@@ -1,5 +1,7 @@
 #DJANGO CORE Models
+from drf_spectacular.utils import extend_schema
 from rest_framework.response import Response
+from rest_framework import serializers
 from rest_framework.views import APIView
 from .django_server_api import DjangoServerAPI
 from django_gui.settings import FILECHOOSER_DIRS
@@ -118,51 +120,6 @@ def _get_cruise_config():
     
     return template_vars
 
-class DeleteCruiseAPIView(APIView):
-    """
-    API endpoint to delete a cruise.
-
-    Request Payload:
-    POST
-    {
-        "delete_cruise": true,
-        "cruise_id": 123
-    }
-
-    Response Payload:
-    {
-        "status": "cruise deleted"
-    }
-    
-    """
-    authentication_classes = [authentication.BasicAuthentication, TokenAuthentication]
-    permission_classes = [IsAuthenticated]
-    def post(self, request):
-        api = _get_api()
-        
-        log_request(request, 'delete_cruise')
-
-        # Are they deleting a cruise?(!)
-        if 'delete_cruise' in request.data:
-            logging.info('deleting cruise')
-            api.delete_cruise()
-            logging.info('cruise deleted')
-            return Response({'status': 'cruise deleted'}, 200)
-        
-        return Response({'status': 'Invalid Request'},400)
-    
-    def get(self, request):
-        try:        
-            api = _get_api()
-            configuration = api.get_configuration()
-            data = {}
-            data['cruise_id'] = configuration.get('id', 'Cruise')
-        except (ValueError, AttributeError):
-            logging.info('No configuration loaded')
-            data = {'cruise': 'no cruise loaded'}
-
-        return Response({'status': 'ok', "data": data}, 200)
-    
 class CruiseSelectModeAPIView(APIView):
 
     """
@@ -314,8 +271,7 @@ class EditLoggerConfigAPIView(APIView):
         
         return Response({'status': 'ok', "loggers": loggers, 'msg': msg}, status=200)
 
-
-class LoadConfigurationFile(APIView):
+class LoadConfigurationFileAPIView(APIView):
     """
         Load Configuration File
 
@@ -392,10 +348,6 @@ class LoadConfigurationFile(APIView):
             return Response({'status': f"Errors loading target file {target_file}", "errors": load_errors}, 400)
             
 
-# Websockets + # Streaming data api. 
-
-
-# widget api - not sure if this needs an api.
 
 
 

@@ -15,12 +15,18 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
+from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
+
+
+    
+
 
 from django.conf import settings
 from django.conf.urls.static import static
-from rest_framework import routers
 from . import views
 from . import api_views
+
+
 
 urlpatterns = [
     
@@ -46,7 +52,10 @@ urlpatterns = [
     #
     #API DRF Views       
     #
-    path('api/', include('rest_framework.urls', namespace='rest_framework')),
+    # path('api/', include('rest_framework.urls', namespace='rest_framework')),
+    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+    path('api/schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    path('api/schema/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
     path('api/obtain-auth-token/', api_views.CustomAuthToken.as_view(), name="obtain-auth-token"),
     path('api/', api_views.api_root),
     path('api/delete-cruise/', api_views.DeleteCruiseAPIView.as_view(), name='delete-cruise'),
@@ -54,7 +63,7 @@ urlpatterns = [
     path('api/select-cruise-mode/', api_views.CruiseSelectModeAPIView.as_view(), name='select-cruise-mode'),
     path('api/reload-current-configuration/', api_views.CruiseReloadCurrentConfigurationAPIView.as_view(), name='reload-current-configuration'),
     path('api/edit-logger-config/', api_views.EditLoggerConfigAPIView.as_view(), name='edit-logger-config'),
-    path('api/load-configuration-file/', api_views.LoadConfigurationFile.as_view(), name='load-configuration-file')
+    path('api/load-configuration-file/', api_views.LoadConfigurationFileAPIView.as_view(), name='load-configuration-file')
 
 
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

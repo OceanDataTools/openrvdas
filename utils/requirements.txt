@@ -24,3 +24,6 @@ shapely
 # Version-restricted packages
 django==5.0.3
 djangorestframework==3.15.1
+#includes the swagger ui css and javascript
+drf-spectacular[sidecar]
+
