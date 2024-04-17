@@ -162,6 +162,10 @@ class FileWriter(Writer):
             if file_dir:
                 os.makedirs(file_dir, exist_ok=True)
 
+    ############################
+    def __del__(self):
+        if self.file:
+            self.file.close()
 
     ############################
     @staticmethod
