@@ -61,6 +61,7 @@ urlpatterns = [
     path('api/cruise-configuration/', api_views.CruiseConfigurationAPIView.as_view(), name='cruise-configuration'),
     path('api/select-cruise-mode/', api_views.CruiseSelectModeAPIView.as_view(), name='select-cruise-mode'),
     path('api/reload-current-configuration/', api_views.CruiseReloadCurrentConfigurationAPIView.as_view(), name='reload-current-configuration'),
+    path('api/delete-configuration/', api_views.CruiseDeleteConfigurationAPIView.as_view(), name='delete-configuration'),
     path('api/edit-logger-config/', api_views.EditLoggerConfigAPIView.as_view(), name='edit-logger-config'),
     path('api/load-configuration-file/', api_views.LoadConfigurationFileAPIView.as_view(), name='load-configuration-file')
 

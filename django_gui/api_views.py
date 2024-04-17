@@ -51,6 +51,7 @@ def api_root(request, format=None):
         'cruise-configuration': reverse('cruise-configuration', request=request, format=format),
         'select-cruise-mode': reverse('select-cruise-mode', request=request, format=format),
         'reload-current-configuration': reverse('reload-current-configuration', request=request, format=format),
+        'delete-configuration': reverse('delete-configuration', request=request, format=format),
         'edit-logger-config': reverse('edit-logger-config', request=request, format=format),
         'load-configuration-file': reverse('load-configuration-file', request=request, format=format),
      
@@ -89,8 +90,6 @@ class CustomAuthToken(ObtainAuthToken):
 #
 #
 
-#       index.get
-#           index.get_configuration
 class CruiseConfigurationAPIView(APIView):
     authentication_classes = [authentication.BasicAuthentication, TokenAuthentication]
     permission_classes = [IsAuthenticated]
@@ -273,6 +272,69 @@ class CruiseReloadCurrentConfigurationAPIView(APIView):
         template_vars = _get_cruise_config()    
         return Response({'status': 'ok', "configuration": template_vars}, 200)
 
+class CruiseDeleteConfigurationSerializer(serializers.Serializer):
+    delete = serializers.CharField(required=True)
+    
+class CruiseDeleteConfigurationAPIView(APIView):
+    """
+    API endpoint for deleting all configurations.
+    """
+    
+    if coreapi_schema.is_enabled():
+        schema = ManualSchema(
+            fields=[
+                coreapi.Field(
+                    name="delete",
+                    required=True,
+                    location='form',
+                    schema=coreschema.String(
+                        title="delete",
+                        description="id for configuartion.",
+                    ),
+                ),          
+            ],
+            encoding="application/json",
+        )
+
+    serializer_class = CruiseDeleteConfigurationSerializer
+    authentication_classes = [authentication.BasicAuthentication, TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        api = _get_api()
+        log_request(request, 'delete_configuration')
+        serializer = CruiseDeleteConfigurationSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        if serializer.validated_data.get('delete'):
+            try:               
+                api.delete_configuration()
+                return Response({'status': f"Cruise configuration deleted"}, status=200)
+
+            except ValueError as e:
+                logging.warning('Error trying to delete configuration')
+                return Response({'status': f'Invalid Request. Error trying to delete configuration'}, status=400)
+        return Response({'status': 'Invalid Request'}, status=400)
+
+    def get(self, request):
+        try:        
+            api = _get_api()            
+            data = {}
+            configuration = api.get_configuration()
+            data['cruise_id'] = configuration.get('id', 'Cruise')
+        except (ValueError, AttributeError):
+            logging.info('No configuration loaded')
+            data = {'cruise_id': 'no cruise loaded'}
+
+        return Response({'status': 'ok', "data": data}, 200)
+
+#
+#
+#
+# LOGGER ACTIONS
+#
+#
+#
 class EditLoggerConfigSerializer(serializers.Serializer):
     update = serializers.CharField(required=True)
     logger_id = serializers.CharField(required=True)
