@@ -60,7 +60,8 @@ class TestUDPReader(unittest.TestCase):
     def read_udp(self, interface, port, data, mc_group=None, encoding='utf-8', delay=0):
         time.sleep(delay)
         try:
-            reader = UDPReader(interface=interface, port=port, mc_group=mc_group, encoding=encoding)
+            reader = UDPReader(interface=interface, port=port, mc_group=mc_group, encoding=encoding,
+                           this_is_a_test=True)
             for line in data:
                 time.sleep(delay)
                 logging.debug('UDPReader reading...')

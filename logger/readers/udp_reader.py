@@ -42,7 +42,8 @@ class UDPReader(Reader):
     ############################
     def __init__(self, interface=None, port=None, mc_group=None,
                  reuseaddr=False, reuseport=False,
-                 encoding='utf-8', encoding_errors='ignore'):
+                 encoding='utf-8', encoding_errors='ignore',
+                 this_is_a_test=False):
         """
         ```
         interface    IP (or resolvable name) of interface to listen on.  None or ''
@@ -71,6 +72,8 @@ class UDPReader(Reader):
                 'replace', and 'backslashreplace', described here:
                 https://docs.python.org/3/howto/unicode.html#encodings
 
+        this_is_a_test - If True, recognize that this is being called in a unittest, so
+                don't output warnings about not using loopback addresses.
         ```
         """
         super().__init__(encoding=encoding,
@@ -114,6 +117,8 @@ class UDPReader(Reader):
         self.reuseaddr = reuseaddr
         self.reuseport = reuseport
 
+        self.this_is_a_test = this_is_a_test
+
         # socket gets initialized on-demand in read()
         self.socket = None
 
@@ -146,7 +151,7 @@ class UDPReader(Reader):
             #       never leave the system, and you never actually join the
             #       group.
             #
-            if self.interface.startswith('127.'):
+            if self.interface.startswith('127.') and not self.this_is_a_test:
                 logging.warning("Can't use loopback device for joining multicast groups.  Make "
                                 "sure your system's hostname does NOT resolve to something in "
                                 "the 127.0.0.0/8 address block (e.g., localhost, 127.0.0.1), or "
