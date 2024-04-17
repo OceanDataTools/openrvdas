@@ -69,7 +69,7 @@ class TestRegexLogfileWriter(unittest.TestCase):
             bad_line = 'there is no timestamp here'
             with self.assertLogs(logging.getLogger(), logging.ERROR) as cm:
                 writer.write(bad_line)
-            error = 'ERROR:root:LogfileWriter.write() - bad timestamp: ' + bad_line
+            error = 'ERROR:root:LogfileWriter.write() - bad timestamp: "' + bad_line + '"'
             self.assertEqual(cm.output, [error])
 
             for line in lines:

@@ -86,7 +86,8 @@ class RegexLogfileWriter(Writer):
     ############################
     def write(self, record):
         """Note: Assume record begins with a timestamp string."""
-        if record is None:
+        # If record is None, or an empty string
+        if not record:
             return
 
         # If we've got a list, hope it's a list of records. Recurse,
@@ -108,7 +109,7 @@ class RegexLogfileWriter(Writer):
             ts = timestamp.timestamp(time_str, time_format=self.time_format)
         except ValueError:
             if not self.quiet:
-                logging.error('LogfileWriter.write() - bad timestamp: %s', record)
+                logging.error('LogfileWriter.write() - bad timestamp: "%s"', record)
                 return
 
         # Now parse ts into hour and date strings
