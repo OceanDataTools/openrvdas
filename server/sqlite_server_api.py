@@ -33,7 +33,7 @@ DIR_PATH = os.path.dirname(__file__)
 DEFAULT_DATABASE_PATH = os.path.join(DIR_PATH, 'openrvdas.sql')
 
 # Effectively "time zero" for POSIX systems.
-EPOCH_TIME_ZERO = '1970-01-01 00:00:00.000000'
+EPOCH_TIME_ZERO = datetime(1970, 1, 1, 0, 0, 0)
 
 ########################################################################
 # Let's trust SQLite and forget about thread locking.
@@ -67,6 +67,7 @@ class SQLiteServerAPI(ServerAPI):
         self.server_messages = []
         self.cx = None
         self.timestamp = self._get_database_timestamp()
+        logging.warning(f'INITIALIZED AS self.timestamp({type(self.timestamp)}): {self.timestamp}')
 
 
     def _database_exists(self):
