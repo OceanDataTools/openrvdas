@@ -50,7 +50,7 @@ urlpatterns = [
 
     path('fields/', views.fields, name='fields'),
     #
-    #API DRF Views       
+    #API DRF Views     
     #
     path('api/', include('rest_framework.urls', namespace='rest_framework')),
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),

@@ -17,6 +17,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.authtoken.models import Token
 from rest_framework.schemas import ManualSchema
 from rest_framework.compat import coreapi, coreschema
+from rest_framework.schemas import coreapi as coreapi_schema
+
 import json
 import yaml
 import os
@@ -65,7 +67,7 @@ def _get_api():
 
 class CustomAuthToken(ObtainAuthToken):
 
-    renderer_classes = api_settings.DEFAULT_RENDERER_CLASSES
+    
 
     def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data,
@@ -121,14 +123,10 @@ def _get_cruise_config():
     
     return template_vars
 
+
+
 class CruiseSelectModeSerializer(serializers.Serializer):
     select_mode = serializers.CharField(required=True)
-
-    def create(self, validated_data):
-        pass
-
-    def update(self, instance, validated_data):
-        pass
 
 class CruiseSelectModeAPIView(APIView):
 
@@ -137,9 +135,9 @@ class CruiseSelectModeAPIView(APIView):
 
     Request Payload:
     POST
-       {
-                "select_mode": mode_id,        
-            }
+    {
+        "select_mode": mode_id,        
+    }
 
     Response Payload:
     {
@@ -148,8 +146,8 @@ class CruiseSelectModeAPIView(APIView):
     
     """
 
-
-    schema = ManualSchema(
+    if coreapi_schema.is_enabled():
+        schema = ManualSchema(
             fields=[
                 coreapi.Field(
                     name="select_mode",
@@ -166,8 +164,8 @@ class CruiseSelectModeAPIView(APIView):
 
 
 
-    renderer_classes = api_settings.DEFAULT_RENDERER_CLASSES
-    serializer_class =CruiseSelectModeSerializer
+    # 
+    serializer_class = CruiseSelectModeSerializer
     authentication_classes = [authentication.BasicAuthentication, TokenAuthentication]
     permission_classes = [IsAuthenticated]
 
@@ -202,14 +200,57 @@ class CruiseSelectModeAPIView(APIView):
 
         return Response({'status': 'ok', "data": data}, 200)
 
+
+class CruiseReloadCurrentConfiguartionSerializer(serializers.Serializer):
+    #The presence of the value implies the 
+    reload = serializers.CharField(required=True)
+
 class CruiseReloadCurrentConfigurationAPIView(APIView):
+
+    """
+    Reload Current Configuration API
+
+    Request Payload:
+    POST
+    {
+        "reload": true,        
+    }
+
+    Response Payload:
+    {
+        "status": "ok",
+        "configuration": ...
+    }
+    """
+    if coreapi_schema.is_enabled():
+        schema = ManualSchema(
+            fields=[
+                coreapi.Field(
+                    name="reload",
+                    required=True,
+                    location='form',
+                    schema=coreschema.String(
+                        title="reload",
+                        description="true / false",
+                    ),
+                ),          
+            ],
+            encoding="application/json",
+        )
+    
+    
+    serializer_class = CruiseReloadCurrentConfiguartionSerializer
     authentication_classes = [authentication.BasicAuthentication, TokenAuthentication]
     permission_classes = [IsAuthenticated]
+
     def post(self, request):
+
         api = _get_api()
         log_request(request, "reload current cruise configuration")
-
-        if 'reload' in request.data:            
+        serializer = CruiseReloadCurrentConfiguartionSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        if serializer.validated_data.get('reload'):         
             logging.info('reloading current configuration file')
             try:
                 cruise = api.get_configuration()
@@ -232,6 +273,11 @@ class CruiseReloadCurrentConfigurationAPIView(APIView):
         template_vars = _get_cruise_config()    
         return Response({'status': 'ok', "configuration": template_vars}, 200)
 
+class EditLoggerConfigSerializer(serializers.Serializer):
+    update = serializers.CharField(required=True)
+    logger_id = serializers.CharField(required=True)
+    config = serializers.CharField(required=True)
+
 class EditLoggerConfigAPIView(APIView):
     """
     API endpoint for editing logger configurations.
@@ -239,48 +285,82 @@ class EditLoggerConfigAPIView(APIView):
     This endpoint supports both POST and GET requests.
     POST request allows updating logger configurations.
     GET request retrieves the list of loggers.
+    
 
-    Authentication:
-    - BasicAuthentication
-    - TokenAuthentication
+    POST Parameters:
+    - update: true 
+    - logger_id: The ID of the logger to be updated.
+    - config: The new configuration to be set.
+    {
+    "update": "true",
+    "logger_id": "<logger_id>",
+    "config": "<config_id>"
+    }
 
-    Permissions:
-    - IsAuthenticated
+    Returns:
+    - Response with status and message
 
     """
+    if coreapi_schema.is_enabled():
+        schema = ManualSchema(
+            fields=[
+                coreapi.Field(
+                    name="update",
+                    required=True,
+                    location='form',
+                    schema=coreschema.String(
+                        title="realod",
+                        description="true / false",
+                    ),
+                ), 
+                coreapi.Field(
+                    name="logger_id",
+                    required=True,
+                    location='form',
+                    schema=coreschema.String(
+                        title="realod",
+                        description="The logger id to update",
+                    ),
+                ),   
+                coreapi.Field(
+                    name="config",
+                    required=True,
+                    location='form',
+                    schema=coreschema.String(
+                        title="realod",
+                        description="The logger id to update",
+                    ),
+                ),   
 
+            ],
+            encoding="application/json",
+        )
+    
+    
+    serializer_class = EditLoggerConfigSerializer
     authentication_classes = [authentication.BasicAuthentication, TokenAuthentication]
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        """
-        Update logger configuration.
-
-        POST Parameters:
-        - logger_id: The ID of the logger to be updated.
-        - select_config: The new configuration to be set.
-        {
-        "update": true,
-        "logger_id": "<logger_id>",
-        "select_config": "<config_id>"
-        }
-
-        Returns:
-        - Response with status and message.
-
-        """
+   
         api = _get_api()
-        if 'update' in request.data:
-            logger_id = request.data['logger_id']
+        log_request(request, "Edit logger configuration")
+        
+        serializer = EditLoggerConfigSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        if serializer.validated_data.get('update'): 
+            logger_id = serializer.validated_data.get('logger_id')
             # First things first: log the request
             log_request(request, '%s edit_config' % logger_id)
 
             # Now figure out what they selected
-            new_config = request.data['select_config']
+            new_config = serializer.validated_data.get('config')            
             logging.warning('selected config: %s', new_config)
             api.set_active_logger_config(logger_id, new_config)
             
             return Response({'status': f'Logger {logger_id} updated.'}, status=200)
+        
         return Response({'status': 'Invalid Request'}, status=400)
     
     def get(self, request):
@@ -302,11 +382,15 @@ class EditLoggerConfigAPIView(APIView):
         
         return Response({'status': 'ok', "loggers": loggers, 'msg': msg}, status=200)
 
+
+class LoadConfigurationFileSerializer(serializers.Serializer):
+    target_file = serializers.CharField(required=True)
+
 class LoadConfigurationFileAPIView(APIView):
     """
         Load Configuration File
 
-        Get:
+        GET:
             returns a json object containing a tree of files in your files folder.
         
         POST:
@@ -320,10 +404,26 @@ class LoadConfigurationFileAPIView(APIView):
         - Response with status and message.
 
     """
+    if coreapi_schema.is_enabled():
+        schema = ManualSchema(
+            fields=[
+                coreapi.Field(
+                    name="target_file",
+                    required=True,
+                    location='form',
+                    schema=coreschema.String(
+                        title="target_file",
+                        description="A path to a file.",
+                    ),
+                ),          
+            ],
+            encoding="application/json",
+        )
+
+
+    serializer_class = LoadConfigurationFileSerializer
     authentication_classes = [authentication.BasicAuthentication, TokenAuthentication]
     permission_classes = [IsAuthenticated]
-
-
 
     def get(self, request):
         # list all files in a tree
@@ -349,14 +449,19 @@ class LoadConfigurationFileAPIView(APIView):
 
         return config_files
         
-
-
     def post(self, request):
+
         api = _get_api()
-        if 'target_file' in request.data:
+        log_request(request, "Load configuration file.")
+        
+        serializer = LoadConfigurationFileSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        if serializer.validated_data.get('target_file'):
             #try to load it.
             load_errors = []
-            target_file = request.data.get('target_file', None)
+            target_file = serializer.validated_data.get('target_file', None)
+
             if target_file is None:
                 return Response({'status': f'File not found. {target_file}'},404)
             try:
