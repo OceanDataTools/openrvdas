@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 
 import logging
-import socket
-import struct
 import sys
 from time import sleep
 
@@ -114,11 +112,11 @@ class ModBusTCPReader(Reader):
             readings = []
             for register in self.registers:
                 if isinstance(register, tuple):
-                    readings.append(self.client.read_holding_registers(register[0],register[1]))
+                    readings.append(self.client.read_holding_registers(register[0], register[1]))
                 else:
-                    readings.append(self.client.read_holding_registers(register,1))
+                    readings.append(self.client.read_holding_registers(register, 1))
 
-            record = self.sep.join(regs)
+            record = self.sep.join(readings)
         except OSError as e:
             logging.error('ModBusReader error: %s', str(e))
             return None

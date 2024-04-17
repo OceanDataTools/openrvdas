@@ -82,7 +82,7 @@ class ComposedReader(Reader):
 
         # Transforms can be empty. But if not empty, make it a list, even
         # if it's only a single transform.
-        if not type(transforms) == list:
+        if not isinstance(transforms, list):
             self.transforms = [transforms]
         else:
             self.transforms = transforms

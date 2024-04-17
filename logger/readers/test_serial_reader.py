@@ -3,7 +3,6 @@
 import logging
 import sys
 import tempfile
-import time
 import threading
 import unittest
 import warnings
@@ -39,18 +38,19 @@ SAMPLE_MAX_BYTES_2 = ['$H',
                       '1b']
 
 SAMPLE_TIMEOUT = ['$HEHDT,234.76,T*1b',
-                None,
-                None,
-                '$HEHDT,234.73,T*1e',
-                None,
-                None,
-                '$HEHDT,234.72,T*1f',
-                None,
-                None,
-                '$HEHDT,234.72,T*1f',
-                None,
-                None,
-                '$HEHDT,234.73,T*1e']
+                  None,
+                  None,
+                  '$HEHDT,234.73,T*1e',
+                  None,
+                  None,
+                  '$HEHDT,234.72,T*1f',
+                  None,
+                  None,
+                  '$HEHDT,234.72,T*1f',
+                  None,
+                  None,
+                  '$HEHDT,234.73,T*1e']
+
 
 ################################################################################
 class TestSerialReader(unittest.TestCase):

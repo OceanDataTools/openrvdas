@@ -11,8 +11,8 @@ import unittest
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
-from logger.readers.tcp_reader import TCPReader
-from logger.writers.tcp_writer import TCPWriter
+from logger.readers.tcp_reader import TCPReader  # noqa E402
+from logger.writers.tcp_writer import TCPWriter  # noqa E402
 
 SAMPLE_DATA = ['f1 line 1',
                'f1 line 2',
@@ -26,6 +26,7 @@ BINARY_DATA = [b'\xff\xa1',
 class ReaderTimeout(StopIteration):
     """A custom exception we can raise when we hit timeout."""
     pass
+
 
 ################################################################################
 class TestTCPReader(unittest.TestCase):
@@ -64,7 +65,7 @@ class TestTCPReader(unittest.TestCase):
         eol = '\n'
         line = 'hello there'
         encoding = 'utf-8'
-        count=0
+        count = 0
 
         # Set timeout we can catch if things are taking too long
         signal.signal(signal.SIGALRM, self._handler)
@@ -96,7 +97,7 @@ class TestTCPReader(unittest.TestCase):
 
             logging.info("creating 2nd reader")
             reader = TCPReader(str(socket.INADDR_ANY), dest_port, eol=eol, encoding=encoding)
-            
+
             while True:
                 record = reader.read()
                 line_bytes = line.encode(encoding)
@@ -107,15 +108,18 @@ class TestTCPReader(unittest.TestCase):
 
         except ReaderTimeout:
             passing = 6
-            self.assertTrue(count >= passing , 'Failed to receive at least %d records (received %d)' % (passing, count))
+            self.assertTrue(count >= passing,
+                            'Failed to receive at least %d records (received %d)'
+                            % (passing, count))
         signal.alarm(0)
 
         logging.info('received %d records', count)
         self.time_to_die = True
         w_thread.join()
-        
+
     ############################
-    def do_the_test(self, dest_ip=None, dest_port=None, eol=None, encoding='utf-8', sample_data=SAMPLE_DATA, alarm_timeout=3):
+    def do_the_test(self, dest_ip=None, dest_port=None, eol=None,
+                    encoding='utf-8', sample_data=SAMPLE_DATA, alarm_timeout=3):
         # Set timeout we can catch if things are taking too long
         signal.signal(signal.SIGALRM, self._handler)
         signal.alarm(alarm_timeout)
@@ -124,7 +128,7 @@ class TestTCPReader(unittest.TestCase):
         try:
             # create the reader
             reader = TCPReader(str(socket.INADDR_ANY), dest_port, eol=eol, encoding=encoding)
-            
+
             # create the writer and pump all our data into the socket in one big blob
             writer = TCPWriter(dest_ip, dest_port, eol=eol, encoding=encoding)
             for line in sample_data:
@@ -151,44 +155,37 @@ class TestTCPReader(unittest.TestCase):
                 self.assertEqual(line, record)
         except ReaderTimeout:
             self.assertTrue(False, 'NetworkReader timed out in test - is port '
-                            '%s open?' % addr)
+                            '%s open?' % dest_port)
         signal.alarm(0)
 
     ############################
     def test_text_by_size(self):
-        kwargs = { 'dest_ip': '127.0.0.1',
-                   'dest_port': 8001,
-                   'eol': None,
-        }
+        kwargs = {'dest_ip': '127.0.0.1',
+                  'dest_port': 8001,
+                  'eol': None}
         self.do_the_test(**kwargs)
-
 
     ############################
     def test_text_by_eol(self):
-        kwargs = { 'dest_ip': '127.0.0.1',
-                   'dest_port': 8002,
-                   'eol': '\r\n',
-        }
+        kwargs = {'dest_ip': '127.0.0.1',
+                  'dest_port': 8002,
+                  'eol': '\r\n'}
         self.do_the_test(**kwargs)
-
 
     ############################
     def test_text_with_crazy_eol(self):
-        kwargs = { 'dest_ip': '127.0.0.1',
-                   'dest_port': 8003,
-                   'eol': 'FOO\\r\\n',
-        }
+        kwargs = {'dest_ip': '127.0.0.1',
+                  'dest_port': 8003,
+                  'eol': 'FOO\\r\\n'}
         self.do_the_test(**kwargs)
-
 
     ############################
     def test_binary(self):
-        kwargs = { 'dest_ip': '127.0.0.1',
-                   'dest_port': 8004,
-                   'eol': b'\xffFOO\xff',
-                   'encoding': '',
-                   'sample_data': BINARY_DATA,
-        }
+        kwargs = {'dest_ip': '127.0.0.1',
+                  'dest_port': 8004,
+                  'eol': b'\xffFOO\xff',
+                  'encoding': '',
+                  'sample_data': BINARY_DATA}
         self.do_the_test(**kwargs)
 
 

@@ -11,9 +11,6 @@ import unittest
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
-from logger.readers.udp_reader import UDPReader
-from logger.writers.udp_writer import UDPWriter
-
 SAMPLE_DATA = ['f1 line 1',
                'f1 line 2',
                'f1 line 3']
@@ -50,7 +47,8 @@ class TestUDPReader(unittest.TestCase):
 
     ############################
     def write_udp(self, dest, port, data, mc_interface=None, encoding='utf-8', interval=0, delay=0):
-        writer = UDPWriter(destination=dest, port=port, mc_interface=mc_interface, encoding=encoding)
+        writer = UDPWriter(destination=dest, port=port,
+                           mc_interface=mc_interface, encoding=encoding)
         time.sleep(delay)
         for line in data:
             writer.write(line)
@@ -61,7 +59,7 @@ class TestUDPReader(unittest.TestCase):
         time.sleep(delay)
         try:
             reader = UDPReader(interface=interface, port=port, mc_group=mc_group, encoding=encoding,
-                           this_is_a_test=True)
+                               this_is_a_test=True)
             for line in data:
                 time.sleep(delay)
                 logging.debug('UDPReader reading...')
@@ -75,7 +73,7 @@ class TestUDPReader(unittest.TestCase):
                     # want to break this one, and test exception handling?
                     # uncomment the next line.  i dare you.
                     #
-                    #result += b'FOOO'
+                    # result += b'FOOO'
                     line_bytes = line
                     result_bytes = result
                 logging.info('network wrote %s, read %s', line_bytes, result_bytes)
@@ -161,7 +159,8 @@ class TestUDPReader(unittest.TestCase):
 
         w_thread = threading.Thread(target=self.write_udp, name='multicast1',
                                     args=(dest, port, SAMPLE_DATA),
-                                    kwargs={'mc_interface': mc_interface, 'interval': 0.1, 'delay': 0.2})
+                                    kwargs={'mc_interface': mc_interface,
+                                            'interval': 0.1, 'delay': 0.2})
 
         # Set timeout we can catch if things are taking too long
         signal.signal(signal.SIGALRM, self._handler)

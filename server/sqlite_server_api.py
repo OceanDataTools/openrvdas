@@ -16,7 +16,6 @@ import gzip
 from datetime import datetime
 
 from os.path import dirname, realpath
-import time
 sys.path.append(dirname(dirname(realpath(__file__))))
 
 from server.server_api import ServerAPI  # noqa: E402
@@ -43,6 +42,7 @@ EPOCH_TIME_ZERO = datetime(1970, 1, 1, 0, 0, 0)
 # (can be safely used by multiple threads without restriction)
 # All distros tested are good.  To test yours:
 # strings `which sqlite3` | grep THREADSAFE (should = 1)
+
 
 class SQLiteServerAPI(ServerAPI):
     ############################
@@ -72,7 +72,7 @@ class SQLiteServerAPI(ServerAPI):
         and can be read without errors."""
         read_only_database_path = ''.join(['file:', self.database_path, '?mode=ro'])
         try:
-            cx = sqlite3.connect(read_only_database_path, uri=True)
+            cx = sqlite3.connect(read_only_database_path, uri=True)  # noqa: F841
         except sqlite3.OperationalError:
             return False
         except sqlite3.Error as err:
@@ -86,9 +86,9 @@ class SQLiteServerAPI(ServerAPI):
         logging.debug(f'Creating SQLite database "{self.database_path}"')
         cx = sqlite3.connect(self.database_path)
         cu = cx.cursor()
-        cu.execute('CREATE TABLE Cruise (highlander integer primary key not null, config blob, [loaded_time] datetime, compressed integer)')
-        cu.execute('CREATE TABLE lastupdate (highlander integer primary key not null, [timestamp] datetime)')
-        cu.execute('CREATE TABLE logmessages (timestamp datetime primary key not null, loglevel integer, cruise text, source text, user text, message text)')
+        cu.execute('CREATE TABLE Cruise (highlander integer primary key not null, config blob, [loaded_time] datetime, compressed integer)')  # noqa E501
+        cu.execute('CREATE TABLE lastupdate (highlander integer primary key not null, [timestamp] datetime)')  # noqa E501
+        cu.execute('CREATE TABLE logmessages (timestamp datetime primary key not null, loglevel integer, cruise text, source text, user text, message text)')  # noqa E501
 
         # We need a time or we think the database is not initialized
         cu.execute('INSERT INTO lastupdate (highlander, timestamp) VALUES (1, CURRENT_TIMESTAMP);')
@@ -117,8 +117,8 @@ class SQLiteServerAPI(ServerAPI):
         # Otherwise establish a connection to database
         if not self._database_exists():
             if self.no_create_database:
-                raise OperationalError(f'No database "{self.database_path}" found, '
-                                       'and flag "no_create_database" is set.')
+                raise sqlite3.OperationalError(f'No database "{self.database_path}" found, '
+                                               'and flag "no_create_database" is set.')
             # Otherwise, create the missing database
             self._create_database()
 
@@ -232,7 +232,7 @@ class SQLiteServerAPI(ServerAPI):
         try:
             res = cx.execute(Q)
             row = res.fetchone()
-            if  row:
+            if row:
                 return row['timestamp']
 
             # If no timestamp row, return string for 'time zero'

@@ -91,12 +91,12 @@ class MQTTReader(Reader):
 
             self.paho.connect(broker, 1883)
             self.paho.subscribe(channel)
-            
+
         except mqtt.WebsocketConnectionError as e:
             logging.error('Unable to connect to broker at %s:%s',
                           self.broker, self.channel)
             raise e
-    
+
     ############################
     def read(self):
         while True:

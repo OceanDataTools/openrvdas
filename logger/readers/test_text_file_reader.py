@@ -379,5 +379,6 @@ class TestTextFileReader(unittest.TestCase):
                     line = reader.read()
                     self.assertEqual(line, expect[i])
 
+
 if __name__ == '__main__':
     unittest.main()

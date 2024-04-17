@@ -159,7 +159,7 @@ class UDPReader(Reader):
                                 "`interface` parameter.  (You can ignore this message if you're "
                                 "actually just doing loopback testing.)")
             sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_IF,
-                                  socket.inet_aton(self.interface))
+                            socket.inet_aton(self.interface))
 
             # join the group via IGMP
             #
@@ -193,7 +193,7 @@ class UDPReader(Reader):
             return
 
         # Read datagrams until we get one that doesn't end with a FRAGMENT_MARKER
-        record_buffer=b''
+        record_buffer = b''
         while True:
             try:
                 record = self.socket.recv(READ_BUFFER_SIZE)

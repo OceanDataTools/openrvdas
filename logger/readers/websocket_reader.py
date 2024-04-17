@@ -70,7 +70,7 @@ class WebsocketReader():
                         ssl_context = None
 
                     logging.debug(f'WebsocketReader connecting to {self.uri}')
-                    async with websockets.connect(self.uri, ssl=ssl_context) as ws: # type: ignore
+                    async with websockets.connect(self.uri, ssl=ssl_context) as ws:  # type: ignore
                         logging.info(f'Connected to WebsocketWriter at {self.uri}')
 
                         while not self.quit_flag:
@@ -83,11 +83,11 @@ class WebsocketReader():
                     pass
                 except AttributeError as e:
                     logging.warning(f'WebsocketReader websocket loop error: {e}')
-                except websockets.exceptions.ConnectionClosed: # type: ignore
+                except websockets.exceptions.ConnectionClosed:  # type: ignore
                     logging.info('WebsocketReader lost websocket connection to '
                                  'data server; trying to reconnect.')
                     await asyncio.sleep(0.2)
-                except websockets.exceptions.InvalidStatusCode: # type: ignore
+                except websockets.exceptions.InvalidStatusCode:  # type: ignore
                     logging.info('WebsocketReader InvalidStatusCode connecting to '
                                  'data server; trying to reconnect.')
                     await asyncio.sleep(0.2)
