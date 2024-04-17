@@ -46,7 +46,6 @@ EPOCH_TIME_ZERO = datetime(1970, 1, 1, 0, 0, 0)
 
 class SQLiteServerAPI(ServerAPI):
     ############################
-
     def __init__(self, database_path=DEFAULT_DATABASE_PATH,
                  no_create_database=False):
         """
@@ -67,8 +66,6 @@ class SQLiteServerAPI(ServerAPI):
         self.server_messages = []
         self.cx = None
         self.timestamp = self._get_database_timestamp()
-        logging.warning(f'INITIALIZED AS self.timestamp({type(self.timestamp)}): {self.timestamp}')
-
 
     def _database_exists(self):
         """Return True if SQLite database at self.database_path exists,
