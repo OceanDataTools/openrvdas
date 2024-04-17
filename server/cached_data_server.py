@@ -957,6 +957,9 @@ class CachedDataServer:
         """
         logging.info('Starting WebSocketServer on port %d', self.port)
         try:
+            # Note: unittest raises a deprecation warning here:
+            #    DeprecationWarning: remove loop argument
+            # but removing the loop arg causes errors.
             self.websocket_server = websockets.serve(
                 ws_handler=self._serve_websocket_data,
                 host='', port=self.port, loop=self.event_loop)
