@@ -20,7 +20,7 @@ from rest_framework.schemas import coreapi as coreapi_schema
 import json
 import yaml
 import os
-
+from rest_framework.settings import api_settings
 # Read in JSON with comments
 from logger.utils.read_config import parse, read_config  # noqa: E402
 
@@ -50,11 +50,15 @@ api = None
 @api_view(["GET"])
 def api_root(request, format=None):
     """
-    RVDAS REST Framework endpoints.
+    RVDAS REST API Endpoints.
 
     These are an authenticated set of urls.
-    You need to to login to use them via the ui.
-    For calling them via curl or requests. You need to pass header authenticiation.
+    You need to to login to use them via the APi ui.
+    For calling them via curl or requests. You need to pass header authenticiation. 
+    Use token auth, it's simpler. 
+    But basic auth is supported. 
+    https://www.django-rest-framework.org/api-guide/authentication/
+
 
     Such as:
     curl -H "Authorization: Token <a token string>" http://127.0.0.1:8000/api/cruise-configuration/**
@@ -94,6 +98,8 @@ def _get_api():
 
 
 class CustomAuthToken(ObtainAuthToken):
+
+    renderer_classes = api_settings.DEFAULT_RENDERER_CLASSES
 
     def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data, context={"request": request})
