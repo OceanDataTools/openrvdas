@@ -3,7 +3,6 @@
 import logging
 import sys
 import tempfile
-import time
 import unittest
 
 from os.path import dirname, realpath
@@ -24,6 +23,7 @@ SAMPLE_DATA_NO_TIMESTAMP = """Io non so ben ridir com' i' v'intrai,
 ' era pien di sonno a quel punto
 che la verace via abbandonai.
 """
+
 
 class TestRegexLogfileWriter(unittest.TestCase):
     ############################
@@ -75,31 +75,31 @@ class TestRegexLogfileWriter(unittest.TestCase):
             for line in lines:
                 writer.write(line)
 
-            #logging.warning(f'Tempdirname: {tmpdirname}')
-            #time.sleep(200)
+            # logging.warning(f'Tempdirname: {tmpdirname}')
+            # time.sleep(200)
 
-            with open(tmpdirname +'/logfile_A-2017-11-03', 'r') as outfile:
+            with open(tmpdirname + '/logfile_A-2017-11-03', 'r') as outfile:
                 self.assertEqual(lines[0], outfile.readline().rstrip())
                 self.assertEqual('', outfile.readline().rstrip())
 
-            with open(tmpdirname +'/logfile_A-2017-11-04', 'r') as outfile:
+            with open(tmpdirname + '/logfile_A-2017-11-04', 'r') as outfile:
                 self.assertEqual(lines[4], outfile.readline().rstrip())
                 self.assertEqual(lines[7], outfile.readline().rstrip())
                 self.assertEqual('', outfile.readline().rstrip())
 
-            with open(tmpdirname +'/logfile_B-2017-11-03', 'r') as outfile:
+            with open(tmpdirname + '/logfile_B-2017-11-03', 'r') as outfile:
                 self.assertEqual(lines[1], outfile.readline().rstrip())
                 self.assertEqual('', outfile.readline().rstrip())
-            with open(tmpdirname +'/logfile_B-2017-11-04', 'r') as outfile:
+            with open(tmpdirname + '/logfile_B-2017-11-04', 'r') as outfile:
                 self.assertEqual(lines[3], outfile.readline().rstrip())
                 self.assertEqual(lines[5], outfile.readline().rstrip())
                 self.assertEqual(lines[8], outfile.readline().rstrip())
                 self.assertEqual('', outfile.readline().rstrip())
 
-            with open(tmpdirname +'/logfile_C-2017-11-03', 'r') as outfile:
+            with open(tmpdirname + '/logfile_C-2017-11-03', 'r') as outfile:
                 self.assertEqual(lines[2], outfile.readline().rstrip())
                 self.assertEqual('', outfile.readline().rstrip())
-            with open(tmpdirname +'/logfile_C-2017-11-04', 'r') as outfile:
+            with open(tmpdirname + '/logfile_C-2017-11-04', 'r') as outfile:
                 self.assertEqual(lines[5], outfile.readline().rstrip())
                 self.assertEqual(lines[6], outfile.readline().rstrip())
                 self.assertEqual(lines[7], outfile.readline().rstrip())

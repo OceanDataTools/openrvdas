@@ -11,7 +11,7 @@ import unittest
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
-from logger.writers.udp_writer import UDPWriter
+from logger.writers.udp_writer import UDPWriter  # noqa E402
 
 SAMPLE_DATA = ['f1 line 1',
                'f1 line 2',
@@ -20,7 +20,6 @@ SAMPLE_DATA = ['f1 line 1',
 BINARY_DATA = [b'\xff\xa1',
                b'\xff\xa2',
                b'\xff\xa3']
-
 
 
 class ReaderTimeout(StopIteration):
@@ -39,8 +38,10 @@ class TestUDPWriter(unittest.TestCase):
 
     ############################
     # Actually run the UDPWriter in internal method
-    def write(self, host, port, eol=None, data=None, interval=0, delay=0, encoding='utf-8', mc_interface=None, mc_ttl=3):
-        writer = UDPWriter(destination=host, port=port, eol=eol, encoding=encoding, mc_interface=mc_interface, mc_ttl=mc_ttl)
+    def write(self, host, port, eol=None, data=None, interval=0, delay=0,
+              encoding='utf-8', mc_interface=None, mc_ttl=3):
+        writer = UDPWriter(destination=host, port=port, eol=eol,
+                           encoding=encoding, mc_interface=mc_interface, mc_ttl=mc_ttl)
 
         time.sleep(delay)
         for line in data:
@@ -88,7 +89,7 @@ class TestUDPWriter(unittest.TestCase):
                 self.assertEqual(line, record)
         except ReaderTimeout:
             self.assertTrue(False, 'UDPReader timed out in test - is port '
-                            '%s open?' % addr)
+                            '%s open?' % port)
         signal.alarm(0)
 
     ############################
@@ -100,7 +101,7 @@ class TestUDPWriter(unittest.TestCase):
         # Main method starts here
         host = ''
         port = 8002
-        eol = '\\r\\n' # simulate escaped entry from config file
+        eol = '\\r\\n'  # simulate escaped entry from config file
 
         sock = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
         sock.bind((host, port))
@@ -124,7 +125,7 @@ class TestUDPWriter(unittest.TestCase):
                     self.assertEqual(line, record)
         except ReaderTimeout:
             self.assertTrue(False, 'UDPReader timed out in test - is port '
-                            '%s open?' % addr)
+                            '%s open?' % port)
         signal.alarm(0)
 
     ############################
@@ -152,7 +153,7 @@ class TestUDPWriter(unittest.TestCase):
                 self.assertEqual(line, record)
         except ReaderTimeout:
             self.assertTrue(False, 'UDPReader timed out in test - is port '
-                            '%s open?' % addr)
+                            '%s open?' % port)
         signal.alarm(0)
 
     ############################
@@ -187,7 +188,8 @@ class TestUDPWriter(unittest.TestCase):
         # Start the writer
         threading.Thread(target=self.write,
                          args=(host, port),
-                         kwargs={"data": SAMPLE_DATA, "interval": 0.1, "mc_interface": source_ip, "mc_ttl": ttl}).start()
+                         kwargs={"data": SAMPLE_DATA, "interval": 0.1,
+                                 "mc_interface": source_ip, "mc_ttl": ttl}).start()
 
         # Set timeout we can catch if things are taking too long
         signal.signal(signal.SIGALRM, self._handler)
@@ -202,7 +204,7 @@ class TestUDPWriter(unittest.TestCase):
                 self.assertEqual(line, record)
         except ReaderTimeout:
             self.assertTrue(False, 'UDPReader timed out in test - is port '
-                            '%s open?' % addr)
+                            '%s open?' % port)
         signal.alarm(0)
 
 

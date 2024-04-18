@@ -76,5 +76,4 @@ class StripTransform(Transform):
             if self.strip_suffix:
                 record = record.rstrip(self.chars)
 
-
         return record

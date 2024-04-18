@@ -30,6 +30,7 @@ class TestRegexFilterTransform(unittest.TestCase):
         self.assertEqual(transform.transform('not foo'), 'not foo')
         self.assertIsNone(transform.transform('6foo bar'))
 
+
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()

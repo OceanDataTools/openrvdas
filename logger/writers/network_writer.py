@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 
-import json
 import logging
-import socket
 import sys
 
 from os.path import dirname, realpath
@@ -18,4 +16,5 @@ class NetworkWriter(Writer):
         logging.error("NetworkWriter has been replaced by TCPWriter and UDPWriter")
 
     def write(self, record):
-        logging.error("not writing anything: NetworkWriter has been replaced by TCPWriter and UDPWriter")
+        logging.error("not writing anything: NetworkWriter has been replaced "
+                      "by TCPWriter and UDPWriter")

@@ -63,7 +63,7 @@ class TextFileWriter(Writer):
             try:
                 with open(header_file, 'r') as file:
                     self.header = file.read()
-            except:
+            except:  # noqa E722 - though should really fix this
                 raise ValueError('FileWriter: Unable to add header to data '
                                  'file. header_file argument must be a valid '
                                  'filepath: %s', header_file)

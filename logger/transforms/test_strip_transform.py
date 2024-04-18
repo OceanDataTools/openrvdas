@@ -32,6 +32,7 @@ class TestStripTransform(unittest.TestCase):
         transform = StripTransform(unprintable=True)
         self.assertEqual(transform.transform(beta), 'abc d')
 
+
 ################################################################################
 if __name__ == '__main__':
     import argparse

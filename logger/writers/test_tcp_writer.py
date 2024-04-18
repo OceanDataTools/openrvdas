@@ -47,7 +47,9 @@ class TestTCPWriter(unittest.TestCase):
             time.sleep(interval)
 
     ############################
-    def do_the_test(self, dest_ip=None, dest_port=None, eol=None, encoding='utf-8', sample_data=SAMPLE_DATA, interval=0.1, delay=0, alarm_timeout=3):
+    def do_the_test(self, dest_ip=None, dest_port=None, eol=None,
+                    encoding='utf-8', sample_data=SAMPLE_DATA,
+                    interval=0.1, delay=0, alarm_timeout=3):
         s = socket.socket(family=socket.AF_INET, type=socket.SOCK_STREAM)
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, True)
 
@@ -57,7 +59,8 @@ class TestTCPWriter(unittest.TestCase):
 
         # Start the writer
         threading.Thread(target=self.write_tcp,
-                         args=(dest_ip, dest_port, eol, encoding, sample_data, interval, delay)).start()
+                         args=(dest_ip, dest_port, eol, encoding,
+                               sample_data, interval, delay)).start()
 
         # Set timeout we can catch if things are taking too long
         signal.signal(signal.SIGALRM, self._handler)
@@ -89,45 +92,37 @@ class TestTCPWriter(unittest.TestCase):
                 self.assertEqual(line, record)
         except ReaderTimeout:
             self.assertTrue(False, 'NetworkReader timed out in test - is port '
-                            '%s open?' % addr)
+                            '%s open?' % dest_port)
         signal.alarm(0)
-
 
     ############################
     def test_text(self):
-        kwargs = { 'dest_ip': '127.0.0.1',
-                   'dest_port': 8001,
-                   'eol': None,
-        }
+        kwargs = {'dest_ip': '127.0.0.1',
+                  'dest_port': 8001,
+                  'eol': None}
         self.do_the_test(**kwargs)
-
 
     ############################
     def test_text_with_eol(self):
-        kwargs = { 'dest_ip': '127.0.0.1',
-                   'dest_port': 8002,
-                   'eol': '\r\n',
-        }
+        kwargs = {'dest_ip': '127.0.0.1',
+                  'dest_port': 8002,
+                  'eol': '\r\n'}
         self.do_the_test(**kwargs)
-
 
     ############################
     def test_text_with_crazy_eol(self):
-        kwargs = { 'dest_ip': '127.0.0.1',
-                   'dest_port': 8003,
-                   'eol': 'FOO\\r\\n',
-        }
+        kwargs = {'dest_ip': '127.0.0.1',
+                  'dest_port': 8003,
+                  'eol': 'FOO\\r\\n'}
         self.do_the_test(**kwargs)
-
 
     ############################
     def test_binary(self):
-        kwargs = { 'dest_ip': '127.0.0.1',
-                   'dest_port': 8004,
-                   'eol': None,
-                   'encoding': '',
-                   'sample_data': BINARY_DATA,
-        }
+        kwargs = {'dest_ip': '127.0.0.1',
+                  'dest_port': 8004,
+                  'eol': None,
+                  'encoding': '',
+                  'sample_data': BINARY_DATA}
         self.do_the_test(**kwargs)
 
 

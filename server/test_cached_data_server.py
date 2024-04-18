@@ -13,7 +13,7 @@ import websockets
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(realpath(__file__))))
-from server.cached_data_server import CachedDataServer
+from server.cached_data_server import CachedDataServer  # noqa: E402
 
 # Django 3 doesn't play nicely when mixing sync and async, so when we
 # try to run the Django 'manage.py test' command, it gets unhappy

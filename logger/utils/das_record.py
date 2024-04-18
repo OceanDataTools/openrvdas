@@ -5,7 +5,6 @@ import pprint
 import logging
 
 from logger.utils.timestamp import timestamp as timestamp_method  # noqa: E402
-from logger.utils.read_config import parse  # noqa: E402
 
 
 class DASRecord:

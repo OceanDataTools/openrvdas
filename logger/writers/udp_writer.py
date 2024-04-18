@@ -8,8 +8,7 @@ import sys
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
-
-from logger.writers.writer import Writer
+from logger.writers.writer import Writer  # noqa E402
 
 # So that we can write the user's record no matter how silly big it is, we
 # autodetect the system's maximum datagram size and write() fragments the
@@ -43,7 +42,7 @@ def __detect_maxsize():
     #        correct", but I don't feel like making this go faster right now.
     #        And it's only done once, so whatever.
     #
-    trysize=65535
+    trysize = 65535
     while trysize > 0:
         logging.debug("__detect_maxsize: trying %d", trysize)
         try:
@@ -60,10 +59,12 @@ def __detect_maxsize():
         break
 
     if not trysize:
-        logging.warning("Failed to autodetect maximum UDP datagram size.  Record fragmentation disabled")
+        logging.warning("Failed to autodetect maximum UDP datagram size. "
+                        "Record fragmentation disabled")
     else:
         logging.info("Detected maximum UDP datagram size %d", trysize)
         MAXSIZE = trysize
+
 
 # attempt to detect maximum datagram size when module is loaded
 __detect_maxsize()
@@ -125,7 +126,7 @@ class UDPWriter(Writer):
         self.num_retry = num_retry
         self.warning_limit = warning_limit
         self.num_warnings = 0
-        self.good_writes = 0 # consecutive good writes, for detecting UDP errors
+        self.good_writes = 0  # consecutive good writes, for detecting UDP errors
 
         # 'eol' comes in as a (probably escaped) string. We need to
         # unescape it, which means converting to bytes and back.
@@ -246,7 +247,7 @@ class UDPWriter(Writer):
 
         # Fragment record if needed, and recurse.
         if len(record) > MAXSIZE:
-            record_list=[]
+            record_list = []
             max_fragment_size = MAXSIZE - len(FRAGMENT_MARKER)
             fragment_sizes = []
             while len(record) > max_fragment_size:
@@ -258,7 +259,8 @@ class UDPWriter(Writer):
             record_list.append(record)
             fragment_sizes.append("{} bytes".format(len(record)))
             fragment_sizes = ', '.join(fragment_sizes)
-            logging.info("write: fragmented record into %d datagrams: %s", len(record_list), fragment_sizes)
+            logging.info("write: fragmented record into %d datagrams: %s",
+                         len(record_list), fragment_sizes)
             logging.debug(str(record_list))
 
             # change our encoding to binary temporarily, because we've already

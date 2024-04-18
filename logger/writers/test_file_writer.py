@@ -15,8 +15,8 @@ SAMPLE_DATA = ['f1 line 1',
 
 SAMPLE_HEADER = 'Hi, I\'m a header'
 
-class TestFileWriter(unittest.TestCase):
 
+class TestFileWriter(unittest.TestCase):
     ############################
     def test_write(self):
         with tempfile.TemporaryDirectory() as tmpdirname:

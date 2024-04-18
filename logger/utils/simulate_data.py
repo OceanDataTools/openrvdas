@@ -138,7 +138,7 @@ class SimUDP:
         self.compiled_record_format = parse.compile(self.record_format)
         self.eol = eol
         self.input_eol = input_eol
-        self.quiet=quiet
+        self.quiet = quiet
         self.use_timestamps = use_timestamps
 
         # Do we have any files we can actually read from?

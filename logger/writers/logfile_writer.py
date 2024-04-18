@@ -81,7 +81,7 @@ class LogfileWriter(Writer):
 
         # If our filebase is a dict, we're going to be doing our
         # fancy pattern->filebase mapping.
-        self.do_filebase_mapping = type(self.filebase) == dict
+        self.do_filebase_mapping = isinstance(self.filebase, dict)
 
         if self.do_filebase_mapping:
             # Do our matches faster by precompiling

@@ -90,7 +90,7 @@ class LoggerManagerWriter(Writer):
         ```
         """
         if database and api:
-            raise ValueError(f'Must specify either "database" or "api" but not both.')
+            raise ValueError('Must specify either "database" or "api" but not both.')
 
         # If database specified, create appropriate api instance
         if database:
@@ -104,12 +104,12 @@ class LoggerManagerWriter(Writer):
                 from server.sqlite_server_api import SQLiteServerAPI
                 api = SQLiteServerAPI()
             else:
-                raise ValueError(f'Parameter "database" must be one of [django, memory, sqlite], '
+                raise ValueError('Parameter "database" must be one of [django, memory, sqlite], '
                                  f'found "{database}"')
 
         # If not database, we'd better have an api specified
         elif not api:
-            raise ValueError(f'Must specify one of "database" or "api".')
+            raise ValueError('Must specify one of "database" or "api".')
 
         self.command_parser = ServerAPICommandLine(api=api)
 

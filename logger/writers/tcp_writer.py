@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import json
 import logging
 import socket
 import sys
@@ -221,13 +220,13 @@ class TCPWriter(Writer):
             try:
                 # If the socket is still connected, this will raise
                 # BlockingIOError.  If it's not, it returns 0 bytes.
-                msg = self.socket.recv(1, socket.MSG_DONTWAIT | socket.MSG_PEEK)
+                msg = self.socket.recv(1, socket.MSG_DONTWAIT | socket.MSG_PEEK)  # noqa F841
                 logging.error('TCPWriter: connection closed')
                 self.num_warnings += 1
                 self._close_socket(self.socket)
                 self.socket = None
                 continue
-            except BlockingIOError as e:
+            except BlockingIOError:
                 pass
 
             # we're connected, try sending
@@ -239,7 +238,8 @@ class TCPWriter(Writer):
                 # NOTE: In order to get this far, we have to have successfully
                 #       connected, which means we JUST reset self.num_warnings
                 #
-                logging.error('TCPWriter: send() error: %s:%d: %s', self.destination, self.port, str(e))
+                logging.error('TCPWriter: send() error: %s:%d: %s',
+                              self.destination, self.port, str(e))
                 self.num_warnings += 1
                 self._close_socket(self.socket)
                 self.socket = None

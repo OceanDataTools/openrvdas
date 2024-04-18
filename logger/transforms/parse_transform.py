@@ -7,6 +7,7 @@ sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.utils import record_parser  # noqa: E402
 from logger.transforms.transform import Transform  # noqa: E402
 
+
 ################################################################################
 class ParseTransform(Transform):
     """Parse a "<data_id> <timestamp> <message>" record and return

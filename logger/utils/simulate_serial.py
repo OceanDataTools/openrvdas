@@ -28,6 +28,7 @@ class SimSerial:
         """Takes source file, whether to deliver data at rate indicated by
         timestamps, and the standard parameters that a serial port takes."""
 
+        # flake8: noqa: E501
         logging.warning('simulate_serial.SimSerial is deprecated in favor of simulate_data.SimSerial')
 
         self.source_file = source_file

@@ -136,10 +136,9 @@ class SimSerialPort:
 
 ################################################################################
 class TestSerialWriter(unittest.TestCase):
-    @unittest.skip('Test (or SerialWriter) appears to be broken!')
-
     ############################
     # Set up set up simulated serial in/out ports
+    @unittest.skip('Test (or SerialWriter) appears to be broken!')
     def setUp(self):
         warnings.simplefilter("ignore", ResourceWarning)
 

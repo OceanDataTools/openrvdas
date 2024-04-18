@@ -13,7 +13,6 @@ sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.writers.text_file_writer import TextFileWriter  # noqa: E402
 from logger.writers.composed_writer import ComposedWriter  # noqa: E402
 from logger.transforms.prefix_transform import PrefixTransform  # noqa: E402
-from logger.transforms.parse_nmea_transform import ParseNMEATransform  # noqa: E402
 
 SAMPLE_DATA = ['f1 line 1',
                'f1 line 2',

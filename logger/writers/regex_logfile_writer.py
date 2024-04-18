@@ -7,7 +7,6 @@ import sys
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.utils import timestamp  # noqa: E402
-from logger.utils.formats import Text  # noqa: E402
 from logger.writers.writer import Writer  # noqa: E402
 from logger.writers.file_writer import FileWriter  # noqa: E402
 
@@ -73,12 +72,12 @@ class RegexLogfileWriter(Writer):
 
         # If our filebase is a dict, we're going to be doing our
         # fancy pattern->filebase mapping.
-        self.do_filebase_mapping = type(self.filebase) == dict
+        self.do_filebase_mapping = isinstance(self.filebase, dict)
 
         if self.do_filebase_mapping:
             # Do our matches faster by precompiling
             self.compiled_filebase_map = {
-                pattern:re.compile(pattern) for pattern in self.filebase
+                pattern: re.compile(pattern) for pattern in self.filebase
             }
         self.current_filename = {}
         self.writer = {}
@@ -123,7 +122,7 @@ class RegexLogfileWriter(Writer):
         if self.do_filebase_mapping:
             matched_patterns = [self.write_if_match(record, pattern, time_str)
                                 for pattern in self.filebase]
-            if not True in matched_patterns:
+            if True not in matched_patterns:
                 if not self.quiet:
                     logging.warning(f'No patterns matched in PatternLogfileWriter '
                                     f'for record "{record}"')
