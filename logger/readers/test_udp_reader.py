@@ -10,6 +10,8 @@ import unittest
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
+from logger.writers.udp_writer import UDPWriter  # noqa E402
+from logger.readers.udp_reader import UDPReader  # noqa E402
 
 SAMPLE_DATA = ['f1 line 1',
                'f1 line 2',
@@ -238,10 +240,6 @@ if __name__ == '__main__':
     LOG_LEVELS = {0: logging.WARNING, 1: logging.INFO, 2: logging.DEBUG}
     args.verbosity = min(args.verbosity, max(LOG_LEVELS))
     logging.getLogger().setLevel(LOG_LEVELS[args.verbosity])
-
-    # import these down here so logger is already setup
-    from logger.writers.udp_writer import UDPWriter
-    from logger.readers.udp_reader import UDPReader
 
     # import the whole udp_reader module so we can override MAXSIZE
     import logger.writers.udp_writer as udp_writer

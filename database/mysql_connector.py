@@ -127,7 +127,7 @@ class MySQLConnector:
         # First, check that we've got something we can work with
         if not record:
             return
-        if not type(record) == DASRecord:
+        if not isinstance(record, DASRecord):
             logging.error('write_record() received non-DASRecord as input. '
                           'Type: %s', type(record))
             return

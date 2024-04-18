@@ -728,7 +728,8 @@ class DjangoServerAPI(ServerAPI):
                 for mode, mode_loggers in modes.items():
                     for mode_logger, mode_logger_config in mode_loggers.items():
                         if mode_logger not in loggers:
-                            raise ValueError(f'In mode \'{mode}\', logger \'{mode_logger}\' is undefined')
+                            raise ValueError(
+                                f'In mode \'{mode}\', logger \'{mode_logger}\' is undefined')
                         if mode_logger_config not in configs:
                             raise ValueError(f'In mode \'{mode}\', logger \'{mode_logger}\', ' +
                                              f'config \'{mode_logger_config}\' is undefined')

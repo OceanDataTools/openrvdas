@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# flake8: noqa: W605
 """
 Barebones script to generate OpenRVDAS config file from minimal input file
 using a Jinja template.
