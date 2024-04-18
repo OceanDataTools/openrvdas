@@ -86,7 +86,7 @@ WEBSOCKET_HOST = ''
 # simply edit this value in settings.py without also modifying the
 # value in django_gui/openrvdas_nginx.conf and display/js/widgets/settings.js
 WEBSOCKET_PROTOCOL = 'ws'
-WEBSOCKET_PORT = 8766
+WEBSOCKET_PORT = 80
 WEBSOCKET_PATH = '/cds-ws'
 WEBSOCKET_DATA_SERVER = f'{WEBSOCKET_PROTOCOL}://{WEBSOCKET_HOST}:{WEBSOCKET_PORT}{WEBSOCKET_PATH}'
 
