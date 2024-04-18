@@ -45,7 +45,7 @@ import socket  # noqa: E402
 # your own hostname in its place.
 HOSTNAME = socket.gethostname()
 
-ALLOWED_HOSTS = [HOSTNAME, 'localhost', "*"]
+ALLOWED_HOSTS = [HOSTNAME, 'localhost', '127.0.0.1']
 
 # Host name may be a fully-qualified domain. Also allow just the basic
 # name.
@@ -86,7 +86,7 @@ WEBSOCKET_HOST = ''
 # simply edit this value in settings.py without also modifying the
 # value in django_gui/openrvdas_nginx.conf and display/js/widgets/settings.js
 WEBSOCKET_PROTOCOL = 'ws'
-WEBSOCKET_PORT = 80
+WEBSOCKET_PORT = 8766
 WEBSOCKET_PATH = '/cds-ws'
 WEBSOCKET_DATA_SERVER = f'{WEBSOCKET_PROTOCOL}://{WEBSOCKET_HOST}:{WEBSOCKET_PORT}{WEBSOCKET_PATH}'
 
@@ -107,6 +107,8 @@ INSTALLED_APPS = [
     'django_gui',
     'rest_framework',
     'rest_framework.authtoken',
+    'drf_spectacular',
+    'drf_spectacular_sidecar',
 ]
 
 MIDDLEWARE = [
@@ -198,7 +200,8 @@ USE_L10N = True
 
 USE_TZ = True
 
-
+# This is required with Django > 3.2 
+# https://docs.djangoproject.com/en/3.2/releases/3.2/#customizing-type-of-auto-created-primary-keys
 DEFAULT_AUTO_FIELD='django.db.models.AutoField'
 
 #DJANGO REST FRAMEWORK SETTINGS
@@ -211,5 +214,12 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.TokenAuthentication',
     ],
 
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
 
+SPECTACULAR_SETTINGS = {
+    'SWAGGER_UI_DIST': 'SIDECAR',  # shorthand to use the sidecar instead
+    'SWAGGER_UI_FAVICON_HREF': 'SIDECAR',
+    'REDOC_DIST': 'SIDECAR',
+    # OTHER SETTINGS
 }
