@@ -291,9 +291,10 @@ class CruiseReloadCurrentConfigurationAPIView(APIView):
                 api.load_configuration(config)
 
                 return Response({"status": "Current config reloaded"}, 200)
-            except ValueError as e:
+            except Exception as e:
                 logging.warning("Error reloading current configuration: %s", str(e))
-
+                return Response({"status": f"Error reloading current configuration: {e}"}, 400)
+    
         return Response({"status": "Invalid Request"}, 400)
 
     def get(self, request):
@@ -332,13 +333,16 @@ class CruiseDeleteConfigurationAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
+        #The serializer takes a KV pair. Delete:value that isn't used other than to check it exists. 
+        # in the future if there is the intent to store more than a single cruise configuration in the db
+        # Then this api can be expanded to cater to this.
         api = _get_api()
         log_request(request, "delete_configuration")
         serializer = CruiseDeleteConfigurationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         if serializer.validated_data.get("delete"):
-            try:
+            try:                
                 api.delete_configuration()
                 return Response({"status": f"Cruise configuration deleted"}, status=200)
 
