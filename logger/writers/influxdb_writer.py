@@ -3,7 +3,12 @@
 import time
 import logging
 import sys
-import urllib3
+
+try:
+    import urllib3
+    URLLIB3_INSTALLED = True
+except ImportError:
+    URLLIB3_INSTALLED = False
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
@@ -63,6 +68,9 @@ class InfluxDBWriter(Writer):
         ```
         """
         super().__init__(input_format=Text)  # type: ignore
+        if not URLLIB3_INSTALLED:
+            raise ImportError('InfluxDBWriter requires Python "urllib3" module; '
+                              'please run "pip install urllib3"')
         if not auth_token:
             raise RuntimeError('No auth token specified in InfluxDBWriter and '
                                'none found in database/influxdb/settings.py. Have '
