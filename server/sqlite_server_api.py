@@ -232,11 +232,18 @@ class SQLiteServerAPI(ServerAPI):
         try:
             res = cx.execute(Q)
             row = res.fetchone()
-            if row:
-                return row['timestamp']
+            if not row:  # if no timestamp row, return 'time zero'
+                return EPOCH_TIME_ZERO
 
-            # If no timestamp row, return string for 'time zero'
-            return EPOCH_TIME_ZERO
+            timestamp = row['timestamp']
+            if isinstance(timestamp, str):
+                timestamp = datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S.%f")
+
+            # Sanity check that we get what we expect
+            elif not isinstance(timestamp, datetime):
+                logging.warning('Got non-datetime timestamp from database!')
+                logging.warning(f'Type: "{type(timestamp)}", value: "{timestamp}"')
+            return timestamp
 
         except sqlite3.OperationalError as err:
             # No such table
