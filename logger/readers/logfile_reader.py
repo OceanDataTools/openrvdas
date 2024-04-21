@@ -1,9 +1,14 @@
 #!/usr/bin/env python3
 import json
 import logging
-import parse
 import sys
 import time
+
+try:
+    import parse
+    PARSE_INSTALLED = True
+except ImportError:
+    PARSE_INSTALLED = False
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
@@ -78,6 +83,9 @@ class LogfileReader(TimestampedReader):
         """
         super().__init__(output_format=Text)
 
+        if not PARSE_INSTALLED:
+            raise ImportError('LogfileReader requires Python "parse" module; '
+                              'please run "pip install parse"')
         if interval and use_timestamps:
             raise ValueError('Can not specify both "interval" and "use_timestamps"')
 
