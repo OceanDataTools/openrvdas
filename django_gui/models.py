@@ -1,6 +1,5 @@
 from django.db import models
 
-
 ##############################
 class Logger(models.Model):
     """Note that name may not be unique in the database - multiple cruises

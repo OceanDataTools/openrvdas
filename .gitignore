@@ -45,6 +45,8 @@ static/
 
 # virtualenv
 venv/
+.venv 
+
 
 # SSH
 *.pem
@@ -101,3 +103,6 @@ contrib/utils/JSON_YAML_Creator/yarn.lock
 sqlite_gui
 .install_sqlite_gui_preferences
 server/openrvdas.sql
+
+#tmp
+tmp
