@@ -33,8 +33,8 @@ participating, you are expected to uphold this code. Please report unacceptable 
 > **Note:** Please don't file an issue to ask a question. You'll get faster results by using the resources below.
 
 * If you haven't already, please join the [OpenRVDAS mailing list](https://groups.google.com/forum/#!forum/openrvdas).
-* If chat is more your speed, please join the [OpenRVDAS Slack channel](https://openrvdas.slack.com) to ask your questions there.
-    * Even though Slack is a chat service, sometimes it takes several hours for community members to respond &mdash; please be patient!
+* If chat is more your speed, please join the [OpenRVDAS Discord channel](https://discord.gg/8n7HSwf5ZV) to ask your questions there.
+    * Even though Discord is a chat service, sometimes it takes several hours for community members to respond &mdash; please be patient!
     * Use the `#general` channel for general questions or discussion about OpenRVDAS
     * Use the `#openrvdas` channel for technical questions about OpenRVDAS
 
