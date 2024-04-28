@@ -1304,7 +1304,6 @@ echo
 echo "#####################################################################"
 echo "This script can install Strapdown.js so that the .md files in"
 echo "the /docs directory are rendered properly."
-echo "under supervisord as \"simulate:simulate_nbp\"."
 echo
 yes_no "Do you want to install Strapdown.js?" $DEFAULT_INSTALL_DOC_MARKDOWN
 INSTALL_DOC_MARKDOWN=$YES_NO_RESULT

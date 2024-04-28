@@ -54,9 +54,9 @@ def api_root(request, format=None):
 
     These are an authenticated set of urls.
     You need to to login to use them via the APi ui.
-    For calling them via curl or requests. You need to pass header authenticiation. 
-    Use token auth, it's simpler. 
-    But basic auth is supported. 
+    For calling them via curl or requests. You need to pass header authenticiation.
+    Use token auth, it's simpler.
+    But basic auth is supported.
     https://www.django-rest-framework.org/api-guide/authentication/
 
 
@@ -74,6 +74,7 @@ def api_root(request, format=None):
     """
     return Response(
         {
+            # flake8: noqa E501
             "login": reverse("rest_framework:login", request=request, format=format),
             "logout": reverse("rest_framework:logout", request=request, format=format),
             "obtain-auth-token": reverse("obtain-auth-token", request=request, format=format),
@@ -213,7 +214,9 @@ class CruiseSelectModeAPIView(APIView):
 
             except ValueError as e:
                 logging.warning('Error trying to set mode to "%s": %s', new_mode_name, str(e))
-                return Response({"status": f"Invalid Request. Error trying to set mode to {new_mode_name}"}, status=400)
+                return Response(
+                    {"status": f"Invalid Request. Error trying to set mode to {new_mode_name}"},
+                    status=400)
         return Response({"status": "Invalid Request"}, status=400)
 
     def get(self, request):
@@ -294,7 +297,7 @@ class CruiseReloadCurrentConfigurationAPIView(APIView):
             except Exception as e:
                 logging.warning("Error reloading current configuration: %s", str(e))
                 return Response({"status": f"Error reloading current configuration: {e}"}, 400)
-    
+
         return Response({"status": "Invalid Request"}, 400)
 
     def get(self, request):
@@ -321,7 +324,7 @@ class CruiseDeleteConfigurationAPIView(APIView):
                     location="form",
                     schema=coreschema.String(
                         title="delete",
-                        description="id for configuartion.",
+                        description="id for configuration.",
                     ),
                 ),
             ],
@@ -333,22 +336,23 @@ class CruiseDeleteConfigurationAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        #The serializer takes a KV pair. Delete:value that isn't used other than to check it exists. 
-        # in the future if there is the intent to store more than a single cruise configuration in the db
-        # Then this api can be expanded to cater to this.
+        # The serializer takes a KV pair. Delete:value that isn't used other than to check it
+        # exists. In the future if there is the intent to store more than a single cruise
+        # configuration in the db, then this api can be expanded to cater to this.
         api = _get_api()
         log_request(request, "delete_configuration")
         serializer = CruiseDeleteConfigurationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         if serializer.validated_data.get("delete"):
-            try:                
+            try:
                 api.delete_configuration()
-                return Response({"status": f"Cruise configuration deleted"}, status=200)
+                return Response({"status": "Cruise configuration deleted"}, status=200)
 
             except ValueError as e:
-                logging.warning("Error trying to delete configuration")
-                return Response({"status": f"Invalid Request. Error trying to delete configuration"}, status=400)
+                logging.warning(f"Error trying to delete configuration: {e}")
+                return Response(
+                    {"status": "Invalid Request. Error trying to delete configuration"}, status=400)
         return Response({"status": "Invalid Request"}, status=400)
 
     def get(self, request):
@@ -542,7 +546,8 @@ class LoadConfigurationFileAPIView(APIView):
                 current_dir_dict = folder_dict
                 for dir_name in current_dir.split(os.path.sep):
                     current_dir_dict = current_dir_dict.setdefault(dir_name, {})
-                current_dir_dict.update({file_name: os.path.join(root, file_name) for file_name in files})
+                current_dir_dict.update({file_name: os.path.join(root, file_name)
+                                         for file_name in files})
 
             config_files[file_dir] = folder_dict
 
@@ -580,4 +585,5 @@ class LoadConfigurationFileAPIView(APIView):
             except ValueError as e:
                 load_errors.append(str(e))
 
-            return Response({"status": f"Errors loading target file {target_file}", "errors": load_errors}, 400)
+            return Response({"status": f"Errors loading target file {target_file}",
+                             "errors": load_errors}, 400)

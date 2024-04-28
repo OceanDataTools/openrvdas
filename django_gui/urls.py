@@ -18,7 +18,7 @@ from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 
 
-    
+
 
 
 from django.conf import settings
@@ -29,7 +29,7 @@ from . import api_views
 
 
 urlpatterns = [
-    
+
     path('', views.index, name='index'),
     path('admin/', admin.site.urls),
     path('accounts/', include('django.contrib.auth.urls')),
@@ -49,24 +49,25 @@ urlpatterns = [
     path('widget/', views.widget, name='widget'),
 
     path('fields/', views.fields, name='fields'),
-    
-    
+
+
     #
-    #API Dango REST Framework Views     
+    #API Dango REST Framework Views
     #
-        
+
     # DRF Spectacular urls.
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
     path('api/schema/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
-    
+
     # These are the login and logout restframework urls
     path('api/', include('rest_framework.urls', namespace='rest_framework')),
     # Token Auth
     path('api/obtain-auth-token/', api_views.CustomAuthToken.as_view(), name="obtain-auth-token"),
-    
+
     # These are the DRF API stubbs
-    path('api/', api_views.api_root),    
+    # flake8: noqa E501
+    path('api/', api_views.api_root),
     path('api/cruise-configuration/', api_views.CruiseConfigurationAPIView.as_view(), name='cruise-configuration'),
     path('api/select-cruise-mode/', api_views.CruiseSelectModeAPIView.as_view(), name='select-cruise-mode'),
     path('api/reload-current-configuration/', api_views.CruiseReloadCurrentConfigurationAPIView.as_view(), name='reload-current-configuration'),
@@ -76,5 +77,3 @@ urlpatterns = [
 
 
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
-
-
