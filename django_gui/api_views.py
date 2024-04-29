@@ -1,23 +1,23 @@
-from rest_framework.response import Response
-from rest_framework import serializers
-from rest_framework.views import APIView
 from .django_server_api import DjangoServerAPI
 from django_gui.settings import FILECHOOSER_DIRS
 from django_gui.settings import WEBSOCKET_DATA_SERVER
-import logging
-from rest_framework import authentication
-from .views import log_request
-from rest_framework.decorators import api_view
-from rest_framework.reverse import reverse
+
+from rest_framework import authentication, serializers
+from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authentication import TokenAuthentication
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.authtoken.models import Token
-from rest_framework.schemas import ManualSchema
 from rest_framework.compat import coreapi, coreschema
-from rest_framework.schemas import coreapi as coreapi_schema
+from rest_framework.decorators import api_view
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.reverse import reverse
+from rest_framework.schemas import ManualSchema, coreapi as coreapi_schema
+from rest_framework.views import APIView
+
+from .views import log_request
 
 import json
+import logging
 import yaml
 import os
 from rest_framework.settings import api_settings
@@ -59,12 +59,10 @@ def api_root(request, format=None):
     But basic auth is supported.
     https://www.django-rest-framework.org/api-guide/authentication/
 
-
     Such as:
     curl -H "Authorization: Token <a token string>" http://127.0.0.1:8000/api/cruise-configuration/**
 
     Via a browser you can use this interface with
-
     http://127.0.0.1:8000/api/cruise-configuration/?format=json
 
     There are also the drf-spectacular endpoints for swagger files and integration at
@@ -176,7 +174,6 @@ class CruiseSelectModeAPIView(APIView):
     {
         "status": "Cruise mode set: new cruise"
     }
-
     """
 
     if coreapi_schema.is_enabled():
@@ -389,7 +386,6 @@ class EditLoggerConfigAPIView(APIView):
     POST request allows updating logger configurations.
     GET request retrieves the list of loggers.
 
-
     POST Parameters:
     - update: true
     - logger_id: The ID of the logger to be updated.
@@ -402,7 +398,6 @@ class EditLoggerConfigAPIView(APIView):
 
     Returns:
     - Response with status and message
-
     """
 
     if coreapi_schema.is_enabled():
@@ -444,7 +439,6 @@ class EditLoggerConfigAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-
         api = _get_api()
         log_request(request, "Edit logger configuration")
 
@@ -453,10 +447,9 @@ class EditLoggerConfigAPIView(APIView):
 
         if serializer.validated_data.get("update"):
             logger_id = serializer.validated_data.get("logger_id")
-            # First things first: log the request
             log_request(request, "%s edit_config" % logger_id)
 
-            # Now figure out what they selected
+            # Figure out what they selected
             new_config = serializer.validated_data.get("config")
             logging.warning("selected config: %s", new_config)
             api.set_active_logger_config(logger_id, new_config)
@@ -471,7 +464,6 @@ class EditLoggerConfigAPIView(APIView):
 
         Returns:
         - Response with status and list of loggers.
-
         """
         api = _get_api()
         log_request(request, "get_loggers")
@@ -505,7 +497,6 @@ class LoadConfigurationFileAPIView(APIView):
 
     Returns:
     - Response with status and message.
-
     """
 
     if coreapi_schema.is_enabled():
@@ -534,7 +525,6 @@ class LoadConfigurationFileAPIView(APIView):
         return Response({"status": "ok", "files": files}, status=200)
 
     def _list_files_in_folder(self):
-
         config_files = {}
         for file_dir in FILECHOOSER_DIRS:
             folder_dict = {}
@@ -554,7 +544,6 @@ class LoadConfigurationFileAPIView(APIView):
         return config_files
 
     def post(self, request):
-
         api = _get_api()
         log_request(request, "Load configuration file.")
 
