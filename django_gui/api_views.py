@@ -55,8 +55,7 @@ def api_root(request, format=None):
     These are an authenticated set of urls.
     You need to to login to use them via the APi ui.
     For calling them via curl or requests. You need to pass header authenticiation.
-    Use token auth, it's simpler.
-    But basic auth is supported.
+    Use token auth, it's simpler, but basic auth is supported.
     https://www.django-rest-framework.org/api-guide/authentication/
 
     Such as:
