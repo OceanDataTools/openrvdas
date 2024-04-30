@@ -229,7 +229,9 @@ class CruiseSelectModeAPIView(APIView):
 
 
 class CruiseReloadCurrentConfiguartionSerializer(serializers.Serializer):
-    # The presence of the value implies the
+    # The presence of the value implies true, as the implementation in the the main views.py at 
+    # line: ~93 switches on the presence of a form element. For consistency, the input object is 
+    # expecting json {"reload": "true"} but the reload key is really the switch.
     reload = serializers.CharField(required=True)
 
 
