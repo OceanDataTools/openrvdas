@@ -15,7 +15,8 @@ from rest_framework.schemas import ManualSchema, coreapi as coreapi_schema
 from rest_framework.views import APIView
 
 from .views import log_request
-
+from django.urls import include, path
+from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 import json
 import logging
 import yaml
@@ -44,11 +45,15 @@ from logger.utils.read_config import parse, read_config  # noqa: E402
 
 # Interacting with the Django DB via its API class
 # As per the standard view.
+
 api = None
 
+class GetSerializer(serializers.Serializer):
+    #Empty serializer that stops a warning from drf-spectacular ui
+    #Used  by api root, and get cruise config.
+    pass
 
-@api_view(["GET"])
-def api_root(request, format=None):
+class ApiRoot(APIView):
     """
     RVDAS REST API Endpoints.
 
@@ -69,9 +74,11 @@ def api_root(request, format=None):
     /api/schema/docs to use the openai version of this interface.
 
     """
-    return Response(
-        {
-            # flake8: noqa E501
+
+    serializer_class = GetSerializer
+    
+    def get(self, request, format=None):
+        return Response({
             "login": reverse("rest_framework:login", request=request, format=format),
             "logout": reverse("rest_framework:logout", request=request, format=format),
             "obtain-auth-token": reverse("obtain-auth-token", request=request, format=format),
@@ -81,8 +88,9 @@ def api_root(request, format=None):
             "delete-configuration": reverse("delete-configuration", request=request, format=format),
             "edit-logger-config": reverse("edit-logger-config", request=request, format=format),
             "load-configuration-file": reverse("load-configuration-file", request=request, format=format),
-        }
-    )
+        })
+
+
 
 
 def _get_api():
@@ -124,7 +132,7 @@ class CustomAuthToken(ObtainAuthToken):
 class CruiseConfigurationAPIView(APIView):
     authentication_classes = [authentication.BasicAuthentication, TokenAuthentication]
     permission_classes = [IsAuthenticated]
-
+    serializer_class = GetSerializer
     def get(self, request):
         log_request(request, "get_configuration")
         template_vars = _get_cruise_config()
@@ -577,3 +585,23 @@ class LoadConfigurationFileAPIView(APIView):
 
             return Response({"status": f"Errors loading target file {target_file}",
                              "errors": load_errors}, 400)
+
+urlpatterns = [
+    path('schema/', SpectacularAPIView.as_view(), name='schema'),
+    path('schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    path('schema/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
+    # These are the login and logout restframework urls
+    path('', include('rest_framework.urls', namespace='rest_framework')),
+    # Token Auth
+    path('obtain-auth-token/', CustomAuthToken.as_view(), name="obtain-auth-token"),
+    # These are the DRF API stubbs
+    # flake8: noqa E501
+    path('', ApiRoot.as_view()),
+    path('cruise-configuration/', CruiseConfigurationAPIView.as_view(), name='cruise-configuration'),
+    path('delete-configuration/', CruiseDeleteConfigurationAPIView.as_view(), name='delete-configuration'),
+    path('edit-logger-config/', EditLoggerConfigAPIView.as_view(), name='edit-logger-config'),
+    path('load-configuration-file/', LoadConfigurationFileAPIView.as_view(), name='load-configuration-file'),
+    path('reload-current-configuration/', CruiseReloadCurrentConfigurationAPIView.as_view(), name='reload-current-configuration'),
+    path('select-cruise-mode/', CruiseSelectModeAPIView.as_view(), name='select-cruise-mode'),
+]
+    
