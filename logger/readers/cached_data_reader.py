@@ -29,7 +29,7 @@ class CachedDataReader(Reader):
     """
 
     def __init__(self, subscription, data_server=DEFAULT_SERVER_WEBSOCKET,
-                 bundle_seconds=0, use_wss=False, check_cert=False):
+                 use_wss=False, check_cert=False):
         """
         ```
         subscription - a dictionary corresponding to the full
@@ -42,10 +42,6 @@ class CachedDataReader(Reader):
 
         data_server - the host and port at which to try to connect to a
             CachedDataServer
-
-        bundle_seconds - If specified, aggregate this many seconds worth of records
-                      and return as a list of records. Note that as implemented, it
-                      bundles by system clock time, and not by DASRecord timestamp.
 
         use_wss -     If True, use secure websockets
 
@@ -72,15 +68,9 @@ class CachedDataReader(Reader):
             raise ModuleNotFoundError('CachedDataReader(): websockets module is not '
                                       'installed. Please try "pip3 install '
                                       'websockets" prior to use.')
-        if not (isinstance(bundle_seconds, int) or isinstance(bundle_seconds, float)) \
-            or bundle_seconds < 0:
-            raise ValueError('CachedDataReader parameter "bundle_seconds" must be a number '
-                             f'greater than or equal to zero. Found "{bundle_seconds}"')
-
         self.subscription = subscription
         subscription['type'] = 'subscribe'
         self.data_server = data_server
-        self.bundle_seconds = bundle_seconds
         self.use_wss = use_wss
         self.check_cert = check_cert
 
@@ -230,30 +220,16 @@ class CachedDataReader(Reader):
                 daemon=True)
             self.websocket_thread.start()
 
-        start_time = time.time()
-        result_list = []
-
         # Use a timeout in our queue get() so we can periodically check if
         # we've gotten a 'quit'
         while not self.quit_flag:
             try:
-                result = self.queue.get(timeout=1)
+                result = self.queue.get(timeout=2)
                 logging.debug('Got result from queue: %s', result)
-
-                # If we're not bundling results, just return the result
-                if not self.bundle_seconds:
-                    return result
-                else:
-                    result_list.append(result)
+                return result
             except queue.Empty:
                 logging.debug('get() timed out - trying again')
                 pass
-
-            # If we've been bundling long enough, return the list of records,
-            # or None if the list is empty.
-            now = time.time()
-            if now > start_time + self.bundle_seconds:
-                return result_list
 
         # If we've fallen out because of a quit...
         return None
