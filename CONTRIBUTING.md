@@ -1,26 +1,31 @@
 # How to contribute
-(Based on the [ATOM Contributor Guidelines](https://github.com/atom/atom/blob/master/CONTRIBUTING.md))
 
 Many thanks for considering contributing to OpenRVDAS.
 
 #### Table Of Contents
-
-[Code of Conduct](#code-of-conduct)
-
-[I don't want to read this whole thing, I just have a question!!!](#i-dont-want-to-read-this-whole-thing-i-just-have-a-question)
-
-[What should I know before I get started?](#what-should-i-know-before-i-get-started)
-
-[How Can I Contribute?](#how-can-i-contribute)
-  * [Reporting Bugs](#reporting-bugs)
-  * [Suggesting Enhancements](#suggesting-enhancements)
-  * [Your First Code Contribution](#your-first-code-contribution)
-  * [Git Commits and Pull Requests](#git-commits-and-pull-requests)
-
-[Styleguides](#styleguides)
-  * [Python Styleguide](#python-styleguide)
-  * [JavaScript Styleguide](#javascript-styleguide)
-  * [Documentation Styleguide](#documentation-styleguide)
+- [Code of Conduct](#code-of-conduct)
+- [I just have a question!!!](#i-just-have-a-question!!!)
+- [What should I know before I get started?](#what-should-i-know-before-i-get-started?)
+- [How Can I Contribute?](#how-can-i-contribute?)
+  - [Reporting Bugs](#reporting-bugs)
+    - [Before Submitting A Bug Report](#before-submitting-a-bug-report)
+    - [How Do I Submit A (Good) Bug Report?](#how-do-i-submit-a-(good)-bug-report?)
+  - [Suggesting Enhancements](#suggesting-enhancements)
+    - [Before Submitting An Enhancement Suggestion](#before-submitting-an-enhancement-suggestion)
+    - [How Do I Submit A (Good) Enhancement Suggestion?](#how-do-i-submit-a-(good)-enhancement-suggestion?)
+  - [Contributing Code](#contributing-code)
+    - [If you have a bug fix.](#if-you-have-a-bug-fix.)
+    - [If you have a feature or code module you would like to add.](#if-you-have-a-feature-or-code-module-you-would-like-to-add.)
+    - [If you would just like to help out somewhere.](#if-you-would-just-like-to-help-out-somewhere.)
+  - [Git Commits and Pull Requests](#git-commits-and-pull-requests)
+    - [Unit tests](#unit-tests)
+    - [flake8](#flake8)
+    - [Commits](#commits)
+    - [Pull requests](#pull-requests)
+- [Styleguides](#styleguides)
+  - [Python Styleguide](#python-styleguide)
+  - [JavaScript Styleguide](#javascript-styleguide)
+  - [Documentation Styleguide](#documentation-styleguide)
 
 ## Code of Conduct
 
@@ -28,13 +33,13 @@ This project and everyone participating in it is governed by the [OpenRVDAS Code
 participating, you are expected to uphold this code. Please report unacceptable behavior to 
 [oceandatatools@github.com](mailto:oceandatatools@github.com).
 
-## I don't want to read this whole thing I just have a question!!!
+## I just have a question!!!
 
 > **Note:** Please don't file an issue to ask a question. You'll get faster results by using the resources below.
 
 * If you haven't already, please join the [OpenRVDAS mailing list](https://groups.google.com/forum/#!forum/openrvdas).
-* If chat is more your speed, please join the [OpenRVDAS Slack channel](https://openrvdas.slack.com) to ask your questions there.
-    * Even though Slack is a chat service, sometimes it takes several hours for community members to respond &mdash; please be patient!
+* If chat is more your speed, please join the [OpenRVDAS Discord channel](https://discord.gg/8n7HSwf5ZV) to ask your questions there.
+    * Even though Discord is a chat service, sometimes it takes several hours for community members to respond &mdash; please be patient!
     * Use the `#general` channel for general questions or discussion about OpenRVDAS
     * Use the `#openrvdas` channel for technical questions about OpenRVDAS
 
@@ -110,7 +115,26 @@ Enhancement suggestions are tracked as [GitHub issues](https://guides.github.com
 * **Describe the current behavior** and **explain which behavior you expected to see instead** and why.
 * **Explain why this enhancement would be useful** to OpenRVDAS users.
 
-### Your First Code Contribution
+### Contributing Code
+
+#### If you have a bug fix.
+
+If you have a bug fix that you believe should be integrated back into the core repository,
+please [issue a pull request to integrate it into the OpenRVDAS __dev__ branch](https://github.com/OceanDataTools/openrvdas/pulls)
+(_not_ master). If it fixes a previously reported issue, please make sure your pull request references the issue number in question.
+
+If it fixes an issue that has _not_ been previously reported, please [file an issue report](https://github.com/OceanDataTools/openrvdas/issues) prior to sending the pull request.
+The issue report will be a much better forum for explaining what the problem is than whatever you put in the text of your
+pull request, and will allow discussion of the problem and its resolution.
+
+#### If you have a feature or code module you would like to add.
+
+There is now a separate [openrvdas_contrib repository](https://github.com/OceanDataTools/openrvdas_contrib). We encourage you to create new modules
+in the `contrib/` subdirectory of that repository, following the conventions described in [contrib/README.md](contrib/README.md)
+
+If you would like to make the case that this feature should should be incorporated into the core repository, please file an "Enhancement Request", as above.
+
+#### If you would just like to help out somewhere.
 
 Unsure where to begin contributing to OpenRVDAS? You can start by looking through these `good first issue` and `help-wanted` issues:
 
@@ -119,8 +143,8 @@ Unsure where to begin contributing to OpenRVDAS? You can start by looking throug
 
 Both issue lists are sorted by total number of comments. While not perfect, number of comments is a reasonable proxy for impact a given change will have.
 
-Once you have selected an issue to work on, say 'issue 57', create a fork of the repository into your own GitHub account. Check out the ``dev`` branch and create from it a new branch with the name of the issue you've selected:
-
+When your contribution is ready:
+, ensure that
 ```
 git branch issue_57
 git checkout issue_57
@@ -130,15 +154,36 @@ When your contribution is ready, submit a pull request, requesting that it be me
 
 ### Git Commits and Pull Requests
 
-Prior to submitting any pull request, please ensure that the code passes all unit tests. 
-You can run the battery of unit tests via:
+Prior to submitting any pull request, please ensure that the code 1) passes all unit tests, and 2) produces no complaints under flake8. 
+
+#### Unit tests
+
+A commit for any new module or functionality should, if at all possible, be accompanied by a new unit test. Remember:
+unit tests are what your teeth feel like after you floss. Write them!
+
+You should also verify that your change does not break any pre-existing code by running all the rest of the repository's unit tests.
+To run using Django's test mechanism (which will include any Django-specific tests), run:
 
 ```
 ./manage.py test
 ```
 
-A commit for any new module or functionality should, if at all possible, be accompanied by a new unit test. Remember:
-unit tests are what your teeth feel like after you floss. Write them!
+If, for some reason you don't want to run the Django-related tests, you can run everything elso with:
+```
+python -m unittest discover
+```
+
+#### flake8
+
+Flake8 is a PEP8 Style Guide checker. Install using `pip install flake8` in the OpenRVDAS virtual environment, then test using
+
+```buildoutcfg
+flake8
+```
+on the command line. As referenced in the Style Guide below, we allow certain deviations from flake8 recommendations, but the
+warnings these variations trigger must be silence by appropriate use of `noqa` comments.
+
+#### Commits
 
 Always write a clear log message for your commits. One-line messages are fine for small changes, but bigger changes
 should look like this:
@@ -146,8 +191,9 @@ should look like this:
     $ git commit -m "A brief summary of the commit
     > 
     > A paragraph describing what changed and its impact."
-    
-Please send a [GitHub Pull Request to oceandatatools/openrvdas/dev](https://github.com/oceandatatools/openrvdas/pull/new/dev) with
+
+#### Pull requests
+Please file a GitHub  [pull request for oceandatatools/openrvdas/dev](https://github.com/oceandatatools/openrvdas/pull/new/dev) (or for [oceandatatools/openrvdas/dev](https://github.com/oceandatatools/openrvdas_contrib/pull/new/dev) as appropriate), with
 a clear list of what you've done (read more about [pull requests](http://help.github.com/pull-requests/)). When you send
 a pull request, we will love you forever if you include examples. We can always use more test coverage. Please follow
 our coding conventions (below) and make sure all of your commits are atomic (one feature per commit).
@@ -219,3 +265,5 @@ All JavaScript must adhere to [JavaScript Standard Style](https://standardjs.com
     * Reference classes with `{ClassName}`
     * Reference instance methods with `{ClassName::methodName}`
     * Reference class methods with `{ClassName.methodName}`
+
+_This document is based on the [ATOM Contributor Guidelines](https://github.com/atom/atom/blob/master/CONTRIBUTING.md)_
