@@ -42,7 +42,7 @@ class UDPReader(Reader):
     ############################
     def __init__(self, interface=None, port=None, mc_group=None,
                  reuseaddr=False, reuseport=False,
-                 encoding='utf-8', encoding_errors='ignore',
+                 encoding='utf-8', encoding_errors='ignore', eol=None,
                  this_is_a_test=False):
         """
         ```
@@ -63,14 +63,16 @@ class UDPReader(Reader):
         reuseport    Specifies wether we set SO_REUSEPORT on the created socket.  If
                      you don't know you need this, don't enable it.
 
-        encoding - 'utf-8' by default. If empty or None, do not attempt any decoding
-                and return raw bytes. Other possible encodings are listed in online
-                documentation here:
-                https://docs.python.org/3/library/codecs.html#standard-encodings
+        encoding     'utf-8' by default. If empty or None, do not attempt any decoding
+                     and return raw bytes. Other possible encodings are listed in
+                     online documentation here:
+                     https://docs. python.org/3/library/codecs.html#standard-encodings
 
-        encoding_errors - 'ignore' by default. Other error strategies are 'strict',
-                'replace', and 'backslashreplace', described here:
-                https://docs.python.org/3/howto/unicode.html#encodings
+        encoding_errors 'ignore' by default. Other error strategies are 'strict',
+                        'replace', and 'backslashreplace', described here:
+                        https://docs.python.org/3/howto/unicode.html#encodings
+
+        eol          split the record by the eol character if present.
 
         this_is_a_test - If True, recognize that this is being called in a unittest, so
                 don't output warnings about not using loopback addresses.
@@ -116,6 +118,8 @@ class UDPReader(Reader):
 
         self.reuseaddr = reuseaddr
         self.reuseport = reuseport
+
+        self.eol = eol
 
         self.this_is_a_test = this_is_a_test
 
@@ -213,4 +217,18 @@ class UDPReader(Reader):
                 break
 
         # we've got a whole record in our record_buffer, decode it
-        return self._decode_bytes(record_buffer)
+
+        # if eol == None, return the record as is
+        if not self.eol:
+            return self._decode_bytes(record_buffer)
+
+        # otherwise split the record by the eol
+        decoded_records = self._decode_bytes(record_buffer).rstrip(self.eol).split(self.eol)
+
+        # if there was only one record, return the first element in the list.
+        if len(decoded_records) == 1:
+            return decoded_records[0]
+
+        # otherwise return the list of records.
+        return decoded_records
+
