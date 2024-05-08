@@ -28,6 +28,21 @@ BOUNDARY_GML = """<?xml version="1.0" encoding="UTF-8"?>
     </gml:exterior>
 </gml:Polygon>"""
 
+# EEZ of Togo
+BOUNDARY_GML_2 = """<?xml version="1.0" encoding="UTF-8"?>
+<gml:Polygon xmlns:gml="http://www.opengis.net/gml">
+    <gml:exterior>
+        <gml:LinearRing>
+            <gml:coordinates>
+                 0.044915558749550846,0 0.044915558749550846,0.089821117499101692
+                 0.134746676248651692,0.089821117499101692 0.134746676248651692,0
+                 0.044915558749550846,0
+            </gml:coordinates>
+        </gml:LinearRing>
+    </gml:exterior>
+</gml:Polygon>
+"""
+
 LAT_RECORDS = [
     {'lat': -0.07, 'lon': 0},
     {'lat': -0.06, 'lon': 0},
@@ -59,6 +74,22 @@ LAT_DATA = [
     (-0.02, 0.07),
 ]
 
+LAT_DATA_2 = [
+    (-0.07, 0),
+    (-0.06, 0),
+    (-0.05, 0),
+    ( 0.01, 0.05),
+    (-0.03, 0),
+    (-0.02, 0),
+    (0.01, 0.06),
+    (0.01, 0.09),
+    (0.01, 0.11),
+    (0.01, 0.13),
+    (0.01, 0.14),
+    (0.01, 0.15),
+    (0.01, 0.16),
+]
+
 IN_DATA = [
     False, False, False, True, True, True, True, True, True, True, False, False, False
 ]
@@ -80,9 +111,15 @@ class TestGeofenceTransform(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # Create a temporary file that can be used by all tests in this class
-        cls.boundary_file = tempfile.NamedTemporaryFile(mode='w+', delete=False)
+        cls.boundary_file = tempfile.NamedTemporaryFile(mode='w+', delete=False, suffix='.gml')
         cls.boundary_file.write(BOUNDARY_GML)
         cls.boundary_file.flush()
+
+        cls.boundary_dir_name = os.path.dirname(cls.boundary_file.name)
+
+        cls.boundary_file2 = tempfile.NamedTemporaryFile(mode='w+', delete=False, suffix='.gml')
+        cls.boundary_file2.write(BOUNDARY_GML_2)
+        cls.boundary_file2.flush()
 
     ############################
     @classmethod
@@ -90,6 +127,7 @@ class TestGeofenceTransform(unittest.TestCase):
         # Close and remove the temporary file after all tests are done
         cls.boundary_file.close()
         os.remove(cls.boundary_file.name)
+        os.remove(cls.boundary_file2.name)
 
     ############################
     def test_get_lat_lon(self):
@@ -125,6 +163,52 @@ class TestGeofenceTransform(unittest.TestCase):
             self.assertEqual(is_inside, BOUNDARY_DATA[i],
                              msg=f'_is_inside({lon}/{lat})[{i}] should be {BOUNDARY_DATA[i]}, is {is_inside}')
 
+    ############################
+    def test_in_boundary_dir(self):
+        transform = GeofenceTransform(latitude_field_name='lat',
+                                      longitude_field_name='lon',
+                                      boundary_dir_name=self.boundary_dir_name)
+        for i in range(len(LAT_DATA_2)):
+            (lat, lon) = LAT_DATA_2[i]
+            self.assertEqual(transform._is_inside_boundary(lat, lon), IN_DATA[i])
+
+    ############################
+    # Should trigger 0.01 degree outside boundary, or appx one data point
+    # further out.
+    def test_in_boundary_buffer_dir(self):
+        transform = GeofenceTransform(latitude_field_name='lat',
+                                      longitude_field_name='lon',
+                                      boundary_dir_name=self.boundary_dir_name,
+                                      distance_from_boundary_in_degrees=0.01)
+        for i in range(len(LAT_DATA_2)):
+            (lat, lon) = LAT_DATA_2[i]
+            is_inside = transform._is_inside_boundary(lat, lon)
+            self.assertEqual(is_inside, BOUNDARY_DATA[i],
+                             msg=f'_is_inside({lon}/{lat})[{i}] should be {BOUNDARY_DATA[i]}, is {is_inside}')
+
+    ############################
+    # Test that the transform will fail if a filename AND directory name are
+    # specified
+    def test_dir_and_file(self):
+        # Check that if we're initialized with bad values
+        with self.assertRaises(ValueError):
+            transform = GeofenceTransform(latitude_field_name='lat',
+                                          longitude_field_name='lon',
+                                          boundary_file_name=self.boundary_file.name,
+                                          boundary_dir_name=self.boundary_dir_name,
+                                          leaving_boundary_message='leaving',
+                                          entering_boundary_message='entering')
+
+    ############################
+    # Test that the transform will fail if no filename OR directory name are
+    # specified
+    def test_no_dir_or_file(self):
+        # Check that if we're initialized with bad values
+        with self.assertRaises(ValueError):
+            transform = GeofenceTransform(latitude_field_name='lat',
+                                          longitude_field_name='lon',
+                                          leaving_boundary_message='leaving',
+                                          entering_boundary_message='entering')
     ############################
     # Test the whole transform
     def test_transform(self):

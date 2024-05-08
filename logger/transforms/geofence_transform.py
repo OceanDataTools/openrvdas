@@ -46,6 +46,7 @@ projection area, possibly resulting in discontinuities. Simpler and less error-p
 to just require degrees.
 """
 import logging
+import os
 import sys
 import time
 
@@ -56,13 +57,20 @@ from logger.utils.das_record import DASRecord  # noqa: E402
 # Load the transform-specific packages we need
 import_errors = False
 try:
-    import geopandas
+    import geopandas as gpd
 except ImportError:
     import_errors = True
 try:
     from shapely.geometry import Point
 except ImportError:
     import_errors = True
+
+import_pandas_errors = False
+try:
+    import pandas as pd
+except ImportError:
+    import_pandas_errors = True
+
 
 
 ################################################################################
@@ -74,7 +82,8 @@ class GeofenceTransform():
     def __init__(self,
                  latitude_field_name,
                  longitude_field_name,
-                 boundary_file_name,
+                 boundary_file_name=None,
+                 boundary_dir_name=None,
                  distance_from_boundary_in_degrees=0,
                  leaving_boundary_message=None,
                  entering_boundary_message=None,
@@ -89,6 +98,9 @@ class GeofenceTransform():
 
         boundary_file_name
                 Path to file from which to load GML boundary definition..
+
+        boundary_dir_name
+                Path to directory from which to load multiple GML boundary definitions.
 
         distance_from_boundary_in_degrees
                 Optional distance from boundary to place the fence, in degrees.
@@ -121,8 +133,40 @@ class GeofenceTransform():
 
         self.last_check = 0  # timestamp: the last time we checked
 
-        # Load the EEZ data from the GML file
-        eez_data = geopandas.read_file(boundary_file_name)
+        if boundary_file_name and boundary_dir_name or not (boundary_file_name or boundary_dir_name):
+            raise ValueError('Please specify a boundary_file_name OR a boundary_dir_name '
+                             'containing multiple gml files.')
+
+        eez_data = None
+
+        if boundary_file_name:
+            # Load the EEZ data from the GML file
+            eez_data = gpd.read_file(boundary_file_name)
+
+        if boundary_dir_name:
+            if import_pandas_errors:
+                raise ImportError('GeofenceTransform using "boundary_dir_name" requires '
+                             'installation of the pandas packages. Please run "pip '
+                             'install pandas" and retry.')
+
+            # List all GML files in the directory
+            gml_files = [os.path.join(boundary_dir_name, file) for file in os.listdir(boundary_dir_name) if file.endswith('.gml')]
+
+            # Initialize an empty list to store GeoDataFrames
+            dfs = []
+
+            # Read each GML file into a GeoDataFrame and store it in the list
+            for gml in gml_files:
+                dfs.append(gpd.read_file(gml))
+
+            # Combine all GeoDataFrames into a single GeoDataFrame
+            combined_gdf = gpd.GeoDataFrame(pd.concat(dfs, ignore_index=True), crs=dfs[0].crs)
+
+            # Combine all polygons into a single polygon
+            union_polygon = combined_gdf.unary_union
+
+            # Convert the union polygon into a GeoDataFrame
+            eez_data = gpd.GeoDataFrame(geometry=[union_polygon])
 
         # Buffer the country's EEZ by distance in degrees
         self.buffered_eez = eez_data.buffer(distance_from_boundary_in_degrees)
