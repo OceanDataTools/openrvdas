@@ -120,17 +120,17 @@ writers:
 Before we run this logger again, let's create a _second_ logger that reads the UDP records. Open a second terminal, go to the `openrvdas` directory and create a second file called `read_udp.yaml`:
 ```buildoutcfg
 readers:
-- class: UDPReader
+- class: UDPReader  # read UDP records from port 6221
   kwargs:
     port: 6221
 
 transforms:
-- class: SliceTransform  # Strip out the prefix and timestamp
+- class: SliceTransform  # strip out the prefix and timestamp
   kwargs:
     fields: "2:"
 
 writers:
-- class: TextFileWriter
+- class: TextFileWriter  # write records to stdout
 ```
 This logger reads records from UDP port 6221, strips out the first two whitespace-separated fields (in this case the 'license:' prefix and timestamp), and outputs the result to standard error.
 
@@ -147,15 +147,46 @@ At this point you should see the annotated license file data scrolling through t
 Congratulations - you've now created and run a couple of OpenRVDAS loggers!
 
 ## The listen.py script
+The `listen.py` script is a sort of jack-of-all-trades for OpenRVDAS. In addition to loading and running logger configurations from file, it can invoke and run many of the most frequently used modules from the command line. For example, our second logger could have been defined and run from the command line as
+```buildoutcfg
+logger/listener/listen.py \
+    --file LICENSE \
+    --transform_timestamp \
+    --transform_prefix "license:" \
+    --write_file - \
+    --write_udp 6221
+```
+and our UDP-reading logger as
+```buildoutcfg
+logger/listener/listen.py \
+    --udp 6221 \
+    --transform_slice "2:" \
+    --write_file -
+```
+The script is very powerful, but also has some non-intuitive gotchas, such as dependencies in the ordering of command line parameters. Please see the dedicated [listen.py document](listen_py.md) for full details.
 
-## Logfiles
+## Some useful types of modules
+The full complement of OpenRVDAS __readers__, __transforms__ and __writers__ and their functionality can be perused in the repository itself under the `logger/` subdirectory and in the [auto-generated html module documentation](https://htmlpreview.github.io/?https://raw.githubusercontent.com/oceandatatools/openrvdas/master/docs/html/logger/index.html).
 
-## Parsing records
+Below we review a few of the most immediately-useful modules.
 
-## Database connectors
+### Writing/reading logfiles
+While writing raw data to plain text files is a useful start, two modules, `LogfileWriter` and `LogfileReader` allow more refined handling for timestamped data.
 
-## All the modules
+A `LogfileWriter` allows creating date-stamped log files that roll over on a daily (or hourly) basis using names compatible with the [R2R project conventions](https://www.rvdata.us/). When further processing by another logger is required, `LogfileReader` is able to read these files in a timestamp-aware way.
+
+### Parsing records
+Timestamping and storing raw data is useful in itself, but
+
+### Database connectors
+
+### All the modules
 
 ### Creating your own modules
 
-## Controlling Loggers
+## Controlling multiple loggers
+If you only have one or two sensors you intend to log, and wish them to be "always on," then creating a logger configuration file or two and setting them up to run via cron or systemd is a fine and simple solution. But most practical deployments have a dozen or more sensors/data sources and need to vary what is done with the data of each depending on the ship's location and operational status: you always want to relay certain data to ship displays, but only relay other data when underway. And you only want to save certain data only when operating outside of an EEZ.
+
+OpenRVDAS uses a dedicated server script called the "logger manager (in `server/logger_manager.py`) to manage these tasks. It supports both a command line and browser-based interface to do this.
+
+Please refer to the ["Controlling Loggers" document](controlling_loggers.md) for details on running the logger manager. Note that while some of its functionality may be available within the scope of this "quickstart" document, at this point you will be much better off performing a full installation as per the [INSTALL.md document](INSTALL.md), and proceeding from there. 
