@@ -17,7 +17,7 @@ readers:
 # downloaded from https://marineregions.org/eezsearch.php.
 transforms:
   - class: GeofenceTransform
-    module: loggers.transforms.geofence_transform
+    module: logger.transforms.geofence_transform
     kwargs:
       latitude_field_name: s330Latitude,
       longitude_field_name: s330Longitude
