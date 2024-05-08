@@ -72,7 +72,6 @@ except ImportError:
     import_pandas_errors = True
 
 
-
 ################################################################################
 class GeofenceTransform():
     """Class that reads lat/lon from passed records and compare to a geofence loaded at
@@ -133,7 +132,8 @@ class GeofenceTransform():
 
         self.last_check = 0  # timestamp: the last time we checked
 
-        if boundary_file_name and boundary_dir_name or not (boundary_file_name or boundary_dir_name):
+        if (boundary_file_name and boundary_dir_name
+                or not (boundary_file_name or boundary_dir_name)):
             raise ValueError('Please specify a boundary_file_name OR a boundary_dir_name '
                              'containing multiple gml files.')
 
@@ -146,11 +146,13 @@ class GeofenceTransform():
         if boundary_dir_name:
             if import_pandas_errors:
                 raise ImportError('GeofenceTransform using "boundary_dir_name" requires '
-                             'installation of the pandas packages. Please run "pip '
-                             'install pandas" and retry.')
+                                  'installation of the pandas packages. Please run "pip '
+                                  'install pandas" and retry.')
 
             # List all GML files in the directory
-            gml_files = [os.path.join(boundary_dir_name, file) for file in os.listdir(boundary_dir_name) if file.endswith('.gml')]
+            gml_files = [os.path.join(boundary_dir_name, file)
+                         for file in os.listdir(boundary_dir_name)
+                         if file.endswith('.gml')]
 
             # Initialize an empty list to store GeoDataFrames
             dfs = []
