@@ -67,7 +67,17 @@ distance_from_boundary_in_degrees
           
 seconds_between_checks
           Optional number of seconds to wait between doing checks,
-          to minimize computational overhead                
+          to minimize computational overhead
+
+boundary_dir_name
+          Optional name of a directory containing .gml files to use in-
+          place of a single .gml file.  When this option is specified
+          the transform will read all *.gml files contained in the
+          directory, build a new polygon (union) and use this polygon as
+          the boundary
+
+          This option cannot be used if boundary_file_name is used and
+          vice-versa.
 ```
 
 (Note that the optional parameter distance_from_boundary is in _degrees_. Computing the appropriate
@@ -148,5 +158,53 @@ Note that if you also wanted the system to switch out of underway mode when the 
 would need to create a second logger (or use a [ComposedWriter](../logger/writers/composed_writer.py)) using a bounds line like `s330SpeedKt:0.5:100` and an appropriate
 message to switch to the desired mode.
 
+## Example of using boundary_dir_name
+In this scenario we will use the `boundary_dir_name` kwarg to build a geofence based on the combination of multiple gml files located within a directory.  In this scenario we want to be able to easily update the gml files applied to the geofence with minimal distruption to logging operations.
+
+This scenario assumes the complete `logger_config.yaml` file includes 2 configs for the geofence logger: `geofence->off` (does nothing) and `geofence->on` which is based on the example config described above.
+
+#### Updated transform definition
+Location of all gml files the vessel ***may*** want to apply to the transform:
+```
+/home/rvdas/available_gml_files
+```
+
+Location of all gml files the vessel ***does*** want to apply to the transform:
+```
+/home/rvdas/enabled_gml_files
+```
+
+Updated version of the geofence transform based on previous example:
+```
+transforms:
+  - class: GeofenceTransform
+    module: logger.transforms.geofence_transform
+    kwargs:
+      latitude_field_name: s330Latitude
+      longitude_field_name: s330Longitude
+      boundary_dir_name: /home/rvdas/enabled_gml_files
+      leaving_boundary_message: set_active_mode underway_mode
+      entering_boundary_message: set_active_mode eez_mode
+```
+
+#### Adding an gml to use with the transform:
+1. Download the new gml file to `/home/rvdas/available_gml_files` via:
+```
+curl -o /home/rvdas/available_gml_files/<country_name>.gml "<url from marineregions.org>"
+```
+2. Symlink the new gml file to the `enabled_gml_files` directory via:
+```
+ln -s /home/rvdas/available_gml_files/<country_name>.gml /home/rvdas/enabled_gml_files/
+```
+3. Cycle the "geofence" logger in OpenRVDAS WebUI to `geofence->off` (wait for the change to take affect) and back to `geofence->on`
+
+#### If you need to remove an eez from the list:
+1. Delete the file from `/home/rvdas/enabled_gml_files` via:
+```
+rm /home/rvdas/enabled_gml_files/<country_name>.gml
+```
+2. Cycle the "geofence" logger in OpenRVDAS WebUI to `geofence->off` (wait for the change to take affect) and back to `geofence->on`
+
+## Conclusion
 Obviously, there is ample room for more powerful, or custom Transforms to allow more elaborate and/or precise control of logger
 states. We gratefully welcome any code contributed to OpenRVDAS toward that end.
