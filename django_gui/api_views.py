@@ -1,23 +1,24 @@
-from rest_framework.response import Response
-from rest_framework import serializers
-from rest_framework.views import APIView
 from .django_server_api import DjangoServerAPI
 from django_gui.settings import FILECHOOSER_DIRS
 from django_gui.settings import WEBSOCKET_DATA_SERVER
-import logging
-from rest_framework import authentication
-from .views import log_request
-from rest_framework.decorators import api_view
-from rest_framework.reverse import reverse
+
+from rest_framework import authentication, serializers
+from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authentication import TokenAuthentication
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.authtoken.models import Token
-from rest_framework.schemas import ManualSchema
 from rest_framework.compat import coreapi, coreschema
-from rest_framework.schemas import coreapi as coreapi_schema
+from rest_framework.decorators import api_view
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.reverse import reverse
+from rest_framework.schemas import ManualSchema, coreapi as coreapi_schema
+from rest_framework.views import APIView
 
+from .views import log_request
+from django.urls import include, path
+from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 import json
+import logging
 import yaml
 import os
 from rest_framework.settings import api_settings
@@ -44,27 +45,28 @@ from logger.utils.read_config import parse, read_config  # noqa: E402
 
 # Interacting with the Django DB via its API class
 # As per the standard view.
+
 api = None
 
+class GetSerializer(serializers.Serializer):
+    #Empty serializer that stops a warning from drf-spectacular ui
+    #Used  by api root, and get cruise config.
+    pass
 
-@api_view(["GET"])
-def api_root(request, format=None):
+class ApiRoot(APIView):
     """
     RVDAS REST API Endpoints.
 
     These are an authenticated set of urls.
     You need to to login to use them via the APi ui.
     For calling them via curl or requests. You need to pass header authenticiation.
-    Use token auth, it's simpler.
-    But basic auth is supported.
+    Use token auth, it's simpler, but basic auth is supported.
     https://www.django-rest-framework.org/api-guide/authentication/
-
 
     Such as:
     curl -H "Authorization: Token <a token string>" http://127.0.0.1:8000/api/cruise-configuration/**
 
     Via a browser you can use this interface with
-
     http://127.0.0.1:8000/api/cruise-configuration/?format=json
 
     There are also the drf-spectacular endpoints for swagger files and integration at
@@ -72,9 +74,11 @@ def api_root(request, format=None):
     /api/schema/docs to use the openai version of this interface.
 
     """
-    return Response(
-        {
-            # flake8: noqa E501
+
+    serializer_class = GetSerializer
+    
+    def get(self, request, format=None):
+        return Response({
             "login": reverse("rest_framework:login", request=request, format=format),
             "logout": reverse("rest_framework:logout", request=request, format=format),
             "obtain-auth-token": reverse("obtain-auth-token", request=request, format=format),
@@ -84,8 +88,9 @@ def api_root(request, format=None):
             "delete-configuration": reverse("delete-configuration", request=request, format=format),
             "edit-logger-config": reverse("edit-logger-config", request=request, format=format),
             "load-configuration-file": reverse("load-configuration-file", request=request, format=format),
-        }
-    )
+        })
+
+
 
 
 def _get_api():
@@ -127,7 +132,7 @@ class CustomAuthToken(ObtainAuthToken):
 class CruiseConfigurationAPIView(APIView):
     authentication_classes = [authentication.BasicAuthentication, TokenAuthentication]
     permission_classes = [IsAuthenticated]
-
+    serializer_class = GetSerializer
     def get(self, request):
         log_request(request, "get_configuration")
         template_vars = _get_cruise_config()
@@ -176,7 +181,6 @@ class CruiseSelectModeAPIView(APIView):
     {
         "status": "Cruise mode set: new cruise"
     }
-
     """
 
     if coreapi_schema.is_enabled():
@@ -233,7 +237,9 @@ class CruiseSelectModeAPIView(APIView):
 
 
 class CruiseReloadCurrentConfiguartionSerializer(serializers.Serializer):
-    # The presence of the value implies the
+    # The presence of the value implies true, as the implementation in the the main views.py at 
+    # line: ~93 switches on the presence of a form element. For consistency, the input object is 
+    # expecting json {"reload": "true"} but the reload key is really the switch.
     reload = serializers.CharField(required=True)
 
 
@@ -389,7 +395,6 @@ class EditLoggerConfigAPIView(APIView):
     POST request allows updating logger configurations.
     GET request retrieves the list of loggers.
 
-
     POST Parameters:
     - update: true
     - logger_id: The ID of the logger to be updated.
@@ -402,7 +407,6 @@ class EditLoggerConfigAPIView(APIView):
 
     Returns:
     - Response with status and message
-
     """
 
     if coreapi_schema.is_enabled():
@@ -444,7 +448,6 @@ class EditLoggerConfigAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-
         api = _get_api()
         log_request(request, "Edit logger configuration")
 
@@ -453,10 +456,9 @@ class EditLoggerConfigAPIView(APIView):
 
         if serializer.validated_data.get("update"):
             logger_id = serializer.validated_data.get("logger_id")
-            # First things first: log the request
             log_request(request, "%s edit_config" % logger_id)
 
-            # Now figure out what they selected
+            # Figure out what they selected
             new_config = serializer.validated_data.get("config")
             logging.warning("selected config: %s", new_config)
             api.set_active_logger_config(logger_id, new_config)
@@ -471,7 +473,6 @@ class EditLoggerConfigAPIView(APIView):
 
         Returns:
         - Response with status and list of loggers.
-
         """
         api = _get_api()
         log_request(request, "get_loggers")
@@ -505,7 +506,6 @@ class LoadConfigurationFileAPIView(APIView):
 
     Returns:
     - Response with status and message.
-
     """
 
     if coreapi_schema.is_enabled():
@@ -534,7 +534,6 @@ class LoadConfigurationFileAPIView(APIView):
         return Response({"status": "ok", "files": files}, status=200)
 
     def _list_files_in_folder(self):
-
         config_files = {}
         for file_dir in FILECHOOSER_DIRS:
             folder_dict = {}
@@ -554,7 +553,6 @@ class LoadConfigurationFileAPIView(APIView):
         return config_files
 
     def post(self, request):
-
         api = _get_api()
         log_request(request, "Load configuration file.")
 
@@ -587,3 +585,23 @@ class LoadConfigurationFileAPIView(APIView):
 
             return Response({"status": f"Errors loading target file {target_file}",
                              "errors": load_errors}, 400)
+
+urlpatterns = [
+    path('schema/', SpectacularAPIView.as_view(), name='schema'),
+    path('schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    path('schema/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
+    # These are the login and logout restframework urls
+    path('', include('rest_framework.urls', namespace='rest_framework')),
+    # Token Auth
+    path('obtain-auth-token/', CustomAuthToken.as_view(), name="obtain-auth-token"),
+    # These are the DRF API stubbs
+    # flake8: noqa E501
+    path('', ApiRoot.as_view()),
+    path('cruise-configuration/', CruiseConfigurationAPIView.as_view(), name='cruise-configuration'),
+    path('delete-configuration/', CruiseDeleteConfigurationAPIView.as_view(), name='delete-configuration'),
+    path('edit-logger-config/', EditLoggerConfigAPIView.as_view(), name='edit-logger-config'),
+    path('load-configuration-file/', LoadConfigurationFileAPIView.as_view(), name='load-configuration-file'),
+    path('reload-current-configuration/', CruiseReloadCurrentConfigurationAPIView.as_view(), name='reload-current-configuration'),
+    path('select-cruise-mode/', CruiseSelectModeAPIView.as_view(), name='select-cruise-mode'),
+]
+    
