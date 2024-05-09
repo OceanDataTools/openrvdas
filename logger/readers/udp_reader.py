@@ -225,10 +225,6 @@ class UDPReader(Reader):
         # otherwise split the record by the eol
         decoded_records = self._decode_bytes(record_buffer).rstrip(self.eol).split(self.eol)
 
-        # if there was only one record, return the first element in the list.
-        if len(decoded_records) == 1:
-            return decoded_records[0]
-
-        # otherwise return the list of records.
-        return decoded_records
-
+        # if there was only one record, return just the first element in the
+        # list, otherwise return the whole list.
+        return decoded_records[0] if len(decoded_records) == 1 else decoded_records
