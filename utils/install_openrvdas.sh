@@ -114,6 +114,8 @@ function get_os_type {
                 OS_VERSION=22
             elif [[ ! -z `grep "VERSION_ID=\"23" /etc/os-release` ]];then
                 OS_VERSION=23
+            elif [[ ! -z `grep "VERSION_ID=\"24" /etc/os-release` ]];then
+                OS_VERSION=24
             else
                 echo "Sorry - unknown Ubuntu OS Version! - exiting."
                 exit_gracefully
@@ -1304,7 +1306,6 @@ echo
 echo "#####################################################################"
 echo "This script can install Strapdown.js so that the .md files in"
 echo "the /docs directory are rendered properly."
-echo "under supervisord as \"simulate:simulate_nbp\"."
 echo
 yes_no "Do you want to install Strapdown.js?" $DEFAULT_INSTALL_DOC_MARKDOWN
 INSTALL_DOC_MARKDOWN=$YES_NO_RESULT

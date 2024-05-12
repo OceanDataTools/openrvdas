@@ -17,246 +17,246 @@ cruise:
 loggers:
   PCOD:
     configs:
-    - PCOD->off
-    - PCOD->net
-    - PCOD->net/file
+    - PCOD-off
+    - PCOD-net
+    - PCOD-net+file
   cwnc:
     configs:
-    - cwnc->off
-    - cwnc->net
-    - cwnc->net/file
+    - cwnc-off
+    - cwnc-net
+    - cwnc-net+file
   gp02:
     configs:
-    - gp02->off
-    - gp02->net
-    - gp02->net/file
+    - gp02-off
+    - gp02-net
+    - gp02-net+file
   gyr1:
     configs:
-    - gyr1->off
-    - gyr1->net
-    - gyr1->net/file
+    - gyr1-off
+    - gyr1-net
+    - gyr1-net+file
   adcp:
     configs:
-    - adcp->off
-    - adcp->net
-    - adcp->net/file
+    - adcp-off
+    - adcp-net
+    - adcp-net+file
   eng1:
     configs:
-    - eng1->off
-    - eng1->net
-    - eng1->net/file
+    - eng1-off
+    - eng1-net
+    - eng1-net+file
   svp1:
     configs:
-    - svp1->off
-    - svp1->net
-    - svp1->net/file
+    - svp1-off
+    - svp1-net
+    - svp1-net+file
   twnc:
     configs:
-    - twnc->off
-    - twnc->net
-    - twnc->net/file
+    - twnc-off
+    - twnc-net
+    - twnc-net+file
   mbdp:
     configs:
-    - mbdp->off
-    - mbdp->net
-    - mbdp->net/file
+    - mbdp-off
+    - mbdp-net
+    - mbdp-net+file
   knud:
     configs:
-    - knud->off
-    - knud->net
-    - knud->net/file
+    - knud-off
+    - knud-net
+    - knud-net+file
   grv1:
     configs:
-    - grv1->off
-    - grv1->net
-    - grv1->net/file
+    - grv1-off
+    - grv1-net
+    - grv1-net+file
   mwx1:
     configs:
-    - mwx1->off
-    - mwx1->net
-    - mwx1->net/file
+    - mwx1-off
+    - mwx1-net
+    - mwx1-net+file
   pco2:
     configs:
-    - pco2->off
-    - pco2->net
-    - pco2->net/file
+    - pco2-off
+    - pco2-net
+    - pco2-net+file
   pguv:
     configs:
-    - pguv->off
-    - pguv->net
-    - pguv->net/file
+    - pguv-off
+    - pguv-net
+    - pguv-net+file
   s330:
     configs:
-    - s330->off
-    - s330->net
-    - s330->net/file
+    - s330-off
+    - s330-net
+    - s330-net+file
   tsg1:
     configs:
-    - tsg1->off
-    - tsg1->net
-    - tsg1->net/file
+    - tsg1-off
+    - tsg1-net
+    - tsg1-net+file
   rtmp:
     configs:
-    - rtmp->off
-    - rtmp->net
-    - rtmp->net/file
+    - rtmp-off
+    - rtmp-net
+    - rtmp-net+file
   hdas:
     configs:
-    - hdas->off
-    - hdas->net
-    - hdas->net/file
+    - hdas-off
+    - hdas-net
+    - hdas-net+file
   tsg2:
     configs:
-    - tsg2->off
-    - tsg2->net
-    - tsg2->net/file
+    - tsg2-off
+    - tsg2-net
+    - tsg2-net+file
   seap:
     configs:
-    - seap->off
-    - seap->net
-    - seap->net/file
+    - seap-off
+    - seap-net
+    - seap-net+file
   net_reader:
     configs:
-    - net_reader->off
-    - net_reader->on
-    - net_reader->on+influx
+    - net_reader-off
+    - net_reader-on
+    - net_reader-on+influx
   true_wind:
     configs:
-    - true_wind->off
-    - true_wind->on
-    - true_wind->on+influx
+    - true_wind-off
+    - true_wind-on
+    - true_wind-on+influx
   snapshot:
     configs:
-    - snapshot->off
-    - snapshot->on
-    - snapshot->on+influx
+    - snapshot-off
+    - snapshot-on
+    - snapshot-on+influx
 
 ########################################
 modes:
   'off':
-    PCOD: PCOD->off
-    cwnc: cwnc->off
-    gp02: gp02->off
-    gyr1: gyr1->off
-    adcp: adcp->off
-    eng1: eng1->off
-    svp1: svp1->off
-    twnc: twnc->off
-    mbdp: mbdp->off
-    knud: knud->off
-    grv1: grv1->off
-    mwx1: mwx1->off
-    pco2: pco2->off
-    pguv: pguv->off
-    s330: s330->off
-    tsg1: tsg1->off
-    rtmp: rtmp->off
-    hdas: hdas->off
-    tsg2: tsg2->off
-    seap: seap->off
-    net_reader: net_reader->off
-    true_wind: true_wind->off
-    snapshot: snapshot->off
+    PCOD: PCOD-off
+    cwnc: cwnc-off
+    gp02: gp02-off
+    gyr1: gyr1-off
+    adcp: adcp-off
+    eng1: eng1-off
+    svp1: svp1-off
+    twnc: twnc-off
+    mbdp: mbdp-off
+    knud: knud-off
+    grv1: grv1-off
+    mwx1: mwx1-off
+    pco2: pco2-off
+    pguv: pguv-off
+    s330: s330-off
+    tsg1: tsg1-off
+    rtmp: rtmp-off
+    hdas: hdas-off
+    tsg2: tsg2-off
+    seap: seap-off
+    net_reader: net_reader-off
+    true_wind: true_wind-off
+    snapshot: snapshot-off
 
   no_write:
-    PCOD: PCOD->net
-    cwnc: cwnc->net
-    gp02: gp02->net
-    gyr1: gyr1->net
-    adcp: adcp->net
-    eng1: eng1->net
-    svp1: svp1->net
-    twnc: twnc->net
-    mbdp: mbdp->net
-    knud: knud->net
-    grv1: grv1->net
-    mwx1: mwx1->net
-    pco2: pco2->net
-    pguv: pguv->net
-    s330: s330->net
-    tsg1: tsg1->net
-    rtmp: rtmp->net
-    hdas: hdas->net
-    tsg2: tsg2->net
-    seap: seap->net
-    net_reader: net_reader->on
-    true_wind: true_wind->on
-    snapshot: snapshot->on
+    PCOD: PCOD-net
+    cwnc: cwnc-net
+    gp02: gp02-net
+    gyr1: gyr1-net
+    adcp: adcp-net
+    eng1: eng1-net
+    svp1: svp1-net
+    twnc: twnc-net
+    mbdp: mbdp-net
+    knud: knud-net
+    grv1: grv1-net
+    mwx1: mwx1-net
+    pco2: pco2-net
+    pguv: pguv-net
+    s330: s330-net
+    tsg1: tsg1-net
+    rtmp: rtmp-net
+    hdas: hdas-net
+    tsg2: tsg2-net
+    seap: seap-net
+    net_reader: net_reader-on
+    true_wind: true_wind-on
+    snapshot: snapshot-on
 
   no_write+influx:
-    PCOD: PCOD->net
-    cwnc: cwnc->net
-    gp02: gp02->net
-    gyr1: gyr1->net
-    adcp: adcp->net
-    eng1: eng1->net
-    svp1: svp1->net
-    twnc: twnc->net
-    mbdp: mbdp->net
-    knud: knud->net
-    grv1: grv1->net
-    mwx1: mwx1->net
-    pco2: pco2->net
-    pguv: pguv->net
-    s330: s330->net
-    tsg1: tsg1->net
-    rtmp: rtmp->net
-    hdas: hdas->net
-    tsg2: tsg2->net
-    seap: seap->net
-    net_reader: net_reader->on+influx
-    true_wind: true_wind->on+influx
-    snapshot: snapshot->on+influx
+    PCOD: PCOD-net
+    cwnc: cwnc-net
+    gp02: gp02-net
+    gyr1: gyr1-net
+    adcp: adcp-net
+    eng1: eng1-net
+    svp1: svp1-net
+    twnc: twnc-net
+    mbdp: mbdp-net
+    knud: knud-net
+    grv1: grv1-net
+    mwx1: mwx1-net
+    pco2: pco2-net
+    pguv: pguv-net
+    s330: s330-net
+    tsg1: tsg1-net
+    rtmp: rtmp-net
+    hdas: hdas-net
+    tsg2: tsg2-net
+    seap: seap-net
+    net_reader: net_reader-on+influx
+    true_wind: true_wind-on+influx
+    snapshot: snapshot-on+influx
 
   write:
-    PCOD: PCOD->net/file
-    cwnc: cwnc->net/file
-    gp02: gp02->net/file
-    gyr1: gyr1->net/file
-    adcp: adcp->net/file
-    eng1: eng1->net/file
-    svp1: svp1->net/file
-    twnc: twnc->net/file
-    mbdp: mbdp->net/file
-    knud: knud->net/file
-    grv1: grv1->net/file
-    mwx1: mwx1->net/file
-    pco2: pco2->net/file
-    pguv: pguv->net/file
-    s330: s330->net/file
-    tsg1: tsg1->net/file
-    rtmp: rtmp->net/file
-    hdas: hdas->net/file
-    tsg2: tsg2->net/file
-    seap: seap->net/file
-    net_reader: net_reader->on
-    true_wind: true_wind->on
-    snapshot: snapshot->on
+    PCOD: PCOD-net+file
+    cwnc: cwnc-net+file
+    gp02: gp02-net+file
+    gyr1: gyr1-net+file
+    adcp: adcp-net+file
+    eng1: eng1-net+file
+    svp1: svp1-net+file
+    twnc: twnc-net+file
+    mbdp: mbdp-net+file
+    knud: knud-net+file
+    grv1: grv1-net+file
+    mwx1: mwx1-net+file
+    pco2: pco2-net+file
+    pguv: pguv-net+file
+    s330: s330-net+file
+    tsg1: tsg1-net+file
+    rtmp: rtmp-net+file
+    hdas: hdas-net+file
+    tsg2: tsg2-net+file
+    seap: seap-net+file
+    net_reader: net_reader-on
+    true_wind: true_wind-on
+    snapshot: snapshot-on
 
   write+influx:
-    PCOD: PCOD->net/file
-    cwnc: cwnc->net/file
-    gp02: gp02->net/file
-    gyr1: gyr1->net/file
-    adcp: adcp->net/file
-    eng1: eng1->net/file
-    svp1: svp1->net/file
-    twnc: twnc->net/file
-    mbdp: mbdp->net/file
-    knud: knud->net/file
-    grv1: grv1->net/file
-    mwx1: mwx1->net/file
-    pco2: pco2->net/file
-    pguv: pguv->net/file
-    s330: s330->net/file
-    tsg1: tsg1->net/file
-    rtmp: rtmp->net/file
-    hdas: hdas->net/file
-    tsg2: tsg2->net/file
-    seap: seap->net/file
-    net_reader: net_reader->on+influx
-    true_wind: true_wind->on+influx
-    snapshot: snapshot->on+influx
+    PCOD: PCOD-net+file
+    cwnc: cwnc-net+file
+    gp02: gp02-net+file
+    gyr1: gyr1-net+file
+    adcp: adcp-net+file
+    eng1: eng1-net+file
+    svp1: svp1-net+file
+    twnc: twnc-net+file
+    mbdp: mbdp-net+file
+    knud: knud-net+file
+    grv1: grv1-net+file
+    mwx1: mwx1-net+file
+    pco2: pco2-net+file
+    pguv: pguv-net+file
+    s330: s330-net+file
+    tsg1: tsg1-net+file
+    rtmp: rtmp-net+file
+    hdas: hdas-net+file
+    tsg2: tsg2-net+file
+    seap: seap-net+file
+    net_reader: net_reader-on+influx
+    true_wind: true_wind-on+influx
+    snapshot: snapshot-on+influx
 
 ########################################
 default_mode: 'off'
@@ -264,11 +264,11 @@ default_mode: 'off'
 ########################################
 configs:
   ########
-  PCOD->off:
-    name: PCOD->off
+  PCOD-off:
+    name: PCOD-off
 
-  PCOD->net:
-    name: PCOD->net
+  PCOD-net:
+    name: PCOD-net
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -285,8 +285,8 @@ configs:
         port: 6224
         destination: 255.255.255.255
 
-  PCOD->net/file:
-    name: PCOD->net/file
+  PCOD-net+file:
+    name: PCOD-net+file
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -310,11 +310,11 @@ configs:
             port: 6224
             destination: 255.255.255.255
   ########
-  cwnc->off:
-    name: cwnc->off
+  cwnc-off:
+    name: cwnc-off
 
-  cwnc->net:
-    name: cwnc->net
+  cwnc-net:
+    name: cwnc-net
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -331,8 +331,8 @@ configs:
         port: 6224
         destination: 255.255.255.255
 
-  cwnc->net/file:
-    name: cwnc->net/file
+  cwnc-net+file:
+    name: cwnc-net+file
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -356,11 +356,11 @@ configs:
             port: 6224
             destination: 255.255.255.255
   ########
-  gp02->off:
-    name: gp02->off
+  gp02-off:
+    name: gp02-off
 
-  gp02->net:
-    name: gp02->net
+  gp02-net:
+    name: gp02-net
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -377,8 +377,8 @@ configs:
         port: 6224
         destination: 255.255.255.255
 
-  gp02->net/file:
-    name: gp02->net/file
+  gp02-net+file:
+    name: gp02-net+file
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -402,11 +402,11 @@ configs:
             port: 6224
             destination: 255.255.255.255
   ########
-  gyr1->off:
-    name: gyr1->off
+  gyr1-off:
+    name: gyr1-off
 
-  gyr1->net:
-    name: gyr1->net
+  gyr1-net:
+    name: gyr1-net
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -423,8 +423,8 @@ configs:
         port: 6224
         destination: 255.255.255.255
 
-  gyr1->net/file:
-    name: gyr1->net/file
+  gyr1-net+file:
+    name: gyr1-net+file
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -448,11 +448,11 @@ configs:
             port: 6224
             destination: 255.255.255.255
   ########
-  adcp->off:
-    name: adcp->off
+  adcp-off:
+    name: adcp-off
 
-  adcp->net:
-    name: adcp->net
+  adcp-net:
+    name: adcp-net
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -469,8 +469,8 @@ configs:
         port: 6224
         destination: 255.255.255.255
 
-  adcp->net/file:
-    name: adcp->net/file
+  adcp-net+file:
+    name: adcp-net+file
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -494,11 +494,11 @@ configs:
             port: 6224
             destination: 255.255.255.255
   ########
-  eng1->off:
-    name: eng1->off
+  eng1-off:
+    name: eng1-off
 
-  eng1->net:
-    name: eng1->net
+  eng1-net:
+    name: eng1-net
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -515,8 +515,8 @@ configs:
         port: 6224
         destination: 255.255.255.255
 
-  eng1->net/file:
-    name: eng1->net/file
+  eng1-net+file:
+    name: eng1-net+file
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -540,11 +540,11 @@ configs:
             port: 6224
             destination: 255.255.255.255
   ########
-  svp1->off:
-    name: svp1->off
+  svp1-off:
+    name: svp1-off
 
-  svp1->net:
-    name: svp1->net
+  svp1-net:
+    name: svp1-net
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -561,8 +561,8 @@ configs:
         port: 6224
         destination: 255.255.255.255
 
-  svp1->net/file:
-    name: svp1->net/file
+  svp1-net+file:
+    name: svp1-net+file
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -586,11 +586,11 @@ configs:
             port: 6224
             destination: 255.255.255.255
   ########
-  twnc->off:
-    name: twnc->off
+  twnc-off:
+    name: twnc-off
 
-  twnc->net:
-    name: twnc->net
+  twnc-net:
+    name: twnc-net
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -607,8 +607,8 @@ configs:
         port: 6224
         destination: 255.255.255.255
 
-  twnc->net/file:
-    name: twnc->net/file
+  twnc-net+file:
+    name: twnc-net+file
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -632,11 +632,11 @@ configs:
             port: 6224
             destination: 255.255.255.255
   ########
-  mbdp->off:
-    name: mbdp->off
+  mbdp-off:
+    name: mbdp-off
 
-  mbdp->net:
-    name: mbdp->net
+  mbdp-net:
+    name: mbdp-net
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -653,8 +653,8 @@ configs:
         port: 6224
         destination: 255.255.255.255
 
-  mbdp->net/file:
-    name: mbdp->net/file
+  mbdp-net+file:
+    name: mbdp-net+file
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -678,11 +678,11 @@ configs:
             port: 6224
             destination: 255.255.255.255
   ########
-  knud->off:
-    name: knud->off
+  knud-off:
+    name: knud-off
 
-  knud->net:
-    name: knud->net
+  knud-net:
+    name: knud-net
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -699,8 +699,8 @@ configs:
         port: 6224
         destination: 255.255.255.255
 
-  knud->net/file:
-    name: knud->net/file
+  knud-net+file:
+    name: knud-net+file
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -724,11 +724,11 @@ configs:
             port: 6224
             destination: 255.255.255.255
   ########
-  grv1->off:
-    name: grv1->off
+  grv1-off:
+    name: grv1-off
 
-  grv1->net:
-    name: grv1->net
+  grv1-net:
+    name: grv1-net
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -745,8 +745,8 @@ configs:
         port: 6224
         destination: 255.255.255.255
 
-  grv1->net/file:
-    name: grv1->net/file
+  grv1-net+file:
+    name: grv1-net+file
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -770,11 +770,11 @@ configs:
             port: 6224
             destination: 255.255.255.255
   ########
-  mwx1->off:
-    name: mwx1->off
+  mwx1-off:
+    name: mwx1-off
 
-  mwx1->net:
-    name: mwx1->net
+  mwx1-net:
+    name: mwx1-net
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -791,8 +791,8 @@ configs:
         port: 6224
         destination: 255.255.255.255
 
-  mwx1->net/file:
-    name: mwx1->net/file
+  mwx1-net+file:
+    name: mwx1-net+file
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -816,11 +816,11 @@ configs:
             port: 6224
             destination: 255.255.255.255
   ########
-  pco2->off:
-    name: pco2->off
+  pco2-off:
+    name: pco2-off
 
-  pco2->net:
-    name: pco2->net
+  pco2-net:
+    name: pco2-net
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -837,8 +837,8 @@ configs:
         port: 6224
         destination: 255.255.255.255
 
-  pco2->net/file:
-    name: pco2->net/file
+  pco2-net+file:
+    name: pco2-net+file
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -862,11 +862,11 @@ configs:
             port: 6224
             destination: 255.255.255.255
   ########
-  pguv->off:
-    name: pguv->off
+  pguv-off:
+    name: pguv-off
 
-  pguv->net:
-    name: pguv->net
+  pguv-net:
+    name: pguv-net
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -883,8 +883,8 @@ configs:
         port: 6224
         destination: 255.255.255.255
 
-  pguv->net/file:
-    name: pguv->net/file
+  pguv-net+file:
+    name: pguv-net+file
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -908,11 +908,11 @@ configs:
             port: 6224
             destination: 255.255.255.255
   ########
-  s330->off:
-    name: s330->off
+  s330-off:
+    name: s330-off
 
-  s330->net:
-    name: s330->net
+  s330-net:
+    name: s330-net
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -929,8 +929,8 @@ configs:
         port: 6224
         destination: 255.255.255.255
 
-  s330->net/file:
-    name: s330->net/file
+  s330-net+file:
+    name: s330-net+file
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -954,11 +954,11 @@ configs:
             port: 6224
             destination: 255.255.255.255
   ########
-  tsg1->off:
-    name: tsg1->off
+  tsg1-off:
+    name: tsg1-off
 
-  tsg1->net:
-    name: tsg1->net
+  tsg1-net:
+    name: tsg1-net
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -975,8 +975,8 @@ configs:
         port: 6224
         destination: 255.255.255.255
 
-  tsg1->net/file:
-    name: tsg1->net/file
+  tsg1-net+file:
+    name: tsg1-net+file
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -1000,11 +1000,11 @@ configs:
             port: 6224
             destination: 255.255.255.255
   ########
-  rtmp->off:
-    name: rtmp->off
+  rtmp-off:
+    name: rtmp-off
 
-  rtmp->net:
-    name: rtmp->net
+  rtmp-net:
+    name: rtmp-net
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -1021,8 +1021,8 @@ configs:
         port: 6224
         destination: 255.255.255.255
 
-  rtmp->net/file:
-    name: rtmp->net/file
+  rtmp-net+file:
+    name: rtmp-net+file
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -1046,11 +1046,11 @@ configs:
             port: 6224
             destination: 255.255.255.255
   ########
-  hdas->off:
-    name: hdas->off
+  hdas-off:
+    name: hdas-off
 
-  hdas->net:
-    name: hdas->net
+  hdas-net:
+    name: hdas-net
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -1067,8 +1067,8 @@ configs:
         port: 6224
         destination: 255.255.255.255
 
-  hdas->net/file:
-    name: hdas->net/file
+  hdas-net+file:
+    name: hdas-net+file
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -1092,11 +1092,11 @@ configs:
             port: 6224
             destination: 255.255.255.255
   ########
-  tsg2->off:
-    name: tsg2->off
+  tsg2-off:
+    name: tsg2-off
 
-  tsg2->net:
-    name: tsg2->net
+  tsg2-net:
+    name: tsg2-net
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -1113,8 +1113,8 @@ configs:
         port: 6224
         destination: 255.255.255.255
 
-  tsg2->net/file:
-    name: tsg2->net/file
+  tsg2-net+file:
+    name: tsg2-net+file
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -1138,11 +1138,11 @@ configs:
             port: 6224
             destination: 255.255.255.255
   ########
-  seap->off:
-    name: seap->off
+  seap-off:
+    name: seap-off
 
-  seap->net:
-    name: seap->net
+  seap-net:
+    name: seap-net
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -1159,8 +1159,8 @@ configs:
         port: 6224
         destination: 255.255.255.255
 
-  seap->net/file:
-    name: seap->net/file
+  seap-net+file:
+    name: seap-net+file
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -1184,11 +1184,11 @@ configs:
             port: 6224
             destination: 255.255.255.255
   ########
-  net_reader->off:
-    name: net_reader->off
+  net_reader-off:
+    name: net_reader-off
 
-  net_reader->on:
-    name: net_reader->on
+  net_reader-on:
+    name: net_reader-on
     readers:                    # Read from simulated serial port
     - class: UDPReader
       kwargs:
@@ -1203,8 +1203,8 @@ configs:
       kwargs:
         data_server: localhost:8766
 
-  net_reader->on+influx:
-    name: net_reader->on+influx
+  net_reader-on+influx:
+    name: net_reader-on+influx
     readers:                    # Read from simulated serial port
     - class: UDPReader
       kwargs:
@@ -1222,11 +1222,11 @@ configs:
       kwargs:
         bucket_name: openrvdas
   ########
-  true_wind->off:
-    name: true_wind->off
+  true_wind-off:
+    name: true_wind-off
 
-  true_wind->on:
-    name: true_wind->on
+  true_wind-on:
+    name: true_wind-on
     readers:
     - class: CachedDataReader
       kwargs:
@@ -1303,8 +1303,8 @@ configs:
           kwargs:
             data_server: localhost:8766
 
-  true_wind->on+influx:
-    name: true_wind->on+influx
+  true_wind-on+influx:
+    name: true_wind-on+influx
     readers:
     - class: CachedDataReader
       kwargs:
@@ -1391,11 +1391,11 @@ configs:
 
   ########
   # Derived data subsampling logger
-  snapshot->off:
-    name: snapshot->off
+  snapshot-off:
+    name: snapshot-off
 
-  snapshot->on:
-    name: snapshot->on
+  snapshot-on:
+    name: snapshot-on
     readers:
     - class: CachedDataReader
       kwargs:
@@ -1485,8 +1485,8 @@ configs:
       kwargs:
         data_server: localhost:8766
 
-  snapshot->on+influx:
-    name: snapshot->on+influx
+  snapshot-on+influx:
+    name: snapshot-on+influx
     readers:
     - class: CachedDataReader
       kwargs:
@@ -1579,5 +1579,3 @@ configs:
       kwargs:
         bucket_name: openrvdas
         measurement_name: snapshot
-
-

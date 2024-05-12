@@ -74,12 +74,16 @@ import re
 import sys
 import threading
 import time
-import websockets
 
 try:
-    from websockets.exceptions import ConnectionClosed
-except ImportError:
-    from websockets.connection import ConnectionClosed
+    import websockets
+    try:
+        from websockets.exceptions import ConnectionClosed
+    except ImportError:
+        from websockets.connection import ConnectionClosed
+except ModuleNotFoundError:
+    raise ModuleNotFoundError('CachedDataServer requires websockets module.\n'
+                              'Please run "pip3 install websockets".')
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from logger.utils.stderr_logging import StdErrLoggingHandler  # noqa: E402

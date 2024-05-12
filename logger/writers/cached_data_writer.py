@@ -6,7 +6,12 @@ import logging
 import ssl
 import sys
 import threading
-import websockets
+
+try:
+    import websockets
+    WEBSOCKETS_INSTALLED = True
+except ImportError:
+    WEBSOCKETS_INSTALLED = False
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
@@ -46,6 +51,10 @@ class CachedDataWriter(Writer):
 
         ```
         """
+        if not WEBSOCKETS_INSTALLED:
+            raise ImportError('CachedDataWriter requires Python "websockets" module; '
+                              'please run "pip install websockets"')
+
         host_port = data_server.split(':')
         if len(host_port) == 1:
             self.data_server = 'localhost:' + data_server  # they gave us '8766'

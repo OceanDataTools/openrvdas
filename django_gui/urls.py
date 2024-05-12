@@ -13,33 +13,27 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.contrib import admin
-from django.urls import include, path
-
 from django.conf import settings
 from django.conf.urls.static import static
-
+from django.contrib import admin
+from django.urls import include, path
 from . import views
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('accounts/', include('django.contrib.auth.urls')),
-    # path('login/', auth_views.login, name='login'),
-    # path('logout/', auth_views.logout,
-    #    {'next_page': '../'}, name='logout'),
+    path('', views.index, name='index'),
+    path('admin/', admin.site.urls),    
+    path('accounts/', include('django.contrib.auth.urls')),    
+    
+    #api_Views.py
+    path('api/', include('django_gui.api_views')),
 
+    # Views.py    
     path('login/', views.login_user, name='login_user'),
-
-    path('change_mode/',
-         views.change_mode, name='change_mode'),
-    path('edit_config/<str:logger_id>',
-         views.edit_config, name='edit_config'),
+    path('change_mode/', views.change_mode, name='change_mode'),
+    path('edit_config/<str:logger_id>', views.edit_config, name='edit_config'),
     path('choose_file/', views.choose_file, name='choose_file'),
-
     path('widget/<str:field_list>', views.widget, name='widget'),
     path('widget/', views.widget, name='widget'),
-
     path('fields/', views.fields, name='fields'),
-
-    path('', views.index, name='index'),
+  
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
