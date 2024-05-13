@@ -104,5 +104,5 @@ sqlite_gui
 .install_sqlite_gui_preferences
 server/openrvdas.sql
 
-#tmp
+# tmp
 tmp
