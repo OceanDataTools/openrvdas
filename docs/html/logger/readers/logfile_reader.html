@@ -29,9 +29,14 @@
 <pre><code class="python">#!/usr/bin/env python3
 import json
 import logging
-import parse
 import sys
 import time
+
+try:
+    import parse
+    PARSE_INSTALLED = True
+except ImportError:
+    PARSE_INSTALLED = False
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
@@ -106,6 +111,9 @@ class LogfileReader(TimestampedReader):
         &#34;&#34;&#34;
         super().__init__(output_format=Text)
 
+        if not PARSE_INSTALLED:
+            raise ImportError(&#39;LogfileReader requires Python &#34;parse&#34; module; &#39;
+                              &#39;please run &#34;pip install parse&#34;&#39;)
         if interval and use_timestamps:
             raise ValueError(&#39;Can not specify both &#34;interval&#34; and &#34;use_timestamps&#34;&#39;)
 
@@ -503,6 +511,9 @@ depends on how glob returns them.</p></div>
         &#34;&#34;&#34;
         super().__init__(output_format=Text)
 
+        if not PARSE_INSTALLED:
+            raise ImportError(&#39;LogfileReader requires Python &#34;parse&#34; module; &#39;
+                              &#39;please run &#34;pip install parse&#34;&#39;)
         if interval and use_timestamps:
             raise ValueError(&#39;Can not specify both &#34;interval&#34; and &#34;use_timestamps&#34;&#39;)
 

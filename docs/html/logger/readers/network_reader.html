@@ -29,7 +29,6 @@
 <pre><code class="python">#!/usr/bin/env python3
 
 import logging
-import socket
 import sys
 
 from os.path import dirname, realpath
@@ -40,12 +39,11 @@ from logger.readers.reader import Reader  # noqa: E402
 class NetworkReader(Reader):
     def __init__(self, network, eol=&#39;&#39;,
                  encoding=&#39;utf-8&#39;, encoding_errors=&#39;ignore&#39;):
-        super().__init__(encoding=encoding,
-                         encoding_errors=encoding_errors)
         logging.error(&#34;NetworkReader has been replaced by TCPReader and UDPReader&#34;)
 
     def read(self):
-        logging.error(&#34;not reading anything: NetworkReader has been replaced by TCPReader and UDPReader&#34;)</code></pre>
+        logging.error(&#34;not reading anything: NetworkReader has been &#34;
+                      &#34;replaced by TCPReader and UDPReader&#34;)</code></pre>
 </details>
 </section>
 <section>
@@ -81,12 +79,11 @@ documentation here:
 <pre><code class="python">class NetworkReader(Reader):
     def __init__(self, network, eol=&#39;&#39;,
                  encoding=&#39;utf-8&#39;, encoding_errors=&#39;ignore&#39;):
-        super().__init__(encoding=encoding,
-                         encoding_errors=encoding_errors)
         logging.error(&#34;NetworkReader has been replaced by TCPReader and UDPReader&#34;)
 
     def read(self):
-        logging.error(&#34;not reading anything: NetworkReader has been replaced by TCPReader and UDPReader&#34;)</code></pre>
+        logging.error(&#34;not reading anything: NetworkReader has been &#34;
+                      &#34;replaced by TCPReader and UDPReader&#34;)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">

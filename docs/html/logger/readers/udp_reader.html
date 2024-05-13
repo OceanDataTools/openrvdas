@@ -30,7 +30,6 @@
 
 import logging
 import socket
-import struct
 import sys
 
 from os.path import dirname, realpath
@@ -71,7 +70,8 @@ class UDPReader(Reader):
     ############################
     def __init__(self, interface=None, port=None, mc_group=None,
                  reuseaddr=False, reuseport=False,
-                 encoding=&#39;utf-8&#39;, encoding_errors=&#39;ignore&#39;):
+                 encoding=&#39;utf-8&#39;, encoding_errors=&#39;ignore&#39;, eol=None,
+                 this_is_a_test=False):
         &#34;&#34;&#34;
         ```
         interface    IP (or resolvable name) of interface to listen on.  None or &#39;&#39;
@@ -91,15 +91,19 @@ class UDPReader(Reader):
         reuseport    Specifies wether we set SO_REUSEPORT on the created socket.  If
                      you don&#39;t know you need this, don&#39;t enable it.
 
-        encoding - &#39;utf-8&#39; by default. If empty or None, do not attempt any decoding
-                and return raw bytes. Other possible encodings are listed in online
-                documentation here:
-                https://docs.python.org/3/library/codecs.html#standard-encodings
+        encoding     &#39;utf-8&#39; by default. If empty or None, do not attempt any decoding
+                     and return raw bytes. Other possible encodings are listed in
+                     online documentation here:
+                     https://docs. python.org/3/library/codecs.html#standard-encodings
 
-        encoding_errors - &#39;ignore&#39; by default. Other error strategies are &#39;strict&#39;,
-                &#39;replace&#39;, and &#39;backslashreplace&#39;, described here:
-                https://docs.python.org/3/howto/unicode.html#encodings
+        encoding_errors &#39;ignore&#39; by default. Other error strategies are &#39;strict&#39;,
+                        &#39;replace&#39;, and &#39;backslashreplace&#39;, described here:
+                        https://docs.python.org/3/howto/unicode.html#encodings
 
+        eol          split the record by the eol character if present.
+
+        this_is_a_test - If True, recognize that this is being called in a unittest, so
+                don&#39;t output warnings about not using loopback addresses.
         ```
         &#34;&#34;&#34;
         super().__init__(encoding=encoding,
@@ -143,8 +147,17 @@ class UDPReader(Reader):
         self.reuseaddr = reuseaddr
         self.reuseport = reuseport
 
+        self.eol = eol
+
+        self.this_is_a_test = this_is_a_test
+
         # socket gets initialized on-demand in read()
         self.socket = None
+
+    ############################
+    def __del__(self):
+        if self.socket:
+            self.socket.close()
 
     ############################
     def _open_socket(self):
@@ -170,7 +183,7 @@ class UDPReader(Reader):
             #       never leave the system, and you never actually join the
             #       group.
             #
-            if self.interface.startswith(&#39;127.&#39;):
+            if self.interface.startswith(&#39;127.&#39;) and not self.this_is_a_test:
                 logging.warning(&#34;Can&#39;t use loopback device for joining multicast groups.  Make &#34;
                                 &#34;sure your system&#39;s hostname does NOT resolve to something in &#34;
                                 &#34;the 127.0.0.0/8 address block (e.g., localhost, 127.0.0.1), or &#34;
@@ -178,7 +191,7 @@ class UDPReader(Reader):
                                 &#34;`interface` parameter.  (You can ignore this message if you&#39;re &#34;
                                 &#34;actually just doing loopback testing.)&#34;)
             sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_IF,
-                                  socket.inet_aton(self.interface))
+                            socket.inet_aton(self.interface))
 
             # join the group via IGMP
             #
@@ -212,7 +225,7 @@ class UDPReader(Reader):
             return
 
         # Read datagrams until we get one that doesn&#39;t end with a FRAGMENT_MARKER
-        record_buffer=b&#39;&#39;
+        record_buffer = b&#39;&#39;
         while True:
             try:
                 record = self.socket.recv(READ_BUFFER_SIZE)
@@ -232,7 +245,17 @@ class UDPReader(Reader):
                 break
 
         # we&#39;ve got a whole record in our record_buffer, decode it
-        return self._decode_bytes(record_buffer)</code></pre>
+
+        # if eol == None, return the record as is
+        if not self.eol:
+            return self._decode_bytes(record_buffer)
+
+        # otherwise split the record by the eol
+        decoded_records = self._decode_bytes(record_buffer).rstrip(self.eol).split(self.eol)
+
+        # if there was only one record, return just the first element in the
+        # list, otherwise return the whole list.
+        return decoded_records[0] if len(decoded_records) == 1 else decoded_records</code></pre>
 </details>
 </section>
 <section>
@@ -246,7 +269,7 @@ class UDPReader(Reader):
 <dl>
 <dt id="logger.readers.udp_reader.UDPReader"><code class="flex name class">
 <span>class <span class="ident">UDPReader</span></span>
-<span>(</span><span>interface=None, port=None, mc_group=None, reuseaddr=False, reuseport=False, encoding='utf-8', encoding_errors='ignore')</span>
+<span>(</span><span>interface=None, port=None, mc_group=None, reuseaddr=False, reuseport=False, encoding='utf-8', encoding_errors='ignore', eol=None, this_is_a_test=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Read UDP packets from network.</p>
@@ -267,15 +290,19 @@ reuseaddr    Specifies wether we set SO_REUSEADDR on the created socket.  If
 reuseport    Specifies wether we set SO_REUSEPORT on the created socket.  If
              you don't know you need this, don't enable it.
 
-encoding - 'utf-8' by default. If empty or None, do not attempt any decoding
-        and return raw bytes. Other possible encodings are listed in online
-        documentation here:
-        https://docs.python.org/3/library/codecs.html#standard-encodings
+encoding     'utf-8' by default. If empty or None, do not attempt any decoding
+             and return raw bytes. Other possible encodings are listed in
+             online documentation here:
+             https://docs. python.org/3/library/codecs.html#standard-encodings
 
-encoding_errors - 'ignore' by default. Other error strategies are 'strict',
-        'replace', and 'backslashreplace', described here:
-        https://docs.python.org/3/howto/unicode.html#encodings
+encoding_errors 'ignore' by default. Other error strategies are 'strict',
+                'replace', and 'backslashreplace', described here:
+                https://docs.python.org/3/howto/unicode.html#encodings
 
+eol          split the record by the eol character if present.
+
+this_is_a_test - If True, recognize that this is being called in a unittest, so
+        don't output warnings about not using loopback addresses.
 </code></pre></div>
 <details class="source">
 <summary>
@@ -286,7 +313,8 @@ encoding_errors - 'ignore' by default. Other error strategies are 'strict',
     ############################
     def __init__(self, interface=None, port=None, mc_group=None,
                  reuseaddr=False, reuseport=False,
-                 encoding=&#39;utf-8&#39;, encoding_errors=&#39;ignore&#39;):
+                 encoding=&#39;utf-8&#39;, encoding_errors=&#39;ignore&#39;, eol=None,
+                 this_is_a_test=False):
         &#34;&#34;&#34;
         ```
         interface    IP (or resolvable name) of interface to listen on.  None or &#39;&#39;
@@ -306,15 +334,19 @@ encoding_errors - 'ignore' by default. Other error strategies are 'strict',
         reuseport    Specifies wether we set SO_REUSEPORT on the created socket.  If
                      you don&#39;t know you need this, don&#39;t enable it.
 
-        encoding - &#39;utf-8&#39; by default. If empty or None, do not attempt any decoding
-                and return raw bytes. Other possible encodings are listed in online
-                documentation here:
-                https://docs.python.org/3/library/codecs.html#standard-encodings
+        encoding     &#39;utf-8&#39; by default. If empty or None, do not attempt any decoding
+                     and return raw bytes. Other possible encodings are listed in
+                     online documentation here:
+                     https://docs. python.org/3/library/codecs.html#standard-encodings
 
-        encoding_errors - &#39;ignore&#39; by default. Other error strategies are &#39;strict&#39;,
-                &#39;replace&#39;, and &#39;backslashreplace&#39;, described here:
-                https://docs.python.org/3/howto/unicode.html#encodings
+        encoding_errors &#39;ignore&#39; by default. Other error strategies are &#39;strict&#39;,
+                        &#39;replace&#39;, and &#39;backslashreplace&#39;, described here:
+                        https://docs.python.org/3/howto/unicode.html#encodings
 
+        eol          split the record by the eol character if present.
+
+        this_is_a_test - If True, recognize that this is being called in a unittest, so
+                don&#39;t output warnings about not using loopback addresses.
         ```
         &#34;&#34;&#34;
         super().__init__(encoding=encoding,
@@ -358,8 +390,17 @@ encoding_errors - 'ignore' by default. Other error strategies are 'strict',
         self.reuseaddr = reuseaddr
         self.reuseport = reuseport
 
+        self.eol = eol
+
+        self.this_is_a_test = this_is_a_test
+
         # socket gets initialized on-demand in read()
         self.socket = None
+
+    ############################
+    def __del__(self):
+        if self.socket:
+            self.socket.close()
 
     ############################
     def _open_socket(self):
@@ -385,7 +426,7 @@ encoding_errors - 'ignore' by default. Other error strategies are 'strict',
             #       never leave the system, and you never actually join the
             #       group.
             #
-            if self.interface.startswith(&#39;127.&#39;):
+            if self.interface.startswith(&#39;127.&#39;) and not self.this_is_a_test:
                 logging.warning(&#34;Can&#39;t use loopback device for joining multicast groups.  Make &#34;
                                 &#34;sure your system&#39;s hostname does NOT resolve to something in &#34;
                                 &#34;the 127.0.0.0/8 address block (e.g., localhost, 127.0.0.1), or &#34;
@@ -393,7 +434,7 @@ encoding_errors - 'ignore' by default. Other error strategies are 'strict',
                                 &#34;`interface` parameter.  (You can ignore this message if you&#39;re &#34;
                                 &#34;actually just doing loopback testing.)&#34;)
             sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_IF,
-                                  socket.inet_aton(self.interface))
+                            socket.inet_aton(self.interface))
 
             # join the group via IGMP
             #
@@ -427,7 +468,7 @@ encoding_errors - 'ignore' by default. Other error strategies are 'strict',
             return
 
         # Read datagrams until we get one that doesn&#39;t end with a FRAGMENT_MARKER
-        record_buffer=b&#39;&#39;
+        record_buffer = b&#39;&#39;
         while True:
             try:
                 record = self.socket.recv(READ_BUFFER_SIZE)
@@ -447,7 +488,17 @@ encoding_errors - 'ignore' by default. Other error strategies are 'strict',
                 break
 
         # we&#39;ve got a whole record in our record_buffer, decode it
-        return self._decode_bytes(record_buffer)</code></pre>
+
+        # if eol == None, return the record as is
+        if not self.eol:
+            return self._decode_bytes(record_buffer)
+
+        # otherwise split the record by the eol
+        decoded_records = self._decode_bytes(record_buffer).rstrip(self.eol).split(self.eol)
+
+        # if there was only one record, return just the first element in the
+        # list, otherwise return the whole list.
+        return decoded_records[0] if len(decoded_records) == 1 else decoded_records</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -476,7 +527,7 @@ encoding_errors - 'ignore' by default. Other error strategies are 'strict',
         return
 
     # Read datagrams until we get one that doesn&#39;t end with a FRAGMENT_MARKER
-    record_buffer=b&#39;&#39;
+    record_buffer = b&#39;&#39;
     while True:
         try:
             record = self.socket.recv(READ_BUFFER_SIZE)
@@ -496,7 +547,17 @@ encoding_errors - 'ignore' by default. Other error strategies are 'strict',
             break
 
     # we&#39;ve got a whole record in our record_buffer, decode it
-    return self._decode_bytes(record_buffer)</code></pre>
+
+    # if eol == None, return the record as is
+    if not self.eol:
+        return self._decode_bytes(record_buffer)
+
+    # otherwise split the record by the eol
+    decoded_records = self._decode_bytes(record_buffer).rstrip(self.eol).split(self.eol)
+
+    # if there was only one record, return just the first element in the
+    # list, otherwise return the whole list.
+    return decoded_records[0] if len(decoded_records) == 1 else decoded_records</code></pre>
 </details>
 </dd>
 </dl>

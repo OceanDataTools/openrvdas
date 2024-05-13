@@ -28,7 +28,6 @@
 </summary>
 <pre><code class="python">#!/usr/bin/env python3
 
-import json
 import logging
 import socket
 import sys
@@ -163,8 +162,11 @@ class TCPWriter(Writer):
 
     ############################
     def _close_socket(self, s):
-        s.shutdown(socket.SHUT_RDWR)
-        s.close()
+        try:
+            s.shutdown(socket.SHUT_RDWR)
+            s.close()
+        except OSError:
+            logging.debug(&#39;Unable to close socket&#39;)
 
     ############################
     def write(self, record):
@@ -246,13 +248,13 @@ class TCPWriter(Writer):
             try:
                 # If the socket is still connected, this will raise
                 # BlockingIOError.  If it&#39;s not, it returns 0 bytes.
-                msg = self.socket.recv(1, socket.MSG_DONTWAIT | socket.MSG_PEEK)
+                msg = self.socket.recv(1, socket.MSG_DONTWAIT | socket.MSG_PEEK)  # noqa F841
                 logging.error(&#39;TCPWriter: connection closed&#39;)
                 self.num_warnings += 1
                 self._close_socket(self.socket)
                 self.socket = None
                 continue
-            except BlockingIOError as e:
+            except BlockingIOError:
                 pass
 
             # we&#39;re connected, try sending
@@ -264,7 +266,8 @@ class TCPWriter(Writer):
                 # NOTE: In order to get this far, we have to have successfully
                 #       connected, which means we JUST reset self.num_warnings
                 #
-                logging.error(&#39;TCPWriter: send() error: %s:%d: %s&#39;, self.destination, self.port, str(e))
+                logging.error(&#39;TCPWriter: send() error: %s:%d: %s&#39;,
+                              self.destination, self.port, str(e))
                 self.num_warnings += 1
                 self._close_socket(self.socket)
                 self.socket = None
@@ -454,8 +457,11 @@ encoding_errors - 'ignore' by default. Other error strategies are
 
     ############################
     def _close_socket(self, s):
-        s.shutdown(socket.SHUT_RDWR)
-        s.close()
+        try:
+            s.shutdown(socket.SHUT_RDWR)
+            s.close()
+        except OSError:
+            logging.debug(&#39;Unable to close socket&#39;)
 
     ############################
     def write(self, record):
@@ -537,13 +543,13 @@ encoding_errors - 'ignore' by default. Other error strategies are
             try:
                 # If the socket is still connected, this will raise
                 # BlockingIOError.  If it&#39;s not, it returns 0 bytes.
-                msg = self.socket.recv(1, socket.MSG_DONTWAIT | socket.MSG_PEEK)
+                msg = self.socket.recv(1, socket.MSG_DONTWAIT | socket.MSG_PEEK)  # noqa F841
                 logging.error(&#39;TCPWriter: connection closed&#39;)
                 self.num_warnings += 1
                 self._close_socket(self.socket)
                 self.socket = None
                 continue
-            except BlockingIOError as e:
+            except BlockingIOError:
                 pass
 
             # we&#39;re connected, try sending
@@ -555,7 +561,8 @@ encoding_errors - 'ignore' by default. Other error strategies are
                 # NOTE: In order to get this far, we have to have successfully
                 #       connected, which means we JUST reset self.num_warnings
                 #
-                logging.error(&#39;TCPWriter: send() error: %s:%d: %s&#39;, self.destination, self.port, str(e))
+                logging.error(&#39;TCPWriter: send() error: %s:%d: %s&#39;,
+                              self.destination, self.port, str(e))
                 self.num_warnings += 1
                 self._close_socket(self.socket)
                 self.socket = None
@@ -663,13 +670,13 @@ encoding_errors - 'ignore' by default. Other error strategies are
         try:
             # If the socket is still connected, this will raise
             # BlockingIOError.  If it&#39;s not, it returns 0 bytes.
-            msg = self.socket.recv(1, socket.MSG_DONTWAIT | socket.MSG_PEEK)
+            msg = self.socket.recv(1, socket.MSG_DONTWAIT | socket.MSG_PEEK)  # noqa F841
             logging.error(&#39;TCPWriter: connection closed&#39;)
             self.num_warnings += 1
             self._close_socket(self.socket)
             self.socket = None
             continue
-        except BlockingIOError as e:
+        except BlockingIOError:
             pass
 
         # we&#39;re connected, try sending
@@ -681,7 +688,8 @@ encoding_errors - 'ignore' by default. Other error strategies are
             # NOTE: In order to get this far, we have to have successfully
             #       connected, which means we JUST reset self.num_warnings
             #
-            logging.error(&#39;TCPWriter: send() error: %s:%d: %s&#39;, self.destination, self.port, str(e))
+            logging.error(&#39;TCPWriter: send() error: %s:%d: %s&#39;,
+                          self.destination, self.port, str(e))
             self.num_warnings += 1
             self._close_socket(self.socket)
             self.socket = None

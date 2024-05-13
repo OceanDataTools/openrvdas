@@ -44,9 +44,14 @@ import datetime
 import glob
 import json
 import logging
-import parse
 import pprint
 import sys
+
+try:
+    import parse
+    PARSE_INSTALLED = True
+except ImportError:
+    PARSE_INSTALLED = False
 
 # Append openrvdas root to syspath prior to importing openrvdas modules
 from os.path import dirname, realpath
@@ -115,6 +120,10 @@ class RecordParser:
             Not used if prepend_data_id is false.
         ```
         &#34;&#34;&#34;
+        if not PARSE_INSTALLED:
+            raise ImportError(&#39;RecordParser requires Python &#34;parse&#34; module; &#39;
+                              &#39;please run &#34;pip install parse&#34;&#39;)
+
         self.strip_unprintable = strip_unprintable
         self.quiet = quiet
         self.field_patterns = field_patterns
@@ -696,6 +705,10 @@ delimiter
             Not used if prepend_data_id is false.
         ```
         &#34;&#34;&#34;
+        if not PARSE_INSTALLED:
+            raise ImportError(&#39;RecordParser requires Python &#34;parse&#34; module; &#39;
+                              &#39;please run &#34;pip install parse&#34;&#39;)
+
         self.strip_unprintable = strip_unprintable
         self.quiet = quiet
         self.field_patterns = field_patterns

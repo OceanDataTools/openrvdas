@@ -31,7 +31,12 @@
 import time
 import logging
 import sys
-import urllib3
+
+try:
+    import urllib3
+    URLLIB3_INSTALLED = True
+except ImportError:
+    URLLIB3_INSTALLED = False
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
@@ -91,6 +96,9 @@ class InfluxDBWriter(Writer):
         ```
         &#34;&#34;&#34;
         super().__init__(input_format=Text)  # type: ignore
+        if not URLLIB3_INSTALLED:
+            raise ImportError(&#39;InfluxDBWriter requires Python &#34;urllib3&#34; module; &#39;
+                              &#39;please run &#34;pip install urllib3&#34;&#39;)
         if not auth_token:
             raise RuntimeError(&#39;No auth token specified in InfluxDBWriter and &#39;
                                &#39;none found in database/influxdb/settings.py. Have &#39;
@@ -308,6 +316,9 @@ verify_ssl - If the URL begins with 'https', SSL will be used for the
         ```
         &#34;&#34;&#34;
         super().__init__(input_format=Text)  # type: ignore
+        if not URLLIB3_INSTALLED:
+            raise ImportError(&#39;InfluxDBWriter requires Python &#34;urllib3&#34; module; &#39;
+                              &#39;please run &#34;pip install urllib3&#34;&#39;)
         if not auth_token:
             raise RuntimeError(&#39;No auth token specified in InfluxDBWriter and &#39;
                                &#39;none found in database/influxdb/settings.py. Have &#39;

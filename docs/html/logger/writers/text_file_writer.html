@@ -91,7 +91,7 @@ class TextFileWriter(Writer):
             try:
                 with open(header_file, &#39;r&#39;) as file:
                     self.header = file.read()
-            except:
+            except:  # noqa E722 - though should really fix this
                 raise ValueError(&#39;FileWriter: Unable to add header to data &#39;
                                  &#39;file. header_file argument must be a valid &#39;
                                  &#39;filepath: %s&#39;, header_file)
@@ -280,7 +280,7 @@ Add the content of the specified file to each file.
             try:
                 with open(header_file, &#39;r&#39;) as file:
                     self.header = file.read()
-            except:
+            except:  # noqa E722 - though should really fix this
                 raise ValueError(&#39;FileWriter: Unable to add header to data &#39;
                                  &#39;file. header_file argument must be a valid &#39;
                                  &#39;filepath: %s&#39;, header_file)
@@ -381,10 +381,6 @@ Add the content of the specified file to each file.
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="logger.writers.writer.Writer" href="writer.html#logger.writers.writer.Writer">Writer</a></li>
-</ul>
-<h3>Subclasses</h3>
-<ul class="hlist">
-<li><a title="logger.writers.test_text_file_writer.TodayTextFileWriter" href="test_text_file_writer.html#logger.writers.test_text_file_writer.TodayTextFileWriter">TodayTextFileWriter</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>

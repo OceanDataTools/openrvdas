@@ -535,7 +535,7 @@ if __name__ == &#39;__main__&#39;:  # noqa: C901
         from server.in_memory_server_api import InMemoryServerAPI
         api = InMemoryServerAPI()
     elif args.database == &#39;sqlite&#39;:
-        from server.sqlite_server_api import SQLiteServerAPI
+        from server.sqlite_server_api import SQLiteServerAPI  # noqa F811
         api = SQLiteServerAPI()
     else:
         raise ValueError(&#39;Illegal arg for --database: &#34;%s&#34;&#39; % args.database)

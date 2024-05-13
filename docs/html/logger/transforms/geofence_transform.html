@@ -38,7 +38,7 @@ readers:
 # downloaded from https://marineregions.org/eezsearch.php.
 transforms:
   - class: GeofenceTransform
-    module: loggers.transforms.geofence_transform
+    module: logger.transforms.geofence_transform
     kwargs:
       latitude_field_name: s330Latitude,
       longitude_field_name: s330Longitude
@@ -87,7 +87,7 @@ readers:
 # downloaded from https://marineregions.org/eezsearch.php.
 transforms:
   - class: GeofenceTransform
-    module: loggers.transforms.geofence_transform
+    module: logger.transforms.geofence_transform
     kwargs:
       latitude_field_name: s330Latitude,
       longitude_field_name: s330Longitude
@@ -116,6 +116,7 @@ projection area, possibly resulting in discontinuities. Simpler and less error-p
 to just require degrees.
 &#34;&#34;&#34;
 import logging
+import os
 import sys
 import time
 
@@ -126,13 +127,19 @@ from logger.utils.das_record import DASRecord  # noqa: E402
 # Load the transform-specific packages we need
 import_errors = False
 try:
-    import geopandas
+    import geopandas as gpd
 except ImportError:
     import_errors = True
 try:
     from shapely.geometry import Point
 except ImportError:
     import_errors = True
+
+import_pandas_errors = False
+try:
+    import pandas as pd
+except ImportError:
+    import_pandas_errors = True
 
 
 ################################################################################
@@ -144,7 +151,8 @@ class GeofenceTransform():
     def __init__(self,
                  latitude_field_name,
                  longitude_field_name,
-                 boundary_file_name,
+                 boundary_file_name=None,
+                 boundary_dir_name=None,
                  distance_from_boundary_in_degrees=0,
                  leaving_boundary_message=None,
                  entering_boundary_message=None,
@@ -159,6 +167,9 @@ class GeofenceTransform():
 
         boundary_file_name
                 Path to file from which to load GML boundary definition..
+
+        boundary_dir_name
+                Path to directory from which to load multiple GML boundary definitions.
 
         distance_from_boundary_in_degrees
                 Optional distance from boundary to place the fence, in degrees.
@@ -191,8 +202,43 @@ class GeofenceTransform():
 
         self.last_check = 0  # timestamp: the last time we checked
 
-        # Load the EEZ data from the GML file
-        eez_data = geopandas.read_file(boundary_file_name)
+        if (boundary_file_name and boundary_dir_name
+                or not (boundary_file_name or boundary_dir_name)):
+            raise ValueError(&#39;Please specify a boundary_file_name OR a boundary_dir_name &#39;
+                             &#39;containing multiple gml files.&#39;)
+
+        eez_data = None
+
+        if boundary_file_name:
+            # Load the EEZ data from the GML file
+            eez_data = gpd.read_file(boundary_file_name)
+
+        if boundary_dir_name:
+            if import_pandas_errors:
+                raise ImportError(&#39;GeofenceTransform using &#34;boundary_dir_name&#34; requires &#39;
+                                  &#39;installation of the pandas packages. Please run &#34;pip &#39;
+                                  &#39;install pandas&#34; and retry.&#39;)
+
+            # List all GML files in the directory
+            gml_files = [os.path.join(boundary_dir_name, file)
+                         for file in os.listdir(boundary_dir_name)
+                         if file.endswith(&#39;.gml&#39;)]
+
+            # Initialize an empty list to store GeoDataFrames
+            dfs = []
+
+            # Read each GML file into a GeoDataFrame and store it in the list
+            for gml in gml_files:
+                dfs.append(gpd.read_file(gml))
+
+            # Combine all GeoDataFrames into a single GeoDataFrame
+            combined_gdf = gpd.GeoDataFrame(pd.concat(dfs, ignore_index=True), crs=dfs[0].crs)
+
+            # Combine all polygons into a single polygon
+            union_polygon = combined_gdf.unary_union
+
+            # Convert the union polygon into a GeoDataFrame
+            eez_data = gpd.GeoDataFrame(geometry=[union_polygon])
 
         # Buffer the country&#39;s EEZ by distance in degrees
         self.buffered_eez = eez_data.buffer(distance_from_boundary_in_degrees)
@@ -299,7 +345,7 @@ class GeofenceTransform():
 <dl>
 <dt id="logger.transforms.geofence_transform.GeofenceTransform"><code class="flex name class">
 <span>class <span class="ident">GeofenceTransform</span></span>
-<span>(</span><span>latitude_field_name, longitude_field_name, boundary_file_name, distance_from_boundary_in_degrees=0, leaving_boundary_message=None, entering_boundary_message=None, seconds_between_checks=0)</span>
+<span>(</span><span>latitude_field_name, longitude_field_name, boundary_file_name=None, boundary_dir_name=None, distance_from_boundary_in_degrees=0, leaving_boundary_message=None, entering_boundary_message=None, seconds_between_checks=0)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Class that reads lat/lon from passed records and compare to a geofence loaded at
@@ -313,6 +359,9 @@ longitude_field_name
 
 boundary_file_name
         Path to file from which to load GML boundary definition..
+
+boundary_dir_name
+        Path to directory from which to load multiple GML boundary definitions.
 
 distance_from_boundary_in_degrees
         Optional distance from boundary to place the fence, in degrees.
@@ -339,7 +388,8 @@ seconds_between_checks
     def __init__(self,
                  latitude_field_name,
                  longitude_field_name,
-                 boundary_file_name,
+                 boundary_file_name=None,
+                 boundary_dir_name=None,
                  distance_from_boundary_in_degrees=0,
                  leaving_boundary_message=None,
                  entering_boundary_message=None,
@@ -354,6 +404,9 @@ seconds_between_checks
 
         boundary_file_name
                 Path to file from which to load GML boundary definition..
+
+        boundary_dir_name
+                Path to directory from which to load multiple GML boundary definitions.
 
         distance_from_boundary_in_degrees
                 Optional distance from boundary to place the fence, in degrees.
@@ -386,8 +439,43 @@ seconds_between_checks
 
         self.last_check = 0  # timestamp: the last time we checked
 
-        # Load the EEZ data from the GML file
-        eez_data = geopandas.read_file(boundary_file_name)
+        if (boundary_file_name and boundary_dir_name
+                or not (boundary_file_name or boundary_dir_name)):
+            raise ValueError(&#39;Please specify a boundary_file_name OR a boundary_dir_name &#39;
+                             &#39;containing multiple gml files.&#39;)
+
+        eez_data = None
+
+        if boundary_file_name:
+            # Load the EEZ data from the GML file
+            eez_data = gpd.read_file(boundary_file_name)
+
+        if boundary_dir_name:
+            if import_pandas_errors:
+                raise ImportError(&#39;GeofenceTransform using &#34;boundary_dir_name&#34; requires &#39;
+                                  &#39;installation of the pandas packages. Please run &#34;pip &#39;
+                                  &#39;install pandas&#34; and retry.&#39;)
+
+            # List all GML files in the directory
+            gml_files = [os.path.join(boundary_dir_name, file)
+                         for file in os.listdir(boundary_dir_name)
+                         if file.endswith(&#39;.gml&#39;)]
+
+            # Initialize an empty list to store GeoDataFrames
+            dfs = []
+
+            # Read each GML file into a GeoDataFrame and store it in the list
+            for gml in gml_files:
+                dfs.append(gpd.read_file(gml))
+
+            # Combine all GeoDataFrames into a single GeoDataFrame
+            combined_gdf = gpd.GeoDataFrame(pd.concat(dfs, ignore_index=True), crs=dfs[0].crs)
+
+            # Combine all polygons into a single polygon
+            union_polygon = combined_gdf.unary_union
+
+            # Convert the union polygon into a GeoDataFrame
+            eez_data = gpd.GeoDataFrame(geometry=[union_polygon])
 
         # Buffer the country&#39;s EEZ by distance in degrees
         self.buffered_eez = eez_data.buffer(distance_from_boundary_in_degrees)

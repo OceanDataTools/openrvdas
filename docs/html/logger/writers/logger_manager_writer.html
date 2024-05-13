@@ -51,7 +51,7 @@ readers:
 # downloaded from https://marineregions.org/eezsearch.php.
 transforms:
   - class: GeofenceTransform
-    module: loggers.transforms.geofence_transform
+    module: logger.transforms.geofence_transform
     kwargs:
       latitude_field_name: s330Latitude,
       longitude_field_name: s330Longitude
@@ -105,7 +105,7 @@ readers:
 # downloaded from https://marineregions.org/eezsearch.php.
 transforms:
   - class: GeofenceTransform
-    module: loggers.transforms.geofence_transform
+    module: logger.transforms.geofence_transform
     kwargs:
       latitude_field_name: s330Latitude,
       longitude_field_name: s330Longitude
@@ -164,7 +164,7 @@ class LoggerManagerWriter(Writer):
         ```
         &#34;&#34;&#34;
         if database and api:
-            raise ValueError(f&#39;Must specify either &#34;database&#34; or &#34;api&#34; but not both.&#39;)
+            raise ValueError(&#39;Must specify either &#34;database&#34; or &#34;api&#34; but not both.&#39;)
 
         # If database specified, create appropriate api instance
         if database:
@@ -178,12 +178,12 @@ class LoggerManagerWriter(Writer):
                 from server.sqlite_server_api import SQLiteServerAPI
                 api = SQLiteServerAPI()
             else:
-                raise ValueError(f&#39;Parameter &#34;database&#34; must be one of [django, memory, sqlite], &#39;
+                raise ValueError(&#39;Parameter &#34;database&#34; must be one of [django, memory, sqlite], &#39;
                                  f&#39;found &#34;{database}&#34;&#39;)
 
         # If not database, we&#39;d better have an api specified
         elif not api:
-            raise ValueError(f&#39;Must specify one of &#34;database&#34; or &#34;api&#34;.&#39;)
+            raise ValueError(&#39;Must specify one of &#34;database&#34; or &#34;api&#34;.&#39;)
 
         self.command_parser = ServerAPICommandLine(api=api)
 
@@ -310,7 +310,7 @@ of prior commands to settle.
         ```
         &#34;&#34;&#34;
         if database and api:
-            raise ValueError(f&#39;Must specify either &#34;database&#34; or &#34;api&#34; but not both.&#39;)
+            raise ValueError(&#39;Must specify either &#34;database&#34; or &#34;api&#34; but not both.&#39;)
 
         # If database specified, create appropriate api instance
         if database:
@@ -324,12 +324,12 @@ of prior commands to settle.
                 from server.sqlite_server_api import SQLiteServerAPI
                 api = SQLiteServerAPI()
             else:
-                raise ValueError(f&#39;Parameter &#34;database&#34; must be one of [django, memory, sqlite], &#39;
+                raise ValueError(&#39;Parameter &#34;database&#34; must be one of [django, memory, sqlite], &#39;
                                  f&#39;found &#34;{database}&#34;&#39;)
 
         # If not database, we&#39;d better have an api specified
         elif not api:
-            raise ValueError(f&#39;Must specify one of &#34;database&#34; or &#34;api&#34;.&#39;)
+            raise ValueError(&#39;Must specify one of &#34;database&#34; or &#34;api&#34;.&#39;)
 
         self.command_parser = ServerAPICommandLine(api=api)
 
