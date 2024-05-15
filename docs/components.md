@@ -17,9 +17,7 @@ and Transform components. For background on using them, please see the
   * [Writers](#writers)
   * [Transforms](#transforms)
   * [Future Components](#future-components)
-* [Appendix: Record Format Compatibility](#appendix-record-format-compatibility)
-
-
+  
 ## Introduction to Components
 
 The core of OpenRVDAS are three types of simple components designed to be
@@ -334,69 +332,3 @@ Below, we list and briefly describe (most of) the currently-implemented Reader, 
 #### ParseXMLTransform
 
 #### AlarmWriter
-
-## Appendix: Record Format Compatibility
-
-(Note: this section gets into the weeds a bit. Feel free to skip if not interested on the first pass.)
-
-Being able to snap arbitrary input/output components together raises the obvious challenge of ensuring compatibility between the type of record one component produces and the type another component accepts. As the architecture now stands, there is nothing that prevents a user from connecting incompatible components, but we do have a rudimentary system for allowing users to perform compatibility checks between Readers, Transforms and Writers.
-
-The core of this functionality is implemented in [logger/utils/formats.py](../logger/utils/formats.py), which defines a hierarchy of classes intended to represent format compatibilities. As of this writing, the hierarchy is as follows:
-
-* Bytes
-  * Text
-     * NMEA
-     * JSON(a generic JSON string)
-        * JSON_Record (JSON string representing a DAS Record)
-     * XML
-        * XML_OSU
-  * Python (e.g. a dict or list)
-    * Python_Record (Python representation of a DAS Record)
-* Unknown
-
-The idea is that each class defined here represents a particular data exchange format, including everything from raw binary (Bytes) to JSON encodings of RVDAS Records (JSON_Record). Processes that accept inputs higher in the inheritance tree can also accept inputs that inherit from them. So something that accepts Text can also accept NMEA or XML, but not vice versa.
-
-There is also a special case 'Unknown' format that can't accept anything and has no common elements with any other format.
-
-The top-level class, Bytes, implements two class methods that proceduralize this idea:
-
-```
-  A.can_accept(B) - true iff format A can accept format B, e.g.
-     assertTrue(formats.JSON.can_accept(formats.JSON_Record))
-
-  A.common(B) - the lowest common format A and B share, e.g.
-     formats.XML.common(formats.JSON_Record) == formats.Text
-```
-The abstract base class definitions for Reader, Transform and Writer (from which it is recommended new readers, transforms and writers inherit), implement methods designed to shield users from having to directly deal with format classes. The Reader class, for example, takes a format class as an initialization parameter:
-
-```
-  class Reader:
-    def __init__(self, output_format=formats.Unknown):
-      self.output_format(output_format)
-```
-The concrete SerialReader class supplies the output_format value when it initializes an instance:
-
-```
-  class SerialReader(Reader):
-    def __init__(self, ...):
-      super().__init__(output_format=formats.NMEA)
-```
-The abstract Reader, Transform and Writer classes provide two methods for accessing format values, bearing unsurprising names:
-
-```
-output_format() - for classes that inherit from Reader and Transform
-input_format() - for classes that inherit from Transform and Writer.
-```
-To use them together, a coder wanting to connect a reader and writer can check
-
-```
-    writer.input_format().can_accept(reader.output_format())
-```
-or, using the convenience method implemented for writers, can just write
-
-```
-    writer.can_accept(reader)
-```
-The ComposedReader and ComposedWriter classes take an optional check_format argument (default False) that causes them to check that all their readers (or respectively, writers) and transforms are compatible.
-
-At present, this format checking is still very rudimentary and warrants further study to see if it's even the right way to go about things. There are challenges with figuring out how to accommodate transforms whose output format depends on their input, and on the possible need for multiple inheritance in some cases.

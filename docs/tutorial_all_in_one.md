@@ -165,24 +165,97 @@ logger/listener/listen.py \
 ```
 The script is very powerful, but also has some non-intuitive gotchas, such as dependencies in the ordering of command line parameters. Please see the dedicated [listen.py document](listen_py.md) for full details.
 
-## Some useful types of modules
-The full complement of OpenRVDAS __readers__, __transforms__ and __writers__ and their functionality can be perused in the repository itself under the `logger/` subdirectory and in the [auto-generated html module documentation](https://htmlpreview.github.io/?https://raw.githubusercontent.com/oceandatatools/openrvdas/master/docs/html/logger/index.html).
+## Next things to look at
+The full complement of OpenRVDAS __readers__, __transforms__ and __writers__ and their functionality can be perused in the repository itself under the `logger/` subdirectory or in the [auto-generated html module documentation](https://htmlpreview.github.io/?https://raw.githubusercontent.com/oceandatatools/openrvdas/master/docs/html/logger/index.html).
 
-Below we review a few of the most immediately-useful modules.
+To get a sense of a typical set of logger configurations, it is also instructive to look at the loggers defined in the sample cruise definition file for the NB Palmer, in the `configs:` section of [test/NBP1406/NBP1406_cruise.yaml](../test/NBP1406/NBP1406_cruise.yaml).
+
+Note that as a full cruise definition, the file contains multiple configurations for each logger, as well as "cruise modes" that specify which configuration each logger should run in which mode. To better understand cruise definition files, please see the [Controlling Loggers](controlling_loggers.md) document.
 
 ### Writing/reading logfiles
 While writing raw data to plain text files is a useful start, two modules, `LogfileWriter` and `LogfileReader` allow more refined handling for timestamped data.
 
-A `LogfileWriter` allows creating date-stamped log files that roll over on a daily (or hourly) basis using names compatible with the [R2R project conventions](https://www.rvdata.us/). When further processing by another logger is required, `LogfileReader` is able to read these files in a timestamp-aware way.
+If you pass a record that has been timestamped by the `TimestampTransform` to a LogfileWriter, it will get stored in a series of datestamped files rolled over daily using names compatible with the [R2R project conventions](https://www.rvdata.us/). When further processing by another logger is required, `LogfileReader` is able to read these files in a timestamp-aware way.
 
 ### Parsing records
-Timestamping and storing raw data is useful in itself, but
+Timestamping and storing raw data to log files is useful in itself, but you can unlock much more of the power of OpenRVDAS by having it parse your raw data records into labeled fields that can be plotted, compared and calculated with.
+
+Using a `ParseTransform` you can convert raw records like these:
+```
+seap 2014-08-01T00:00:00.814000Z $GPZDA,000000.70,01,08,2014,,*6F
+seap 2014-08-01T00:00:00.814000Z $GPGGA,000000.70,2200.112071,S,01756.360200,W,1,10,0.9,1.04,M,,M,,*41
+seap 2014-08-01T00:00:00.931000Z $GPVTG,213.66,T,,M,9.4,N,,K,A*1E
+```
+into structured data fields like these:
+```
+{'data_id': 'seap',
+  'fields': {'SeapGPSDay': 1,
+             'SeapGPSMonth': 8,
+             'SeapGPSTime': 0.7,
+             'SeapGPSYear': 2014},
+  'timestamp': 1406851200.814},
+ {'data_id': 'seap',
+  'fields': {'SeapAntennaHeight': 1.04,
+             'SeapEorW': 'W',
+             'SeapFixQuality': 1,
+             'SeapGPSTime': 0.7,
+             'SeapHDOP': 0.9,
+             'SeapLatitude': 2200.112071,
+             'SeapLongitude': 1756.3602,
+             'SeapNorS': 'S',
+             'SeapNumSats': 10},
+  'timestamp': 1406851200.814},
+ {'data_id': 'seap',
+  'fields': {'SeapCourseTrue': 213.66, 'SeapMode': 'A', 'SeapSpeedKt': 9.4},
+  'timestamp': 1406851200.931}]
+```
+
+The basic specification of the `ParseTransform` requires only telling it where to look for the appropriate device definition files. This can be done with both the command line interface:
+```buildoutcfg
+logger/listener/listen.py \
+    --udp 6224 \
+    --parse_definition_path "local/devices/*.yaml,/opt/openrvdas/local/devices/*.yaml" \
+    --transform_parse \
+    --write_file -
+```
+or as part of an OpenRVDAS logger configuration:
+```buildoutcfg
+    - class: ParseTransform
+      kwargs:
+        definition_path: test/NBP1406/devices/nbp_devices.yaml
+```
+
+For detailed instructions on using the `ParseTransform`, please read the ["Record Parsing" document](parsing.md).
 
 ### Database connectors
 
-### All the modules
+### Other modules
+In addition to the standard OpenRVDAS modules under the `logger/` directory, your installation may include additional modules in the `local` and `contrib` directories. They may be used by specifying a module location in the logger configuration:
+```buildoutcfg
+- class: BME280Reader
+  module: contrib.raspberrypi.readers.bme280_reader
+  kwargs:
+    interval: 60
+    temp_in_f: true
+    pressure_in_inches: True
+```
 
 ### Creating your own modules
+There is no need to despair if you can't find a module, or combination of modules to do what you need to do. The modularity of OpenRVDAS makes it unreasonably easy to create your own readers, transforms and writers and incorporate them into your workflow.
+
+#### Readers
+A reader is simply a Python class that supports a `read()` method that synchronously returns a "record".
+
+#### Transforms
+A transform is any Python class that supports a `transform(record)` method that takes some record (or list of records), does something to it/them and returns a record or list of records. It can optionally return `None` if the transformation results in an empty result, as would be the case if your transform were a type of filter.
+
+#### Writers
+A writer is any Python class that supports...you guessed it, a `write(record)` method that takes a record or list of records and does something with it. No return value is expected or checked.
+
+In each case, it is good form to link your modules into the repository under the `local/` subdirectory following the guidance in `local/README.md`.
+
+### Record types
+Note that while most modules do at least some type checking on their inputs, there is no explicit type-checking of records between modules. It is expected that the configuration designer verify that the output format of each module is compatible with the input format of the modules it feeds into.
 
 ## Controlling multiple loggers
 If you only have one or two sensors you intend to log, and wish them to be "always on," then creating a logger configuration file or two and setting them up to run via cron or systemd is a fine and simple solution. But most practical deployments have a dozen or more sensors/data sources and need to vary what is done with the data of each depending on the ship's location and operational status: you always want to relay certain data to ship displays, but only relay other data when underway. And you only want to save certain data only when operating outside of an EEZ.
