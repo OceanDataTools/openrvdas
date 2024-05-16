@@ -8,7 +8,7 @@ OpenRVDAS is designed to be modular and extensible, relying on simple compositio
 
 The project code repository is at [https://github.com/oceandatatools/openrvdas](https://github.com/oceandatatools/openrvdas).
 
-Please see the [OpenRVDAS Introduction and Overview](intro_and_overview.md), the [Introduction to Loggers](intro_to_loggers.md) and [Controlling Loggers](controlling_loggers.md) to get started.
+Please see the [OpenRVDAS Quickstart](quickstart.md), the [Introduction to Loggers](intro_to_loggers.md) and [Controlling Loggers](controlling_loggers.md) to get started.
 
 Other relevant documents are:
 
