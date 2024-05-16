@@ -21,13 +21,13 @@ from . import views
 
 urlpatterns = [
     path('', views.index, name='index'),
-    path('admin/', admin.site.urls),    
-    path('accounts/', include('django.contrib.auth.urls')),    
-    
-    #api_Views.py
+    path('admin/', admin.site.urls),
+    path('accounts/', include('django.contrib.auth.urls')),
+
+    # api_Views.py
     path('api/', include('django_gui.api_views')),
 
-    # Views.py    
+    # Views.py
     path('login/', views.login_user, name='login_user'),
     path('change_mode/', views.change_mode, name='change_mode'),
     path('edit_config/<str:logger_id>', views.edit_config, name='edit_config'),
@@ -35,5 +35,4 @@ urlpatterns = [
     path('widget/<str:field_list>', views.widget, name='widget'),
     path('widget/', views.widget, name='widget'),
     path('fields/', views.fields, name='fields'),
-  
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
