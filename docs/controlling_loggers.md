@@ -283,7 +283,7 @@ You will have noticed that many of the examples in this documentation make use o
   supervisor>
 ```
 
-Please see the [Django Web Interface](django_interface.md) document for detailed instructions on operating the web interface and the [server/README.md](../server/README.md) file and [logger_manager.py](../server/logger_manager.py) headers for the most up-to-date information on running logger\_manager.py.
+Please see the [GUI Quickstart](quickstart_gui.md) document for detailed instructions on operating the web interface and the [server/README.md](../server/README.md) file and [logger_manager.py](../server/logger_manager.py) headers for the most up-to-date information on running logger\_manager.py.
 
 ### RESTful API
 

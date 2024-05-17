@@ -121,16 +121,3 @@ Similarly, loggers that are writing to the database may be monitored using the l
     --database_password rvdas \
     --database rvdas@localhost:data
 ```
-
-## Display Pages
-
-A set of sample web displays is available at
-[http://openrvdas/display](http://openrvdas/display); the
-source files for these displays are under the project's
-[display](../display) directory. If you are using the
-``NBP1406_cruise.yaml`` cruise definition, have a look at the
-[http://openrvdas/display/nbp_dashboard.html](http://openrvdas/display/nbp_dashboard.html)
-page for an example of what the displays can do.
-
-Please see the [Displays and Widgets](display_widgets.md) page for a
-discussion of the construction and operation of display pages.
