@@ -11,8 +11,6 @@ The project code repository is at [https://github.com/oceandatatools/openrvdas](
 ## Where to start?
 * [OpenRVDAS Quickstart](quickstart.md) if you want to just grab the code and poke around with basic loggers as quickly as possible.
 * [GUI Quickstart](quickstart_gui.md) if you want to play with the web-based interface.
-* 
-* the [Introduction to Loggers](intro_to_loggers.md) and [Controlling Loggers](controlling_loggers.md) to get started.
 
 Other relevant documents are:
 
