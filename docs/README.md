@@ -1,6 +1,6 @@
 # OpenRVDAS
 © David Pablo Cohn - david.cohn@gmail.com  
-DRAFT 2018-08-09
+2024-05-17
 
 The Open Research Vessel Data Acquisition System (OpenRVDAS) is a software framework used for building custom data acquisition systems (DAS). OpenRVDAS target audiences are oceanographic research vessel operators and operators of other science-related platforms that have the need to record streaming data. OpenRVDAS is capable of reading data records from serial ports and network-aware sensors, optionally modifying those data records and streaming either the result to one or more destinations, including logfiles, network ports, databases, etc.
 
@@ -22,7 +22,7 @@ Other relevant documents are:
 * [Parsing](parsing.md) - how to work with the included RecordParser to turn raw text records into structured data fields
 * [Security assumptions](security.md) - the (rather naive) security assumptions made about the environment in which OpenRVDAS runs.
 
-A very rudimentary project website is available at [OpenRVDAS.org](http://openrvdas.org)
+OpenRVDAS is a part of the [Ocean Data Tools project](http://oceandata.tools).
 
 **DISCLAIMER**: THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF
 ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
