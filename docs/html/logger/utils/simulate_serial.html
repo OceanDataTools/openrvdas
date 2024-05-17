@@ -55,6 +55,10 @@ class SimSerial:
                  dsrdtr=False, inter_byte_timeout=None, exclusive=None):
         &#34;&#34;&#34;Takes source file, whether to deliver data at rate indicated by
         timestamps, and the standard parameters that a serial port takes.&#34;&#34;&#34;
+
+        # flake8: noqa: E501
+        logging.warning(&#39;simulate_serial.SimSerial is deprecated in favor of simulate_data.SimSerial&#39;)
+
         self.source_file = source_file
         self.use_timestamps = use_timestamps
         self.time_format = time_format
@@ -258,6 +262,10 @@ timestamps, and the standard parameters that a serial port takes.</p></div>
                  dsrdtr=False, inter_byte_timeout=None, exclusive=None):
         &#34;&#34;&#34;Takes source file, whether to deliver data at rate indicated by
         timestamps, and the standard parameters that a serial port takes.&#34;&#34;&#34;
+
+        # flake8: noqa: E501
+        logging.warning(&#39;simulate_serial.SimSerial is deprecated in favor of simulate_data.SimSerial&#39;)
+
         self.source_file = source_file
         self.use_timestamps = use_timestamps
         self.time_format = time_format

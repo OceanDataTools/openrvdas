@@ -1,4 +1,5 @@
-# OpenRVDAS Terminology:
+
+## OpenRVDAS Terminology:
 
 **Device Type**
   - A make/model of sensor. A device type definition describes the expected data strings that this device type is expected to generate, how to parse them, and what to name each field (optionally includes a description and unit information).
@@ -74,19 +75,19 @@
 **kwargs**
   - This is how arguments are passed to reader, transform and writer classes. It's a Python thing.
 
-# Additional resources:
+## Additional resources:
 
 + OpenRVDAS official documentation: https://github.com/OceanDataTools/openrvdas/tree/master/docs
 + YAML format cheatsheet: https://lzone.de/cheat-sheet/YAML
 
-# Adding a sensor:
+## Adding a sensor:
 
-## Overview:
+### Overview:
 1. Write a new device type definition
 2. Add a device to the ship/rov devices file
 3. Add logger configurations, loggers and mode mappings to the logger_config.template file
 
-### 1. Take a look at a device type definition:
+#### 1. Take a look at a device type definition:
 ```
 ######################################
 Winch:
@@ -216,7 +217,7 @@ Take a closer look at the fields section:
 
 This section defined additional metadata for each of the named parsed fields.
 
-### 2. Take a look at two device definitions:
+#### 2. Take a look at two device definitions:
 ```
 devices:
 
@@ -275,7 +276,7 @@ Here the device object/name is declared ("winch_mash10").  It is specified that 
 
 This part of the device configuration maps the field in the device type configuration to a field number unique to the individual device.  This mapping differentiates the fields for each winch ("Winch_Mash10_Tension" vs "Winch_Mermac_Tension")
 
-### 3. Adding a logger to the configuration template
+#### 3. Adding a logger to the configuration template
 
 To many this is the most confusing part of the OpenRVDAS configuration process but once the concepts are understood it does make sense.  Defining a new logger within OpenRVDAS means defining a logger configuration for each operating mode, listing all the configurations for a given logger and mapping the logger configuration to the operating modes.
 

@@ -161,12 +161,16 @@ import re
 import sys
 import threading
 import time
-import websockets
 
 try:
-    from websockets.exceptions import ConnectionClosed
-except ImportError:
-    from websockets.connection import ConnectionClosed
+    import websockets
+    try:
+        from websockets.exceptions import ConnectionClosed
+    except ImportError:
+        from websockets.connection import ConnectionClosed
+except ModuleNotFoundError:
+    raise ModuleNotFoundError(&#39;CachedDataServer requires websockets module.\n&#39;
+                              &#39;Please run &#34;pip3 install websockets&#34;.&#39;)
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from logger.utils.stderr_logging import StdErrLoggingHandler  # noqa: E402
@@ -1044,6 +1048,9 @@ class CachedDataServer:
         &#34;&#34;&#34;
         logging.info(&#39;Starting WebSocketServer on port %d&#39;, self.port)
         try:
+            # Note: unittest raises a deprecation warning here:
+            #    DeprecationWarning: remove loop argument
+            # but removing the loop arg causes errors.
             self.websocket_server = websockets.serve(
                 ws_handler=self._serve_websocket_data,
                 host=&#39;&#39;, port=self.port, loop=self.event_loop)
@@ -1436,6 +1443,9 @@ If not None, the event loop to use for websocket events</p></div>
         &#34;&#34;&#34;
         logging.info(&#39;Starting WebSocketServer on port %d&#39;, self.port)
         try:
+            # Note: unittest raises a deprecation warning here:
+            #    DeprecationWarning: remove loop argument
+            # but removing the loop arg causes errors.
             self.websocket_server = websockets.serve(
                 ws_handler=self._serve_websocket_data,
                 host=&#39;&#39;, port=self.port, loop=self.event_loop)

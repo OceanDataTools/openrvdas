@@ -28,9 +28,7 @@
 </summary>
 <pre><code class="python">#!/usr/bin/env python3
 
-import json
 import logging
-import socket
 import sys
 
 from os.path import dirname, realpath
@@ -46,7 +44,8 @@ class NetworkWriter(Writer):
         logging.error(&#34;NetworkWriter has been replaced by TCPWriter and UDPWriter&#34;)
 
     def write(self, record):
-        logging.error(&#34;not writing anything: NetworkWriter has been replaced by TCPWriter and UDPWriter&#34;)</code></pre>
+        logging.error(&#34;not writing anything: NetworkWriter has been replaced &#34;
+                      &#34;by TCPWriter and UDPWriter&#34;)</code></pre>
 </details>
 </section>
 <section>
@@ -105,7 +104,8 @@ listed in online documentation here:
         logging.error(&#34;NetworkWriter has been replaced by TCPWriter and UDPWriter&#34;)
 
     def write(self, record):
-        logging.error(&#34;not writing anything: NetworkWriter has been replaced by TCPWriter and UDPWriter&#34;)</code></pre>
+        logging.error(&#34;not writing anything: NetworkWriter has been replaced &#34;
+                      &#34;by TCPWriter and UDPWriter&#34;)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">

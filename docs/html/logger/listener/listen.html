@@ -104,7 +104,7 @@ sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.readers.cached_data_reader import CachedDataReader  # noqa: E402
 from logger.readers.logfile_reader import LogfileReader  # noqa: E402
 from logger.readers.network_reader import NetworkReader  # noqa: E402
-from logger.readers.tcp_reader import TCPReader
+from logger.readers.tcp_reader import TCPReader  # noqa: E402
 from logger.readers.udp_reader import UDPReader  # noqa: E402
 from logger.readers.redis_reader import RedisReader  # noqa: E402
 from logger.readers.serial_reader import SerialReader  # noqa: E402
@@ -132,7 +132,7 @@ from logger.transforms.true_winds_transform import TrueWindsTransform  # noqa: E
 
 # Compute and emit various NMEA strings
 from logger.writers.network_writer import NetworkWriter  # noqa: E402
-from logger.writers.tcp_writer import TCPWriter
+from logger.writers.tcp_writer import TCPWriter  # noqa: E402
 from logger.writers.udp_writer import UDPWriter  # noqa: E402
 from logger.writers.serial_writer import SerialWriter  # noqa: E402
 from logger.writers.redis_writer import RedisWriter  # noqa: E402

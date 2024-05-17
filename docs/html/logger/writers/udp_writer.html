@@ -36,8 +36,7 @@ import sys
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
-
-from logger.writers.writer import Writer
+from logger.writers.writer import Writer  # noqa E402
 
 # So that we can write the user&#39;s record no matter how silly big it is, we
 # autodetect the system&#39;s maximum datagram size and write() fragments the
@@ -71,7 +70,7 @@ def __detect_maxsize():
     #        correct&#34;, but I don&#39;t feel like making this go faster right now.
     #        And it&#39;s only done once, so whatever.
     #
-    trysize=65535
+    trysize = 65535
     while trysize &gt; 0:
         logging.debug(&#34;__detect_maxsize: trying %d&#34;, trysize)
         try:
@@ -88,10 +87,12 @@ def __detect_maxsize():
         break
 
     if not trysize:
-        logging.warning(&#34;Failed to autodetect maximum UDP datagram size.  Record fragmentation disabled&#34;)
+        logging.warning(&#34;Failed to autodetect maximum UDP datagram size. &#34;
+                        &#34;Record fragmentation disabled&#34;)
     else:
         logging.info(&#34;Detected maximum UDP datagram size %d&#34;, trysize)
         MAXSIZE = trysize
+
 
 # attempt to detect maximum datagram size when module is loaded
 __detect_maxsize()
@@ -153,7 +154,7 @@ class UDPWriter(Writer):
         self.num_retry = num_retry
         self.warning_limit = warning_limit
         self.num_warnings = 0
-        self.good_writes = 0 # consecutive good writes, for detecting UDP errors
+        self.good_writes = 0  # consecutive good writes, for detecting UDP errors
 
         # &#39;eol&#39; comes in as a (probably escaped) string. We need to
         # unescape it, which means converting to bytes and back.
@@ -209,6 +210,11 @@ class UDPWriter(Writer):
 
         # socket gets initialized on-demand in write()
         self.socket = None
+
+    ############################
+    def __del__(self):
+        if self.socket:
+            self.socket.close()
 
     ############################
     def _open_socket(self):
@@ -269,7 +275,7 @@ class UDPWriter(Writer):
 
         # Fragment record if needed, and recurse.
         if len(record) &gt; MAXSIZE:
-            record_list=[]
+            record_list = []
             max_fragment_size = MAXSIZE - len(FRAGMENT_MARKER)
             fragment_sizes = []
             while len(record) &gt; max_fragment_size:
@@ -281,7 +287,8 @@ class UDPWriter(Writer):
             record_list.append(record)
             fragment_sizes.append(&#34;{} bytes&#34;.format(len(record)))
             fragment_sizes = &#39;, &#39;.join(fragment_sizes)
-            logging.info(&#34;write: fragmented record into %d datagrams: %s&#34;, len(record_list), fragment_sizes)
+            logging.info(&#34;write: fragmented record into %d datagrams: %s&#34;,
+                         len(record_list), fragment_sizes)
             logging.debug(str(record_list))
 
             # change our encoding to binary temporarily, because we&#39;ve already
@@ -458,7 +465,7 @@ encoding_errors - 'ignore' by default. Other error strategies are
         self.num_retry = num_retry
         self.warning_limit = warning_limit
         self.num_warnings = 0
-        self.good_writes = 0 # consecutive good writes, for detecting UDP errors
+        self.good_writes = 0  # consecutive good writes, for detecting UDP errors
 
         # &#39;eol&#39; comes in as a (probably escaped) string. We need to
         # unescape it, which means converting to bytes and back.
@@ -514,6 +521,11 @@ encoding_errors - 'ignore' by default. Other error strategies are
 
         # socket gets initialized on-demand in write()
         self.socket = None
+
+    ############################
+    def __del__(self):
+        if self.socket:
+            self.socket.close()
 
     ############################
     def _open_socket(self):
@@ -574,7 +586,7 @@ encoding_errors - 'ignore' by default. Other error strategies are
 
         # Fragment record if needed, and recurse.
         if len(record) &gt; MAXSIZE:
-            record_list=[]
+            record_list = []
             max_fragment_size = MAXSIZE - len(FRAGMENT_MARKER)
             fragment_sizes = []
             while len(record) &gt; max_fragment_size:
@@ -586,7 +598,8 @@ encoding_errors - 'ignore' by default. Other error strategies are
             record_list.append(record)
             fragment_sizes.append(&#34;{} bytes&#34;.format(len(record)))
             fragment_sizes = &#39;, &#39;.join(fragment_sizes)
-            logging.info(&#34;write: fragmented record into %d datagrams: %s&#34;, len(record_list), fragment_sizes)
+            logging.info(&#34;write: fragmented record into %d datagrams: %s&#34;,
+                         len(record_list), fragment_sizes)
             logging.debug(str(record_list))
 
             # change our encoding to binary temporarily, because we&#39;ve already
@@ -684,7 +697,7 @@ encoding_errors - 'ignore' by default. Other error strategies are
 
     # Fragment record if needed, and recurse.
     if len(record) &gt; MAXSIZE:
-        record_list=[]
+        record_list = []
         max_fragment_size = MAXSIZE - len(FRAGMENT_MARKER)
         fragment_sizes = []
         while len(record) &gt; max_fragment_size:
@@ -696,7 +709,8 @@ encoding_errors - 'ignore' by default. Other error strategies are
         record_list.append(record)
         fragment_sizes.append(&#34;{} bytes&#34;.format(len(record)))
         fragment_sizes = &#39;, &#39;.join(fragment_sizes)
-        logging.info(&#34;write: fragmented record into %d datagrams: %s&#34;, len(record_list), fragment_sizes)
+        logging.info(&#34;write: fragmented record into %d datagrams: %s&#34;,
+                     len(record_list), fragment_sizes)
         logging.debug(str(record_list))
 
         # change our encoding to binary temporarily, because we&#39;ve already

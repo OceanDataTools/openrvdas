@@ -5,7 +5,7 @@ One of the primary values a research vessel offers is the ability to gather accu
 
 The basic unit of an RVDAS is a "logger" - a process or set of processes that read from a sensor and store the data, optionally processing it for display, analysis or combination with other acquired data.
 
-This document describes the construction and operation of individual OpenRVDAS loggers. Please see [Controlling Loggers](controlling_loggers.md) for information on running/controlling multiple loggers, and see the [OpenRVDAS Introduction and Overview](intro_and_overview.md) for a big picture introduction to the system as a whole.
+This document describes the construction and operation of individual OpenRVDAS loggers. Please see [Controlling Loggers](controlling_loggers.md) for information on running/controlling multiple loggers, and see the [Quickstart Document](quickstart.md) quick introduction.
 
 ## Table of Contents
 

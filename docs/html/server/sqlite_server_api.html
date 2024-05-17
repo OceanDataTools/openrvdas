@@ -49,7 +49,6 @@ import gzip
 from datetime import datetime
 
 from os.path import dirname, realpath
-import time
 sys.path.append(dirname(dirname(realpath(__file__))))
 
 from server.server_api import ServerAPI  # noqa: E402
@@ -66,7 +65,7 @@ DIR_PATH = os.path.dirname(__file__)
 DEFAULT_DATABASE_PATH = os.path.join(DIR_PATH, &#39;openrvdas.sql&#39;)
 
 # Effectively &#34;time zero&#34; for POSIX systems.
-EPOCH_TIME_ZERO = &#39;1970-01-01 00:00:00.000000&#39;
+EPOCH_TIME_ZERO = datetime(1970, 1, 1, 0, 0, 0)
 
 ########################################################################
 # Let&#39;s trust SQLite and forget about thread locking.
@@ -77,9 +76,9 @@ EPOCH_TIME_ZERO = &#39;1970-01-01 00:00:00.000000&#39;
 # All distros tested are good.  To test yours:
 # strings `which sqlite3` | grep THREADSAFE (should = 1)
 
+
 class SQLiteServerAPI(ServerAPI):
     ############################
-
     def __init__(self, database_path=DEFAULT_DATABASE_PATH,
                  no_create_database=False):
         &#34;&#34;&#34;
@@ -101,13 +100,12 @@ class SQLiteServerAPI(ServerAPI):
         self.cx = None
         self.timestamp = self._get_database_timestamp()
 
-
     def _database_exists(self):
         &#34;&#34;&#34;Return True if SQLite database at self.database_path exists,
         and can be read without errors.&#34;&#34;&#34;
         read_only_database_path = &#39;&#39;.join([&#39;file:&#39;, self.database_path, &#39;?mode=ro&#39;])
         try:
-            cx = sqlite3.connect(read_only_database_path, uri=True)
+            cx = sqlite3.connect(read_only_database_path, uri=True)  # noqa: F841
         except sqlite3.OperationalError:
             return False
         except sqlite3.Error as err:
@@ -121,9 +119,9 @@ class SQLiteServerAPI(ServerAPI):
         logging.debug(f&#39;Creating SQLite database &#34;{self.database_path}&#34;&#39;)
         cx = sqlite3.connect(self.database_path)
         cu = cx.cursor()
-        cu.execute(&#39;CREATE TABLE Cruise (highlander integer primary key not null, config blob, [loaded_time] datetime, compressed integer)&#39;)
-        cu.execute(&#39;CREATE TABLE lastupdate (highlander integer primary key not null, [timestamp] datetime)&#39;)
-        cu.execute(&#39;CREATE TABLE logmessages (timestamp datetime primary key not null, loglevel integer, cruise text, source text, user text, message text)&#39;)
+        cu.execute(&#39;CREATE TABLE Cruise (highlander integer primary key not null, config blob, [loaded_time] datetime, compressed integer)&#39;)  # noqa E501
+        cu.execute(&#39;CREATE TABLE lastupdate (highlander integer primary key not null, [timestamp] datetime)&#39;)  # noqa E501
+        cu.execute(&#39;CREATE TABLE logmessages (timestamp datetime primary key not null, loglevel integer, cruise text, source text, user text, message text)&#39;)  # noqa E501
 
         # We need a time or we think the database is not initialized
         cu.execute(&#39;INSERT INTO lastupdate (highlander, timestamp) VALUES (1, CURRENT_TIMESTAMP);&#39;)
@@ -152,8 +150,8 @@ class SQLiteServerAPI(ServerAPI):
         # Otherwise establish a connection to database
         if not self._database_exists():
             if self.no_create_database:
-                raise OperationalError(f&#39;No database &#34;{self.database_path}&#34; found, &#39;
-                                       &#39;and flag &#34;no_create_database&#34; is set.&#39;)
+                raise sqlite3.OperationalError(f&#39;No database &#34;{self.database_path}&#34; found, &#39;
+                                               &#39;and flag &#34;no_create_database&#34; is set.&#39;)
             # Otherwise, create the missing database
             self._create_database()
 
@@ -267,11 +265,18 @@ class SQLiteServerAPI(ServerAPI):
         try:
             res = cx.execute(Q)
             row = res.fetchone()
-            if  row:
-                return row[&#39;timestamp&#39;]
+            if not row:  # if no timestamp row, return &#39;time zero&#39;
+                return EPOCH_TIME_ZERO
 
-            # If no timestamp row, return string for &#39;time zero&#39;
-            return EPOCH_TIME_ZERO
+            timestamp = row[&#39;timestamp&#39;]
+            if isinstance(timestamp, str):
+                timestamp = datetime.strptime(timestamp, &#34;%Y-%m-%d %H:%M:%S.%f&#34;)
+
+            # Sanity check that we get what we expect
+            elif not isinstance(timestamp, datetime):
+                logging.warning(&#39;Got non-datetime timestamp from database!&#39;)
+                logging.warning(f&#39;Type: &#34;{type(timestamp)}&#34;, value: &#34;{timestamp}&#34;&#39;)
+            return timestamp
 
         except sqlite3.OperationalError as err:
             # No such table
@@ -788,7 +793,6 @@ rather than creating a new database.</p></div>
 </summary>
 <pre><code class="python">class SQLiteServerAPI(ServerAPI):
     ############################
-
     def __init__(self, database_path=DEFAULT_DATABASE_PATH,
                  no_create_database=False):
         &#34;&#34;&#34;
@@ -810,13 +814,12 @@ rather than creating a new database.</p></div>
         self.cx = None
         self.timestamp = self._get_database_timestamp()
 
-
     def _database_exists(self):
         &#34;&#34;&#34;Return True if SQLite database at self.database_path exists,
         and can be read without errors.&#34;&#34;&#34;
         read_only_database_path = &#39;&#39;.join([&#39;file:&#39;, self.database_path, &#39;?mode=ro&#39;])
         try:
-            cx = sqlite3.connect(read_only_database_path, uri=True)
+            cx = sqlite3.connect(read_only_database_path, uri=True)  # noqa: F841
         except sqlite3.OperationalError:
             return False
         except sqlite3.Error as err:
@@ -830,9 +833,9 @@ rather than creating a new database.</p></div>
         logging.debug(f&#39;Creating SQLite database &#34;{self.database_path}&#34;&#39;)
         cx = sqlite3.connect(self.database_path)
         cu = cx.cursor()
-        cu.execute(&#39;CREATE TABLE Cruise (highlander integer primary key not null, config blob, [loaded_time] datetime, compressed integer)&#39;)
-        cu.execute(&#39;CREATE TABLE lastupdate (highlander integer primary key not null, [timestamp] datetime)&#39;)
-        cu.execute(&#39;CREATE TABLE logmessages (timestamp datetime primary key not null, loglevel integer, cruise text, source text, user text, message text)&#39;)
+        cu.execute(&#39;CREATE TABLE Cruise (highlander integer primary key not null, config blob, [loaded_time] datetime, compressed integer)&#39;)  # noqa E501
+        cu.execute(&#39;CREATE TABLE lastupdate (highlander integer primary key not null, [timestamp] datetime)&#39;)  # noqa E501
+        cu.execute(&#39;CREATE TABLE logmessages (timestamp datetime primary key not null, loglevel integer, cruise text, source text, user text, message text)&#39;)  # noqa E501
 
         # We need a time or we think the database is not initialized
         cu.execute(&#39;INSERT INTO lastupdate (highlander, timestamp) VALUES (1, CURRENT_TIMESTAMP);&#39;)
@@ -861,8 +864,8 @@ rather than creating a new database.</p></div>
         # Otherwise establish a connection to database
         if not self._database_exists():
             if self.no_create_database:
-                raise OperationalError(f&#39;No database &#34;{self.database_path}&#34; found, &#39;
-                                       &#39;and flag &#34;no_create_database&#34; is set.&#39;)
+                raise sqlite3.OperationalError(f&#39;No database &#34;{self.database_path}&#34; found, &#39;
+                                               &#39;and flag &#34;no_create_database&#34; is set.&#39;)
             # Otherwise, create the missing database
             self._create_database()
 
@@ -976,11 +979,18 @@ rather than creating a new database.</p></div>
         try:
             res = cx.execute(Q)
             row = res.fetchone()
-            if  row:
-                return row[&#39;timestamp&#39;]
+            if not row:  # if no timestamp row, return &#39;time zero&#39;
+                return EPOCH_TIME_ZERO
 
-            # If no timestamp row, return string for &#39;time zero&#39;
-            return EPOCH_TIME_ZERO
+            timestamp = row[&#39;timestamp&#39;]
+            if isinstance(timestamp, str):
+                timestamp = datetime.strptime(timestamp, &#34;%Y-%m-%d %H:%M:%S.%f&#34;)
+
+            # Sanity check that we get what we expect
+            elif not isinstance(timestamp, datetime):
+                logging.warning(&#39;Got non-datetime timestamp from database!&#39;)
+                logging.warning(f&#39;Type: &#34;{type(timestamp)}&#34;, value: &#34;{timestamp}&#34;&#39;)
+            return timestamp
 
         except sqlite3.OperationalError as err:
             # No such table

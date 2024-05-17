@@ -98,7 +98,7 @@ class WebsocketReader():
                         ssl_context = None
 
                     logging.debug(f&#39;WebsocketReader connecting to {self.uri}&#39;)
-                    async with websockets.connect(self.uri, ssl=ssl_context) as ws: # type: ignore
+                    async with websockets.connect(self.uri, ssl=ssl_context) as ws:  # type: ignore
                         logging.info(f&#39;Connected to WebsocketWriter at {self.uri}&#39;)
 
                         while not self.quit_flag:
@@ -111,11 +111,11 @@ class WebsocketReader():
                     pass
                 except AttributeError as e:
                     logging.warning(f&#39;WebsocketReader websocket loop error: {e}&#39;)
-                except websockets.exceptions.ConnectionClosed: # type: ignore
+                except websockets.exceptions.ConnectionClosed:  # type: ignore
                     logging.info(&#39;WebsocketReader lost websocket connection to &#39;
                                  &#39;data server; trying to reconnect.&#39;)
                     await asyncio.sleep(0.2)
-                except websockets.exceptions.InvalidStatusCode: # type: ignore
+                except websockets.exceptions.InvalidStatusCode:  # type: ignore
                     logging.info(&#39;WebsocketReader InvalidStatusCode connecting to &#39;
                                  &#39;data server; trying to reconnect.&#39;)
                     await asyncio.sleep(0.2)
@@ -249,7 +249,7 @@ check_cert  - If True, and uri protocol is 'wss', check the server's TLS certifi
                         ssl_context = None
 
                     logging.debug(f&#39;WebsocketReader connecting to {self.uri}&#39;)
-                    async with websockets.connect(self.uri, ssl=ssl_context) as ws: # type: ignore
+                    async with websockets.connect(self.uri, ssl=ssl_context) as ws:  # type: ignore
                         logging.info(f&#39;Connected to WebsocketWriter at {self.uri}&#39;)
 
                         while not self.quit_flag:
@@ -262,11 +262,11 @@ check_cert  - If True, and uri protocol is 'wss', check the server's TLS certifi
                     pass
                 except AttributeError as e:
                     logging.warning(f&#39;WebsocketReader websocket loop error: {e}&#39;)
-                except websockets.exceptions.ConnectionClosed: # type: ignore
+                except websockets.exceptions.ConnectionClosed:  # type: ignore
                     logging.info(&#39;WebsocketReader lost websocket connection to &#39;
                                  &#39;data server; trying to reconnect.&#39;)
                     await asyncio.sleep(0.2)
-                except websockets.exceptions.InvalidStatusCode: # type: ignore
+                except websockets.exceptions.InvalidStatusCode:  # type: ignore
                     logging.info(&#39;WebsocketReader InvalidStatusCode connecting to &#39;
                                  &#39;data server; trying to reconnect.&#39;)
                     await asyncio.sleep(0.2)

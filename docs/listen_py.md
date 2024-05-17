@@ -281,7 +281,7 @@ where gyr_logger.yaml consists of the YAML definition
       baudrate: 9600
   transforms:
   - class: TimestampTransform  # NOTE: no keyword args
-  = class: PrefixTransform
+  - class: PrefixTransform
     kwargs:
         prefix: gyr1
    writers:
@@ -302,7 +302,7 @@ The basic format of a logger configuration file is a YAML or JSON definition:
 where the reader/transform/writer definition is a list of dictionaries, each defining one component via two elements: a "class" key defining the type of component, and a "kwargs" key defining its keyword arguments:
 
 ```
-  class: LogfileWriter,
+  class: LogfileWriter
   kwargs:
     filebase: /log/current/gyr1
 ```

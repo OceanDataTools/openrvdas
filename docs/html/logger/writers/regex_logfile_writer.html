@@ -35,7 +35,6 @@ import sys
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.utils import timestamp  # noqa: E402
-from logger.utils.formats import Text  # noqa: E402
 from logger.writers.writer import Writer  # noqa: E402
 from logger.writers.file_writer import FileWriter  # noqa: E402
 
@@ -101,12 +100,12 @@ class RegexLogfileWriter(Writer):
 
         # If our filebase is a dict, we&#39;re going to be doing our
         # fancy pattern-&gt;filebase mapping.
-        self.do_filebase_mapping = type(self.filebase) == dict
+        self.do_filebase_mapping = isinstance(self.filebase, dict)
 
         if self.do_filebase_mapping:
             # Do our matches faster by precompiling
             self.compiled_filebase_map = {
-                pattern:re.compile(pattern) for pattern in self.filebase
+                pattern: re.compile(pattern) for pattern in self.filebase
             }
         self.current_filename = {}
         self.writer = {}
@@ -114,7 +113,8 @@ class RegexLogfileWriter(Writer):
     ############################
     def write(self, record):
         &#34;&#34;&#34;Note: Assume record begins with a timestamp string.&#34;&#34;&#34;
-        if record is None:
+        # If record is None, or an empty string
+        if not record:
             return
 
         # If we&#39;ve got a list, hope it&#39;s a list of records. Recurse,
@@ -136,7 +136,7 @@ class RegexLogfileWriter(Writer):
             ts = timestamp.timestamp(time_str, time_format=self.time_format)
         except ValueError:
             if not self.quiet:
-                logging.error(&#39;LogfileWriter.write() - bad timestamp: %s&#39;, record)
+                logging.error(&#39;LogfileWriter.write() - bad timestamp: &#34;%s&#34;&#39;, record)
                 return
 
         # Now parse ts into hour and date strings
@@ -150,7 +150,7 @@ class RegexLogfileWriter(Writer):
         if self.do_filebase_mapping:
             matched_patterns = [self.write_if_match(record, pattern, time_str)
                                 for pattern in self.filebase]
-            if not True in matched_patterns:
+            if True not in matched_patterns:
                 if not self.quiet:
                     logging.warning(f&#39;No patterns matched in PatternLogfileWriter &#39;
                                     f&#39;for record &#34;{record}&#34;&#39;)
@@ -317,12 +317,12 @@ quiet           If True, don't complain if a record doesn't match
 
         # If our filebase is a dict, we&#39;re going to be doing our
         # fancy pattern-&gt;filebase mapping.
-        self.do_filebase_mapping = type(self.filebase) == dict
+        self.do_filebase_mapping = isinstance(self.filebase, dict)
 
         if self.do_filebase_mapping:
             # Do our matches faster by precompiling
             self.compiled_filebase_map = {
-                pattern:re.compile(pattern) for pattern in self.filebase
+                pattern: re.compile(pattern) for pattern in self.filebase
             }
         self.current_filename = {}
         self.writer = {}
@@ -330,7 +330,8 @@ quiet           If True, don't complain if a record doesn't match
     ############################
     def write(self, record):
         &#34;&#34;&#34;Note: Assume record begins with a timestamp string.&#34;&#34;&#34;
-        if record is None:
+        # If record is None, or an empty string
+        if not record:
             return
 
         # If we&#39;ve got a list, hope it&#39;s a list of records. Recurse,
@@ -352,7 +353,7 @@ quiet           If True, don't complain if a record doesn't match
             ts = timestamp.timestamp(time_str, time_format=self.time_format)
         except ValueError:
             if not self.quiet:
-                logging.error(&#39;LogfileWriter.write() - bad timestamp: %s&#39;, record)
+                logging.error(&#39;LogfileWriter.write() - bad timestamp: &#34;%s&#34;&#39;, record)
                 return
 
         # Now parse ts into hour and date strings
@@ -366,7 +367,7 @@ quiet           If True, don't complain if a record doesn't match
         if self.do_filebase_mapping:
             matched_patterns = [self.write_if_match(record, pattern, time_str)
                                 for pattern in self.filebase]
-            if not True in matched_patterns:
+            if True not in matched_patterns:
                 if not self.quiet:
                     logging.warning(f&#39;No patterns matched in PatternLogfileWriter &#39;
                                     f&#39;for record &#34;{record}&#34;&#39;)
@@ -433,7 +434,8 @@ quiet           If True, don't complain if a record doesn't match
 </summary>
 <pre><code class="python">def write(self, record):
     &#34;&#34;&#34;Note: Assume record begins with a timestamp string.&#34;&#34;&#34;
-    if record is None:
+    # If record is None, or an empty string
+    if not record:
         return
 
     # If we&#39;ve got a list, hope it&#39;s a list of records. Recurse,
@@ -455,7 +457,7 @@ quiet           If True, don't complain if a record doesn't match
         ts = timestamp.timestamp(time_str, time_format=self.time_format)
     except ValueError:
         if not self.quiet:
-            logging.error(&#39;LogfileWriter.write() - bad timestamp: %s&#39;, record)
+            logging.error(&#39;LogfileWriter.write() - bad timestamp: &#34;%s&#34;&#39;, record)
             return
 
     # Now parse ts into hour and date strings
@@ -469,7 +471,7 @@ quiet           If True, don't complain if a record doesn't match
     if self.do_filebase_mapping:
         matched_patterns = [self.write_if_match(record, pattern, time_str)
                             for pattern in self.filebase]
-        if not True in matched_patterns:
+        if True not in matched_patterns:
             if not self.quiet:
                 logging.warning(f&#39;No patterns matched in PatternLogfileWriter &#39;
                                 f&#39;for record &#34;{record}&#34;&#39;)

@@ -722,6 +722,8 @@ class DjangoServerAPI(ServerAPI):
 
                 # Some syntactic sugar to simplify config definitions
                 for config_name, config in configs.items():
+                    if config is None:
+                        raise ValueError(f'No logger for "{config_name}" in cruise definition')
                     if 'name' not in config:
                         config['name'] = config_name
 

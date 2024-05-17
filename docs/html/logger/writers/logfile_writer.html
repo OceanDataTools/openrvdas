@@ -109,7 +109,7 @@ class LogfileWriter(Writer):
 
         # If our filebase is a dict, we&#39;re going to be doing our
         # fancy pattern-&gt;filebase mapping.
-        self.do_filebase_mapping = type(self.filebase) == dict
+        self.do_filebase_mapping = isinstance(self.filebase, dict)
 
         if self.do_filebase_mapping:
             # Do our matches faster by precompiling
@@ -350,7 +350,7 @@ quiet           If True, don't complain if a record doesn't match
 
         # If our filebase is a dict, we&#39;re going to be doing our
         # fancy pattern-&gt;filebase mapping.
-        self.do_filebase_mapping = type(self.filebase) == dict
+        self.do_filebase_mapping = isinstance(self.filebase, dict)
 
         if self.do_filebase_mapping:
             # Do our matches faster by precompiling

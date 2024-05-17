@@ -110,7 +110,7 @@ class ComposedReader(Reader):
 
         # Transforms can be empty. But if not empty, make it a list, even
         # if it&#39;s only a single transform.
-        if not type(transforms) == list:
+        if not isinstance(transforms, list):
             self.transforms = [transforms]
         else:
             self.transforms = transforms
@@ -444,7 +444,7 @@ check_format   If True, attempt to check that Reader/Transform formats
 
         # Transforms can be empty. But if not empty, make it a list, even
         # if it&#39;s only a single transform.
-        if not type(transforms) == list:
+        if not isinstance(transforms, list):
             self.transforms = [transforms]
         else:
             self.transforms = transforms

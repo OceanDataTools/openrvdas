@@ -68,6 +68,8 @@ used elsewhere.
 # flake8: noqa E501  - ignore long comment lines that describe formats
 
 import logging
+import importlib
+import inspect
 
 # For efficient checksum code
 from functools import reduce
@@ -85,8 +87,38 @@ class NMEATransform:
     &#34;&#34;&#34;Call our various component transforms and generate NMEA strings from them.
     &#34;&#34;&#34;
 
-    def __init__(self, **kwargs):
-        self.transforms = [MWDTransform(kwargs), XDRTransform(kwargs)]
+    def __init__(self, nmea_list: list = [], **kwargs):
+        &#34;&#34;&#34;
+        nmea_list
+                List of the nmea transforms that will be used.
+        **kwargs
+                Arugments needed for the nmea transforms, see transforms below for what will be included.
+        &#34;&#34;&#34;
+
+        self.transforms = []
+
+        # If nmea_list is not given as list, force it into one
+        if not isinstance(nmea_list, list):
+            nmea_list = [nmea_list]
+
+        if not nmea_list:
+            self.transforms = [MWDTransform(kwargs), XDRTransform(kwargs)]
+            return
+
+        class_module_name = &#39;logger.transforms.nmea_transform&#39;
+        module = importlib.import_module(class_module_name)
+
+        # Get all classes within this file
+        classes = [cls_name for cls_name, cls_obj in inspect.getmembers(module) if
+                   inspect.isclass(cls_obj)]
+
+        for transform in nmea_list:
+            if transform in classes:
+                class_const = getattr(module, transform)
+                self.transforms.append(class_const(kwargs))
+            else:
+                logging.error(&#39;%s is not in classes %s&#39;, transform, classes)
+
 
     ############################
     def transform(self, record):
@@ -350,7 +382,123 @@ class XDRTransform:
             sea_temp_str = &#39;$%s*%s&#39; % (sea_temp_data, checksum(sea_temp_data))
             results.append(sea_temp_str)
 
-        return results</code></pre>
+        return results
+
+################################################################################
+
+class DPTTransform:
+    &#34;&#34;&#34;Take in records and emit a NMEA DPT string, as per format:
+      $--DPT,x.x,x.x,*nn&lt;CR&gt;&lt;LF&gt; \\
+    Field Number:
+    1) Depth in meters
+    2) Offset from transducer: Positive - distance from transducer to water line,
+        or Negative - distance from transducer to keel
+    n) Checksum
+
+    e.g. $GPDPT,200.3,0.0*46
+    &#34;&#34;&#34;
+
+    def __init__(self, kwargs):
+        &#34;&#34;&#34;
+        Look for these keys in the kwargs dict:
+        ```
+        depth_field
+                 name of field that contains Depth
+        offset_field
+                 Name of field that contains Offset
+        position_source_field
+                 Name of field that contains position source
+        dpt_talker_id
+                 Should be format &#39;--DPT&#39; to identify the instrument
+                 that&#39;s creating the message.
+        ```
+        &#34;&#34;&#34;
+
+        self.depth_field = kwargs.get(&#39;depth_field&#39;, None)
+        self.offset_field = kwargs.get(&#39;offset_field&#39;, None)
+
+        self.dpt_talker_id = kwargs.get(&#39;dpt_talker_id&#39;, None)
+
+    ############################
+    def transform(self, record):
+        &#34;&#34;&#34;Incorporate any useable fields in this record, and if it gives us a
+        new true wind value, return the results.
+        &#34;&#34;&#34;
+        # Check that we&#39;ve got the right record type - it should be a
+        # single record.
+        if not record or type(record) is not dict:
+            logging.warning(&#39;Improper type for record: %s&#39;, type(record))
+            return None
+        fields = record.get(&#39;fields&#39;, None)
+        if not fields:
+            logging.debug(&#39;MWDTransform got record with no fields: %s&#39;, record)
+            return None
+
+        depth = fields.get(self.depth_field)
+        offset = fields.get(self.offset_field)
+
+        if depth:
+            data = f&#39;{self.dpt_talker_id},{depth},{offset}&#39;
+            string = f&#39;${data}*{checksum(data)}&#39;
+            return string
+
+        return None
+
+
+################################################################################
+
+class STNTransform:
+    &#34;&#34;&#34;This sentence is transmitted before each individual sentence where there is a need for the
+    Listener to determine the exact source of data in the system. Examples might include
+    dual-frequency depth sounding equipment or equipment that integrates data from a
+    number of sources and produces a single output.
+
+    Take in records and emit a NMEA STN string, as per format:
+      $--STN,x.x*hh&lt;CR&gt;&lt;LF&gt;
+    Field Number:
+    1) Talker ID Number/Name
+    2) Checksum
+
+    e.g. $
+    &#34;&#34;&#34;
+
+    def __init__(self, kwargs):
+        &#34;&#34;&#34;
+        Look for these keys in the kwargs dict:
+        ```
+        id_field
+                 name of field that contains id
+        stn_talker_id
+                Should be format &#39;--STN&#39; to identify the instrument
+                 that&#39;s creating the message.
+        ```
+        &#34;&#34;&#34;
+        self.id_field = kwargs.get(&#39;id_field&#39;, None)
+
+        self.stn_talker_id = kwargs.get(&#39;stn_talker_id&#39;, None)
+
+    ############################
+    def transform(self, record):
+        &#34;&#34;&#34;Incorporate any useable fields in this record.
+        &#34;&#34;&#34;
+        # Check that we&#39;ve got the right record type - it should be a
+        # single record.
+        if not record or type(record) is not dict:
+            logging.warning(&#39;Improper type for record: %s&#39;, type(record))
+            return None
+        fields = record.get(&#39;fields&#39;, None)
+        if not fields:
+            logging.debug(&#39;MWDTransform got record with no fields: %s&#39;, record)
+            return None
+
+        id = fields.get(self.id_field)
+
+        if id:
+            data = f&#39;{self.stn_talker_id},{id}&#39;
+            string = f&#39;${data}*{checksum(data)}&#39;
+            return string
+
+        return None</code></pre>
 </details>
 </section>
 <section>
@@ -379,6 +527,131 @@ class XDRTransform:
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
+<dt id="logger.transforms.nmea_transform.DPTTransform"><code class="flex name class">
+<span>class <span class="ident">DPTTransform</span></span>
+<span>(</span><span>kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Take in records and emit a NMEA DPT string, as per format:
+$&ndash;DPT,x.x,x.x,*nn<CR><LF> \
+Field Number:
+1) Depth in meters
+2) Offset from transducer: Positive - distance from transducer to water line,
+or Negative - distance from transducer to keel
+n) Checksum</p>
+<p>e.g. $GPDPT,200.3,0.0*46</p>
+<p>Look for these keys in the kwargs dict:</p>
+<pre><code>depth_field
+         name of field that contains Depth
+offset_field
+         Name of field that contains Offset
+position_source_field
+         Name of field that contains position source
+dpt_talker_id
+         Should be format '--DPT' to identify the instrument
+         that's creating the message.
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DPTTransform:
+    &#34;&#34;&#34;Take in records and emit a NMEA DPT string, as per format:
+      $--DPT,x.x,x.x,*nn&lt;CR&gt;&lt;LF&gt; \\
+    Field Number:
+    1) Depth in meters
+    2) Offset from transducer: Positive - distance from transducer to water line,
+        or Negative - distance from transducer to keel
+    n) Checksum
+
+    e.g. $GPDPT,200.3,0.0*46
+    &#34;&#34;&#34;
+
+    def __init__(self, kwargs):
+        &#34;&#34;&#34;
+        Look for these keys in the kwargs dict:
+        ```
+        depth_field
+                 name of field that contains Depth
+        offset_field
+                 Name of field that contains Offset
+        position_source_field
+                 Name of field that contains position source
+        dpt_talker_id
+                 Should be format &#39;--DPT&#39; to identify the instrument
+                 that&#39;s creating the message.
+        ```
+        &#34;&#34;&#34;
+
+        self.depth_field = kwargs.get(&#39;depth_field&#39;, None)
+        self.offset_field = kwargs.get(&#39;offset_field&#39;, None)
+
+        self.dpt_talker_id = kwargs.get(&#39;dpt_talker_id&#39;, None)
+
+    ############################
+    def transform(self, record):
+        &#34;&#34;&#34;Incorporate any useable fields in this record, and if it gives us a
+        new true wind value, return the results.
+        &#34;&#34;&#34;
+        # Check that we&#39;ve got the right record type - it should be a
+        # single record.
+        if not record or type(record) is not dict:
+            logging.warning(&#39;Improper type for record: %s&#39;, type(record))
+            return None
+        fields = record.get(&#39;fields&#39;, None)
+        if not fields:
+            logging.debug(&#39;MWDTransform got record with no fields: %s&#39;, record)
+            return None
+
+        depth = fields.get(self.depth_field)
+        offset = fields.get(self.offset_field)
+
+        if depth:
+            data = f&#39;{self.dpt_talker_id},{depth},{offset}&#39;
+            string = f&#39;${data}*{checksum(data)}&#39;
+            return string
+
+        return None</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="logger.transforms.nmea_transform.DPTTransform.transform"><code class="name flex">
+<span>def <span class="ident">transform</span></span>(<span>self, record)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Incorporate any useable fields in this record, and if it gives us a
+new true wind value, return the results.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def transform(self, record):
+    &#34;&#34;&#34;Incorporate any useable fields in this record, and if it gives us a
+    new true wind value, return the results.
+    &#34;&#34;&#34;
+    # Check that we&#39;ve got the right record type - it should be a
+    # single record.
+    if not record or type(record) is not dict:
+        logging.warning(&#39;Improper type for record: %s&#39;, type(record))
+        return None
+    fields = record.get(&#39;fields&#39;, None)
+    if not fields:
+        logging.debug(&#39;MWDTransform got record with no fields: %s&#39;, record)
+        return None
+
+    depth = fields.get(self.depth_field)
+    offset = fields.get(self.offset_field)
+
+    if depth:
+        data = f&#39;{self.dpt_talker_id},{depth},{offset}&#39;
+        string = f&#39;${data}*{checksum(data)}&#39;
+        return string
+
+    return None</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
 <dt id="logger.transforms.nmea_transform.MWDTransform"><code class="flex name class">
 <span>class <span class="ident">MWDTransform</span></span>
 <span>(</span><span>kwargs)</span>
@@ -582,10 +855,14 @@ new MWD record, return it.</p></div>
 </dd>
 <dt id="logger.transforms.nmea_transform.NMEATransform"><code class="flex name class">
 <span>class <span class="ident">NMEATransform</span></span>
-<span>(</span><span>**kwargs)</span>
+<span>(</span><span>nmea_list: list = [], **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Call our various component transforms and generate NMEA strings from them.</p></div>
+<div class="desc"><p>Call our various component transforms and generate NMEA strings from them.</p>
+<p>nmea_list
+List of the nmea transforms that will be used.
+**kwargs
+Arugments needed for the nmea transforms, see transforms below for what will be included.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -594,8 +871,38 @@ new MWD record, return it.</p></div>
     &#34;&#34;&#34;Call our various component transforms and generate NMEA strings from them.
     &#34;&#34;&#34;
 
-    def __init__(self, **kwargs):
-        self.transforms = [MWDTransform(kwargs), XDRTransform(kwargs)]
+    def __init__(self, nmea_list: list = [], **kwargs):
+        &#34;&#34;&#34;
+        nmea_list
+                List of the nmea transforms that will be used.
+        **kwargs
+                Arugments needed for the nmea transforms, see transforms below for what will be included.
+        &#34;&#34;&#34;
+
+        self.transforms = []
+
+        # If nmea_list is not given as list, force it into one
+        if not isinstance(nmea_list, list):
+            nmea_list = [nmea_list]
+
+        if not nmea_list:
+            self.transforms = [MWDTransform(kwargs), XDRTransform(kwargs)]
+            return
+
+        class_module_name = &#39;logger.transforms.nmea_transform&#39;
+        module = importlib.import_module(class_module_name)
+
+        # Get all classes within this file
+        classes = [cls_name for cls_name, cls_obj in inspect.getmembers(module) if
+                   inspect.isclass(cls_obj)]
+
+        for transform in nmea_list:
+            if transform in classes:
+                class_const = getattr(module, transform)
+                self.transforms.append(class_const(kwargs))
+            else:
+                logging.error(&#39;%s is not in classes %s&#39;, transform, classes)
+
 
     ############################
     def transform(self, record):
@@ -674,6 +981,121 @@ new MWD record, return it.</p></div>
         return pruned_results[0]
     else:
         return pruned_results</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="logger.transforms.nmea_transform.STNTransform"><code class="flex name class">
+<span>class <span class="ident">STNTransform</span></span>
+<span>(</span><span>kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>This sentence is transmitted before each individual sentence where there is a need for the
+Listener to determine the exact source of data in the system. Examples might include
+dual-frequency depth sounding equipment or equipment that integrates data from a
+number of sources and produces a single output.</p>
+<p>Take in records and emit a NMEA STN string, as per format:
+$&ndash;STN,x.x*hh<CR><LF>
+Field Number:
+1) Talker ID Number/Name
+2) Checksum</p>
+<p>e.g. $</p>
+<p>Look for these keys in the kwargs dict:</p>
+<pre><code>id_field
+         name of field that contains id
+stn_talker_id
+        Should be format '--STN' to identify the instrument
+         that's creating the message.
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class STNTransform:
+    &#34;&#34;&#34;This sentence is transmitted before each individual sentence where there is a need for the
+    Listener to determine the exact source of data in the system. Examples might include
+    dual-frequency depth sounding equipment or equipment that integrates data from a
+    number of sources and produces a single output.
+
+    Take in records and emit a NMEA STN string, as per format:
+      $--STN,x.x*hh&lt;CR&gt;&lt;LF&gt;
+    Field Number:
+    1) Talker ID Number/Name
+    2) Checksum
+
+    e.g. $
+    &#34;&#34;&#34;
+
+    def __init__(self, kwargs):
+        &#34;&#34;&#34;
+        Look for these keys in the kwargs dict:
+        ```
+        id_field
+                 name of field that contains id
+        stn_talker_id
+                Should be format &#39;--STN&#39; to identify the instrument
+                 that&#39;s creating the message.
+        ```
+        &#34;&#34;&#34;
+        self.id_field = kwargs.get(&#39;id_field&#39;, None)
+
+        self.stn_talker_id = kwargs.get(&#39;stn_talker_id&#39;, None)
+
+    ############################
+    def transform(self, record):
+        &#34;&#34;&#34;Incorporate any useable fields in this record.
+        &#34;&#34;&#34;
+        # Check that we&#39;ve got the right record type - it should be a
+        # single record.
+        if not record or type(record) is not dict:
+            logging.warning(&#39;Improper type for record: %s&#39;, type(record))
+            return None
+        fields = record.get(&#39;fields&#39;, None)
+        if not fields:
+            logging.debug(&#39;MWDTransform got record with no fields: %s&#39;, record)
+            return None
+
+        id = fields.get(self.id_field)
+
+        if id:
+            data = f&#39;{self.stn_talker_id},{id}&#39;
+            string = f&#39;${data}*{checksum(data)}&#39;
+            return string
+
+        return None</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="logger.transforms.nmea_transform.STNTransform.transform"><code class="name flex">
+<span>def <span class="ident">transform</span></span>(<span>self, record)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Incorporate any useable fields in this record.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def transform(self, record):
+    &#34;&#34;&#34;Incorporate any useable fields in this record.
+    &#34;&#34;&#34;
+    # Check that we&#39;ve got the right record type - it should be a
+    # single record.
+    if not record or type(record) is not dict:
+        logging.warning(&#39;Improper type for record: %s&#39;, type(record))
+        return None
+    fields = record.get(&#39;fields&#39;, None)
+    if not fields:
+        logging.debug(&#39;MWDTransform got record with no fields: %s&#39;, record)
+        return None
+
+    id = fields.get(self.id_field)
+
+    if id:
+        data = f&#39;{self.stn_talker_id},{id}&#39;
+        string = f&#39;${data}*{checksum(data)}&#39;
+        return string
+
+    return None</code></pre>
 </details>
 </dd>
 </dl>
@@ -863,6 +1285,12 @@ new true wind value, return the results.</p></div>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
+<h4><code><a title="logger.transforms.nmea_transform.DPTTransform" href="#logger.transforms.nmea_transform.DPTTransform">DPTTransform</a></code></h4>
+<ul class="">
+<li><code><a title="logger.transforms.nmea_transform.DPTTransform.transform" href="#logger.transforms.nmea_transform.DPTTransform.transform">transform</a></code></li>
+</ul>
+</li>
+<li>
 <h4><code><a title="logger.transforms.nmea_transform.MWDTransform" href="#logger.transforms.nmea_transform.MWDTransform">MWDTransform</a></code></h4>
 <ul class="">
 <li><code><a title="logger.transforms.nmea_transform.MWDTransform.transform" href="#logger.transforms.nmea_transform.MWDTransform.transform">transform</a></code></li>
@@ -872,6 +1300,12 @@ new true wind value, return the results.</p></div>
 <h4><code><a title="logger.transforms.nmea_transform.NMEATransform" href="#logger.transforms.nmea_transform.NMEATransform">NMEATransform</a></code></h4>
 <ul class="">
 <li><code><a title="logger.transforms.nmea_transform.NMEATransform.transform" href="#logger.transforms.nmea_transform.NMEATransform.transform">transform</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="logger.transforms.nmea_transform.STNTransform" href="#logger.transforms.nmea_transform.STNTransform">STNTransform</a></code></h4>
+<ul class="">
+<li><code><a title="logger.transforms.nmea_transform.STNTransform.transform" href="#logger.transforms.nmea_transform.STNTransform.transform">transform</a></code></li>
 </ul>
 </li>
 <li>
