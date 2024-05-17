@@ -3,7 +3,7 @@
 
 ## Overview
 
-The [OpenRVDAS Introduction and Overview](intro_and_overview.md) document provides an introduction to the OpenRVDAS framework, and [Introduction to Loggers](intro_to_loggers.md) provides an introduction to the process of running *individual* loggers.
+The [Quickstart](quickstart.md) document provides an introduction to the OpenRVDAS framework, and [Introduction to Loggers](intro_to_loggers.md) provides an introduction to the process of running *individual* loggers.
 
 This document describes operation of the [Logger Manager](../server/logger_manager.py), a multifaceted script that allows running, controlling and monitoring entire sets of loggers.
 
@@ -21,7 +21,7 @@ This document describes operation of the [Logger Manager](../server/logger_manag
 
 The ``listen.py`` script, described in the [Introduction to listen.py doc](listen_py.md) will run a single logger defined either from command line parameters, or by loading a logger configuration file. 
 
-The ``logger_manager.py`` script take a more complicated file (called a "cruise definition file") that consists not only of a list of named configurations, but also of "modes" such as "off", "in port" and "underway", specifying which configurations should be running in which mode. It supports an API that lets one control and monitor it from the command line or via a web interface.
+The ``logger_manager.py`` script takes a more complicated file (called a "cruise definition file") that consists not only of a list of named configurations, but also of "modes" such as "off", "in port" and "underway", specifying which configurations should be running in which mode. It supports an API that lets one control and monitor it from the command line or via a web interface.
 
   In the default installation, a logger manager and its companion, the cached data server, are run by the system's ``supervisor`` daemon.
 
@@ -29,7 +29,7 @@ Below, we go into greater detail on these points.
 
 ### Cruises, modes and configurations
 
-Before we dive into the use of ``logger_manager.py``, it's worth pausing for a moment to introduce some concepts that underlie the structure of the logger manager. _(Note: much of this section could be moved to [OpenRVDAS Configuration Files](configuration_files.md))._
+Before we dive into the use of ``logger_manager.py``, it's worth pausing for a moment to introduce some concepts that underlie the structure of the logger manager.
 
 -   **Logger configuration** - This is a definition for a set of Readers, Transforms and Writers feeding into each other, such as would be read using the --config argument of the listen.py script. In OpenRVDAS, each logger configuration that is active runs as its own daemon process.  The sample logger configuration below ("knud-\>net") reads NMEA data from the Knudsen serial port, timestamps and labels the record, then broadcasts it via UDP:
 
@@ -89,7 +89,7 @@ knud:
   - knud->net,
   - knud->file/net/db
 ```
-Perusing a complete cruise configuration file such as [test/NBP1406/NBP1406_cruise.yaml](../test/NBP1406/NBP1406_cruise.yaml) may be useful for newcomers to the system.
+Perusing a complete cruise configuration file such as [test/NBP1406/NBP1406_cruise.yaml](../test/NBP1406/NBP1406_cruise.yaml) may be useful for newcomers to the system. _(For a deeper dive, please refer to [OpenRVDAS Configuration Files](configuration_files.md))._
 
 ### What the logger manager does
 
@@ -283,7 +283,7 @@ You will have noticed that many of the examples in this documentation make use o
   supervisor>
 ```
 
-Please see the [Django Web Interface](django_interface.md) document for detailed instructions on operating the web interface and the [server/README.md](../server/README.md) file and [logger_manager.py](../server/logger_manager.py) headers for the most up-to-date information on running logger\_manager.py.
+Please see the [GUI Quickstart](quickstart_gui.md) document for detailed instructions on operating the web interface and the [server/README.md](../server/README.md) file and [logger_manager.py](../server/logger_manager.py) headers for the most up-to-date information on running logger\_manager.py.
 
 ### RESTful API
 

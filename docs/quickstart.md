@@ -1,18 +1,24 @@
 # OpenRVDAS Tutorial and Quickstart
-© 2018-2024 David Pablo Cohn - DRAFT 2024-05-06
+© 2018-2024 David Pablo Cohn - DRAFT 2024-05-016
 
 ## Table of Contents
 
 - [Overview - needs and design philosophy](#overview---needs-and-design-philosophy)
-  * [Design Philosophy](#design-philosophy)
-- [Quick Start](#quick-start)
-- [Architecture](#architecture)
-  * [Running Loggers](#running-loggers)
-  * [Controlling Multiple Loggers](#controlling-multiple-loggers)
-  * [Controlling Multiple Loggers via Web Interface](#controlling-multiple-loggers-via-web-interface)
-  * [Displaying Logger Data](#displaying-logger-data)
-- [Roadmap](#roadmap)
-- [More Documentation](#more-documentation)
+  - [Design Philosophy](#design-philosophy)
+- [Software Requirements](#software-requirements)
+- [Getting Started](#getting-started)
+  - [Get the code](#get-the-code)
+  - [Your first logger](#your-first-logger)
+  - [Your second logger](#your-second-logger)
+- [The listen.py script](#the-listen.py-script)
+- [Next things to look at](#next-things-to-look-at)
+  - [Writing/reading logfiles](#writing/reading-logfiles)
+  - [Parsing records](#parsing-records)
+  - [Writing to databases](#writing-to-databases)
+  - [Other modules](#other-modules)
+  - [Creating your own modules](#creating-your-own-modules)
+  - [Record types](#record-types)
+- [Next Steps](#next-steps)
 
 ## Overview - needs and design philosophy
 
@@ -32,7 +38,7 @@ OpenRVDAS loggers have been tested on most POSIX-compatible systems running Pyth
 
 Please see [http://openrvdas.org](http://openrvdas.org) and [http://github.com/oceandatatools/openrvdas](http://github.com/oceandatatools/openrvdas) for the most recent code and documentation.
 
-## Quick Start
+## Getting Started
 This section will familiarize you with OpenRVDAS and walk you through setting up and running a few simple loggers. These are _not_ the instructions to follow if you want to run it on a ship. If you actually want to set up a proper installation, please read and follow the instructions in [INSTALL.md](../INSTALL.md).
 
 ### Get the code
@@ -227,7 +233,16 @@ or as part of an OpenRVDAS logger configuration:
 
 For detailed instructions on using the `ParseTransform`, please read the ["Record Parsing" document](parsing.md).
 
-### Database connectors
+### Writing to databases
+#### InfluxDB
+OpenRVDAS includes an `InfluxDBWriter` that, as one would expect, writes to the open source time-series database InfluxDB. InfluxDB and its associated graphing package Grafana can be installed and configured by running the script in `utils/install_influx.sh`.
+
+More information on using InfluxDB and Grafana with OpenRVDAS can be found on the [OpenRVDAS Grafana Displays](./grafana_displays.md) page, and on the [InfluxDB](https://www.influxdata.com/) and [Grafana](https://grafana.com/oss/grafana/) project pages.
+
+#### Other databases
+OpenRVDAS includes a `DatabaseWriter` that can be configured to run with PostgreSQL, MySQL, MariaDB or MongoDB via a "database connector".
+
+To configure the `DatabaseWriter`, you will need to run the appropriate setup script from the `databases/` subdirectory. The architectures is designed to allow easy addition of other databases by creating of an appropriate database connector class and installation script.
 
 ### Other modules
 In addition to the standard OpenRVDAS modules under the `logger/` directory, your installation may include additional modules in the `local` and `contrib` directories. They may be used by specifying a module location in the logger configuration:
@@ -257,8 +272,16 @@ In each case, it is good form to link your modules into the repository under the
 ### Record types
 Note that while most modules do at least some type checking on their inputs, there is no explicit type-checking of records between modules. It is expected that the configuration designer verify that the output format of each module is compatible with the input format of the modules it feeds into.
 
-## Controlling multiple loggers
-If you only have one or two sensors you intend to log, and wish them to be "always on," then creating a logger configuration file or two and setting them up to run via cron or systemd is a fine and simple solution. But most practical deployments have a dozen or more sensors/data sources and need to vary what is done with the data of each depending on the ship's location and operational status: you always want to relay certain data to ship displays, but only relay other data when underway. And you only want to save certain data only when operating outside of an EEZ.
+## Next Steps
+If you only have one or two sensors you intend to log, and wish them to be "always on," then creating a logger configuration file or two and setting them up to run via cron or systemd is a fine and simple solution.
+
+But most practical deployments have a dozen or more sensors/data sources and need to vary what is done with the data of each depending on the ship's location and operational status. The ability to monitor the state of each logger is also essential.
+
+For situations like this, you will want to go ahead and perform a full installation of OpenRVDAS so that you can use its full functionality and the built-in Django-based GUI.
+
+using the `utils/install_openrvdas.sh` script. The script is fairly self-explanatory
+
+: you always want to relay certain data to ship displays, but only relay other data when underway. And you only want to save certain data only when operating outside of an EEZ.
 
 OpenRVDAS uses a dedicated server script called the "logger manager (in `server/logger_manager.py`) to manage these tasks. It supports both a command line and browser-based interface to do this.
 
