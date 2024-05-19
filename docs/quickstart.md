@@ -288,4 +288,4 @@ If you only have one or two sensors you intend to log, and wish them to be "alwa
 
 But most practical deployments have a dozen or more sensors/data sources and need to vary what is done with the data of each depending on the ship's location and operational status. The ability to monitor the state of each logger is also essential.
 
-For situations like this, you will want to go ahead and perform a full installation of OpenRVDAS so that you can use its full functionality and the built-in Django-based GUI. Please refer to the [OpenRVDAS GUI Quickstart document[quickstart_gui.md] for an introduction and installation instructions.
+For situations like this, you will want to go ahead and perform a full installation of OpenRVDAS so that you can use its full functionality and the built-in Django-based GUI. Please refer to the [OpenRVDAS GUI Quickstart document](quickstart_gui.md) for an introduction and installation instructions.
