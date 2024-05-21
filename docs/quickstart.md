@@ -1,5 +1,5 @@
- OpenRVDAS Tutorial and Quickstart
-© 2018-2024 David Pablo Cohn - DRAFT 2024-05-016
+# OpenRVDAS Tutorial and Quickstart
+© 2018-2024 David Pablo Cohn - DRAFT 2024-05-19
 
 ## Table of Contents
 
