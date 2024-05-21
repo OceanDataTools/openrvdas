@@ -73,7 +73,7 @@ class CachedDataReader(Reader):
                                       'installed. Please try "pip3 install '
                                       'websockets" prior to use.')
         if not (isinstance(bundle_seconds, int) or isinstance(bundle_seconds, float)) \
-            or bundle_seconds < 0:
+                or bundle_seconds < 0:
             raise ValueError('CachedDataReader parameter "bundle_seconds" must be a number '
                              f'greater than or equal to zero. Found "{bundle_seconds}"')
 

@@ -46,54 +46,14 @@ import sys
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
-from logger.readers.cached_data_reader import CachedDataReader  # noqa: E402
-from logger.readers.logfile_reader import LogfileReader  # noqa: E402
-from logger.readers.network_reader import NetworkReader  # noqa: E402
-from logger.readers.tcp_reader import TCPReader  # noqa: E402
-from logger.readers.udp_reader import UDPReader  # noqa: E402
-from logger.readers.redis_reader import RedisReader  # noqa: E402
-from logger.readers.serial_reader import SerialReader  # noqa: E402
-from logger.readers.text_file_reader import TextFileReader  # noqa: E402
-from logger.readers.database_reader import DatabaseReader  # noqa: E402
-from logger.readers.composed_reader import ComposedReader  # noqa:E402,F401
 
-from logger.transforms.extract_field_transform import ExtractFieldTransform  # noqa: E402
-from logger.transforms.nmea_transform import NMEATransform  # noqa: E402
-from logger.transforms.prefix_transform import PrefixTransform  # noqa: E402
-from logger.transforms.regex_filter_transform import RegexFilterTransform  # noqa: E402
-from logger.transforms.qc_filter_transform import QCFilterTransform  # noqa: E402
-from logger.transforms.slice_transform import SliceTransform  # noqa: E402
-from logger.transforms.timestamp_transform import TimestampTransform  # noqa: E402
-from logger.transforms.parse_nmea_transform import ParseNMEATransform  # noqa: E402
-from logger.transforms.parse_transform import ParseTransform  # noqa: E402
-from logger.transforms.xml_aggregator_transform import XMLAggregatorTransform  # noqa: E402
-
-from logger.transforms.max_min_transform import MaxMinTransform  # noqa: E402
-from logger.transforms.from_json_transform import FromJSONTransform  # noqa: E402
-from logger.transforms.to_json_transform import ToJSONTransform  # noqa: E402
-from logger.transforms.to_das_record_transform import ToDASRecordTransform  # noqa: E402
-from logger.transforms.count_transform import CountTransform  # noqa: E402
-from logger.transforms.true_winds_transform import TrueWindsTransform  # noqa: E402,F401
-
-# Compute and emit various NMEA strings
-from logger.writers.network_writer import NetworkWriter  # noqa: E402
-from logger.writers.tcp_writer import TCPWriter  # noqa: E402
-from logger.writers.udp_writer import UDPWriter  # noqa: E402
-from logger.writers.serial_writer import SerialWriter  # noqa: E402
-from logger.writers.redis_writer import RedisWriter  # noqa: E402
-from logger.writers.file_writer import FileWriter  # noqa: E402
-from logger.writers.text_file_writer import TextFileWriter  # noqa: E402, F401
-from logger.writers.logfile_writer import LogfileWriter  # noqa: E402
-from logger.writers.database_writer import DatabaseWriter  # noqa: E402
-from logger.writers.record_screen_writer import RecordScreenWriter  # noqa: E402
-from logger.writers.cached_data_writer import CachedDataWriter  # noqa: E402
-from logger.writers.influxdb_writer import InfluxDBWriter  # noqa: E402,F401
-from logger.writers.composed_writer import ComposedWriter  # noqa: E402,F401
-
-from logger.utils import read_config, timestamp, nmea_parser, record_parser  # noqa: E402
-from logger.utils.stderr_logging import StdErrLoggingHandler, STDERR_FORMATTER  # noqa: E402
-
-from logger.listener.listener import Listener  # noqa: E402
+# flake8: noqa E402, F406
+from logger.readers import *
+from logger.transforms import *
+from logger.writers import *
+from logger.utils import read_config, timestamp, nmea_parser, record_parser
+from logger.utils.stderr_logging import StdErrLoggingHandler, STDERR_FORMATTER
+from logger.listener.listener import Listener
 
 
 ################################################################################
