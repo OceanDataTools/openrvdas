@@ -3,6 +3,7 @@
 import logging
 import sys
 import threading
+import time
 import unittest
 import warnings
 
@@ -43,11 +44,13 @@ class TestCachedDataReader(unittest.TestCase):
         cdr = CachedDataReader(subscription=subscription,
                                data_server='localhost:%d' % WEBSOCKET_PORT)
 
+        time.sleep(0.05)
         response = cdr.read()
         self.assertDictEqual(response.get('fields', None),
                              {'field_1': 'value_11',
                               'field_2': 'value_21',
                               'field_3': 'value_31'})
+        time.sleep(0.05)
         response = cdr.read()
         self.assertDictEqual(response.get('fields', None),
                              {'field_1': 'value_12',
@@ -56,6 +59,7 @@ class TestCachedDataReader(unittest.TestCase):
 
         cds.cache_record({'fields': {'field_1': 'value_13',
                                      'field_2': 'value_23'}})
+        time.sleep(0.05)
         response = cdr.read()
         self.assertDictEqual(response.get('fields', None),
                              {'field_1': 'value_13',
