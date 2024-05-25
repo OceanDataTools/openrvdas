@@ -264,11 +264,9 @@ default_mode: 'off'
 ########################################
 configs:
   ########
-  PCOD-off:
-    name: PCOD-off
+  PCOD-off: {}
 
   PCOD-net:
-    name: PCOD-net
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -286,7 +284,6 @@ configs:
         destination: 255.255.255.255
 
   PCOD-net+file:
-    name: PCOD-net+file
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -310,11 +307,9 @@ configs:
             port: 6224
             destination: 255.255.255.255
   ########
-  cwnc-off:
-    name: cwnc-off
+  cwnc-off: {}
 
   cwnc-net:
-    name: cwnc-net
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -332,7 +327,6 @@ configs:
         destination: 255.255.255.255
 
   cwnc-net+file:
-    name: cwnc-net+file
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -356,11 +350,9 @@ configs:
             port: 6224
             destination: 255.255.255.255
   ########
-  gp02-off:
-    name: gp02-off
+  gp02-off: {}
 
   gp02-net:
-    name: gp02-net
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -378,7 +370,6 @@ configs:
         destination: 255.255.255.255
 
   gp02-net+file:
-    name: gp02-net+file
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -402,11 +393,9 @@ configs:
             port: 6224
             destination: 255.255.255.255
   ########
-  gyr1-off:
-    name: gyr1-off
+  gyr1-off: {}
 
   gyr1-net:
-    name: gyr1-net
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -424,7 +413,6 @@ configs:
         destination: 255.255.255.255
 
   gyr1-net+file:
-    name: gyr1-net+file
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -448,11 +436,9 @@ configs:
             port: 6224
             destination: 255.255.255.255
   ########
-  adcp-off:
-    name: adcp-off
+  adcp-off: {}
 
   adcp-net:
-    name: adcp-net
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -470,7 +456,6 @@ configs:
         destination: 255.255.255.255
 
   adcp-net+file:
-    name: adcp-net+file
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -494,11 +479,9 @@ configs:
             port: 6224
             destination: 255.255.255.255
   ########
-  eng1-off:
-    name: eng1-off
+  eng1-off: {}
 
   eng1-net:
-    name: eng1-net
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -516,7 +499,6 @@ configs:
         destination: 255.255.255.255
 
   eng1-net+file:
-    name: eng1-net+file
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -540,11 +522,9 @@ configs:
             port: 6224
             destination: 255.255.255.255
   ########
-  svp1-off:
-    name: svp1-off
+  svp1-off: {}
 
   svp1-net:
-    name: svp1-net
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -562,7 +542,6 @@ configs:
         destination: 255.255.255.255
 
   svp1-net+file:
-    name: svp1-net+file
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -586,11 +565,9 @@ configs:
             port: 6224
             destination: 255.255.255.255
   ########
-  twnc-off:
-    name: twnc-off
+  twnc-off: {}
 
   twnc-net:
-    name: twnc-net
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -608,7 +585,6 @@ configs:
         destination: 255.255.255.255
 
   twnc-net+file:
-    name: twnc-net+file
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -632,11 +608,9 @@ configs:
             port: 6224
             destination: 255.255.255.255
   ########
-  mbdp-off:
-    name: mbdp-off
+  mbdp-off: {}
 
   mbdp-net:
-    name: mbdp-net
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -654,7 +628,6 @@ configs:
         destination: 255.255.255.255
 
   mbdp-net+file:
-    name: mbdp-net+file
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -678,11 +651,9 @@ configs:
             port: 6224
             destination: 255.255.255.255
   ########
-  knud-off:
-    name: knud-off
+  knud-off: {}
 
   knud-net:
-    name: knud-net
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -700,7 +671,6 @@ configs:
         destination: 255.255.255.255
 
   knud-net+file:
-    name: knud-net+file
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -724,11 +694,9 @@ configs:
             port: 6224
             destination: 255.255.255.255
   ########
-  grv1-off:
-    name: grv1-off
+  grv1-off: {}
 
   grv1-net:
-    name: grv1-net
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -746,7 +714,6 @@ configs:
         destination: 255.255.255.255
 
   grv1-net+file:
-    name: grv1-net+file
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -770,11 +737,9 @@ configs:
             port: 6224
             destination: 255.255.255.255
   ########
-  mwx1-off:
-    name: mwx1-off
+  mwx1-off: {}
 
   mwx1-net:
-    name: mwx1-net
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -792,7 +757,6 @@ configs:
         destination: 255.255.255.255
 
   mwx1-net+file:
-    name: mwx1-net+file
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -816,11 +780,9 @@ configs:
             port: 6224
             destination: 255.255.255.255
   ########
-  pco2-off:
-    name: pco2-off
+  pco2-off: {}
 
   pco2-net:
-    name: pco2-net
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -838,7 +800,6 @@ configs:
         destination: 255.255.255.255
 
   pco2-net+file:
-    name: pco2-net+file
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -862,11 +823,9 @@ configs:
             port: 6224
             destination: 255.255.255.255
   ########
-  pguv-off:
-    name: pguv-off
+  pguv-off: {}
 
   pguv-net:
-    name: pguv-net
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -884,7 +843,6 @@ configs:
         destination: 255.255.255.255
 
   pguv-net+file:
-    name: pguv-net+file
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -908,11 +866,9 @@ configs:
             port: 6224
             destination: 255.255.255.255
   ########
-  s330-off:
-    name: s330-off
+  s330-off: {}
 
   s330-net:
-    name: s330-net
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -930,7 +886,6 @@ configs:
         destination: 255.255.255.255
 
   s330-net+file:
-    name: s330-net+file
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -954,11 +909,9 @@ configs:
             port: 6224
             destination: 255.255.255.255
   ########
-  tsg1-off:
-    name: tsg1-off
+  tsg1-off: {}
 
   tsg1-net:
-    name: tsg1-net
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -976,7 +929,6 @@ configs:
         destination: 255.255.255.255
 
   tsg1-net+file:
-    name: tsg1-net+file
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -1000,11 +952,9 @@ configs:
             port: 6224
             destination: 255.255.255.255
   ########
-  rtmp-off:
-    name: rtmp-off
+  rtmp-off: {}
 
   rtmp-net:
-    name: rtmp-net
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -1022,7 +972,6 @@ configs:
         destination: 255.255.255.255
 
   rtmp-net+file:
-    name: rtmp-net+file
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -1046,11 +995,9 @@ configs:
             port: 6224
             destination: 255.255.255.255
   ########
-  hdas-off:
-    name: hdas-off
+  hdas-off: {}
 
   hdas-net:
-    name: hdas-net
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -1068,7 +1015,6 @@ configs:
         destination: 255.255.255.255
 
   hdas-net+file:
-    name: hdas-net+file
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -1092,11 +1038,9 @@ configs:
             port: 6224
             destination: 255.255.255.255
   ########
-  tsg2-off:
-    name: tsg2-off
+  tsg2-off: {}
 
   tsg2-net:
-    name: tsg2-net
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -1114,7 +1058,6 @@ configs:
         destination: 255.255.255.255
 
   tsg2-net+file:
-    name: tsg2-net+file
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -1138,11 +1081,9 @@ configs:
             port: 6224
             destination: 255.255.255.255
   ########
-  seap-off:
-    name: seap-off
+  seap-off: {}
 
   seap-net:
-    name: seap-net
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -1160,7 +1101,6 @@ configs:
         destination: 255.255.255.255
 
   seap-net+file:
-    name: seap-net+file
     readers:                    # Read from serial port
     - class: SerialReader
       kwargs:
@@ -1184,11 +1124,9 @@ configs:
             port: 6224
             destination: 255.255.255.255
   ########
-  net_reader-off:
-    name: net_reader-off
+  net_reader-off: {}
 
   net_reader-on:
-    name: net_reader-on
     readers:                    # Read from simulated serial port
     - class: UDPReader
       kwargs:
@@ -1204,7 +1142,6 @@ configs:
         data_server: localhost:8766
 
   net_reader-on+influx:
-    name: net_reader-on+influx
     readers:                    # Read from simulated serial port
     - class: UDPReader
       kwargs:
@@ -1222,11 +1159,9 @@ configs:
       kwargs:
         bucket_name: openrvdas
   ########
-  true_wind-off:
-    name: true_wind-off
+  true_wind-off: {}
 
   true_wind-on:
-    name: true_wind-on
     readers:
     - class: CachedDataReader
       kwargs:
@@ -1304,7 +1239,6 @@ configs:
             data_server: localhost:8766
 
   true_wind-on+influx:
-    name: true_wind-on+influx
     readers:
     - class: CachedDataReader
       kwargs:
@@ -1391,11 +1325,9 @@ configs:
 
   ########
   # Derived data subsampling logger
-  snapshot-off:
-    name: snapshot-off
+  snapshot-off: {}
 
   snapshot-on:
-    name: snapshot-on
     readers:
     - class: CachedDataReader
       kwargs:
@@ -1486,7 +1418,6 @@ configs:
         data_server: localhost:8766
 
   snapshot-on+influx:
-    name: snapshot-on+influx
     readers:
     - class: CachedDataReader
       kwargs:
