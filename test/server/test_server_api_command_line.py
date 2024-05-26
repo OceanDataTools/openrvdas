@@ -118,10 +118,10 @@ class TestInMemoryServerAPI(unittest.TestCase):
         self.assertEqual(api.get_modes(), ['off', 'port', 'underway'])
         self.assertEqual(api.get_active_mode(), 'off')
         self.assertDictEqual(api.get_logger_configs(),
-                             {'knud': {'config': 'off'},
-                              'gyr1': {'config': 'off'},
-                              'mwx1': {'config': 'off'},
-                              's330': {'config': 'off'}})
+                             {'knud': {'config': 'off', 'name': 'off'},
+                              'gyr1': {'config': 'off', 'name': 'off'},
+                              'mwx1': {'config': 'off', 'name': 'off'},
+                              's330': {'config': 'off', 'name': 'off'}})
 
         with self.assertRaises(ValueError):
             api.set_active_mode('invalid mode')
@@ -129,37 +129,28 @@ class TestInMemoryServerAPI(unittest.TestCase):
         api.set_active_mode('underway')
         self.assertEqual(api.get_active_mode(), 'underway')
         self.assertDictEqual(api.get_logger_configs(),
-                             {'knud': {'config': 'knud->net/file'},
-                              'gyr1': {'config': 'gyr1->net/file'},
-                              'mwx1': {'config': 'mwx1->net/file'},
-                              's330': {'config': 's330->net/file'}})
+                             {'knud': {'config': 'knud->net/file', 'name': 'knud->net/file'},
+                              'gyr1': {'config': 'gyr1->net/file', 'name': 'gyr1->net/file'},
+                              'mwx1': {'config': 'mwx1->net/file', 'name': 'mwx1->net/file'},
+                              's330': {'config': 's330->net/file', 'name': 's330->net/file'}})
 
         with self.assertRaises(ValueError):
             api.get_logger_configs('invalid_mode')
         self.assertEqual(api.get_logger_configs('port'),
-                         {'gyr1': {'config': 'gyr1->net'},
-                          'knud': {'config': 'off'},
-                          'mwx1': {'config': 'mwx1->net'},
-                          's330': {'config': 'off'}
-                          })
-        self.assertDictEqual(api.get_loggers(),
+                         {'knud': {'config': 'off', 'name': 'off'},
+                          'gyr1': {'config': 'gyr1->net', 'name': 'gyr1->net'},
+                          'mwx1': {'config': 'mwx1->net', 'name': 'mwx1->net'},
+                          's330': {'config': 'off', 'name': 'off'}})
 
-                             {'knud': {
-                                 'configs': ['off', 'knud->net', 'knud->net/file'],
-                                 'active': 'knud->net/file'
-                             },
-            'gyr1': {
-                                 'configs': ['off', 'gyr1->net', 'gyr1->net/file'],
-                                 'active': 'gyr1->net/file'
-                             },
-            'mwx1': {
-                                 'configs': ['off', 'mwx1->net', 'mwx1->net/file'],
-                                 'active': 'mwx1->net/file'
-                             },
-            's330': {
-                                 'configs': ['off', 's330->net', 's330->net/file'],
-                                 'active': 's330->net/file'
-                             }})
+        self.assertDictEqual(api.get_loggers(),
+                             {'knud': {'configs': ['off', 'knud->net', 'knud->net/file'],
+                                       'active': 'knud->net/file'},
+                              'gyr1': {'configs': ['off', 'gyr1->net', 'gyr1->net/file'],
+                                       'active': 'gyr1->net/file'},
+                              'mwx1': {'configs': ['off', 'mwx1->net', 'mwx1->net/file'],
+                                       'active': 'mwx1->net/file'},
+                              's330': {'configs': ['off', 's330->net', 's330->net/file'],
+                                       'active': 's330->net/file'}})
         api.delete_configuration()
         self.assertEqual(None, api.get_logger_configs())
 
