@@ -184,7 +184,7 @@ class LoggerManager:
             target=self._update_configs_loop, daemon=True)
         self.update_configs_thread.start()
 
-        # Check logger status in a separate thread. If we've got the
+        # Check cruise definition in a separate thread. If we've got the
         # address of a data server websocket, send our updates to it.
         self.send_cruise_definition_loop_thread = threading.Thread(
             name='send_cruise_definition_loop',
@@ -199,7 +199,7 @@ class LoggerManager:
     ############################
     def _load_new_definition_from_api(self):
         """Fetch a new cruise definition from API and build local maps. Then
-        send anupdated cruise definition to the console.
+        send an updated cruise definition to the console.
         """
         logging.info('Fetching new cruise definitions from API')
         try:
@@ -280,9 +280,6 @@ class LoggerManager:
 
         in this file to see where.
         """
-        # First, grab a status update.
-        # self.logger_status = self.supervisor.check_status()
-        # self.status_time = time.time()
         with self.config_lock:
             # Get new configs in dict {logger:{'configs':[config_name,...]}}
             logger_configs = self.api.get_logger_configs()

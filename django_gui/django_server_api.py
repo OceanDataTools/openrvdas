@@ -321,9 +321,15 @@ class DjangoServerAPI(ServerAPI):
         with self.config_rlock:
             configs = {}
             if mode is None:
-                last_update = self._last_config_update_time()
-                if (self.logger_configs and self.logger_configs_time >= last_update):
+                last_db_update = self._last_config_update_time()
+                if (self.logger_configs and self.logger_configs_time >= last_db_update):
+                    logging.debug(f'Cache - cache time {self.logger_configs_time} >= {last_db_update} ')
                     return self.logger_configs
+
+                if not self.logger_configs:
+                    logging.debug(f'Cache is empty')
+                else:
+                    logging.debug(f'Cache is old - cache time {self.logger_configs_time} < {last_db_update}')
 
                 # If cache isn't good, mark our time and fetch configs from DB
                 self.logger_configs_time = time.time()
@@ -334,6 +340,7 @@ class DjangoServerAPI(ServerAPI):
                 # Cache the configs we've gathered
                 self.logger_configs = configs
 
+                logging.debug(f'New cache: {configs}')
                 # And return them
                 return configs
 
@@ -348,12 +355,6 @@ class DjangoServerAPI(ServerAPI):
             for config in LoggerConfig.objects.filter(modes__name=mode):
                 configs[config.logger.name] = json.loads(config.config_json)
             return configs
-
-            # If they've specified a mode, do it the hard way..
-            # for logger_id in self.get_loggers():
-            #  config_obj = self._get_logger_config_object(logger_id, mode)
-            #  configs[logger_id] = json.loads(config_obj.config_json)
-            # return configs
 
     ############################
     def get_logger_config_name(self, logger_id, mode=None):
@@ -853,9 +854,8 @@ class DjangoServerAPI(ServerAPI):
                         if old_config_name:
                             # Can we find a new config with the old name?
                             try:
-                                config = self._get_logger_config_object_by_name(old_config_name)
-                                logger.config = config
-                                logger.save()
+                                logging.debug(f'Preserving {logger_name} to {old_config_name}')
+                                self.set_active_logger_config(logger, old_config_name)
                                 continue
                             except ValueError:
                                 # We couldn't find a new config with old config name
@@ -866,15 +866,17 @@ class DjangoServerAPI(ServerAPI):
                     # If we're here, we're either not trying to preserve the old
                     # config, or we were unable to find it. Use default mode config.
                     default_config_name = self.get_logger_config_name(logger_name, default_mode)
-                    config = self._get_logger_config_object_by_name(default_config_name)
-                    logger.config = config
-                    logger.save()
+                    logging.debug(f'Setting {logger_name} to default {default_config_name}')
+                    self.set_active_logger_config(logger, default_config_name)
 
                 logging.info('Cruise loaded')
-                # self.set_active_mode(default_mode) # we now do this outside of load
 
-        # Let anyone who's interested know that we've got new configurations.
-        self.signal_load()
+                # Note in our cache that we've updated loggers, so anything older than this
+                # time is suspect and should be reloaded.
+                self._set_update_time()
+
+                # Let anyone who's interested know that we've got new configurations.
+                self.signal_load()
 
     ############################
     def delete_configuration(self):
