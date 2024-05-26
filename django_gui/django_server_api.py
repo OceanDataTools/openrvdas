@@ -709,8 +709,15 @@ class DjangoServerAPI(ServerAPI):
                 cruise_def = configuration.get('cruise', {})
                 loggers = configuration.get('loggers', None)
                 modes = configuration.get('modes', None)
-                default_mode = configuration.get('default_mode', None)
+                default_mode_name = configuration.get('default_mode', None)
                 configs = configuration.get('configs', None)
+
+                # If preserve_mode is True, don't reset mode to the new configuration's
+                # default_mode, and leave all loggers running their current configs.
+                preserve_mode = configuration.get('preserve_mode', False)
+
+                old_loggers = self.get_loggers()
+                old_active_mode_name = self.get_active_mode()
 
                 # Some sanity checking
                 if loggers is None:
@@ -735,8 +742,8 @@ class DjangoServerAPI(ServerAPI):
                         if mode_logger_config not in configs:
                             raise ValueError(f'In mode \'{mode}\', logger \'{mode_logger}\', ' +
                                              f'config \'{mode_logger_config}\' is undefined')
-                if default_mode and default_mode not in modes:
-                    raise ValueError(f'Default mode \'{default_mode}\' is not in list' +
+                if default_mode_name and default_mode_name not in modes:
+                    raise ValueError(f'Default mode \'{default_mode_name}\' is not in list' +
                                      f' of valid modes: {list(modes.keys())}')
                 # We're going in - a select_for_update() locks the Logger table
                 # so no one else can mess until we're done with the transaction.
@@ -766,16 +773,33 @@ class DjangoServerAPI(ServerAPI):
 
                 ################
                 # Create the modes
+                old_active_mode = None
+                default_mode = None
                 for mode_name in modes:
-                    logging.info('  Creating mode %s (cruise %s)', mode_name, cruise_id)
+                    logging.info(f'  Creating mode {mode_name} (cruise {cruise_id})')
                     mode = Mode(name=mode_name, cruise=cruise)
                     mode.save()
 
-                    # Is this mode the default mode for the cruise?
-                    if mode_name == default_mode:
-                        logging.info('    Setting %s as default mode', mode_name)
-                        cruise.default_mode = mode
-                        cruise.save()
+                    # If we're trying to keep the old mode and this matches, set as active mode
+                    if mode_name == old_active_mode_name:
+                        old_active_mode = mode
+
+                    # Is this mode the designated default mode for the cruise?
+                    if mode_name == default_mode_name:
+                        default_mode = mode
+
+                if not default_mode:
+                    raise ValueError(f'Default mode "{default_mode_name}" not found '
+                                     'in cruise definition!')
+                logging.info(f'  Setting cruise default mode to {default_mode_name}')
+                cruise.default_mode = default_mode
+
+                if preserve_mode and old_active_mode:
+                    logging.info(f'  Preserving old cruise mode {old_active_mode_name}')
+                    cruise.active_mode = old_active_mode
+                else:
+                    cruise.active_mode = default_mode
+                cruise.save()
 
                 ################
                 # Create the loggers
@@ -823,12 +847,28 @@ class DjangoServerAPI(ServerAPI):
                                               config_name, mode_name)
                                 config.modes.add(mode)
 
-                                # Is this config in the default mode of this logger?
-                                if mode_name == default_mode:
-                                    logging.debug('    Setting logger %s to default config: %s',
-                                                  logger_name, config_name)
-                                    logger.config = config
-                                    logger.save()
+                    # What mode should this logger be in now?
+                    if preserve_mode:  # if we want to keep old mode, assuming we can find it
+                        old_config_name = old_loggers.get(logger_name, {}).get('active', None)
+                        if old_config_name:
+                            # Can we find a new config with the old name?
+                            try:
+                                config = self._get_logger_config_object_by_name(old_config_name)
+                                logger.config = config
+                                logger.save()
+                                continue
+                            except ValueError:
+                                # We couldn't find a new config with old config name
+                                logging.warning(f'Logger "{logger_name}" old config '
+                                                f'"{old_config_name}" not found. Falling '
+                                                'back to default config')
+
+                    # If we're here, we're either not trying to preserve the old
+                    # config, or we were unable to find it. Use default mode config.
+                    default_config_name = self.get_logger_config_name(logger_name, default_mode)
+                    config = self._get_logger_config_object_by_name(default_config_name)
+                    logger.config = config
+                    logger.save()
 
                 logging.info('Cruise loaded')
                 # self.set_active_mode(default_mode) # we now do this outside of load

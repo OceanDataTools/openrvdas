@@ -100,6 +100,13 @@ def index(request):
                 config = read_config(filename)
                 if 'cruise' in config:
                     config['cruise']['config_filename'] = filename
+
+                # Since we're reloading, we'd like to keep any unchanged
+                # loggers running and not revert to the cruise's default
+                # mode. Signal this by slipping some side information into
+                # the config.
+                config['preserve_mode'] = True
+
                 api.load_configuration(config)
             except ValueError as e:
                 logging.warning('Error reloading current configuration: %s', str(e))
