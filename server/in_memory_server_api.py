@@ -318,9 +318,17 @@ class InMemoryServerAPI(ServerAPI):
         self.config = config
         self.config['loaded_time'] = datetime.datetime.utcnow()
 
+        # Some syntactic sugar to simplify config definitions
+        configs = self.config.get('configs', None)
+        for config_name, config in configs.items():
+            if config is None:
+                raise ValueError(f'No logger for "{config_name}" in cruise definition')
+            if 'name' not in config:
+                self.config['configs'][config_name]['name'] = config_name
+
         # Set cruise into default mode, if one is defined
-        if 'default_mode' in config:
-            active_mode = config['default_mode']
+        if 'default_mode' in self.config:
+            active_mode = self.config['default_mode']
             self.set_active_mode(active_mode)
 
         # Let anyone who's interested know that we've got new configurations.

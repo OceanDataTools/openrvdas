@@ -640,15 +640,23 @@ class SQLiteServerAPI(ServerAPI):
         # self.config['loaded_time'] = datetime.utcnow().isoformat()
         self.config['loaded_time'] = datetime.utcnow()
 
+        # Some syntactic sugar to simplify config definitions
+        configs = self.config.get('configs', None)
+        for config_name, config in configs.items():
+            if config is None:
+                raise ValueError(f'No logger for "{config_name}" in cruise definition')
+            if 'name' not in config:
+                self.config['configs'][config_name]['name'] = config_name
+
         # Set cruise into default mode, if one is defined
-        if 'default_mode' in config:
-            active_mode = config['default_mode']
+        if 'default_mode' in self.config:
+            active_mode = self.config['default_mode']
             self.set_active_mode(active_mode)
         else:
             logging.warn('Cruise has no default mode')
         # Why not send the entire config to the CDS?  Why
         # just *almost* all of it?  JSON issue?
-        cruise = config.get('cruise', None)
+        cruise = self.config.get('cruise', None)
         if cruise:
             for key in ['id', 'start', 'end']:
                 if key not in self.config:

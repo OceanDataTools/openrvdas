@@ -48,14 +48,14 @@ sample_1 = {
         "gyr1->off": {},
         "mwx1->off": {},
         "s330->off": {},
-        "knud->net": {"config knud->net"},
-        "gyr1->net": {"config gyr1->net"},
-        "mwx1->net": {"config mwx1->net"},
-        "s330->net": {"config s330->net"},
-        "knud->net/file": {"config knud->net/file"},
-        "gyr1->net/file": {"config gyr1->net/file"},
-        "mwx1->net/file": {"config mwx1->net/file"},
-        "s330->net/file": {"config s330->net/file"}
+        "knud->net": {},
+        "gyr1->net": {},
+        "mwx1->net": {},
+        "s330->net": {},
+        "knud->net/file": {},
+        "gyr1->net/file": {},
+        "mwx1->net/file": {},
+        "s330->net/file": {}
     }
 }
 
@@ -71,12 +71,15 @@ class TestInMemoryServerAPI(unittest.TestCase):
         self.assertEqual(api.get_modes(), ['off', 'port', 'underway'])
         self.assertEqual(api.get_active_mode(), 'off')
         self.assertDictEqual(api.get_logger_configs(),
-                             {'knud': {}, 'gyr1': {}, 'mwx1': {}, 's330': {}})
+                             {'gyr1': {'name': 'gyr1->off'},
+                              'knud': {'name': 'knud->off'},
+                              'mwx1': {'name': 'mwx1->off'},
+                              's330': {'name': 's330->off'}})
         self.assertDictEqual(api.get_logger_configs('underway'),
-                             {'knud': {'config knud->net/file'},
-                              'gyr1': {'config gyr1->net/file'},
-                              'mwx1': {'config mwx1->net/file'},
-                              's330': {'config s330->net/file'}})
+                             {'knud': {'name': 'knud->net/file'},
+                              'gyr1': {'name': 'gyr1->net/file'},
+                              'mwx1': {'name': 'mwx1->net/file'},
+                              's330': {'name': 's330->net/file'}})
 
         with self.assertRaises(ValueError):
             api.set_active_mode('invalid mode')
@@ -84,18 +87,18 @@ class TestInMemoryServerAPI(unittest.TestCase):
         api.set_active_mode('underway')
         self.assertEqual(api.get_active_mode(), 'underway')
         self.assertDictEqual(api.get_logger_configs(),
-                             {'knud': {'config knud->net/file'},
-                              'gyr1': {'config gyr1->net/file'},
-                              'mwx1': {'config mwx1->net/file'},
-                              's330': {'config s330->net/file'}})
+                             {'knud': {'name': 'knud->net/file'},
+                              'gyr1': {'name': 'gyr1->net/file'},
+                              'mwx1': {'name': 'mwx1->net/file'},
+                              's330': {'name': 's330->net/file'}})
 
         with self.assertRaises(ValueError):
             api.get_logger_configs('invalid_mode')
         self.assertEqual(api.get_logger_configs('port'),
-                         {'gyr1': {'config gyr1->net'},
-                          'knud': {},
-                          'mwx1': {'config mwx1->net'},
-                          's330': {}
+                         {'gyr1': {'name': 'gyr1->net'},
+                          'knud': {'name': 'knud->off'},
+                          'mwx1': {'name': 'mwx1->net'},
+                          's330': {'name': 's330->off'}
                           })
         self.assertDictEqual(api.get_loggers(),
                              {'knud': {
