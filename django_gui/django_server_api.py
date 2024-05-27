@@ -323,13 +323,14 @@ class DjangoServerAPI(ServerAPI):
             if mode is None:
                 last_db_update = self._last_config_update_time()
                 if (self.logger_configs and self.logger_configs_time >= last_db_update):
-                    logging.debug(f'Cache - cache time {self.logger_configs_time} >= {last_db_update} ')
+                    logging.debug(f'Cache time {self.logger_configs_time} >= {last_db_update} ')
                     return self.logger_configs
 
                 if not self.logger_configs:
-                    logging.debug(f'Cache is empty')
+                    logging.debug('Cache is empty')
                 else:
-                    logging.debug(f'Cache is old - cache time {self.logger_configs_time} < {last_db_update}')
+                    logging.debug(f'Cache is old: cache time {self.logger_configs_time} '
+                                  f'< {last_db_update}')
 
                 # If cache isn't good, mark our time and fetch configs from DB
                 self.logger_configs_time = time.time()
