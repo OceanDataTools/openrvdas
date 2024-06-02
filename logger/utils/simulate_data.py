@@ -288,12 +288,20 @@ class SimSerial:
         self.write_fd, self.read_fd = pty.openpty()  # open the pseudoterminal
         true_read_port = os.ttyname(self.read_fd)  # this is the true filename of port
 
+        # WARNING: NON-PORTABLE
+        true_write_port = f'/dev/fd/{self.write_fd}'
+
         # Get rid of any previous symlink if it exists, and symlink the new pty
         try:
             os.unlink(self.read_port)
         except FileNotFoundError:
             pass
+        try:
+            os.unlink(self.write_port)
+        except FileNotFoundError:
+            pass
         os.symlink(true_read_port, self.read_port)
+        os.symlink(true_write_port, self.write_port)
 
         self.reader = LogfileReader(filebase=self.filebase,
                                     use_timestamps=self.use_timestamps,
@@ -306,6 +314,10 @@ class SimSerial:
         # Get rid of the symlink we've created
         try:
             os.unlink(self.read_port)
+        except FileNotFoundError:
+            pass
+        try:
+            os.unlink(self.write_port)
         except FileNotFoundError:
             pass
 
