@@ -87,6 +87,7 @@ import glob
 import logging
 import os.path
 import parse
+import platform
 import pty
 import sys
 import threading
@@ -288,8 +289,11 @@ class SimSerial:
         self.write_fd, self.read_fd = pty.openpty()  # open the pseudoterminal
         true_read_port = os.ttyname(self.read_fd)  # this is the true filename of port
 
-        # WARNING: NON-PORTABLE
-        true_write_port = f'/dev/fd/{self.write_fd}'
+        # Handle macOS-specific logic
+        if platform.system() == 'Darwin':
+            true_write_port = f'/dev/fd/{self.write_fd}'
+        else:
+            true_write_port = os.ttyname(self.write_fd)
 
         # Get rid of any previous symlink if it exists, and symlink the new pty
         try:
