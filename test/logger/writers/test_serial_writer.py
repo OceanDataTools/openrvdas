@@ -71,7 +71,8 @@ class TestSerialWriter(unittest.TestCase):
         # self.sim_serial = SimSerial(port=self.tmp_port_name, filebase=self.dummy_filebase)
 
     def _run_reader(self, port):
-        reader = SerialReader(port)
+        logging.info(f'started _run_reader on port {port}')
+        reader = SerialReader(port, baudrate=9600)
         for line in SAMPLE_DATA.split('\n'):
             result = reader.read()
             logging.info('data: %s, read: %s', line, result)
@@ -102,7 +103,8 @@ class TestSerialWriter(unittest.TestCase):
         time.sleep(0.1)
 
         def _run_writer():
-            writer = SerialWriter(port=write_port)
+            logging.info(f'started _run_writer on port {write_port}')
+            writer = SerialWriter(port=write_port, baudrate=9600)
             for line in SAMPLE_DATA.split('\n'):
                 writer.write(line)
                 logging.info('wrote: %s', line)
