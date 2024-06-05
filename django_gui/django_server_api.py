@@ -718,8 +718,13 @@ class DjangoServerAPI(ServerAPI):
                 # default_mode, and leave all loggers running their current configs.
                 preserve_mode = configuration.get('preserve_mode', False)
 
-                old_loggers = self.get_loggers()
-                old_active_mode_name = self.get_active_mode()
+                # See if we can even get previous loggers and mode
+                try:
+                    old_loggers = self.get_loggers()
+                    old_active_mode_name = self.get_active_mode()
+                except ValueError:
+                    old_loggers = {}
+                    old_active_mode_name = ''
 
                 # Some sanity checking
                 if loggers is None:
