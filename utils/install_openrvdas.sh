@@ -194,13 +194,13 @@ function get_new_filename {
       # Prompt the user to enter a filename
       read -p "$FILENAME_PROMPT" NEW_FILENAME_RESULT
 
-      echo got new: $NEW_FILENAME_RESULT
-      # Check if the directory exists
-      dir=$(dirname "$NEW_FILENAME_RESULT")
-      if [ ! -d "$dir" ]; then
-        echo "Directory '$dir' does not exist. Please try again."
-        continue  # Skip the rest of the loop and prompt again
-      fi
+      # Disabled check - on initial installation, /opt/openrvdas dir won't exist yet
+      ## Check if the directory exists
+      #dir=$(dirname "$NEW_FILENAME_RESULT")
+      #if [ ! -d "$dir" ]; then
+      #  echo "Directory '$dir' does not exist. Please try again."
+      #  continue  # Skip the rest of the loop and prompt again
+      #fi
 
       # Check if the file already exists
       if [ -e "$NEW_FILENAME_RESULT" ]; then
