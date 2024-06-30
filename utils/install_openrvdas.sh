@@ -168,6 +168,56 @@ function get_os_type {
 
 ###########################################################################
 ###########################################################################
+function get_existing_filename {
+    FILENAME_PROMPT=$1
+    EXISTING_FILENAME_RESULT=""
+    while true; do
+      # Prompt the user to enter a filename
+      read -p "$FILENAME_PROMPT" EXISTING_FILENAME_RESULT
+
+      # Check if the file exists
+      if [ -f "$EXISTING_FILENAME_RESULT" ]; then
+        break  # Exit the loop if the file is found
+      else
+        echo "File '$EXISTING_FILENAME_RESULT' not found. Please try again."
+      fi
+    done
+}
+
+###########################################################################
+###########################################################################
+function get_new_filename {
+    FILENAME_PROMPT=$1
+    NEW_FILENAME_RESULT=""
+
+    while true; do
+      # Prompt the user to enter a filename
+      read -p "$FILENAME_PROMPT" NEW_FILENAME_RESULT
+
+      echo got new: $NEW_FILENAME_RESULT
+      # Check if the directory exists
+      dir=$(dirname "$NEW_FILENAME_RESULT")
+      if [ ! -d "$dir" ]; then
+        echo "Directory '$dir' does not exist. Please try again."
+        continue  # Skip the rest of the loop and prompt again
+      fi
+
+      # Check if the file already exists
+      if [ -e "$NEW_FILENAME_RESULT" ]; then
+        read -p "File '$NEW_FILENAME_RESULT' already exists. Overwrite? (y/n): " answer
+        case $answer in
+          [Yy]* ) break;;  # Break the loop if the user agrees to overwrite
+          [Nn]* ) continue;;  # Continue the loop if the user does not want to overwrite
+          * ) echo "Please answer yes or no.";;
+        esac
+      else
+        break  # File does not exist and can be created, exit loop
+      fi
+    done
+}
+
+###########################################################################
+###########################################################################
 # Read any pre-saved default variables from file
 function set_default_variables {
     # Defaults that will be overwritten by the preferences file, if it
@@ -1073,7 +1123,6 @@ EOF
 # Start of actual script
 ###########################################################################
 ###########################################################################
-
 echo
 echo "OpenRVDAS configuration script"
 
@@ -1178,14 +1227,19 @@ if [ "$USE_SSL" == "yes" ]; then
     echo "below, and you will be prompted for their locations. Otherwise answer \"no\""
     echo "and you will be prompted to create a self-signed certificate."
     echo
-    yes_no "Do you already have a .key and a .crt file to use for this server? " $DEFAULT_HAVE_SSL_CERTIFICATE
+    yes_no "Do you already have a .key and a .crt file to use for this server?" $DEFAULT_HAVE_SSL_CERTIFICATE
     HAVE_SSL_CERTIFICATE=$YES_NO_RESULT
+
     if [ $HAVE_SSL_CERTIFICATE == 'yes' ]; then
-        read -p "Location of .crt file? ($DEFAULT_SSL_CRT_LOCATION) " SSL_CRT_LOCATION
-        read -p "Location of .key file? ($DEFAULT_SSL_KEY_LOCATION) " SSL_KEY_LOCATION
+        get_existing_filename "Path and name of .crt file? ($DEFAULT_SSL_CRT_LOCATION) "
+        SSL_CRT_LOCATION=$EXISTING_FILENAME_RESULT
+        get_existing_filename "Path and name of .key file? ($DEFAULT_SSL_KEY_LOCATION) "
+        SSL_KEY_LOCATION=$EXISTING_FILENAME_RESULT
     else
-        read -p "Where to create .crt file? ($DEFAULT_SSL_CRT_LOCATION) " SSL_CRT_LOCATION
-        read -p "Where to create .key file? ($DEFAULT_SSL_KEY_LOCATION) " SSL_KEY_LOCATION
+        get_new_filename "Path and name of .crt file to create? ($DEFAULT_SSL_CRT_LOCATION) "
+        SSL_CRT_LOCATION=$NEW_FILENAME_RESULT
+        get_new_filename "Path and name of .key file to create? ($DEFAULT_SSL_KEY_LOCATION) "
+        SSL_KEY_LOCATION=$NEW_FILENAME_RESULT
     fi
     SSL_CRT_LOCATION=${SSL_CRT_LOCATION:-$DEFAULT_SSL_CRT_LOCATION}
     SSL_KEY_LOCATION=${SSL_KEY_LOCATION:-$DEFAULT_SSL_KEY_LOCATION}
