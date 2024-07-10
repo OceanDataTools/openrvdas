@@ -233,8 +233,8 @@ function set_default_variables {
 
     DEFAULT_USE_SSL=no
     DEFAULT_HAVE_SSL_CERTIFICATE=no
-    DEFAULT_SSL_CRT_LOCATION=
-    DEFAULT_SSL_KEY_LOCATION=
+    DEFAULT_SSL_CRT_LOCATION=${DEFAULT_INSTALL_ROOT}/openrvdas/openrvdas.crt
+    DEFAULT_SSL_KEY_LOCATION=${DEFAULT_INSTALL_ROOT}/openrvdas/openrvdas.key
 
     DEFAULT_RVDAS_USER=rvdas
 
