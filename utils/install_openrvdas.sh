@@ -412,7 +412,7 @@ function install_packages {
         fi
 
         # Check if EPEL repository is installed
-        if ! yum repolist | grep -q "^epel/"; then
+        if ! yum repolist | grep -q "^epel"; then
           echo "EPEL repository is not installed. Installing it now."
           sudo yum install -y epel-release
 
