@@ -168,51 +168,49 @@ function get_os_type {
 
 ###########################################################################
 ###########################################################################
-function get_existing_filename {
+function verify_existing_filename {
     FILENAME_PROMPT=$1
-    EXISTING_FILENAME_RESULT=""
+    EXISTING_FILENAME=$2
     while true; do
-      # Prompt the user to enter a filename
-      read -p "$FILENAME_PROMPT" EXISTING_FILENAME_RESULT
+        # Check if the file exists
+        if [ -f "$EXISTING_FILENAME" ]; then
+            break  # Exit the loop if the file is found
+        else
+            echo "File '$EXISTING_FILENAME' not found. Please try again."
+            read -p "$FILENAME_PROMPT" EXISTING_FILENAME
 
-      # Check if the file exists
-      if [ -f "$EXISTING_FILENAME_RESULT" ]; then
-        break  # Exit the loop if the file is found
-      else
-        echo "File '$EXISTING_FILENAME_RESULT' not found. Please try again."
-      fi
+        fi
     done
 }
 
 ###########################################################################
 ###########################################################################
-function get_new_filename {
+function verify_new_filename {
     FILENAME_PROMPT=$1
-    NEW_FILENAME_RESULT=""
+    NEW_FILENAME=$2
 
     while true; do
-      # Prompt the user to enter a filename
-      read -p "$FILENAME_PROMPT" NEW_FILENAME_RESULT
+        # Check if the directory exists
+        dir=$(dirname "$NEW_FILENAME")
+        if [ ! -d "$dir" ]; then
+            echo "Directory '$dir' does not exist for path '$NEW_FILENAME'. Please try again."
+            read -p "$FILENAME_PROMPT" NEW_FILENAME
+            continue  # Skip the rest of the loop and prompt again
+        fi
 
-      # Disabled check - on initial installation, /opt/openrvdas dir won't exist yet
-      ## Check if the directory exists
-      #dir=$(dirname "$NEW_FILENAME_RESULT")
-      #if [ ! -d "$dir" ]; then
-      #  echo "Directory '$dir' does not exist. Please try again."
-      #  continue  # Skip the rest of the loop and prompt again
-      #fi
-
-      # Check if the file already exists
-      if [ -e "$NEW_FILENAME_RESULT" ]; then
-        read -p "File '$NEW_FILENAME_RESULT' already exists. Overwrite? (y/n): " answer
-        case $answer in
-          [Yy]* ) break;;  # Break the loop if the user agrees to overwrite
-          [Nn]* ) continue;;  # Continue the loop if the user does not want to overwrite
-          * ) echo "Please answer yes or no.";;
-        esac
-      else
-        break  # File does not exist and can be created, exit loop
-      fi
+          # Check if the file already exists
+        if [ -e "$NEW_FILENAME" ]; then
+            read -p "File '$NEW_FILENAME' already exists. Overwrite? (y/n): " answer
+            case $answer in
+                [Yy]* ) break;;  # Break the loop if the user agrees to overwrite
+                [Nn]* )
+                    read -p "$FILENAME_PROMPT" NEW_FILENAME
+                    continue;;  # Continue the loop if the user does not want to overwrite
+                * ) echo "Please answer yes or no.";;
+            esac
+        else
+            break  # File does not exist and can be created, exit loop
+        fi
     done
 }
 
@@ -1230,16 +1228,13 @@ if [ "$USE_SSL" == "yes" ]; then
     yes_no "Do you already have a .key and a .crt file to use for this server?" $DEFAULT_HAVE_SSL_CERTIFICATE
     HAVE_SSL_CERTIFICATE=$YES_NO_RESULT
 
+    # We will sanity check these values later
     if [ $HAVE_SSL_CERTIFICATE == 'yes' ]; then
-        get_existing_filename "Path and name of .crt file? ($DEFAULT_SSL_CRT_LOCATION) "
-        SSL_CRT_LOCATION=$EXISTING_FILENAME_RESULT
-        get_existing_filename "Path and name of .key file? ($DEFAULT_SSL_KEY_LOCATION) "
-        SSL_KEY_LOCATION=$EXISTING_FILENAME_RESULT
+        read -p "Path and name of .crt file? ($DEFAULT_SSL_CRT_LOCATION) " SSL_CRT_LOCATION
+        read -p "Path and name of .key file? ($DEFAULT_SSL_KEY_LOCATION) " SSL_KEY_LOCATION
     else
-        get_new_filename "Path and name of .crt file to create? ($DEFAULT_SSL_CRT_LOCATION) "
-        SSL_CRT_LOCATION=$NEW_FILENAME_RESULT
-        get_new_filename "Path and name of .key file to create? ($DEFAULT_SSL_KEY_LOCATION) "
-        SSL_KEY_LOCATION=$NEW_FILENAME_RESULT
+        read -p "Path and name of .crt file to create? ($DEFAULT_SSL_CRT_LOCATION) " SSL_CRT_LOCATION
+        read -p "Path and name of .key file to create? ($DEFAULT_SSL_KEY_LOCATION) " SSL_KEY_LOCATION
     fi
     SSL_CRT_LOCATION=${SSL_CRT_LOCATION:-$DEFAULT_SSL_CRT_LOCATION}
     SSL_KEY_LOCATION=${SSL_KEY_LOCATION:-$DEFAULT_SSL_KEY_LOCATION}
@@ -1409,11 +1404,28 @@ fi
 #########################################################################
 #########################################################################
 # Create new self-signed SSL certificate, if that's what they want
-if [ $USE_SSL == "yes" ] && [ $HAVE_SSL_CERTIFICATE == 'no' ]; then
+if [ $USE_SSL == "yes" ]; then
+    if [ $HAVE_SSL_CERTIFICATE == 'yes' ]; then
+        # We have certs: verify that the files exist, or prompt for new names if they don't
+        verify_existing_filename "Please enter location of existing .crt file: " $SSL_CRT_LOCATION
+        SSL_CRT_LOCATION=$EXISTING_FILENAME
+        verify_existing_filename "Please enter location of existing .key file: " $SSL_KEY_LOCATION
+        SSL_KEY_LOCATION=$EXISTING_FILENAME
+        save_default_variables  # In case user updated locations
+    else
+        # We're going to create new certs. Verify that the directory where we're going to
+        # create them exists, and check that we're not overwriting an existing one.
+        echo "#####################################################################"
+        echo "Ready to set up new self-signed SSL certificates:"
+        verify_new_filename "Please enter a path and filename for the .crt file: " $SSL_CRT_LOCATION
+        SSL_CRT_LOCATION=$NEW_FILENAME
+        verify_new_filename "Please enter a path and filename for the .key file: " $SSL_KEY_LOCATION
+        SSL_KEY_LOCATION=$NEW_FILENAME
+        save_default_variables  # In case user updated locations
+
+        setup_ssl_certificate
+    fi
     echo
-    echo "#####################################################################"
-    echo "Ready to set up new self-signed SSL certificate."
-    setup_ssl_certificate
 fi
 
 #########################################################################
