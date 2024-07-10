@@ -410,7 +410,28 @@ function install_packages {
         if [ $OS_VERSION == '7' ]; then
             sudo yum install -y deltarpm
         fi
-        sudo yum install -y epel-release
+
+        # Check if EPEL repository is installed
+        if ! yum repolist | grep -q "^epel/"; then
+          echo "EPEL repository is not installed. Installing it now."
+          sudo yum install -y epel-release
+
+          if [ $? -eq 0 ]; then
+            echo "EPEL repository installed successfully."
+          else
+            echo "Failed to install EPEL repository."
+            exit 1
+          fi
+        fi
+
+        # Enable EPEL repository
+        sudo yum-config-manager --enable epel
+        if [ $? -eq 0 ]; then
+          echo "EPEL repository is enabled."
+        else
+          echo "Failed to enable EPEL repository."
+          exit 1
+        fi
         sudo yum -y update
 
         echo Installing required packages
