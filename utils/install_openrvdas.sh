@@ -460,18 +460,19 @@ function install_openrvdas {
       sudo chown ${RVDAS_USER} openrvdas
     fi
 
-    if [ -e openrvdas/.git ] ; then   # If we've already got an installation
-      cd openrvdas
-      git pull
-      git checkout $OPENRVDAS_BRANCH
-      git pull
-    else                              # If we don't already have an installation
-      sudo rm -rf openrvdas           # in case there's a non-git dir there
-      sudo mkdir openrvdas
-      sudo chown ${RVDAS_USER} openrvdas
-      git clone -b $OPENRVDAS_BRANCH $OPENRVDAS_REPO
-      cd openrvdas
-    fi
+    # if [ -e openrvdas/.git ] ; then   # If we've already got an installation
+    #   cd openrvdas
+    #   git pull
+    #   git checkout $OPENRVDAS_BRANCH
+    #   git pull
+    # else                              # If we don't already have an installation
+    #   sudo rm -rf openrvdas           # in case there's a non-git dir there
+    #   sudo mkdir openrvdas
+    #   sudo chown ${RVDAS_USER} openrvdas
+    #   git clone -b $OPENRVDAS_BRANCH $OPENRVDAS_REPO
+    #   cd openrvdas
+    # fi
+    cd openrvdas
 
     # Copy widget settings into place and customize for this machine
     cp display/js/widgets/settings.js.dist \
@@ -729,7 +730,7 @@ function setup_uwsgi {
 
     # MacOS
     if [ $OS_TYPE == 'MacOS' ]; then
-        ETC_HOME=/usr/local/etc
+        ETC_HOME=/opt/homebrew/etc
 
     # CentOS/RHEL and Ubuntu/Debian
     elif [ $OS_TYPE == 'CentOS' ] || [ $OS_TYPE == 'Ubuntu' ]; then

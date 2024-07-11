@@ -1,0 +1,25 @@
+cruise:
+  id: Blank
+  start: '2023-10-13'
+  end: '2023-12-31'
+
+loggers:
+  blank:
+    configs:
+    - blank->off
+    - blank->on
+
+modes:
+  'off':
+    blank: blank->off
+  'on':
+    blank: blank->on
+
+default_mode: 'off'
+
+configs:
+  blank->off:
+    name: blank->off
+
+  blank->on:
+    name: blank->on
