@@ -473,7 +473,7 @@ function install_packages {
 #            fi
         fi
 
-        if [ $OS_VERSION == '7' || $OS_VERSION == '8' ]; then
+        if [ $OS_VERSION == '7' ] || [ $OS_VERSION == '8' ]; then
             # Build Python, too, if we don't have right version
             PYTHON_VERSION='3.8.3'
             if [ "`/usr/local/bin/python3 --version`" == "Python $PYTHON_VERSION" ]; then
