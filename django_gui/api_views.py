@@ -2,6 +2,8 @@ from .django_server_api import DjangoServerAPI
 from django_gui.settings import FILECHOOSER_DIRS
 from django_gui.settings import WEBSOCKET_DATA_SERVER
 
+from django.contrib.auth.models import Permission, User 
+
 from rest_framework import authentication, serializers
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
@@ -78,17 +80,40 @@ class ApiRoot(APIView):
     serializer_class = GetSerializer
     
     def get(self, request, format=None):
-        return Response({
-            "login": reverse("rest_framework:login", request=request, format=format),
-            "logout": reverse("rest_framework:logout", request=request, format=format),
-            "obtain-auth-token": reverse("obtain-auth-token", request=request, format=format),
-            "cruise-configuration": reverse("cruise-configuration", request=request, format=format),
-            "select-cruise-mode": reverse("select-cruise-mode", request=request, format=format),
-            "reload-current-configuration": reverse("reload-current-configuration", request=request, format=format),
-            "delete-configuration": reverse("delete-configuration", request=request, format=format),
-            "edit-logger-config": reverse("edit-logger-config", request=request, format=format),
-            "load-configuration-file": reverse("load-configuration-file", request=request, format=format),
-        })
+        return Response(
+            {
+                "login": reverse(
+                    "rest_framework:login", request=request, format=format
+                ),
+                "logout": reverse(
+                    "rest_framework:logout", request=request, format=format
+                ),
+                "obtain-auth-token": reverse(
+                    "obtain-auth-token", request=request, format=format
+                ),
+                "get-auth-user": reverse(
+                    "get-auth-user", request=request, format=format
+                ),
+                "cruise-configuration": reverse(
+                    "cruise-configuration", request=request, format=format
+                ),
+                "select-cruise-mode": reverse(
+                    "select-cruise-mode", request=request, format=format
+                ),
+                "reload-current-configuration": reverse(
+                    "reload-current-configuration", request=request, format=format
+                ),
+                "delete-configuration": reverse(
+                    "delete-configuration", request=request, format=format
+                ),
+                "edit-logger-config": reverse(
+                    "edit-logger-config", request=request, format=format
+                ),
+                "load-configuration-file": reverse(
+                    "load-configuration-file", request=request, format=format
+                ),
+            }
+        )
 
 
 
@@ -120,6 +145,34 @@ class CustomAuthToken(ObtainAuthToken):
                 "create": created,
             }
         )
+
+class PermissionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Permission
+        fields = ('id', 'codename', 'name')
+
+class UserSerializer(serializers.ModelSerializer):
+    user_permissions = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'user_permissions')
+    
+    def get_user_permissions(self, obj):
+        serializer = PermissionSerializer(obj.user_permissions.all(), many=True)
+        return serializer.data
+
+
+class AuthUserAPIView(APIView):
+    authentication_classes = [authentication.BasicAuthentication, TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+    serializer_class = UserSerializer
+
+    def get(self, request):
+        log_request(request, "get_auth_user")
+        serializer = UserSerializer(request.user)
+
+        return Response({"status": "ok", "user": serializer.data}, 200)
 
 
 #
@@ -597,6 +650,7 @@ urlpatterns = [
     # These are the DRF API stubbs
     # flake8: noqa E501
     path('', ApiRoot.as_view()),
+    path('get-auth-user', AuthUserAPIView.as_view(), name="get-auth-user"),
     path('cruise-configuration/', CruiseConfigurationAPIView.as_view(), name='cruise-configuration'),
     path('delete-configuration/', CruiseDeleteConfigurationAPIView.as_view(), name='delete-configuration'),
     path('edit-logger-config/', EditLoggerConfigAPIView.as_view(), name='edit-logger-config'),
