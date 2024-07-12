@@ -1,3 +1,6 @@
+import re
+from contrib.niwa.shared_methods.definition_files import parse_definition_files
+from django_gui.models import Logger, LoggerConfig
 from .django_server_api import DjangoServerAPI
 from django_gui.settings import FILECHOOSER_DIRS
 from django_gui.settings import WEBSOCKET_DATA_SERVER
@@ -180,8 +183,6 @@ class AuthUserAPIView(APIView):
 # CRUISE LEVEL ACTIONS
 #
 #
-
-
 class CruiseConfigurationAPIView(APIView):
     authentication_classes = [authentication.BasicAuthentication, TokenAuthentication]
     permission_classes = [IsAuthenticated]
@@ -204,9 +205,17 @@ def _get_cruise_config():
     try:
         api = _get_api()
         configuration = api.get_configuration()
-        template_vars["cruise_id"] = configuration.get("id", "Cruise")
+        
+        cruise_id = configuration.get("id", "Cruise")
+        template_vars["cruise_id"] = cruise_id
         template_vars["filename"] = configuration.get("config_filename", "-none-")
         template_vars["loggers"] = api.get_loggers()
+        template_vars["cruise_specific_loggers"] = [
+            logger_name
+            for logger_name in Logger.objects.filter(
+                cruise_id=cruise_id
+            ).values_list("name", flat=True)
+        ]
         template_vars["modes"] = api.get_modes()
         template_vars["active_mode"] = api.get_active_mode()
         template_vars["errors"] = errors
@@ -438,6 +447,10 @@ class EditLoggerConfigSerializer(serializers.Serializer):
     update = serializers.CharField(required=True)
     logger_id = serializers.CharField(required=True)
     config = serializers.CharField(required=True)
+    full_config = serializers.JSONField()
+    available_configs = serializers.JSONField()
+    selected_config = serializers.CharField(required=True)
+    definition_files = serializers.JSONField()
 
 
 class EditLoggerConfigAPIView(APIView):
@@ -470,7 +483,7 @@ class EditLoggerConfigAPIView(APIView):
                     required=True,
                     location="form",
                     schema=coreschema.String(
-                        title="realod",
+                        title="update",
                         description="true / false",
                     ),
                 ),
@@ -479,7 +492,7 @@ class EditLoggerConfigAPIView(APIView):
                     required=True,
                     location="form",
                     schema=coreschema.String(
-                        title="realod",
+                        title="logger_id",
                         description="The logger id to update",
                     ),
                 ),
@@ -488,8 +501,8 @@ class EditLoggerConfigAPIView(APIView):
                     required=True,
                     location="form",
                     schema=coreschema.String(
-                        title="realod",
-                        description="The logger id to update",
+                        title="config",
+                        description="The logger config",
                     ),
                 ),
             ],
@@ -520,23 +533,49 @@ class EditLoggerConfigAPIView(APIView):
 
         return Response({"status": "Invalid Request"}, status=400)
 
-    def get(self, request):
+    def get(self, request, logger_name):
         """
-        Retrieve list of loggers.
+        Retrieve logger details.
 
         Returns:
-        - Response with status and list of loggers.
+        - Response with logger details
         """
         api = _get_api()
-        log_request(request, "get_loggers")
-        loggers = None
+        log_request(request, "get_logger")
+
         try:
-            loggers = api.get_loggers()
+            
+            logger_config = api.get_logger(logger_name).config
+
+            full_configs = {}
+            available_configs = []
+            definition_file_strings = []
+
+            file_regex = "(?:definition_path\": \")(\S*)\""
+
+            for config in LoggerConfig.objects.filter(logger__name=logger_name).all():
+                loaded_config = json.loads(config.config_json)
+                full_configs[config.name] = loaded_config
+                available_configs.append({"value":config.name, "name":config.name})
+                definition_file_strings = re.findall(file_regex, config.config_json)
+
+            definition_file_paths = ",".join(definition_file_strings)
+            definition_files = parse_definition_files(definition_file_paths)
+
             msg = None
         except Exception as e:
             msg = str(e)
 
-        return Response({"status": "ok", "loggers": loggers, "msg": msg}, status=200)
+        return Response(
+            {
+                "status": "ok",  
+                "full_config": full_configs,
+                "availableConfigs": available_configs,
+                "selectedConfig": logger_config.name,
+                "definitionFiles": definition_files,
+                "msg": msg
+            }, status=200
+        )
 
 
 class LoadConfigurationFileSerializer(serializers.Serializer):
@@ -653,7 +692,7 @@ urlpatterns = [
     path('get-auth-user', AuthUserAPIView.as_view(), name="get-auth-user"),
     path('cruise-configuration/', CruiseConfigurationAPIView.as_view(), name='cruise-configuration'),
     path('delete-configuration/', CruiseDeleteConfigurationAPIView.as_view(), name='delete-configuration'),
-    path('edit-logger-config/', EditLoggerConfigAPIView.as_view(), name='edit-logger-config'),
+    path('edit-logger-config/<str:logger_name>/', EditLoggerConfigAPIView.as_view(), name='edit-logger-config'),
     path('load-configuration-file/', LoadConfigurationFileAPIView.as_view(), name='load-configuration-file'),
     path('reload-current-configuration/', CruiseReloadCurrentConfigurationAPIView.as_view(), name='reload-current-configuration'),
     path('select-cruise-mode/', CruiseSelectModeAPIView.as_view(), name='select-cruise-mode'),
