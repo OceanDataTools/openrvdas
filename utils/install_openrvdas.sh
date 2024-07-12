@@ -479,6 +479,7 @@ function install_packages {
             if [ "`/usr/local/bin/python3 --version`" == "Python $PYTHON_VERSION" ]; then
                 echo Already have appropriate version of Python3
             else
+                yum install -y make
                 cd /var/tmp
                 PYTHON_BASE=Python-${PYTHON_VERSION}
                 PYTHON_TGZ=${PYTHON_BASE}.tgz
@@ -530,6 +531,9 @@ function install_openrvdas {
       sudo mkdir openrvdas
       sudo chown ${RVDAS_USER} openrvdas
     fi
+
+    # If FIPS is active, we need this to prevent it from complaining
+    git config --global --add safe.directory ${INSTALL_ROOT}/openrvdas
 
     if [ -e openrvdas/.git ] ; then   # If we've already got an installation
       cd openrvdas
