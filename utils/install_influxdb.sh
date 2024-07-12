@@ -84,8 +84,8 @@ DEFAULT_RUN_TELEGRAF=no
 
 DEFAULT_USE_SSL=no
 DEFAULT_HAVE_SSL_CERTIFICATE=no
-DEFAULT_SSL_CRT_LOCATION=
-DEFAULT_SSL_KEY_LOCATION=
+DEFAULT_SSL_CRT_LOCATION=${DEFAULT_INSTALL_ROOT}/openrvdas/openrvdas.crt
+DEFAULT_SSL_KEY_LOCATION=${DEFAULT_INSTALL_ROOT}/openrvdas/openrvdas.key
 
 # Bucket Telegraf should write its data to
 TELEGRAF_BUCKET=_monitoring
@@ -351,7 +351,9 @@ EOF
         if [ $OS_VERSION == '7' ]; then
             sudo yum install -y influxdb2 influxdb2-cli
         else
-            sudo yum install -y --nobest influxdb2 influxdb2-cli
+            dnf download influxdb
+            rpm -ivh --nofiledigest ‘influxdb2*’
+            #sudo yum install -y --nobest influxdb2 influxdb2-cli
         fi
     elif [ $OS_TYPE == 'Ubuntu' ]; then
         # influxdata-archive_compat.key GPG Fingerprint: 9D539D90D3328DC7D6C8D3B9D8FF8E1F7DF8B07E
@@ -774,11 +776,11 @@ if [ "$USE_SSL" == "yes" ]; then
     yes_no "Do you already have a .key and a .crt file to use for this server? " $DEFAULT_HAVE_SSL_CERTIFICATE
     HAVE_SSL_CERTIFICATE=$YES_NO_RESULT
     if [ $HAVE_SSL_CERTIFICATE == 'yes' ]; then
-        read -p "Location of .crt file? ($DEFAULT_SSL_CRT_LOCATION) " SSL_CRT_LOCATION
-        read -p "Location of .key file? ($DEFAULT_SSL_KEY_LOCATION) " SSL_KEY_LOCATION
+        read -p "Path and name of .crt file? ($DEFAULT_SSL_CRT_LOCATION) " SSL_CRT_LOCATION
+        read -p "Path and name of .key file? ($DEFAULT_SSL_KEY_LOCATION) " SSL_KEY_LOCATION
     else
-        read -p "Where to create .crt file? ($DEFAULT_SSL_CRT_LOCATION) " SSL_CRT_LOCATION
-        read -p "Where to create .key file? ($DEFAULT_SSL_KEY_LOCATION) " SSL_KEY_LOCATION
+        read -p "Path and name of .crt file to create? ($DEFAULT_SSL_CRT_LOCATION) " SSL_CRT_LOCATION
+        read -p "Path and name of .key file to create? ($DEFAULT_SSL_KEY_LOCATION) " SSL_KEY_LOCATION
     fi
     SSL_CRT_LOCATION=${SSL_CRT_LOCATION:-$DEFAULT_SSL_CRT_LOCATION}
     SSL_KEY_LOCATION=${SSL_KEY_LOCATION:-$DEFAULT_SSL_KEY_LOCATION}
