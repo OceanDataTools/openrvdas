@@ -351,8 +351,8 @@ EOF
         if [ $OS_VERSION == '7' ]; then
             sudo yum install -y influxdb2 influxdb2-cli
         else
-            dnf download influxdb influxdb2-cli
-            rpm -ivh --nofiledigest influxdb2 influxdb2-cli
+            yumdownloader influxdb2 influxdb2-cli
+            sudo rpm -ivh --nofiledigest influxdb2*.rpm
             #sudo yum install -y --nobest influxdb2 influxdb2-cli
         fi
     elif [ $OS_TYPE == 'Ubuntu' ]; then
