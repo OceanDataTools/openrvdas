@@ -23,6 +23,8 @@ shapely
 
 django
 djangorestframework
+django-csp
+corsheaders
 
 # Version-restricted packages
 #django==5.0.3
