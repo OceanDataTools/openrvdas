@@ -411,10 +411,11 @@ function install_packages {
             sudo yum install -y deltarpm
         fi
 
-        # Check if EPEL repository is installed
-        if ! yum repolist | grep -q "^epel"; then
-          echo "EPEL repository is not installed. Installing it now."
-          sudo yum install -y epel-release
+        # Check if EPEL repository is installed by trying to install supervisor
+        sudo dnf install -y supervisor
+        if ! command -v supervisorctl &> /dev/null; then
+          # Install EPEL repository
+          sudo dnf install -y epel-release
 
           if [ $? -eq 0 ]; then
             echo "EPEL repository installed successfully."
@@ -425,15 +426,31 @@ function install_packages {
         else
           echo "EPEL already installed - skipping."
         fi
+        # Install EPEL repository
+    #sudo dnf install -y epel-release
 
-        # Enable EPEL repository
-        sudo yum config-manager --enable epel
-        if [ $? -eq 0 ]; then
-          echo "EPEL repository is enabled."
-        else
-          echo "Failed to enable EPEL repository."
-          exit 1
-        fi
+    #    if ! yum repolist | grep -q "^epel"; then
+    #      echo "EPEL repository is not installed. Installing it now."
+    #      sudo yum install -y epel-release
+
+    #      if [ $? -eq 0 ]; then
+    #        echo "EPEL repository installed successfully."
+    #      else
+    #        echo "Failed to install EPEL repository."
+    #        exit 1
+    #      fi
+    #    else
+    #      echo "EPEL already installed - skipping."
+    #    fi
+
+    #    # Enable EPEL repository
+    #    sudo yum config-manager --enable epel
+    #    if [ $? -eq 0 ]; then
+    #      echo "EPEL repository is enabled."
+    #    else
+    #      echo "Failed to enable EPEL repository."
+    #      exit 1
+    #    fi
         sudo yum -y update
 
         echo Installing required packages
