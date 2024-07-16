@@ -1,4 +1,6 @@
 import re
+
+import yaml.scanner
 from contrib.niwa.shared_methods.definition_files import parse_definition_files
 from django_gui.models import Logger, LoggerConfig
 from .django_server_api import DjangoServerAPI
@@ -21,6 +23,7 @@ from rest_framework.views import APIView
 
 from .views import log_request
 from django.urls import include, path
+from django.core.files.storage import FileSystemStorage
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 import json
 import logging
@@ -109,6 +112,9 @@ class ApiRoot(APIView):
                 "delete-configuration": reverse(
                     "delete-configuration", request=request, format=format
                 ),
+                "upload-configuration": reverse(
+                    "upload-configuration", request=request, format=format
+                ),
                 "edit-logger-config": reverse(
                     "edit-logger-config", request=request, format=format
                 ),
@@ -189,8 +195,28 @@ class CruiseConfigurationAPIView(APIView):
     serializer_class = GetSerializer
     def get(self, request):
         log_request(request, "get_configuration")
-        template_vars = _get_cruise_config()
-        return Response({"status": "ok", "configuration": template_vars}, 200)
+        cruise_config = _get_cruise_config()
+
+        config_file_content = (
+            read_config(cruise_config["filename"]) if cruise_config else ""
+        )
+
+        response = {
+            "status": "ok",
+            "id": cruise_config.get("id", None) if cruise_config else None,
+            "configuration": cruise_config,
+            "fullConfig": config_file_content,
+            "availableConfigs": [
+                {"value": m, "name": m} for m in cruise_config.get("modes", [])
+            ]
+            if cruise_config
+            else [],
+            "selectedConfig": cruise_config.get("active_mode", None)
+            if cruise_config
+            else None,
+        }
+
+        return Response(response, 200)
 
 
 def _get_cruise_config():
@@ -544,7 +570,6 @@ class EditLoggerConfigAPIView(APIView):
         log_request(request, "get_logger")
 
         try:
-            
             logger_config = api.get_logger(logger_name).config
 
             full_configs = {}
@@ -576,6 +601,83 @@ class EditLoggerConfigAPIView(APIView):
                 "msg": msg
             }, status=200
         )
+
+
+class CruiseUploadConfigurationFileSerializer(serializers.Serializer):
+    file = serializers.FileField(required=True)
+    filename = serializers.CharField(required=True)
+
+class CruiseUploadConfigurationAPIView(APIView):
+    """
+    Upload yaml configuration and create a new file
+
+    POST:
+    {
+        'filename': '<a name for the new config file>'
+        'file': '<the yaml config blob>'
+    }
+
+    Returns:
+    - Response with status and message.
+    """
+    serializer_class = CruiseUploadConfigurationFileSerializer
+    authentication_classes = [authentication.BasicAuthentication, TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    cruise_config_folder = "local/cruise_configs"
+
+    def post(self, request):
+        api = _get_api()
+        log_request(request, "Load configuration file.")
+
+        serializer = CruiseUploadConfigurationFileSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        if serializer.validated_data.get("file"):
+            new_config_file = request.FILES.get("file")
+            new_config_filename = request.POST.get("filename")
+
+            load_errors = []
+            # this is a snippet taken from views.choose_file()
+            try:
+                # Load the file to memory and parse to a dict. Add the name of
+                # the file we've just loaded to the dict.
+                configuration = parse(new_config_file)
+
+                # TODO do some stricter validation on cruise definition before saving file
+                fs = FileSystemStorage(
+                    location=self.cruise_config_folder
+                )  # defaults to   MEDIA_ROOT
+                filename = fs.save(new_config_filename, new_config_file)
+
+                if "cruise" in configuration:
+                    configuration["cruise"]["config_filename"] = (
+                        self.cruise_config_folder + "/" + filename
+                    )
+
+                # Load the config and set to the default mode
+                api.load_configuration(configuration)
+                default_mode = api.get_default_mode()
+                if default_mode:
+                    api.set_active_mode(default_mode)
+
+            except (json.JSONDecodeError, yaml.scanner.ScannerError) as e:
+                load_errors.append('Error loading "%s": %s' % (new_config_filename, str(e)))
+            except Exception as e:
+                load_errors.append(str(e))
+
+            response = {
+                "status": "ok",
+                "success": True,
+                "message": "There are errors with this config file"
+                if len(load_errors) > 0
+                else "Cruise config file loaded",
+                "errors": load_errors,
+            }
+
+            return Response(response, 200)
+        else:
+            return Response
 
 
 class LoadConfigurationFileSerializer(serializers.Serializer):
@@ -692,6 +794,7 @@ urlpatterns = [
     path('get-auth-user', AuthUserAPIView.as_view(), name="get-auth-user"),
     path('cruise-configuration/', CruiseConfigurationAPIView.as_view(), name='cruise-configuration'),
     path('delete-configuration/', CruiseDeleteConfigurationAPIView.as_view(), name='delete-configuration'),
+    path('upload-configuration/', CruiseUploadConfigurationAPIView.as_view(), name='upload-configuration'),
     path('edit-logger-config/<str:logger_name>/', EditLoggerConfigAPIView.as_view(), name='edit-logger-config'),
     path('load-configuration-file/', LoadConfigurationFileAPIView.as_view(), name='load-configuration-file'),
     path('reload-current-configuration/', CruiseReloadCurrentConfigurationAPIView.as_view(), name='reload-current-configuration'),
