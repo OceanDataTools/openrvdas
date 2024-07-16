@@ -468,6 +468,9 @@ function install_packages {
             if [ "`/usr/local/bin/python3 --version`" == "Python $PYTHON_VERSION" ]; then
                 echo Already have appropriate version of Python3
             else
+                OPENRVDAS_INSTALL_TMP_DIR=openrvdas_install_tmp
+                mkdir $OPENRVDAS_INSTALL_TMP_DIR
+                pushd $OPENRVDAS_INSTALL_TMP_DIR
                 yum install -y make
                 #cd /var/tmp    # Nope - some systems bar executing anything in /tmp
                 PYTHON_BASE=Python-${PYTHON_VERSION}
@@ -480,6 +483,7 @@ function install_packages {
 
                 sudo ln -s -f /usr/local/bin/python3.8 /usr/local/bin/python3
                 sudo ln -s -f /usr/local/bin/pip3.8 /usr/local/bin/pip3
+                popd
             fi
         elif [ $OS_VERSION == '8' ] || [ $OS_VERSION == '9' ]; then
             sudo yum install -y python3 python3-devel
