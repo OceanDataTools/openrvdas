@@ -205,13 +205,13 @@ class CruiseConfigurationAPIView(APIView):
             "status": "ok",
             "id": cruise_config.get("id", None) if cruise_config else None,
             "configuration": cruise_config,
-            "fullConfig": config_file_content,
-            "availableConfigs": [
+            "full_config": config_file_content,
+            "available_configs": [
                 {"value": m, "name": m} for m in cruise_config.get("modes", [])
             ]
             if cruise_config
             else [],
-            "selectedConfig": cruise_config.get("active_mode", None)
+            "selected_config": cruise_config.get("active_mode", None)
             if cruise_config
             else None,
         }
@@ -470,13 +470,13 @@ class CruiseDeleteConfigurationAPIView(APIView):
 #
 #
 class EditLoggerConfigSerializer(serializers.Serializer):
-    update = serializers.CharField(required=True)
+    update = serializers.BooleanField(required=True)
     logger_id = serializers.CharField(required=True)
     config = serializers.CharField(required=True)
-    full_config = serializers.JSONField()
-    available_configs = serializers.JSONField()
-    selected_config = serializers.CharField(required=True)
-    definition_files = serializers.JSONField()
+    full_config = serializers.JSONField(required=False)
+    available_configs = serializers.JSONField(required=False)
+    selected_config = serializers.CharField(required=False)
+    definition_files = serializers.JSONField(required=False)
 
 
 class EditLoggerConfigAPIView(APIView):
@@ -539,7 +539,7 @@ class EditLoggerConfigAPIView(APIView):
     authentication_classes = [authentication.BasicAuthentication, TokenAuthentication]
     permission_classes = [IsAuthenticated]
 
-    def post(self, request):
+    def post(self, request, logger_name):
         api = _get_api()
         log_request(request, "Edit logger configuration")
 
@@ -595,9 +595,9 @@ class EditLoggerConfigAPIView(APIView):
             {
                 "status": "ok",  
                 "full_config": full_configs,
-                "availableConfigs": available_configs,
-                "selectedConfig": logger_config.name,
-                "definitionFiles": definition_files,
+                "available_configs": available_configs,
+                "selected_config": logger_config.name,
+                "definition_files": definition_files,
                 "msg": msg
             }, status=200
         )
