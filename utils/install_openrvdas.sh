@@ -427,7 +427,7 @@ function install_packages {
         fi
 
         # Enable EPEL repository
-        sudo yum-config-manager --enable epel
+        sudo yum config-manager --enable epel
         if [ $? -eq 0 ]; then
           echo "EPEL repository is enabled."
         else
@@ -480,7 +480,7 @@ function install_packages {
                 echo Already have appropriate version of Python3
             else
                 yum install -y make
-                cd /var/tmp
+                #cd /var/tmp    # Nope - some systems bar executing anything in /tmp
                 PYTHON_BASE=Python-${PYTHON_VERSION}
                 PYTHON_TGZ=${PYTHON_BASE}.tgz
                 [ -e $PYTHON_TGZ ] || wget https://www.python.org/ftp/python/${PYTHON_VERSION}/${PYTHON_TGZ}
