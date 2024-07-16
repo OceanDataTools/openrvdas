@@ -53,6 +53,9 @@ venv/
 *.crt
 *.key
 
+#local
+local/cruise_configs
+
 # CORIOLIX
 local/rcrv/settings.py
 local/rcrv/config_template.yaml
