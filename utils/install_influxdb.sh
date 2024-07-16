@@ -351,10 +351,11 @@ EOF
         if [ $OS_VERSION == '7' ]; then
             sudo yum install -y influxdb2 influxdb2-cli
         else
-            yumdownloader influxdb2 influxdb2-cli
+            # Need to accommodate FIPS in RHEL8, which will complain
+            # if we try to MD5. Sheesh.
+            # sudo yum install -y --nobest influxdb2 influxdb2-cli
+            dnf download influxdb2 influxdb2-cli
             sudo rpm -ivh --nofiledigest --replacepkgs --replacefiles influxdb*.rpm
-
-            #sudo yum install -y --nobest influxdb2 influxdb2-cli
         fi
     elif [ $OS_TYPE == 'Ubuntu' ]; then
         # influxdata-archive_compat.key GPG Fingerprint: 9D539D90D3328DC7D6C8D3B9D8FF8E1F7DF8B07E
