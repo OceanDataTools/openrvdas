@@ -33,6 +33,15 @@ from rest_framework.settings import api_settings
 # Read in JSON with comments
 from logger.utils.read_config import parse, read_config  # noqa: E402
 
+
+from contrib.niwa.views.niwa_api_views import get_niwa_paths, get_niwa_schema
+
+# import and add your own API routes here
+custom_paths = get_niwa_paths()
+
+def get_custom_schema(request, format=None):
+    return get_niwa_schema(request, format)
+
 # RVDAS API Views + Serializers
 
 # In DRF, request data is typically accessed through request.data,
@@ -66,7 +75,7 @@ class ApiRoot(APIView):
     RVDAS REST API Endpoints.
 
     These are an authenticated set of urls.
-    You need to to login to use them via the APi ui.
+    You need to to login to use them via the API ui.
     For calling them via curl or requests. You need to pass header authenticiation.
     Use token auth, it's simpler, but basic auth is supported.
     https://www.django-rest-framework.org/api-guide/authentication/
@@ -121,6 +130,7 @@ class ApiRoot(APIView):
                 "load-configuration-file": reverse(
                     "load-configuration-file", request=request, format=format
                 ),
+                **get_custom_schema(request, format)
             }
         )
 
@@ -799,5 +809,5 @@ urlpatterns = [
     path('load-configuration-file/', LoadConfigurationFileAPIView.as_view(), name='load-configuration-file'),
     path('reload-current-configuration/', CruiseReloadCurrentConfigurationAPIView.as_view(), name='reload-current-configuration'),
     path('select-cruise-mode/', CruiseSelectModeAPIView.as_view(), name='select-cruise-mode'),
-]
+] + custom_paths
     

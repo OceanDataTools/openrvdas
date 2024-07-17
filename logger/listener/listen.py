@@ -43,6 +43,7 @@ import logging
 import pprint
 import re
 import sys
+import traceback
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
@@ -170,8 +171,12 @@ class ListenerFromLoggerConfig(Listener):
         try:
             component = class_const(**kwargs)
         except (TypeError, ValueError, RuntimeError) as e:
-            raise ValueError('Class {}: {}\nClass definition: {}'.format(
-                class_name, e, pprint.pformat(class_json)))
+            e_trace = "".join(traceback.TracebackException.from_exception(e).format())
+            raise ValueError(
+                "Class {}: {}\nClass definition: {}".format(
+                    class_name, e_trace, pprint.pformat(class_json)
+                )
+            )
         return component
 
 

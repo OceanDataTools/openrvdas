@@ -42,6 +42,7 @@ import pprint
 import signal
 import sys
 import time
+import traceback
 
 from importlib import reload
 from logging.handlers import RotatingFileHandler
@@ -163,6 +164,9 @@ def run_logger(logger, config, stderr_filename=None, stderr_data_server=None,
                 logging.warning(f'Received quit for {config_name}')
     except Exception as e:
         logging.fatal(e)
+        e_trace = "".join(traceback.TracebackException.from_exception(e).format())
+        logging.fatal(e_trace)
+        
 
     # Allow a moment for stderr_writers to finish up
     time.sleep(0.25)

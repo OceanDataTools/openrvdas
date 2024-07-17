@@ -71,6 +71,10 @@ local/unols
 
 local/usap/palmer
 
+local/niwa
+contrib/niwa/database/initial_data
+contrib/niwa/database/timescaledb_settings*
+
 # local for Scripps Institution of Oceanography
 #
 # SIO is testing this software out and wants the ability to make rapid
