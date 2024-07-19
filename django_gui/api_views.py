@@ -1,5 +1,7 @@
+import asyncio
 import re
 
+import websockets
 import yaml.scanner
 from contrib.niwa.shared_methods.definition_files import parse_definition_files
 from django_gui.models import Logger, LoggerConfig
@@ -130,7 +132,10 @@ class ApiRoot(APIView):
                 "load-configuration-file": reverse(
                     "load-configuration-file", request=request, format=format
                 ),
-                **get_custom_schema(request, format)
+                "view-cache": reverse(
+                    "view-cache", request=request, format=format
+                ),
+                **get_custom_schema(request, format),
             }
         )
 
@@ -208,21 +213,23 @@ class CruiseConfigurationAPIView(APIView):
         cruise_config = _get_cruise_config()
 
         config_file_content = (
-            read_config(cruise_config["filename"]) if cruise_config else ""
+            read_config(cruise_config["filename"]) if cruise_config.get("cruise_id") else ""
         )
 
         response = {
             "status": "ok",
-            "id": cruise_config.get("id", None) if cruise_config else None,
+            "id": cruise_config.get("id", None)
+            if cruise_config.get("cruise_id")
+            else None,
             "configuration": cruise_config,
             "full_config": config_file_content,
             "available_configs": [
                 {"value": m, "name": m} for m in cruise_config.get("modes", [])
             ]
-            if cruise_config
+            if cruise_config.get("cruise_id")
             else [],
             "selected_config": cruise_config.get("active_mode", None)
-            if cruise_config
+            if cruise_config.get("cruise_id")
             else None,
         }
 
@@ -790,6 +797,52 @@ class LoadConfigurationFileAPIView(APIView):
             return Response({"status": f"Errors loading target file {target_file}",
                              "errors": load_errors}, 400)
 
+
+# misc actions
+
+class ViewCacheSerializer(serializers.Serializer):
+    cache_value = serializers.CharField(required=True)
+
+
+class ViewCacheAPIView(APIView):
+    authentication_classes = [authentication.BasicAuthentication, TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+    serializer_class = ViewCacheSerializer
+
+    def get(self, request, field=None):
+        log_request(request, "view_cache")
+
+        cache_value = asyncio.run(self._read_cached_data_server(field))
+
+        return Response({"status": "ok", "cache_value": cache_value}, 200)
+
+    async def _read_cached_data_server(self, field):
+        # bypass the proxy to avoid CORS issues
+        WEBSOCKET_PORT = 8766
+        async with websockets.connect(
+            "ws://localhost:%d" % WEBSOCKET_PORT
+        ) as ws:
+            result = {}
+
+            if field:
+                base_message = {"type": "subscribe", "fields": {}}
+
+                base_message["fields"][field] = {"seconds": 60, "back_records": 30}
+                await ws.send(json.dumps(base_message))
+                result[field] = json.loads(await ws.recv())
+                await ws.send(json.dumps({"type": "ready"}))
+                result["ready"] = json.loads(await ws.recv())
+            else:
+                await ws.send(json.dumps({"type": "fields"}))
+                response = json.loads(await ws.recv())
+                response["data"] = sorted(response.get("data", []))
+                result["fields"] = response
+                await ws.send(json.dumps({"type": "describe"}))
+                result["describe"] = json.loads(await ws.recv())
+
+            return result
+
+
 urlpatterns = [
     path('schema/', SpectacularAPIView.as_view(), name='schema'),
     path('schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
@@ -809,5 +862,7 @@ urlpatterns = [
     path('load-configuration-file/', LoadConfigurationFileAPIView.as_view(), name='load-configuration-file'),
     path('reload-current-configuration/', CruiseReloadCurrentConfigurationAPIView.as_view(), name='reload-current-configuration'),
     path('select-cruise-mode/', CruiseSelectModeAPIView.as_view(), name='select-cruise-mode'),
+    path('view-cache/<str:field>/', ViewCacheAPIView.as_view(), name='view-cache'),
+    path('view-cache/', ViewCacheAPIView.as_view(), name='view-cache'),
 ] + custom_paths
     

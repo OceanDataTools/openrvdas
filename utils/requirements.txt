@@ -16,6 +16,7 @@ psutil
 setproctitle
 influxdb_client
 pyModbusTCP
+requests
 
 # For Geofencing
 geopandas
@@ -24,7 +25,7 @@ shapely
 django
 djangorestframework
 django-csp
-corsheaders
+django-cors-headers
 
 # Version-restricted packages
 #django==5.0.3

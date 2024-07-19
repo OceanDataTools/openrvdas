@@ -72,8 +72,6 @@ local/unols
 local/usap/palmer
 
 local/niwa
-contrib/niwa/database/initial_data
-contrib/niwa/database/timescaledb_settings*
 
 # local for Scripps Institution of Oceanography
 #

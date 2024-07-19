@@ -7,7 +7,7 @@ Note that this is a bit different from the standard OpenRVDAS
 database writer that accepts DAS Records!  But we want a slightly
 different result...
 
-
+Original Credit:
 Lloyd Symons
 13th June 2019
 
@@ -24,15 +24,15 @@ from logger.utils.formats import Python_Record
 from logger.utils.das_record import DASRecord
 from logger.writers.writer import Writer
 
-from contrib.niwa.database.timescaledb_settings import (
+from local.niwa.database.timescaledb_settings import (
     DATA_DATABASE_ENABLED,
     TimescaledbConnector,
 )
-from contrib.niwa.database.timescaledb_settings import (
+from local.niwa.database.timescaledb_settings import (
     DEFAULT_DATA_DATABASE,
     DEFAULT_DATA_DATABASE_HOST,
 )
-from contrib.niwa.database.timescaledb_settings import (
+from local.niwa.database.timescaledb_settings import (
     DEFAULT_DATA_DATABASE_USER,
     DEFAULT_DATA_DATABASE_PASSWORD,
 )

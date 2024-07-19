@@ -4,7 +4,6 @@ import errno
 import logging
 import requests
 import socket
-import struct
 import sys
 
 from datetime import datetime, timedelta
@@ -157,6 +156,8 @@ class UDPSubscriptionWriter(UDPWriter):
         self.sockets = {}
 
         self.api_headers = {"Authorization": settings.API_KEY}
+
+        # TODO LW: implement these API endpoints and figure out the auth for them (api key?)
 
         try:
             id_response = requests.get(

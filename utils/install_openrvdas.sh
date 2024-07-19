@@ -646,6 +646,10 @@ http {
         # Internally, Cached Data Server operates on port 8766; we proxy
         # it externally, serve cached data server at $SERVER_PORT/cds-ws
         location /cds-ws {
+            if ($request_method = OPTIONS) {
+                return 204;
+            }
+
             proxy_pass http://localhost:8766;
             proxy_http_version 1.1;
             proxy_set_header Upgrade \$http_upgrade;
