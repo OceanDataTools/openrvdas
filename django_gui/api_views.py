@@ -180,7 +180,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'user_permissions')
+        fields = ('id', 'username', 'user_permissions', 'is_superuser')
     
     def get_user_permissions(self, obj):
         serializer = PermissionSerializer(obj.user_permissions.all(), many=True)

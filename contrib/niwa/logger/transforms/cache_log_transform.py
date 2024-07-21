@@ -8,6 +8,8 @@ the field names in the record.
 Intended to be used with CachedDataServer for the AAD data system naming
 convention.
 
+This transform is also used to cache "live" values for each logger for use by front-ends
+
 '''
 
 import sys

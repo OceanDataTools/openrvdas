@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 """
+Requires installation of psycopg2:
+    pip3 install psycopg2-binary
+
 a database writer that uses sqlalchemy to write
 JSON data to a database.
 
