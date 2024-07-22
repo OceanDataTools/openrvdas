@@ -1,4 +1,5 @@
 import asyncio
+import itertools
 import re
 
 import websockets
@@ -182,8 +183,11 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ('id', 'username', 'user_permissions', 'is_superuser')
     
-    def get_user_permissions(self, obj):
-        serializer = PermissionSerializer(obj.user_permissions.all(), many=True)
+    def get_user_permissions(self, user):
+        direct_permissions = [permission for permission in user.user_permissions.all()]
+        group_permissions =  [permission for permission in itertools.chain.from_iterable([group.permissions.all() for group in user.groups.all()])]
+
+        serializer = PermissionSerializer(direct_permissions + group_permissions, many=True)
         return serializer.data
 
 

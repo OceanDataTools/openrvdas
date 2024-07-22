@@ -55,6 +55,7 @@ venv/
 
 #local
 local/cruise_configs
+local/logger_configs
 
 # CORIOLIX
 local/rcrv/settings.py

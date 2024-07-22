@@ -1,19 +1,23 @@
+import glob
 import json
 import re
 import traceback
+from django.db import IntegrityError
 import yaml
 
 from rest_framework import authentication, serializers
 from rest_framework.authentication import TokenAuthentication
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework.views import APIView
 
 from django.urls import path
+from django.contrib.auth.models import Group, Permission
+from contrib.niwa.permissions.ui import ADMIN_UI_PERMISSIONS, VIEW_ONLY_PERMISSIONS, add_global_permissions
 from django_gui.views import log_request
 from django_gui.models import Logger, LoggerConfig
-from logger.utils.read_config import parse
+from logger.utils.read_config import parse, read_config
 
 from contrib.niwa.shared_methods.loggers import (
     add_logger_without_cruise,
@@ -39,6 +43,21 @@ def get_niwa_paths():
             SaveYamlFileContentAPIView.as_view(),
             name="save-yaml-file-content",
         ),
+        path(
+            "create-permissions/",
+            CreatePermissionsAPIView.as_view(),
+            name="create-permissions",
+        ),
+        path(
+            "create-permission-groups/",
+            CreatePermissionGroupsAPIView.as_view(),
+            name="create-permission-groups",
+        ),
+        path(
+            "load-persistent-loggers/",
+            LoadPersistentLoggersAPIView.as_view(),
+            name="load-persistent-loggers",
+        ),
     ]
 
 def get_niwa_schema(request, format=None):
@@ -46,11 +65,20 @@ def get_niwa_schema(request, format=None):
         "persistent-loggers": reverse(
             "persistent-loggers", request=request, format=format
         ),
+        "load-persistent-loggers": reverse(
+            "load-persistent-loggers", request=request, format=format
+        ),
         "yaml-file-content": reverse(
             "yaml-file-content", request=request, format=format
         ),
         "save-yaml-file-content": reverse(
             "save-yaml-file-content", request=request, format=format
+        ),
+        "create-permissions": reverse(
+            "create-permissions", request=request, format=format
+        ),
+        "create-permission-groups": reverse(
+            "create-permission-groups", request=request, format=format
         ),
     }
 
@@ -122,7 +150,6 @@ class PersistentLoggerAPIView(APIView):
 
 class YamlFileContentSerializer(serializers.Serializer):
     content = serializers.FileField(required=True)
-    # TODO LW: add in schema for POST
 
 
 class LoadYamlFileContentAPIView(APIView):
@@ -187,3 +214,101 @@ class SaveYamlFileContentAPIView(APIView):
                 "errors": save_errors,
             }
             return Response(response, 500)
+        
+
+class BlankSerializer(serializers.Serializer):
+    pass
+
+
+class CreatePermissionsAPIView(APIView):
+    authentication_classes = [authentication.BasicAuthentication, TokenAuthentication]
+    permission_classes = [IsAdminUser]
+    serializer_class = BlankSerializer
+
+
+    def get(self, request):
+        try:
+            add_global_permissions()
+
+            return Response(
+                {"status": "ok", "message": "Permissions created"}, 200
+            )
+
+        except Exception as e:
+            return Response({"status": "error", "message": str(e)}, 500)
+
+
+class CreatePermissionGroupsAPIView(APIView):
+    authentication_classes = [authentication.BasicAuthentication, TokenAuthentication]
+    permission_classes = [IsAdminUser]
+    serializer_class = BlankSerializer
+
+
+    def create_group(self, name, permissions):
+        try:
+            group = Group(name=name)
+            group.save()
+
+            for permission in permissions:
+                group.permissions.add(permission)
+
+            group.save()
+        except IntegrityError:
+            pass
+
+
+    def get(self, request):
+        
+        default_admin_permissions = Permission.objects.filter(
+            codename__in=ADMIN_UI_PERMISSIONS
+        )
+
+        default_viewer_permissions = Permission.objects.filter(
+            codename__in=VIEW_ONLY_PERMISSIONS
+        )
+
+        try:
+            self.create_group(name="Admin", permissions=default_admin_permissions)
+            self.create_group(name="Viewer", permissions=default_viewer_permissions)
+
+            return Response({"status": "ok", "message": "Permission groups created"}, 200)
+
+        except Exception as e:
+            return Response({"status": "error", "message": str(e)}, 500)
+
+
+class LoadPersistentLoggersAPIView(APIView):
+    authentication_classes = [authentication.BasicAuthentication, TokenAuthentication]
+    permission_classes = [IsAdminUser]
+    serializer_class = BlankSerializer
+
+    def get(self, request):
+        try:
+            relative_file_location = "local/logger_configs/*.yaml"
+            file_paths = glob.glob(relative_file_location)
+
+            loggers_added = []
+            loggers_skipped = []
+
+            for logger_file in file_paths:           
+                logger_name = logger_file.split("/")[-1].split(".")[0]
+                logger_config = read_config(logger_file)
+
+                if not Logger.objects.filter(name=logger_name).exists():
+                    new_logger = add_logger_without_cruise(logger_name, logger_config)
+                    loggers_added.append(new_logger.name)
+                else:
+                    loggers_skipped.append(logger_name)
+
+            response = {
+                "status": "ok",
+                "message": f"{', '.join(loggers_added)}{" loaded" if len(loggers_added) else ""}{", " if len(loggers_added) else ""}{', '.join(loggers_skipped)}{" skipped" if len(loggers_skipped) else ""}",
+                "loggersAdded": loggers_added,
+                "loggersSkipped": loggers_skipped,
+                "filePaths": file_paths,
+            }
+
+            return Response(response, 200)
+
+        except Exception as e:
+            return Response({"status": "error", "message": str(e)}, 500)

@@ -1,10 +1,10 @@
 from django.contrib import admin
+from django.contrib.auth.models import Permission
 
 from .models import Logger, LoggerConfig, LoggerConfigState
 from .models import Mode, Cruise
 from .models import LastUpdate
 from .models import LogMessage
-
 
 #############################################
 class ModeInline(admin.TabularInline):
@@ -114,6 +114,12 @@ class LogMessageAdmin(admin.ModelAdmin):
 # class StatusUpdateAdmin(admin.ModelAdmin):
 #  list_display = ('timestamp', 'server', 'cruise', 'status')
 
+class PermissionAdmin(admin.ModelAdmin):
+    model = Permission
+    fields = ["name"]
+
+
+
 
 #############################################
 admin.site.register(Logger, LoggerAdmin)
@@ -125,6 +131,9 @@ admin.site.register(Mode, ModeAdmin)
 admin.site.register(Cruise, CruiseAdmin)
 admin.site.register(LogMessage, LogMessageAdmin)
 admin.site.register(LastUpdate, LastUpdateAdmin)
+
+admin.site.register(Permission, PermissionAdmin)
+
 
 # admin.site.register(CurrentCruise, CurrentCruiseAdmin)
 # admin.site.register(CruiseState, CruiseStateAdmin)
