@@ -156,3 +156,12 @@ class LogMessage(models.Model):
 #  server = models.CharField(max_length=80, blank=True, null=True)
 #  cruise = models.CharField(max_length=80, blank=True, null=True)
 #  status = models.TextField(blank=True, null=True)
+
+# TODO LW: find a better way of optionally including this
+class UDPSubscription(models.Model):
+    logger = models.ForeignKey("Logger", on_delete=models.CASCADE)
+    ip_address = models.CharField(max_length=32)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.logger} - {self.ip_address}"

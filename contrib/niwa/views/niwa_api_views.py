@@ -2,28 +2,61 @@ import glob
 import json
 import re
 import traceback
-from django.db import IntegrityError
+from django.conf import settings
 import yaml
+
+from ipware import get_client_ip
 
 from rest_framework import authentication, serializers
 from rest_framework.authentication import TokenAuthentication
+from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework.views import APIView
 
 from django.urls import path
-from django.contrib.auth.models import Group, Permission
+from django.contrib.auth.models import Group, Permission, User
+from django.db import IntegrityError
+from django.db.models import Q
 from contrib.niwa.permissions.ui import ADMIN_UI_PERMISSIONS, VIEW_ONLY_PERMISSIONS, add_global_permissions
+from django_gui.django_server_api import DjangoServerAPI
 from django_gui.views import log_request
-from django_gui.models import Logger, LoggerConfig
+from django_gui.models import Logger, LoggerConfig, UDPSubscription
 from logger.utils.read_config import parse, read_config
 
 from contrib.niwa.shared_methods.loggers import (
     add_logger_without_cruise,
+    get_udp_subscription_ports,
     remove_unused_config,
     save_logger_config,
 )
+
+
+
+class APIKeyAuthentication(authentication.BaseAuthentication):
+    """
+    Custom authentication to allow API calls from logger processes using an API_KEY in settings.py 
+    """
+    def authenticate(self, request):
+        given_api_key = request.headers.get("authorization")
+        if not given_api_key:
+            return None
+
+        if given_api_key == settings.API_KEY:
+            return (User(username="api", password="api"), None)
+        else:
+            raise AuthenticationFailed("Invalid API Key")
+
+
+
+api = None
+def _get_api():
+    global api
+    if api is None:
+        api = DjangoServerAPI()
+
+    return api
 
 
 def get_niwa_paths():
@@ -58,6 +91,31 @@ def get_niwa_paths():
             LoadPersistentLoggersAPIView.as_view(),
             name="load-persistent-loggers",
         ),
+        path(
+            "get-client-ip/",
+            ClientIPAPIView.as_view(),
+            name="get-client-ip",
+        ),
+        path(
+            "get-udp-subscriptions-by-ip/<str:ip_address>",
+            GetUDPSubscriptionsByIPAPIView.as_view(),
+            name="get-udp-subscriptions",
+        ),
+        path(
+            "get-udp-subscriptions-by-logger-id/<int:logger_id>",
+            GetUDPSubscriptionsByLoggerIdAPIView.as_view(),
+            name="get-udp-subscription-by-logger",
+        ),
+        path(
+            "update-udp-subscriptions/",
+            UpdateUDPSubscriptionsAPIView.as_view(),
+            name="update-udp-subscriptions",
+        ),
+        path(
+            "get-logger-id-by-name/<str:logger_name>",
+            GetLoggerIdAPIView.as_view(),
+            name="get-logger-id",
+        ),
     ]
 
 def get_niwa_schema(request, format=None):
@@ -79,6 +137,19 @@ def get_niwa_schema(request, format=None):
         ),
         "create-permission-groups": reverse(
             "create-permission-groups", request=request, format=format
+        ),
+        "get-client-ip": reverse("get-client-ip", request=request, format=format),
+        "get-udp-subscriptions-by-ip": reverse(
+            "get-udp-subscriptions-by-ip", request=request, format=format
+        ),
+        "get-udp-subscriptions-by-logger-id": reverse(
+            "get-udp-subscriptions-by-logger", request=request, format=format
+        ),
+        "update-udp-subscriptions": reverse(
+            "update-udp-subscriptions", request=request, format=format
+        ),
+        "get-logger-id-by-name": reverse(
+            "get-logger-id", request=request, format=format
         ),
     }
 
@@ -214,7 +285,174 @@ class SaveYamlFileContentAPIView(APIView):
                 "errors": save_errors,
             }
             return Response(response, 500)
+
+
+class ClientIPSerializer(serializers.Serializer):
+    ip_address = serializers.CharField()
+
+
+class ClientIPAPIView(APIView):
+    authentication_classes = [authentication.BasicAuthentication, TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+    serializer_class = ClientIPSerializer
+
+    def get(self, request):
+        try:
+            client_ip, is_routertable = get_client_ip(request)
+
+            return Response({"status": "ok", "ip_address": client_ip}, 200)
+
+        except Exception as e:
+            return Response({"status": "error", "message": str(e)}, 500)
+
+
+class LoggerIdSerializer(serializers.Serializer):
+    logger_id = serializers.CharField()
+
+
+class GetLoggerIdAPIView(APIView):
+    """
+    API endpoint used by 'udp_subscription_writer' to know which logger is running
+    """
+
+    authentication_classes = [
+        authentication.BasicAuthentication,
+        TokenAuthentication,
+        APIKeyAuthentication,
+    ]
+    permission_classes = [IsAuthenticated]
+    serializer_class = LoggerIdSerializer
+
+    def get(self, request, logger_name):
+        try:
+            logger_id = Logger.objects.filter(name=logger_name).first().id
+            return Response({"status": "ok", "logger_id": logger_id}, 200)
+
+        except Exception as e:
+            return Response({"status": "error", "message": str(e)}, 500)
         
+
+class UDPSubscriptionSerializer(serializers.Serializer):
+    ip_address = serializers.CharField()
+
+
+class GetUDPSubscriptionsByIPAPIView(APIView):
+    authentication_classes = [authentication.BasicAuthentication, TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+    serializer_class = UDPSubscriptionSerializer
+
+    def get(self, request, ip_address):
+
+        if not request.user.has_perm("django_gui.manage_udp"):
+            return Response(
+                {"status": "error", "message": "Missing UDP permission"}, 401
+            )
+        
+        try:
+            cruise_data = _get_api().get_configuration()
+
+            rows = []
+            if cruise_data:
+                for logger in Logger.objects.filter(Q(cruise_id=cruise_data["id"]) | Q(cruise_id=None)).order_by("name"):
+                    is_subscribed = logger.udpsubscription_set.filter(ip_address=ip_address).exists()
+                    port_numbers = get_udp_subscription_ports(logger.config.config_json)
+                    rows.append([logger.id, logger.name, ", ".join(port_numbers), is_subscribed])
+
+            response = {
+                "status": "ok",
+                "rows": rows,
+            }
+
+            return Response(response, 200)
+
+        except Exception as e:
+            return Response({"status": "error", "message": str(e)}, 500)
+
+class GetUDPSubscriptionsByLoggerIdAPIView(APIView):
+    authentication_classes = [authentication.BasicAuthentication, TokenAuthentication, APIKeyAuthentication]
+    permission_classes = [IsAuthenticated]
+    serializer_class = UDPSubscriptionSerializer
+
+    def get(self, request, logger_id):
+        
+        try:
+            subscribed_ip_addresses = []
+
+            for subscription in UDPSubscription.objects.filter(
+                logger_id=logger_id
+            ).all():           
+                subscribed_ip_addresses.append(subscription.ip_address)
+
+            response = {
+                "status": "ok",
+                "ip_addresses": subscribed_ip_addresses,
+            }
+
+            return Response(response, 200)
+
+        except Exception as e:
+            return Response({"status": "error", "message": str(e)}, 500)
+
+
+class UpdateUDPSubscriptionsAPIView(APIView):
+    authentication_classes = [authentication.BasicAuthentication, TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+    serializer_class = UDPSubscriptionSerializer
+
+    def post(self, request):
+
+        if not request.user.has_perm("django_gui.manage_udp"):
+            return Response(
+                {"status": "error", "message": "Missing UDP permission"}, 401
+            )
+
+        try:
+            data = json.loads(request.body)
+            ip_address = data.get("ip", None)
+            changes = data.get("changes", None)
+
+            if not ip_address:
+                return Response(
+                    {
+                        "status": "error",
+                        "message": "Changes were not saved, no IP address given",
+                        "errors": ["No IP"],
+                    }, 400
+                )      
+
+            if not changes:
+                return Response(
+                    {
+                        "status": "ok",
+                        "message": "No changes to save",
+                        "errors": ["No changes"],
+                    }, 200
+                )
+
+            to_insert = []
+            to_delete = []
+
+            for (logger_id, subscribe) in changes.items():
+                if subscribe:
+                    to_insert.append(UDPSubscription(logger_id=logger_id, ip_address=ip_address))
+                else:
+                    to_delete.append(logger_id)
+
+            UDPSubscription.objects.bulk_create(to_insert)
+            UDPSubscription.objects.filter(ip_address=ip_address).filter(logger_id__in=to_delete).delete()
+
+            response = {
+                "status": "ok",
+                "message": ["UDP subscriptions updated.", f"{len(to_insert)} added, {len(to_delete)} removed."],
+            }
+
+            return Response(response, 200)
+
+        except Exception as e:
+            return Response({"status": "error", "message": str(e)}, 500)
+
+
+### Admin Shortcuts
 
 class BlankSerializer(serializers.Serializer):
     pass
@@ -312,3 +550,6 @@ class LoadPersistentLoggersAPIView(APIView):
 
         except Exception as e:
             return Response({"status": "error", "message": str(e)}, 500)
+
+
+####

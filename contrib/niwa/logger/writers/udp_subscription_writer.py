@@ -79,6 +79,8 @@ __detect_maxsize()
 class UDPSubscriptionWriter(UDPWriter):
     """Write UDP packets to subscribed IP addresses."""
 
+    matching_logger_id = None
+
     def __init__(
         self,
         subscription_logger_name,
@@ -154,31 +156,30 @@ class UDPSubscriptionWriter(UDPWriter):
         self.last_updated_subscriptions = datetime.now()
 
         self.sockets = {}
-
         self.api_headers = {"Authorization": settings.API_KEY}
 
-        # TODO LW: implement these API endpoints and figure out the auth for them (api key?)
-
+    def get_logger_id(self):
         try:
             id_response = requests.get(
-                f"http://localhost/api/get_logger_id_by_name/{subscription_logger_name}",
+                f"http://localhost:8000/api/get-logger-id-by-name/{self.subscription_logger_name}",
                 headers=self.api_headers,
             ).json()
-            self.matching_logger_id = int(id_response.get("loggerId"))
+            self.matching_logger_id = int(id_response.get("logger_id"))
             asyncio.run(self.get_ip_addresses())
         except Exception as e:
             logging.error(e)
+            logging.debug(id_response)
             logging.error(
-                f"Could not get matching logger id for logger named: {subscription_logger_name}"
+                f"Could not get matching logger id for logger named: {self.subscription_logger_name}"
             )
 
     async def get_ip_addresses(self):
         if self.matching_logger_id is not None:
             ip_response = requests.get(
-                f"http://localhost/api/get_subscriptions_by_logger_id/{self.matching_logger_id}",
+                f"http://localhost:8000/api/get-udp-subscriptions-by-logger-id/{self.matching_logger_id}",
                 headers=self.api_headers,
             ).json()
-            self.subscribed_ip_addresses = ip_response.get("ipAddresses", [])
+            self.subscribed_ip_addresses = ip_response.get("ip_addresses", [])
         else:
             self.subscribed_ip_addresses = []
 
@@ -208,6 +209,10 @@ class UDPSubscriptionWriter(UDPWriter):
 
     def write(self, record):
         # update subscribers but don't interupt the current message
+
+        if not self.matching_logger_id:
+            self.get_logger_id()
+
         if self.last_updated_subscriptions < datetime.now() - timedelta(seconds=20):
             asyncio.run(self.get_ip_addresses())
 
