@@ -53,6 +53,7 @@ VIEW_ONLY_PERMISSIONS = [
 ]
 
 def add_global_permissions():
+    # admin endpoint to automate creating these permissions, they will show in the regular Permission table
 
     default_ui_permissions = [
         {"name": "UI | View Home", "codename": "view_home"},
@@ -63,12 +64,10 @@ def add_global_permissions():
         {"name": "UI | View Grafana", "codename": "view_grafana"},
     ]
 
-    # make sure these permissions always get added, they will show in the regular Permission table
     for permission in default_ui_permissions:
-
         try:
             GlobalPermission.objects.create(name=permission["name"], codename=permission["codename"])
 
         except IntegrityError as e:
-            # ignore if already exists
+            # ignore if permission already exists
             pass

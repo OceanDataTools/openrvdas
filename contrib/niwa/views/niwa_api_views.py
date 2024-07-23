@@ -33,7 +33,6 @@ from contrib.niwa.shared_methods.loggers import (
 )
 
 
-
 class APIKeyAuthentication(authentication.BaseAuthentication):
     """
     Custom authentication to allow API calls from logger processes using an API_KEY in settings.py 
@@ -47,7 +46,6 @@ class APIKeyAuthentication(authentication.BaseAuthentication):
             return (User(username="api", password="api"), None)
         else:
             raise AuthenticationFailed("Invalid API Key")
-
 
 
 api = None
@@ -155,7 +153,9 @@ def get_niwa_schema(request, format=None):
 
 class PersistentLoggerSerializer(serializers.Serializer):
     persistent_loggers = serializers.DictField(required=False)
-    # TODO LW: add in schema for POST
+    logger_id = serializers.IntegerField()
+    logger_config = serializers.CharField()
+
 
 class PersistentLoggerAPIView(APIView):
     authentication_classes = [authentication.BasicAuthentication, TokenAuthentication]
@@ -219,6 +219,7 @@ class PersistentLoggerAPIView(APIView):
             ]
             return Response(response, 500)
 
+
 class YamlFileContentSerializer(serializers.Serializer):
     content = serializers.FileField(required=True)
 
@@ -250,6 +251,7 @@ class LoadYamlFileContentAPIView(APIView):
                 "errors": ["Invalid file"]
             }
             return Response(response, 400)
+
 
 class SaveYamlFileContentAPIView(APIView):
     authentication_classes = [authentication.BasicAuthentication, TokenAuthentication]
@@ -287,11 +289,16 @@ class SaveYamlFileContentAPIView(APIView):
             return Response(response, 500)
 
 
+### UDP subscription endpoints
+
 class ClientIPSerializer(serializers.Serializer):
     ip_address = serializers.CharField()
 
 
 class ClientIPAPIView(APIView):
+    """
+    API endpoint used by udp page of NIWA frontend to display the user's IP
+    """
     authentication_classes = [authentication.BasicAuthentication, TokenAuthentication]
     permission_classes = [IsAuthenticated]
     serializer_class = ClientIPSerializer
@@ -314,7 +321,6 @@ class GetLoggerIdAPIView(APIView):
     """
     API endpoint used by 'udp_subscription_writer' to know which logger is running
     """
-
     authentication_classes = [
         authentication.BasicAuthentication,
         TokenAuthentication,
@@ -330,7 +336,7 @@ class GetLoggerIdAPIView(APIView):
 
         except Exception as e:
             return Response({"status": "error", "message": str(e)}, 500)
-        
+
 
 class UDPSubscriptionSerializer(serializers.Serializer):
     ip_address = serializers.CharField()
@@ -367,6 +373,7 @@ class GetUDPSubscriptionsByIPAPIView(APIView):
 
         except Exception as e:
             return Response({"status": "error", "message": str(e)}, 500)
+
 
 class GetUDPSubscriptionsByLoggerIdAPIView(APIView):
     authentication_classes = [authentication.BasicAuthentication, TokenAuthentication, APIKeyAuthentication]
@@ -516,6 +523,9 @@ class CreatePermissionGroupsAPIView(APIView):
 
 
 class LoadPersistentLoggersAPIView(APIView):
+    """
+    API endpoint to create loggers from individual logger configs without linking to a cruise config.
+    """
     authentication_classes = [authentication.BasicAuthentication, TokenAuthentication]
     permission_classes = [IsAdminUser]
     serializer_class = BlankSerializer

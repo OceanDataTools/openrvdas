@@ -17,7 +17,6 @@ from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.compat import coreapi, coreschema
-from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
@@ -35,7 +34,6 @@ import os
 from rest_framework.settings import api_settings
 # Read in JSON with comments
 from logger.utils.read_config import parse, read_config  # noqa: E402
-
 
 from contrib.niwa.views.niwa_api_views import get_niwa_paths, get_niwa_schema
 
@@ -141,8 +139,6 @@ class ApiRoot(APIView):
         )
 
 
-
-
 def _get_api():
 
     global api
@@ -154,7 +150,6 @@ def _get_api():
 
 
 class CustomAuthToken(ObtainAuthToken):
-
     renderer_classes = api_settings.DEFAULT_RENDERER_CLASSES
 
     def post(self, request, *args, **kwargs):
@@ -204,9 +199,7 @@ class AuthUserAPIView(APIView):
 
 
 #
-#
 # CRUISE LEVEL ACTIONS
-#
 #
 class CruiseConfigurationAPIView(APIView):
     authentication_classes = [authentication.BasicAuthentication, TokenAuthentication]
@@ -323,14 +316,14 @@ class CruiseSelectModeAPIView(APIView):
                 new_mode_name = serializer.validated_data["select_mode"]
                 logging.info('switching to mode "%s"', new_mode_name)
                 api.set_active_mode(new_mode_name)
-                return Response({"status": f"Cruise mode set: {new_mode_name}"}, status=200)
+                return Response({"status": "ok", "message": f"Cruise mode set: {new_mode_name}"}, status=200)
 
             except ValueError as e:
                 logging.warning('Error trying to set mode to "%s": %s', new_mode_name, str(e))
                 return Response(
-                    {"status": f"Invalid Request. Error trying to set mode to {new_mode_name}"},
+                    {"status": "error", "message": f"Invalid Request. Error trying to set mode to {new_mode_name}"},
                     status=400)
-        return Response({"status": "Invalid Request"}, status=400)
+        return Response({"status": "error", "message": "Invalid Request"}, status=400)
 
     def get(self, request):
         try:
@@ -408,12 +401,12 @@ class CruiseReloadCurrentConfigurationAPIView(APIView):
                     config["cruise"]["config_filename"] = filename
                 api.load_configuration(config)
 
-                return Response({"status": "Current config reloaded"}, 200)
+                return Response({"status": "ok", "message": "Current config reloaded"}, 200)
             except Exception as e:
                 logging.warning("Error reloading current configuration: %s", str(e))
-                return Response({"status": f"Error reloading current configuration: {e}"}, 400)
+                return Response({"status": "error", "message":f"Error reloading current configuration: {e}"}, 400)
 
-        return Response({"status": "Invalid Request"}, 400)
+        return Response({"status": "error", "message": "Invalid Request"}, 400)
 
     def get(self, request):
         log_request(request, "reload_configuration")
@@ -462,13 +455,13 @@ class CruiseDeleteConfigurationAPIView(APIView):
         if serializer.validated_data.get("delete"):
             try:
                 api.delete_configuration()
-                return Response({"status": "Cruise configuration deleted"}, status=200)
+                return Response({"status": "ok", "message": "Cruise configuration deleted"}, status=200)
 
             except ValueError as e:
                 logging.warning(f"Error trying to delete configuration: {e}")
                 return Response(
                     {"status": "Invalid Request. Error trying to delete configuration"}, status=400)
-        return Response({"status": "Invalid Request"}, status=400)
+        return Response({"status": "error", "message": "Invalid Request"}, status=400)
 
     def get(self, request):
         try:
@@ -576,9 +569,11 @@ class EditLoggerConfigAPIView(APIView):
             logging.warning("selected config: %s", new_config)
             api.set_active_logger_config(logger_id, new_config)
 
-            return Response({"status": f"Logger {logger_id} updated."}, status=200)
+            return Response(
+                {"status": "ok", "message": f"Logger {logger_id} updated."}, status=200
+            )
 
-        return Response({"status": "Invalid Request"}, status=400)
+        return Response({"status": "error", "message": "Invalid Request"}, status=400)
 
     def get(self, request, logger_name):
         """
@@ -780,7 +775,9 @@ class LoadConfigurationFileAPIView(APIView):
             target_file = serializer.validated_data.get("target_file", None)
 
             if target_file is None:
-                return Response({"status": f"File not found. {target_file}"}, 404)
+                return Response(
+                    {"status": "error", "message": f"File not found. {target_file}"}, 404
+                )
             try:
                 with open(target_file, "r") as config_file:
                     configuration = parse(config_file.read())
@@ -791,14 +788,14 @@ class LoadConfigurationFileAPIView(APIView):
                     default_mode = api.get_default_mode()
                     if default_mode:
                         api.set_active_mode(default_mode)
-                    return Response({"status": f"target_file loaded {target_file}"}, 200)
+                    return Response({"status": "ok", "message": f"target_file loaded {target_file}"}, 200)
 
             except (json.JSONDecodeError, yaml.scanner.ScannerError) as e:
                 load_errors.append('Error loading "%s": %s' % (target_file, str(e)))
             except ValueError as e:
                 load_errors.append(str(e))
 
-            return Response({"status": f"Errors loading target file {target_file}",
+            return Response({"status": "error", "message": f"Errors loading target file {target_file}",
                              "errors": load_errors}, 400)
 
 
@@ -862,10 +859,10 @@ urlpatterns = [
     path('cruise-configuration/', CruiseConfigurationAPIView.as_view(), name='cruise-configuration'),
     path('delete-configuration/', CruiseDeleteConfigurationAPIView.as_view(), name='delete-configuration'),
     path('upload-configuration/', CruiseUploadConfigurationAPIView.as_view(), name='upload-configuration'),
-    path('edit-logger-config/<str:logger_name>/', EditLoggerConfigAPIView.as_view(), name='edit-logger-config'),
-    path('load-configuration-file/', LoadConfigurationFileAPIView.as_view(), name='load-configuration-file'),
     path('reload-current-configuration/', CruiseReloadCurrentConfigurationAPIView.as_view(), name='reload-current-configuration'),
     path('select-cruise-mode/', CruiseSelectModeAPIView.as_view(), name='select-cruise-mode'),
+    path('edit-logger-config/<str:logger_name>/', EditLoggerConfigAPIView.as_view(), name='edit-logger-config'),
+    path('load-configuration-file/', LoadConfigurationFileAPIView.as_view(), name='load-configuration-file'),
     path('view-cache/<str:field>/', ViewCacheAPIView.as_view(), name='view-cache'),
     path('view-cache/', ViewCacheAPIView.as_view(), name='view-cache'),
 ] + custom_paths

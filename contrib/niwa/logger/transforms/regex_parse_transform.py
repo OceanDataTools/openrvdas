@@ -74,5 +74,3 @@ class RegexParseTransform(ParseTransform):
             prepend_data_id=prepend_data_id,
             delimiter=delimiter)
 
-        # pco2.yaml
-

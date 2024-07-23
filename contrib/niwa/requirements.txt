@@ -1,3 +1,5 @@
+# to use postgres
 psycopg2-binary
+# used by udp subscription flow
 django-ipware
 requests

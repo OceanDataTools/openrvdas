@@ -460,19 +460,18 @@ function install_openrvdas {
       sudo chown ${RVDAS_USER} openrvdas
     fi
 
-    # if [ -e openrvdas/.git ] ; then   # If we've already got an installation
-    #   cd openrvdas
-    #   git pull
-    #   git checkout $OPENRVDAS_BRANCH
-    #   git pull
-    # else                              # If we don't already have an installation
-    #   sudo rm -rf openrvdas           # in case there's a non-git dir there
-    #   sudo mkdir openrvdas
-    #   sudo chown ${RVDAS_USER} openrvdas
-    #   git clone -b $OPENRVDAS_BRANCH $OPENRVDAS_REPO
-    #   cd openrvdas
-    # fi
-    cd openrvdas
+    if [ -e openrvdas/.git ] ; then   # If we've already got an installation
+      cd openrvdas
+      git pull
+      git checkout $OPENRVDAS_BRANCH
+      git pull
+    else                              # If we don't already have an installation
+      sudo rm -rf openrvdas           # in case there's a non-git dir there
+      sudo mkdir openrvdas
+      sudo chown ${RVDAS_USER} openrvdas
+      git clone -b $OPENRVDAS_BRANCH $OPENRVDAS_REPO
+      cd openrvdas
+    fi
 
     # Copy widget settings into place and customize for this machine
     cp display/js/widgets/settings.js.dist \

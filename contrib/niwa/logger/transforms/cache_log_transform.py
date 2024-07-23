@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
 
 '''
-Organisation - Australian Antarctic Division
+Original credit: Australian Antarctic Division
 
 This transform is used to prepend the data_id from a DASRecord or Dict to 
-the field names in the record. 
-Intended to be used with CachedDataServer for the AAD data system naming
-convention.
+the field names in the record and write it to the cache data server.
 
-This transform is also used to cache "live" values for each logger for use by front-ends
+This transform is used to cache "live" values for each logger before transform are done for use by front-ends
 
 '''
 

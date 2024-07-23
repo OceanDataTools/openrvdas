@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 
+# Original credit: Australian Antarctic Division
+
 import logging
 import sys
 
 from os.path import dirname, realpath; sys.path.append(dirname(dirname(realpath(__file__))))
-from logger.utils.formats import Python_Record
 from logger.utils.das_record import DASRecord
 
 try:
-  #import psycopg2.connector
   import psycopg2
   POSTGRESQL_ENABLED = True
 except ImportError:
@@ -32,8 +32,6 @@ class PostgreSQLRecordConnector:
                                         user=user, password=password)
     # Map from table_name->next id we're going to read from that table
     self.next_id = {}
-
-    #self.exec_sql_command('set autocommit = 1')
 
   ############################
   def exec_sql_command(self, command):
@@ -156,8 +154,6 @@ class PostgreSQLRecordConnector:
     print('!!!!!!!!!!!!!!!1Creating table with command: %s', table_cmd)
     self.exec_sql_command(table_cmd)
 
-    #index_cmd = 'CREATE INDEX index ON "%s"(timestamp)' % table_name
-    #self.exec_sql_command(index_cmd)
     # Register the fields in the record as being contained in this table.
     self._register_record_fields(record)
 

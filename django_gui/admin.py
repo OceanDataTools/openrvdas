@@ -118,22 +118,15 @@ class PermissionAdmin(admin.ModelAdmin):
     model = Permission
     fields = ["name"]
 
-
-
-
 #############################################
 admin.site.register(Logger, LoggerAdmin)
 admin.site.register(LoggerConfig, LoggerConfigAdmin)
 admin.site.register(LoggerConfigState, LoggerConfigStateAdmin)
-
 admin.site.register(Mode, ModeAdmin)
-
 admin.site.register(Cruise, CruiseAdmin)
 admin.site.register(LogMessage, LogMessageAdmin)
 admin.site.register(LastUpdate, LastUpdateAdmin)
-
 admin.site.register(Permission, PermissionAdmin)
-
 
 # admin.site.register(CurrentCruise, CurrentCruiseAdmin)
 # admin.site.register(CruiseState, CruiseStateAdmin)
