@@ -24,7 +24,7 @@ class MQTTReader(Reader):
     Read messages from an mqtt broker
     """
 
-    def __init__(self, broker, channel, client_name):
+    def __init__(self, broker, channel, client_name, paho_version=1, return_bytes=True):
         """
         Read text records from the channel subscription.
         ```
@@ -82,10 +82,17 @@ class MQTTReader(Reader):
         self.broker = broker
         self.channel = channel
         self.client_name = client_name
+        self.paho_version = paho_version
+        self.return_bytes = return_bytes
         self.queue = Queue()
 
         try:
-            self.paho = mqtt.Client(client_name)
+            if paho_version == 1:
+                self.paho = mqtt.Client(client_name)
+            else:
+                # CallbackAPIVersion required for paho-mqtt v2+
+                self.paho = mqtt.Client(mqtt.CallbackAPIVersion.VERSION1, client_name)
+
             self.paho.on_connect = on_connect
             self.paho.on_message = on_message
 
@@ -107,7 +114,10 @@ class MQTTReader(Reader):
                     if message is None:
                         continue
                     logging.debug('Got message "%s"', message.payload)
-                    return message.payload
+                    if self.return_bytes:
+                        return message.payload
+                    else:
+                        return str(message.payload, "utf-8")
             except KeyboardInterrupt:
                 self.paho.disconnect()
                 exit(0)

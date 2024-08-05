@@ -30,12 +30,8 @@ from logger.writers.writer import Writer
 from local.niwa.database.timescaledb_settings import (
     DATA_DATABASE_ENABLED,
     TimescaledbConnector,
-)
-from local.niwa.database.timescaledb_settings import (
     DEFAULT_DATA_DATABASE,
     DEFAULT_DATA_DATABASE_HOST,
-)
-from local.niwa.database.timescaledb_settings import (
     DEFAULT_DATA_DATABASE_USER,
     DEFAULT_DATA_DATABASE_PASSWORD,
 )

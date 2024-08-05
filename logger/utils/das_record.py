@@ -3,6 +3,7 @@
 import json
 import pprint
 import logging
+from datetime import date, datetime
 
 from logger.utils.timestamp import timestamp as timestamp_method  # noqa: E402
 
@@ -48,17 +49,27 @@ class DASRecord:
     ############################
     def as_json(self, pretty=False):
         """Return DASRecord as a JSON string."""
+        
+        # TODO: sort out datetime to int for field values as well as timestamp
         json_dict = {
-            'data_id': self.data_id,
-            'message_type': self.message_type,
-            'timestamp': self.timestamp,
+            "data_id": self.data_id,
+            "message_type": self.message_type,
+            # 'timestamp': self.timestamp if type(self.timestamp) is not datetime else self.timestamp.timestamp(),
+            # 'fields': {field: value if type(value) is not datetime else value.timestamp() for field, value in self.fields.items()},
+            "timestamp": self.timestamp,            
             'fields': self.fields,
-            'metadata': self.metadata
+            "metadata": self.metadata,
         }
         if pretty:
-            return json.dumps(json_dict, sort_keys=True, indent=4)
+            return json.dumps(json_dict, sort_keys=True, indent=4, default=self.serializer)
         else:
-            return json.dumps(json_dict)
+            return json.dumps(json_dict, default=self.serializer)
+
+    def serializer(self, obj):
+        """JSON serializer for objects not serializable by default json code"""
+        if isinstance(obj, (datetime, date)):
+            return obj.isoformat()
+        raise TypeError ("Type %s not serializable" % type(obj))
 
     ############################
     def __str__(self):

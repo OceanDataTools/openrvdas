@@ -81,7 +81,10 @@ class Listener:
         Signal 'quit' to all the readers.
         """
         self.quit_signalled = True
+        # NIWA: make logger starting info visible in cached stderr logs for UI to retreive
+        logging.root.setLevel(logging.INFO)
         logging.info('Shutting down %s', self.name)
+        logging.root.setLevel(logging.WARNING)
 
     ############################
     def run(self):
@@ -90,12 +93,17 @@ class Listener:
         thread, or ComposedReader returns None, indicating that all its
         component readers have returned EOF.
         """
+        # NIWA: make logger starting info visible in cached stderr logs for UI to retreive
+        logging.root.setLevel(logging.INFO)
         logging.info('Running %s', self.name)
+        
 
         if not self.reader and not self.writer:
             logging.info('No readers or writers defined - exiting.')
             return
 
+        # NIWA: now only show warnings or errors from the logger
+        logging.root.setLevel(logging.WARNING)
         record = ''
         try:
             while not self.quit_signalled and record is not None:

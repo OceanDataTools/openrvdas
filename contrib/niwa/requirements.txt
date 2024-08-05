@@ -3,3 +3,5 @@ psycopg2-binary
 # used by udp subscription flow
 django-ipware
 requests
+#MQTT onshore connection
+paho-mqtt
