@@ -69,7 +69,7 @@ class TestLoggerRunner(unittest.TestCase):
         runner.start()
         time.sleep(1.0)
 
-        reader = TextFileReader(self.dest_name)
+        reader = TextFileReader(self.source_name)
         for line in SAMPLE_DATA:
             result = reader.read()
             logging.info('Checking line: "%s"', line)
@@ -86,7 +86,7 @@ class TestLoggerRunner(unittest.TestCase):
         # Try a degenerate runner
         runner = LoggerRunner(config={})
         runner.start()
-        time.sleep(1.0)
+        time.sleep(3.0)
 
         self.assertFalse(runner.is_runnable())
         self.assertFalse(runner.is_alive())

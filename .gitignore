@@ -112,3 +112,11 @@ server/openrvdas.sql
 
 # tmp
 tmp
+
+# continuous-integration & linters
+gitlab-ci.yml
+pyproject.toml
+*.egg-info
+.tox*
+*coverage*
+pytest_report.xml
