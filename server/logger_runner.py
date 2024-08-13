@@ -42,6 +42,7 @@ import pprint
 import signal
 import sys
 import time
+import traceback
 
 from importlib import reload
 from logging.handlers import RotatingFileHandler
@@ -156,6 +157,19 @@ def run_logger(logger, config, stderr_filename=None, stderr_data_server=None,
 
     try:
         if config_is_runnable(config):
+            # Add cache server writer to every logger so we can display live output before it is parsed into fields
+            live_logging_transform = {
+                "class": "CacheLogTransform",
+                "module": "contrib.niwa.logger.transforms.cache_log_transform",
+                "kwargs": {"field_name": "logger:" + logger},
+            }
+
+            # log before transforms
+            modified_transforms = [live_logging_transform] + config.get(
+                "transforms", []
+            )
+            config["transforms"] = modified_transforms
+
             listener = ListenerFromLoggerConfig(config=config)
             try:
                 listener.run()
@@ -163,6 +177,9 @@ def run_logger(logger, config, stderr_filename=None, stderr_data_server=None,
                 logging.warning(f'Received quit for {config_name}')
     except Exception as e:
         logging.fatal(e)
+        e_trace = "".join(traceback.TracebackException.from_exception(e).format())
+        logging.fatal(e_trace)
+        
 
     # Allow a moment for stderr_writers to finish up
     time.sleep(0.25)

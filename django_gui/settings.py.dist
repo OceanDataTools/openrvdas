@@ -45,7 +45,29 @@ import socket  # noqa: E402
 # your own hostname in its place.
 HOSTNAME = socket.gethostname()
 
-ALLOWED_HOSTS = [HOSTNAME, 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = [HOSTNAME, 'localhost', '127.0.0.1',]
+CORS_ALLOWED_ORIGINS = [
+    "http://127.0.0.1:5173",
+    "http://localhost:5173",
+    "http://127.0.0.1:80",
+    "http://localhost:80",
+]
+CSRF_TRUSTED_ORIGINS = [
+    "http://127.0.0.1:5173",
+    "http://localhost:5173",
+    "http://127.0.0.1:80",
+    "http://localhost:80",
+]
+
+# 5173 is the port used by vite dev server, 80 for production
+
+X_FRAME_OPTIONS = 'SAMEORIGIN'
+CSP_IMG_SRC = ("'self'", "'unsafe-inline'")
+CSP_SCRIPT_SRC = ("'self'", "'unsafe-inline'")
+CSP_CONNECT_SRC = ("'self'", "ws://127.0.0.1/cds-ws", "ws://localhost/cds-ws")
+CSP_STYLE_SRC = ("'self'", "'unsafe-inline'")
+CSP_FONT_SRC = "'self'"
+CSP_FRAME_ANCESTORS = ("'self'", "http://127.0.0.1:5173", "http://localhost:5173", "http://127.0.0.1:80", "http://localhost:80")
 
 # Host name may be a fully-qualified domain. Also allow just the basic
 # name.
@@ -107,13 +129,16 @@ INSTALLED_APPS = [
     'django_gui',
     'rest_framework',
     'rest_framework.authtoken',
+    'corsheaders',
     'drf_spectacular',
     'drf_spectacular_sidecar',
 ]
 
 MIDDLEWARE = [
+    'csp.middleware.CSPMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -158,9 +183,18 @@ DATABASES = {
     #     'HOST': 'localhost',
     #     'PORT': '',
     # },
+    #'default': {
+    #    'ENGINE': 'django.db.backends.sqlite3',
+    #    'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    #},
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.postgresql',
+        'CONN_MAX_AGE': 280,
+        'NAME': 'openrvdas',
+        'USER': 'rvdas',
+        'PASSWORD': 'rvdas',
+        'HOST': 'localhost',
+        'PORT': '5432',
     },
 
     'OPTIONS': {

@@ -1,13 +1,22 @@
+import asyncio
+import itertools
+import re
+
+import websockets
+import yaml.scanner
+from contrib.niwa.shared_methods.definition_files import parse_definition_files
+from django_gui.models import Logger, LoggerConfig
 from .django_server_api import DjangoServerAPI
 from django_gui.settings import FILECHOOSER_DIRS
 from django_gui.settings import WEBSOCKET_DATA_SERVER
+
+from django.contrib.auth.models import Permission, User 
 
 from rest_framework import authentication, serializers
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.compat import coreapi, coreschema
-from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
@@ -16,6 +25,7 @@ from rest_framework.views import APIView
 
 from .views import log_request
 from django.urls import include, path
+from django.core.files.storage import FileSystemStorage
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 import json
 import logging
@@ -24,6 +34,14 @@ import os
 from rest_framework.settings import api_settings
 # Read in JSON with comments
 from logger.utils.read_config import parse, read_config  # noqa: E402
+
+from contrib.niwa.views.niwa_api_views import get_niwa_paths, get_niwa_schema
+
+# import and add your own API routes here
+custom_paths = get_niwa_paths()
+
+def get_custom_schema(request, format=None):
+    return get_niwa_schema(request, format)
 
 # RVDAS API Views + Serializers
 
@@ -58,7 +76,7 @@ class ApiRoot(APIView):
     RVDAS REST API Endpoints.
 
     These are an authenticated set of urls.
-    You need to to login to use them via the APi ui.
+    You need to to login to use them via the API ui.
     For calling them via curl or requests. You need to pass header authenticiation.
     Use token auth, it's simpler, but basic auth is supported.
     https://www.django-rest-framework.org/api-guide/authentication/
@@ -78,19 +96,47 @@ class ApiRoot(APIView):
     serializer_class = GetSerializer
     
     def get(self, request, format=None):
-        return Response({
-            "login": reverse("rest_framework:login", request=request, format=format),
-            "logout": reverse("rest_framework:logout", request=request, format=format),
-            "obtain-auth-token": reverse("obtain-auth-token", request=request, format=format),
-            "cruise-configuration": reverse("cruise-configuration", request=request, format=format),
-            "select-cruise-mode": reverse("select-cruise-mode", request=request, format=format),
-            "reload-current-configuration": reverse("reload-current-configuration", request=request, format=format),
-            "delete-configuration": reverse("delete-configuration", request=request, format=format),
-            "edit-logger-config": reverse("edit-logger-config", request=request, format=format),
-            "load-configuration-file": reverse("load-configuration-file", request=request, format=format),
-        })
-
-
+        return Response(
+            {
+                "login": reverse(
+                    "rest_framework:login", request=request, format=format
+                ),
+                "logout": reverse(
+                    "rest_framework:logout", request=request, format=format
+                ),
+                "obtain-auth-token": reverse(
+                    "obtain-auth-token", request=request, format=format
+                ),
+                "get-auth-user": reverse(
+                    "get-auth-user", request=request, format=format
+                ),
+                "cruise-configuration": reverse(
+                    "cruise-configuration", request=request, format=format
+                ),
+                "select-cruise-mode": reverse(
+                    "select-cruise-mode", request=request, format=format
+                ),
+                "reload-current-configuration": reverse(
+                    "reload-current-configuration", request=request, format=format
+                ),
+                "delete-configuration": reverse(
+                    "delete-configuration", request=request, format=format
+                ),
+                "upload-configuration": reverse(
+                    "upload-configuration", request=request, format=format
+                ),
+                "edit-logger-config": reverse(
+                    "edit-logger-config", request=request, format=format
+                ),
+                "load-configuration-file": reverse(
+                    "load-configuration-file", request=request, format=format
+                ),
+                "view-cache": reverse(
+                    "view-cache", request=request, format=format
+                ),
+                **get_custom_schema(request, format),
+            }
+        )
 
 
 def _get_api():
@@ -104,7 +150,6 @@ def _get_api():
 
 
 class CustomAuthToken(ObtainAuthToken):
-
     renderer_classes = api_settings.DEFAULT_RENDERER_CLASSES
 
     def post(self, request, *args, **kwargs):
@@ -121,22 +166,71 @@ class CustomAuthToken(ObtainAuthToken):
             }
         )
 
+class PermissionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Permission
+        fields = ('id', 'codename', 'name')
 
-#
+class UserSerializer(serializers.ModelSerializer):
+    user_permissions = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'user_permissions', 'is_superuser')
+    
+    def get_user_permissions(self, user):
+        direct_permissions = [permission for permission in user.user_permissions.all()]
+        group_permissions =  [permission for permission in itertools.chain.from_iterable([group.permissions.all() for group in user.groups.all()])]
+
+        serializer = PermissionSerializer(direct_permissions + group_permissions, many=True)
+        return serializer.data
+
+
+class AuthUserAPIView(APIView):
+    authentication_classes = [authentication.BasicAuthentication, TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+    serializer_class = UserSerializer
+
+    def get(self, request):
+        log_request(request, "get_auth_user")
+        serializer = UserSerializer(request.user)
+
+        return Response({"status": "ok", "user": serializer.data}, 200)
+
+
 #
 # CRUISE LEVEL ACTIONS
 #
-#
-
-
 class CruiseConfigurationAPIView(APIView):
     authentication_classes = [authentication.BasicAuthentication, TokenAuthentication]
     permission_classes = [IsAuthenticated]
     serializer_class = GetSerializer
     def get(self, request):
         log_request(request, "get_configuration")
-        template_vars = _get_cruise_config()
-        return Response({"status": "ok", "configuration": template_vars}, 200)
+        cruise_config = _get_cruise_config()
+
+        config_file_content = (
+            read_config(cruise_config["filename"]) if cruise_config.get("cruise_id") else ""
+        )
+
+        response = {
+            "status": "ok",
+            "id": cruise_config.get("id", None)
+            if cruise_config.get("cruise_id")
+            else None,
+            "configuration": cruise_config,
+            "full_config": config_file_content,
+            "available_configs": [
+                {"value": m, "name": m} for m in cruise_config.get("modes", [])
+            ]
+            if cruise_config.get("cruise_id")
+            else [],
+            "selected_config": cruise_config.get("active_mode", None)
+            if cruise_config.get("cruise_id")
+            else None,
+        }
+
+        return Response(response, 200)
 
 
 def _get_cruise_config():
@@ -151,9 +245,17 @@ def _get_cruise_config():
     try:
         api = _get_api()
         configuration = api.get_configuration()
-        template_vars["cruise_id"] = configuration.get("id", "Cruise")
+        
+        cruise_id = configuration.get("id", "Cruise")
+        template_vars["cruise_id"] = cruise_id
         template_vars["filename"] = configuration.get("config_filename", "-none-")
         template_vars["loggers"] = api.get_loggers()
+        template_vars["cruise_specific_loggers"] = [
+            logger_name
+            for logger_name in Logger.objects.filter(
+                cruise_id=cruise_id
+            ).values_list("name", flat=True)
+        ]
         template_vars["modes"] = api.get_modes()
         template_vars["active_mode"] = api.get_active_mode()
         template_vars["errors"] = errors
@@ -214,14 +316,14 @@ class CruiseSelectModeAPIView(APIView):
                 new_mode_name = serializer.validated_data["select_mode"]
                 logging.info('switching to mode "%s"', new_mode_name)
                 api.set_active_mode(new_mode_name)
-                return Response({"status": f"Cruise mode set: {new_mode_name}"}, status=200)
+                return Response({"status": "ok", "message": f"Cruise mode set: {new_mode_name}"}, status=200)
 
             except ValueError as e:
                 logging.warning('Error trying to set mode to "%s": %s', new_mode_name, str(e))
                 return Response(
-                    {"status": f"Invalid Request. Error trying to set mode to {new_mode_name}"},
+                    {"status": "error", "message": f"Invalid Request. Error trying to set mode to {new_mode_name}"},
                     status=400)
-        return Response({"status": "Invalid Request"}, status=400)
+        return Response({"status": "error", "message": "Invalid Request"}, status=400)
 
     def get(self, request):
         try:
@@ -299,12 +401,12 @@ class CruiseReloadCurrentConfigurationAPIView(APIView):
                     config["cruise"]["config_filename"] = filename
                 api.load_configuration(config)
 
-                return Response({"status": "Current config reloaded"}, 200)
+                return Response({"status": "ok", "message": "Current config reloaded"}, 200)
             except Exception as e:
                 logging.warning("Error reloading current configuration: %s", str(e))
-                return Response({"status": f"Error reloading current configuration: {e}"}, 400)
+                return Response({"status": "error", "message":f"Error reloading current configuration: {e}"}, 400)
 
-        return Response({"status": "Invalid Request"}, 400)
+        return Response({"status": "error", "message": "Invalid Request"}, 400)
 
     def get(self, request):
         log_request(request, "reload_configuration")
@@ -353,13 +455,13 @@ class CruiseDeleteConfigurationAPIView(APIView):
         if serializer.validated_data.get("delete"):
             try:
                 api.delete_configuration()
-                return Response({"status": "Cruise configuration deleted"}, status=200)
+                return Response({"status": "ok", "message": "Cruise configuration deleted"}, status=200)
 
             except ValueError as e:
                 logging.warning(f"Error trying to delete configuration: {e}")
                 return Response(
                     {"status": "Invalid Request. Error trying to delete configuration"}, status=400)
-        return Response({"status": "Invalid Request"}, status=400)
+        return Response({"status": "error", "message": "Invalid Request"}, status=400)
 
     def get(self, request):
         try:
@@ -382,9 +484,13 @@ class CruiseDeleteConfigurationAPIView(APIView):
 #
 #
 class EditLoggerConfigSerializer(serializers.Serializer):
-    update = serializers.CharField(required=True)
+    update = serializers.BooleanField(required=True)
     logger_id = serializers.CharField(required=True)
     config = serializers.CharField(required=True)
+    full_config = serializers.JSONField(required=False)
+    available_configs = serializers.JSONField(required=False)
+    selected_config = serializers.CharField(required=False)
+    definition_files = serializers.JSONField(required=False)
 
 
 class EditLoggerConfigAPIView(APIView):
@@ -417,7 +523,7 @@ class EditLoggerConfigAPIView(APIView):
                     required=True,
                     location="form",
                     schema=coreschema.String(
-                        title="realod",
+                        title="update",
                         description="true / false",
                     ),
                 ),
@@ -426,7 +532,7 @@ class EditLoggerConfigAPIView(APIView):
                     required=True,
                     location="form",
                     schema=coreschema.String(
-                        title="realod",
+                        title="logger_id",
                         description="The logger id to update",
                     ),
                 ),
@@ -435,8 +541,8 @@ class EditLoggerConfigAPIView(APIView):
                     required=True,
                     location="form",
                     schema=coreschema.String(
-                        title="realod",
-                        description="The logger id to update",
+                        title="config",
+                        description="The logger config",
                     ),
                 ),
             ],
@@ -447,7 +553,7 @@ class EditLoggerConfigAPIView(APIView):
     authentication_classes = [authentication.BasicAuthentication, TokenAuthentication]
     permission_classes = [IsAuthenticated]
 
-    def post(self, request):
+    def post(self, request, logger_name):
         api = _get_api()
         log_request(request, "Edit logger configuration")
 
@@ -463,27 +569,131 @@ class EditLoggerConfigAPIView(APIView):
             logging.warning("selected config: %s", new_config)
             api.set_active_logger_config(logger_id, new_config)
 
-            return Response({"status": f"Logger {logger_id} updated."}, status=200)
+            return Response(
+                {"status": "ok", "message": f"Logger {logger_id} updated."}, status=200
+            )
 
-        return Response({"status": "Invalid Request"}, status=400)
+        return Response({"status": "error", "message": "Invalid Request"}, status=400)
 
-    def get(self, request):
+    def get(self, request, logger_name):
         """
-        Retrieve list of loggers.
+        Retrieve logger details.
 
         Returns:
-        - Response with status and list of loggers.
+        - Response with logger details
         """
         api = _get_api()
-        log_request(request, "get_loggers")
-        loggers = None
+        log_request(request, "get_logger")
+
         try:
-            loggers = api.get_loggers()
+            logger_config = api.get_logger(logger_name).config
+
+            full_configs = {}
+            available_configs = []
+            definition_file_strings = []
+
+            file_regex = "(?:definition_path\": \")(\S*)\""
+
+            for config in LoggerConfig.objects.filter(logger__name=logger_name).all():
+                loaded_config = json.loads(config.config_json)
+                full_configs[config.name] = loaded_config
+                available_configs.append({"value":config.name, "name":config.name})
+                definition_file_strings = re.findall(file_regex, config.config_json)
+
+            definition_file_paths = ",".join(definition_file_strings)
+            definition_files = parse_definition_files(definition_file_paths)
+
             msg = None
         except Exception as e:
             msg = str(e)
 
-        return Response({"status": "ok", "loggers": loggers, "msg": msg}, status=200)
+        return Response(
+            {
+                "status": "ok",  
+                "full_config": full_configs,
+                "available_configs": available_configs,
+                "selected_config": logger_config.name,
+                "definition_files": definition_files,
+                "msg": msg
+            }, status=200
+        )
+
+
+class CruiseUploadConfigurationFileSerializer(serializers.Serializer):
+    file = serializers.FileField(required=True)
+    filename = serializers.CharField(required=True)
+
+class CruiseUploadConfigurationAPIView(APIView):
+    """
+    Upload yaml configuration and create a new file
+
+    POST:
+    {
+        'filename': '<a name for the new config file>'
+        'file': '<the yaml config blob>'
+    }
+
+    Returns:
+    - Response with status and message.
+    """
+    serializer_class = CruiseUploadConfigurationFileSerializer
+    authentication_classes = [authentication.BasicAuthentication, TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    cruise_config_folder = "local/cruise_configs"
+
+    def post(self, request):
+        api = _get_api()
+        log_request(request, "Load configuration file.")
+
+        serializer = CruiseUploadConfigurationFileSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        if serializer.validated_data.get("file"):
+            new_config_file = request.FILES.get("file")
+            new_config_filename = request.POST.get("filename")
+
+            load_errors = []
+            # this is a snippet taken from views.choose_file()
+            try:
+                # Load the file to memory and parse to a dict. Add the name of
+                # the file we've just loaded to the dict.
+                configuration = parse(new_config_file)
+
+                # TODO do some stricter validation on cruise definition before saving file
+                fs = FileSystemStorage(
+                    location=self.cruise_config_folder
+                )  # defaults to   MEDIA_ROOT
+                filename = fs.save(new_config_filename, new_config_file)
+
+                if "cruise" in configuration:
+                    configuration["cruise"]["config_filename"] = (
+                        self.cruise_config_folder + "/" + filename
+                    )
+
+                # Load the config and set to the default mode
+                api.load_configuration(configuration)
+                default_mode = api.get_default_mode()
+                if default_mode:
+                    api.set_active_mode(default_mode)
+
+            except (json.JSONDecodeError, yaml.scanner.ScannerError) as e:
+                load_errors.append('Error loading "%s": %s' % (new_config_filename, str(e)))
+            except Exception as e:
+                load_errors.append(str(e))
+
+            response = {
+                "status": "ok",
+                "success": True,
+                "message": "There are errors with this config file"
+                if len(load_errors) > 0
+                else "Cruise config file loaded",
+                "errors": load_errors,
+            }
+
+            return Response(response, 200)
+        else:
+            return Response
 
 
 class LoadConfigurationFileSerializer(serializers.Serializer):
@@ -565,7 +775,9 @@ class LoadConfigurationFileAPIView(APIView):
             target_file = serializer.validated_data.get("target_file", None)
 
             if target_file is None:
-                return Response({"status": f"File not found. {target_file}"}, 404)
+                return Response(
+                    {"status": "error", "message": f"File not found. {target_file}"}, 404
+                )
             try:
                 with open(target_file, "r") as config_file:
                     configuration = parse(config_file.read())
@@ -576,15 +788,61 @@ class LoadConfigurationFileAPIView(APIView):
                     default_mode = api.get_default_mode()
                     if default_mode:
                         api.set_active_mode(default_mode)
-                    return Response({"status": f"target_file loaded {target_file}"}, 200)
+                    return Response({"status": "ok", "message": f"target_file loaded {target_file}"}, 200)
 
             except (json.JSONDecodeError, yaml.scanner.ScannerError) as e:
                 load_errors.append('Error loading "%s": %s' % (target_file, str(e)))
             except ValueError as e:
                 load_errors.append(str(e))
 
-            return Response({"status": f"Errors loading target file {target_file}",
+            return Response({"status": "error", "message": f"Errors loading target file {target_file}",
                              "errors": load_errors}, 400)
+
+
+# misc actions
+
+class ViewCacheSerializer(serializers.Serializer):
+    cache_value = serializers.CharField(required=True)
+
+
+class ViewCacheAPIView(APIView):
+    authentication_classes = [authentication.BasicAuthentication, TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+    serializer_class = ViewCacheSerializer
+
+    def get(self, request, field=None):
+        log_request(request, "view_cache")
+
+        cache_value = asyncio.run(self._read_cached_data_server(field))
+
+        return Response({"status": "ok", "cache_value": cache_value}, 200)
+
+    async def _read_cached_data_server(self, field):
+        # bypass the proxy to avoid CORS issues
+        WEBSOCKET_PORT = 8766
+        async with websockets.connect(
+            "ws://localhost:%d" % WEBSOCKET_PORT
+        ) as ws:
+            result = {}
+
+            if field:
+                base_message = {"type": "subscribe", "fields": {}}
+
+                base_message["fields"][field] = {"seconds": 60, "back_records": 30}
+                await ws.send(json.dumps(base_message))
+                result[field] = json.loads(await ws.recv())
+                await ws.send(json.dumps({"type": "ready"}))
+                result["ready"] = json.loads(await ws.recv())
+            else:
+                await ws.send(json.dumps({"type": "fields"}))
+                response = json.loads(await ws.recv())
+                response["data"] = sorted(response.get("data", []))
+                result["fields"] = response
+                await ws.send(json.dumps({"type": "describe"}))
+                result["describe"] = json.loads(await ws.recv())
+
+            return result
+
 
 urlpatterns = [
     path('schema/', SpectacularAPIView.as_view(), name='schema'),
@@ -597,11 +855,15 @@ urlpatterns = [
     # These are the DRF API stubbs
     # flake8: noqa E501
     path('', ApiRoot.as_view()),
+    path('get-auth-user', AuthUserAPIView.as_view(), name="get-auth-user"),
     path('cruise-configuration/', CruiseConfigurationAPIView.as_view(), name='cruise-configuration'),
     path('delete-configuration/', CruiseDeleteConfigurationAPIView.as_view(), name='delete-configuration'),
-    path('edit-logger-config/', EditLoggerConfigAPIView.as_view(), name='edit-logger-config'),
-    path('load-configuration-file/', LoadConfigurationFileAPIView.as_view(), name='load-configuration-file'),
+    path('upload-configuration/', CruiseUploadConfigurationAPIView.as_view(), name='upload-configuration'),
     path('reload-current-configuration/', CruiseReloadCurrentConfigurationAPIView.as_view(), name='reload-current-configuration'),
     path('select-cruise-mode/', CruiseSelectModeAPIView.as_view(), name='select-cruise-mode'),
-]
+    path('edit-logger-config/<str:logger_name>/', EditLoggerConfigAPIView.as_view(), name='edit-logger-config'),
+    path('load-configuration-file/', LoadConfigurationFileAPIView.as_view(), name='load-configuration-file'),
+    path('view-cache/<str:field>/', ViewCacheAPIView.as_view(), name='view-cache'),
+    path('view-cache/', ViewCacheAPIView.as_view(), name='view-cache'),
+] + custom_paths
     

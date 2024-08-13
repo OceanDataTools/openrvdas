@@ -21,7 +21,7 @@ from logger.writers.writer import Writer  # noqa: E402
 class MQTTWriter(Writer):
     """Write to paho-mqtt broker channel."""
 
-    def __init__(self, broker, channel, client_name):
+    def __init__(self, broker, channel, client_name, paho_version=1, qos=0):
         """
         Write text records to a paho-mqtt broker channel.
         ```
@@ -39,15 +39,24 @@ class MQTTWriter(Writer):
         self.broker = broker
         self.channel = channel
         self.client_name = client_name
+        self.paho_version = paho_version
+        self.qos = qos
 
         try:
-            self.paho = mqtt.Client(client_name)
+            if paho_version == 1:
+                self.paho = mqtt.Client(client_name)
+            else:
+                # CallbackAPIVersion required for paho-mqtt v2+
+                self.paho = mqtt.Client(mqtt.CallbackAPIVersion.VERSION1, client_name)
 
             self.paho.connect(broker)
             self.paho.subscribe(channel)
 
-            while paho.loop() == 0:
-                pass
+            if paho_version == 1:
+                while paho.loop() == 0:
+                    pass
+            else:
+                self.paho.loop_start()
 
         except mqtt.WebsocketConnectionError as e:
             logging.error('Unable to connect to broker at %s:%s',
@@ -76,7 +85,7 @@ class MQTTWriter(Writer):
         #    record = str(record)
 
         try:
-            self.paho.publish(self.channel, record)
+            self.paho.publish(self.channel, record, self.qos)
         except mqtt.WebsocketConnectionError as e:
             logging.error('Unable to connect to broker at %s:%d',
                           self.broker, self.channel)

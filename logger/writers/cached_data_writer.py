@@ -142,9 +142,9 @@ class CachedDataWriter(Writer):
                                     'data server; trying to reconnect.')
                     await asyncio.sleep(0.2)
 
-                except websockets.exceptions.InvalidStatusCode:
+                except websockets.exceptions.InvalidStatusCode as e:
                     logging.warning('CachedDataWriter InvalidStatusCode connecting to '
-                                    'data server; trying to reconnect.')
+                                    'data server; trying to reconnect: %s', e.status_code)
                     await asyncio.sleep(0.2)
 
                 # If the websocket connection failed

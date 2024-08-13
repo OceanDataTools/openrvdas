@@ -53,6 +53,10 @@ venv/
 *.crt
 *.key
 
+#local
+local/cruise_configs
+local/logger_configs
+
 # CORIOLIX
 local/rcrv/settings.py
 local/rcrv/config_template.yaml
@@ -67,6 +71,8 @@ local/stonybrook
 local/unols
 
 local/usap/palmer
+
+local/niwa
 
 # local for Scripps Institution of Oceanography
 #
@@ -87,7 +93,7 @@ local/starc/
 .install_openrvdas_preferences
 .install_mysql_preferences
 .install_waterwall_preferences
-
+.install_*_preferences
 # Symlink for legacy widget paths
 widgets
 
@@ -106,3 +112,11 @@ server/openrvdas.sql
 
 # tmp
 tmp
+
+# continuous-integration & linters
+gitlab-ci.yml
+pyproject.toml
+*.egg-info
+.tox*
+*coverage*
+pytest_report.xml

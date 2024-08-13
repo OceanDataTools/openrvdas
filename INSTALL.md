@@ -5,7 +5,7 @@ will be added here as they are verified and documented.
 
 You will need to be able to run the ``sudo`` command. To begin installation, grab the script from Github and run from
 the command line using the following commands:
-```
+```sh
 OPENRVDAS_REPO=raw.githubusercontent.com/oceandatatools/openrvdas
 BRANCH=master
 curl -O -L https://$OPENRVDAS_REPO/$BRANCH/utils/install_openrvdas.sh
@@ -14,12 +14,14 @@ sudo ./install_openrvdas.sh
 ```
 selecting ``master``, ``dev`` or other branch of the repo if your project has one.
 
+MacOS: Do not run the install command with ``sudo`` as the homebrew commands cannot be ran with sudo.
+
 The script must be run as a user that has sudo permissions (the script will prompt several times
 for the sudo password when needed). It will ask a lot of questions and provide default answers in parens that will be filled in if you hit "return"; without any other input:
 
 ############################################################################
 
-```
+```sh
 OpenRVDAS configuration script
 Name to assign to host (lmg-dast-s1-t)?
 Hostname will be 'lmg-dast-s1-t'
@@ -32,7 +34,7 @@ repo and branch unless you have a project-specific branch in mind (e.g. "usap").
 If you need to access the internet via a proxy (as shown below), enter it when
 asked; otherwise just hit return._
 
-```
+```sh
 Repository to install from? (http://github.com/oceandatatools/openrvdas)
 Repository branch to install? (master)
 HTTP/HTTPS proxy to use (http://proxy.lmg.usap.gov:3128)?
@@ -152,12 +154,12 @@ Whew.
 
 The installation should allow you to connect via http to the server at the name you specified at the start of the script (e.g. ``lmg-dast-s1-t``). If you want to connect using any other names, e.g. the fully-qualified domain name ``lmg-dast-s1-t.lmg.usap.gov``, you'll need to add it to the Django server settings file in ``django_gui/settings.py``:
 
-```
+```py
 ALLOWED_HOSTS = [HOSTNAME, 'localhost', HOSTNAME + '.lmg.usap.gov']
 ```
 If you make this change, you will want to restart the Django-based services:
 
-```
+```sh
 supervisorctl restart django:*
 ```
 
@@ -173,7 +175,7 @@ The easiest way to manage these servers is via the supervisord package that is i
 
 You can do this two ways, either via the local webserver at [http://openrvdas:9001](http://openrvdas:9001) (assuming your machine is named 'openrvdas') or via the command line ``supervisorctl`` tool:
 
-```
+```sh
 (venv) rvdas@openrvdas:/opt/openrvdas$ supervisorctl
 cached_data_server               RUNNING   pid 2045550, uptime 0:00:49
 django:nginx                     RUNNING   pid 2045639, uptime 0:00:35
@@ -208,7 +210,7 @@ supervisor> exit
 
 If you are planning to run the test cruise definition in ``test/NBP1406/NBP1406_cruise.yaml`` then you should also start the process that creates the simulated serial ports that it's configured for:
 
-```
+```sh
     supervisor> start simulate:simulate_nbp
 ```
 
@@ -225,7 +227,7 @@ The OpenRVDAS virtual environment may be activated for a shell by running
 from the OpenRVDAS home directory. The primary effect of this activation is to modify the default path searched for binaries
 so that invoking ``python`` uses the version at ``venv/bin/python`` rather than the default system path. Once activated,
 OpenRVDAS scripts may be run by invoking their location, e.g.:
-```
+```sh
 logger/listener/listen.py --udp 6204 --write_file /var/log/udp_6204.txt
 ```
 To deactivate the virtual environment, run the ``deactivate`` command.
@@ -233,7 +235,7 @@ To deactivate the virtual environment, run the ``deactivate`` command.
 OpenRVDAS scripts may be run outside the virtual environment by specifying the path to the executable to be use on the
 command line. E.g.
 
-```
+```sh
 venv/bin/python logger/listener/listen.py --udp 6204 --write_file /var/log/udp_6204.txt
 ```
 This latter method is how the servers are configured to run inside the supervisor's config file at
