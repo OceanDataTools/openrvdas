@@ -4,11 +4,19 @@ import logging
 import sys
 
 # Don't barf if they don't have paho mqtt installed. Only complain if
-# they actually try to use it, below
+# they actually try to use it, below. If it *is* installed, check which
+# version, so we know how to call it.
 try:
     import paho.mqtt.client as mqtt  # import the client | $ pip installing paho-mqtt is necessary
-    import paho.mqtt.publish
     PAHO_ENABLED = True
+
+    # Check which paho version is being used
+    from pkg_resources import get_distribution, packaging  # noqa: E402
+    PAHO_VERSION = get_distribution("paho-mqtt").version
+    if packaging.version.parse(PAHO_VERSION) >= packaging.version.parse('2.0.0'):
+        USE_VERSION_FLAG = True
+    else:
+        USE_VERSION_FLAG = False
 except ModuleNotFoundError:
     PAHO_ENABLED = False
 
@@ -41,18 +49,26 @@ class MQTTWriter(Writer):
         self.client_name = client_name
 
         try:
-            self.paho = mqtt.Client(client_name)
+            if USE_VERSION_FLAG:
+                self.client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+            else:
+                self.client = mqtt.Client()
 
-            self.paho.connect(broker)
-            self.paho.subscribe(channel)
+            self.client.connect(broker)
+            self.client.subscribe(channel)
 
-            while paho.loop() == 0:
-                pass
+            self.client.loop_start()
 
         except mqtt.WebsocketConnectionError as e:
             logging.error('Unable to connect to broker at %s:%s',
                           self.broker, self.channel)
             raise e
+
+    ############################
+    def __del__(self):
+        """Clean up the connection once finished"""
+        self.client.loop_stop()
+        self.client.diconnect()
 
     ############################
     def write(self, record):
@@ -76,7 +92,7 @@ class MQTTWriter(Writer):
         #    record = str(record)
 
         try:
-            self.paho.publish(self.channel, record)
+            self.client.publish(self.channel, record)
         except mqtt.WebsocketConnectionError as e:
             logging.error('Unable to connect to broker at %s:%d',
                           self.broker, self.channel)
