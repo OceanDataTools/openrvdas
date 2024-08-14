@@ -22,24 +22,22 @@ except ModuleNotFoundError:
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
-from logger.utils.formats import Text  # noqa: E402
 from logger.writers.writer import Writer  # noqa: E402
 
 
 class MQTTWriter(Writer):
     """Write to paho-mqtt broker channel."""
 
-    def __init__(self, broker, channel, client_name):
+    def __init__(self, broker, channel, client_name=None):
         """
         Write text records to a paho-mqtt broker channel.
         ```
         broker       MQTT broker to connect, broker format[###.###.#.###]
         channel      MQTT channel to read from, channel format[@broker/path_of_subscripton]
+        client_name  Deprecated
         ```
         See /readers/mqtt_reader.py for info on how to start a broker
         """
-        super().__init__(input_format=Text)
-
         if not PAHO_ENABLED:
             raise ModuleNotFoundError('MQTTReader(): paho-mqtt is not installed. Please '
                                       'try "pip install paho-mqtt" prior to use.')
