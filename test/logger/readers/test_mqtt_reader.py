@@ -27,8 +27,8 @@ SAMPLE_DATA = [
     's330 2017-11-04T06:54:19.408518Z $INZDA,002039.17,07,08,2014,,*70',
 ]
 
-broker_address = '1883'
-channel = 'pathOfDevices'
+broker_address = 'localhost'
+channel = 'test'
 client_name = 'Instance1'
 
 
@@ -44,12 +44,12 @@ class TestMQTTReader(unittest.TestCase):
             # try to connect
             writer = MQTTWriter(broker_address, channel, client_name)
             reader = MQTTReader(broker_address, channel, client_name)
-
             for i in range(len(SAMPLE_DATA)):
+                logging.debug(f'MQTTWriter writing: {SAMPLE_DATA[i]}')
                 writer.write(SAMPLE_DATA[i])
                 self.assertEqual(SAMPLE_DATA[i], reader.read())
-        except:  # noqa: E722
-            self.skipTest("No MQTT broker found - skipped test_mqtt_reader")
+        except ConnectionRefusedError:  # noqa: E722
+            self.skipTest(f'No local MQTT broker found - skipped test_mqtt_reader')
 
 
 ################################################################################
