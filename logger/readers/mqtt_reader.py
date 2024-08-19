@@ -34,7 +34,7 @@ class MQTTReader(Reader):
     def __init__(self, broker, channel, client_name,
                  port=1883,
                  clean_start=mqtt.MQTT_CLEAN_START_FIRST_ONLY,
-                 qos=0, return_bytes=True):
+                 qos=0, return_as_bytes=False):
         """
         Read text records from the channel subscription.
         ```
@@ -47,7 +47,8 @@ class MQTTReader(Reader):
                         mqtt.MQTT_CLEAN_START_TRUE - request new session each time client connects
                         mqtt.MQTT_CLEAN_START_FALSE - never request clean connection
         qos          Quality of service: 0 = at most once, 1 = at least once, 2 = exactly once
-        return_bytes If true, return message in bytes, otherwise convert to str
+        return_as_bytes
+                     If true, return message in bytes, otherwise convert to str
         ```
         Instructions on how to start an MQTT broker:
 
@@ -102,7 +103,7 @@ class MQTTReader(Reader):
         self.port = port
         self.clean_start = clean_start
         self.qos = qos
-        self.return_bytes = return_bytes
+        self.return_as_bytes = return_as_bytes
         self.queue = Queue()
 
         try:
@@ -135,7 +136,7 @@ class MQTTReader(Reader):
                     if message is None:
                         continue
                     logging.debug('Got message "%s"', message.payload)
-                    if self.return_bytes:
+                    if self.return_as_bytes:
                         return message.payload
                     else:
                         return str(message.payload, 'utf-8')
