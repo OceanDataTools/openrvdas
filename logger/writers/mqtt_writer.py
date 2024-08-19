@@ -28,23 +28,28 @@ from logger.writers.writer import Writer  # noqa: E402
 class MQTTWriter(Writer):
     """Write to paho-mqtt broker channel."""
 
-    def __init__(self, broker, channel, client_name=None):
+    def __init__(self, broker, channel, client_name=None, qos=0):
         """
         Write text records to a paho-mqtt broker channel.
         ```
         broker       MQTT broker to connect, broker format[###.###.#.###]
         channel      MQTT channel to read from, channel format[@broker/path_of_subscripton]
         client_name  Deprecated
+        qos          Quality of service: 0 = at most once, 1 = at least once, 2 = exactly once
+
         ```
         See /readers/mqtt_reader.py for info on how to start a broker
         """
         if not PAHO_ENABLED:
             raise ModuleNotFoundError('MQTTReader(): paho-mqtt is not installed. Please '
                                       'try "pip install paho-mqtt" prior to use.')
-
+        if not qos in [0, 1, 2]:
+            raise ValueError('MQTTWriter parameter qos must be integer value 0, 1 or 2. '
+                             f'Found type "{type(qos).__name__}", value "{qos}".')
         self.broker = broker
         self.channel = channel
         self.client_name = client_name
+        self.qos = qos
 
         try:
             if USE_VERSION_FLAG:
@@ -90,7 +95,7 @@ class MQTTWriter(Writer):
         #    record = str(record)
 
         try:
-            self.client.publish(self.channel, record)
+            self.client.publish(self.channel, record, self.qos)
         except mqtt.WebsocketConnectionError as e:
             logging.error('Unable to connect to broker at %s:%d',
                           self.broker, self.channel)
