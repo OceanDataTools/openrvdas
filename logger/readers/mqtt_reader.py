@@ -4,18 +4,25 @@ import logging
 import sys
 from queue import Queue
 
-from os.path import dirname, realpath
-sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
-from logger.readers.reader import Reader  # noqa: E402
-from logger.utils.formats import Text  # noqa: E402
-
 # Don't barf if they don't have redis installed. Only complain if
 # they actually try to use it, below
 try:
     import paho.mqtt.client as mqtt  # import the client | $ pip installing paho-mqtt is necessary
     PAHO_ENABLED = True
+
+    # Check which paho version is being used
+    from pkg_resources import get_distribution, packaging  # noqa: E402
+    PAHO_VERSION = get_distribution('paho-mqtt').version
+    if packaging.version.parse(PAHO_VERSION) >= packaging.version.parse('2.0.0'):
+        USE_VERSION_FLAG = True
+    else:
+        USE_VERSION_FLAG = False
 except ModuleNotFoundError:
     PAHO_ENABLED = False
+
+from os.path import dirname, realpath
+sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
+from logger.readers.reader import Reader  # noqa: E402
 
 
 ################################################################################
@@ -24,13 +31,23 @@ class MQTTReader(Reader):
     Read messages from an mqtt broker
     """
 
-    def __init__(self, broker, channel, client_name):
+    def __init__(self, broker, channel, client_name,
+                 port=1883,
+                 clean_start=mqtt.MQTT_CLEAN_START_FIRST_ONLY,
+                 qos=0, return_bytes=True):
         """
         Read text records from the channel subscription.
         ```
 
         broker       MQTT broker to connect, broker format[###.###.#.#]
-        channel     MQTT channel to read from, channel format[@broker/path_of_subscripton]
+        channel      MQTT channel to read from, channel format[@broker/path_of_subscripton]
+        port         broker port, typically 1883
+        clean_start  Options:
+                        mqtt.MQTT_CLEAN_START_FIRST_ONLY - request new session on first connection
+                        mqtt.MQTT_CLEAN_START_TRUE - request new session each time client connects
+                        mqtt.MQTT_CLEAN_START_FALSE - never request clean connection
+        qos          Quality of service: 0 = at most once, 1 = at least once, 2 = exactly once
+        return_bytes If true, return message in bytes, otherwise convert to str
         ```
         Instructions on how to start an MQTT broker:
 
@@ -66,15 +83,15 @@ class MQTTReader(Reader):
 
         ```
         """
-
-        super().__init__(output_format=Text)
-
         if not PAHO_ENABLED:
             raise ModuleNotFoundError('MQTTReader(): paho-mqtt is not installed. Please '
                                       'try "pip install paho-mqtt" prior to use.')
+        if not qos in [0, 1, 2]:
+            raise ValueError('MQTTReader parameter qos must be integer value 0, 1 or 2. '
+                             f'Found type "{type(qos).__name__}", value "{qos}".')
 
-        def on_connect(client, userdata, flags, rc):
-            logging.warn("Connected With Result Code: {}".format(rc))
+        def on_connect(client, userdata, flags, rc, properties=None):
+            logging.info(f'Connected With Result Code: {rc}')
 
         def on_message(client, userdata, message):
             self.queue.put(message)
@@ -82,32 +99,46 @@ class MQTTReader(Reader):
         self.broker = broker
         self.channel = channel
         self.client_name = client_name
+        self.port = port
+        self.clean_start = clean_start
+        self.qos = qos
+        self.return_bytes = return_bytes
         self.queue = Queue()
 
         try:
-            self.paho = mqtt.Client(client_name)
-            self.paho.on_connect = on_connect
-            self.paho.on_message = on_message
+            if USE_VERSION_FLAG:
+                self.client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_name)
+            else:
+                self.client = mqtt.Client(client_name)
 
-            self.paho.connect(broker, 1883)
-            self.paho.subscribe(channel)
+            self.client.on_connect = on_connect
+            self.client.on_message = on_message
 
-        except mqtt.WebsocketConnectionError as e:
-            logging.error('Unable to connect to broker at %s:%s',
-                          self.broker, self.channel)
+            if USE_VERSION_FLAG:
+                self.client.connect(broker, port)
+                self.client.subscribe(channel, qos=self.qos)
+            else:
+                self.client.connect(broker, port, clean_start=clean_start)
+                self.client.subscribe(channel, options=SubscribeOptions(qos=qos))
+
+        except (mqtt.WebsocketConnectionError, ConnectionRefusedError) as e:
+            logging.error(f'Unable to connect to broker at {broker}:{port} {channel}')
             raise e
 
     ############################
     def read(self):
         while True:
             try:
-                self.paho.loop()
+                self.client.loop()
                 while not self.queue.empty():
                     message = self.queue.get()
                     if message is None:
                         continue
                     logging.debug('Got message "%s"', message.payload)
-                    return message.payload
+                    if self.return_bytes:
+                        return message.payload
+                    else:
+                        return str(message.payload, 'utf-8')
             except KeyboardInterrupt:
-                self.paho.disconnect()
+                self.client.disconnect()
                 exit(0)
