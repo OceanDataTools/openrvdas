@@ -66,7 +66,7 @@ class MQTTWriter(Writer):
     def __del__(self):
         """Clean up the connection once finished"""
         self.client.loop_stop()
-        self.client.diconnect()
+        self.client.disconnect()
 
     ############################
     def write(self, record):
