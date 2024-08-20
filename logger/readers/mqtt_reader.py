@@ -42,10 +42,8 @@ class MQTTReader(Reader):
         broker       MQTT broker to connect, broker format[###.###.#.#]
         channel      MQTT channel to read from, channel format[@broker/path_of_subscripton]
         port         broker port, typically 1883
-        clean_start  Options:
-                        mqtt.MQTT_CLEAN_START_FIRST_ONLY - request new session on first connection
-                        mqtt.MQTT_CLEAN_START_TRUE - request new session each time client connects
-                        mqtt.MQTT_CLEAN_START_FALSE - never request clean connection
+        clean_start  Request new session on first connection. Options: True, False,
+                       or mqtt.MQTT_CLEAN_START_FIRST_ONLY
         qos          Quality of service: 0 = at most once, 1 = at least once, 2 = exactly once
         return_as_bytes
                      If true, return message in bytes, otherwise convert to str
