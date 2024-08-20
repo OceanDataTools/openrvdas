@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 
 import logging
+import signal
 import sys
+import threading
 import unittest
 
 sys.path.append('.')
@@ -31,23 +33,51 @@ broker_address = 'localhost'
 channel = 'test'
 client_name = 'Instance1'
 
+##############################
+class ReaderTimeout(StopIteration):
+    """A custom exception we can raise when we hit timeout."""
+    pass
+
 
 ##############################################################################
 class TestMQTTReader(unittest.TestCase):
 
     @unittest.skipUnless(PAHO_ENABLED, 'Paho MQTT not installed; tests of MQTT '
                          'functionality will not be run.')
-    def test_read(self):
 
+    ############################
+    def _handler(self, signum, frame):
+        """If timeout fires, raise our custom exception"""
+        logging.info('MQTTReader operation timed out')
+        raise ReaderTimeout
+
+    def reader_thread(self):
+        reader = MQTTReader(broker_address, channel, client_name)
+        for i in range(len(SAMPLE_DATA)):
+            logging.debug(f'MQTTReader waiting for: {SAMPLE_DATA[i]}')
+            self.assertEqual(SAMPLE_DATA[i], reader.read())
+
+    def test_read(self):
         try:
+            r_thread = threading.Thread(target=self.reader_thread, name='reader_thread')
+
+            # Set timeout we can catch if things are taking too long
+            signal.signal(signal.SIGALRM, self._handler)
+            signal.alarm(5)
+
+            r_thread.start()
+
             # Creating a new instance from the mqtt broker address above
             # try to connect
             writer = MQTTWriter(broker_address, channel, client_name)
-            reader = MQTTReader(broker_address, channel, client_name)
             for i in range(len(SAMPLE_DATA)):
                 logging.debug(f'MQTTWriter writing: {SAMPLE_DATA[i]}')
                 writer.write(SAMPLE_DATA[i])
-                self.assertEqual(SAMPLE_DATA[i], reader.read())
+
+            # Make sure everyone has terminated and silence the alarm
+            r_thread.join()
+            signal.alarm(0)
+
         except ConnectionRefusedError:  # noqa: E722
             self.skipTest(f'No local MQTT broker found - skipped test_mqtt_reader')
 
