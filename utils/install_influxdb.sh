@@ -68,6 +68,8 @@ DEFAULT_INSTALL_ROOT=/opt
 #DEFAULT_HTTP_PROXY=proxy.lmg.usap.gov:3128 #$HTTP_PROXY
 DEFAULT_HTTP_PROXY=$http_proxy
 
+DEFAULT_STANDALONE_INSTALLATION=no
+
 DEFAULT_INFLUXDB_USER=rvdas
 DEFAULT_INFLUXDB_PASSWORD=rvdasrvdas
 
@@ -162,6 +164,8 @@ function save_default_variables {
 DEFAULT_INSTALL_ROOT=$INSTALL_ROOT  # path where openrvdas is found
 #DEFAULT_HTTP_PROXY=proxy.lmg.usap.gov:3128 #$HTTP_PROXY
 DEFAULT_HTTP_PROXY=$HTTP_PROXY
+
+DEFAULT_STANDALONE_INSTALLATION=$STANDALONE_INSTALLATION
 
 DEFAULT_INFLUXDB_USER=$INFLUXDB_USER
 DEFAULT_INFLUXDB_PASSWORD=$INFLUXDB_PASSWORD
@@ -744,6 +748,15 @@ umask 022
 
 echo "#####################################################################"
 echo InfluxDB/Grafana/Telegraf configuration script
+echo
+echo "Will this be a standalone installation? (yes = OpenRVDAS is not installed"
+echo "on this machine, no = OpenRVDAS is/will be run on this machine)"
+yes_no "Standalone installation? " $DEFAULT_STANDALONE_INSTALLATION
+STANDALONE_INSTALLATION=$YES_NO_RESULT
+
+read -p "Will this be a standalone installation?
+Path to openrvdas directory? ($DEFAULT_INSTALL_ROOT) " INSTALL_ROOT
+INSTALL_ROOT=${INSTALL_ROOT:-$DEFAULT_INSTALL_ROOT}
 
 echo "#####################################################################"
 read -p "Path to openrvdas directory? ($DEFAULT_INSTALL_ROOT) " INSTALL_ROOT
