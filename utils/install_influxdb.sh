@@ -754,15 +754,11 @@ echo "on this machine, no = OpenRVDAS is/will be run on this machine)"
 yes_no "Standalone installation? " $DEFAULT_STANDALONE_INSTALLATION
 STANDALONE_INSTALLATION=$YES_NO_RESULT
 
-read -p "Will this be a standalone installation?
-Path to openrvdas directory? ($DEFAULT_INSTALL_ROOT) " INSTALL_ROOT
-INSTALL_ROOT=${INSTALL_ROOT:-$DEFAULT_INSTALL_ROOT}
-
 echo "#####################################################################"
 read -p "Path to openrvdas directory? ($DEFAULT_INSTALL_ROOT) " INSTALL_ROOT
 INSTALL_ROOT=${INSTALL_ROOT:-$DEFAULT_INSTALL_ROOT}
-echo "Activating virtual environment in '${INSTALL_ROOT}/openrvdas'"
-source $INSTALL_ROOT/openrvdas/venv/bin/activate
+#echo "Activating virtual environment in '${INSTALL_ROOT}/openrvdas'"
+#source $INSTALL_ROOT/openrvdas/venv/bin/activate
 echo
 echo "#####################################################################"
 echo "InfluxDB and Grafana can use SSL via secure websockets for off-server"
