@@ -1035,10 +1035,9 @@ if [ "$(whoami)" == "root" ]; then
       echo "Alas, on MacOS, we can't create a user via this script. Please create"
       echo "or switch to another user, then re-run this script under that UID."
       exit_gracefully
-    # If we're on Linux
-    elif [ $OS_TYPE == 'CentOS' ] || [ $OS_TYPE == 'Ubuntu' ]; then
-      read -p "OpenRVDAS user to create? ($DEFAULT_RVDAS_USER) " RVDAS_USER
     fi
+    # If we're on Linux
+    read -p "OpenRVDAS user to create? ($DEFAULT_RVDAS_USER) " RVDAS_USER
     RVDAS_USER=${RVDAS_USER:-$DEFAULT_RVDAS_USER}
     create_user $RVDAS_USER
 
@@ -1050,6 +1049,7 @@ if [ "$(whoami)" == "root" ]; then
   fi
 else
     read -p "User to set system up as? ($DEFAULT_RVDAS_USER) " RVDAS_USER
+    RVDAS_USER=${RVDAS_USER:-$DEFAULT_RVDAS_USER}
 fi
 if [ $OS_TYPE == 'MacOS' ]; then
     RVDAS_GROUP=wheel
@@ -1063,7 +1063,7 @@ fi
 umask 022
 
 echo "Will this be a standalone installation? (yes = OpenRVDAS is not installed"
-echo "on this machine, no = OpenRVDAS is/will be run on this machine)"
+echo "on this machine, no = OpenRVDAS is/will also be run on this machine)"
 yes_no "Standalone installation? " $DEFAULT_STANDALONE_INSTALLATION
 STANDALONE_INSTALLATION=$YES_NO_RESULT
 echo
@@ -1188,14 +1188,11 @@ while true; do
       break
     fi
 done
-
-echo
 read -p "'Organization' to use for InfluxDB OpenRVDAS data? ($DEFAULT_INFLUXDB_ORGANIZATION) " INFLUXDB_ORGANIZATION
 INFLUXDB_ORGANIZATION=${INFLUXDB_ORGANIZATION:-$DEFAULT_INFLUXDB_ORGANIZATION}
-echo
 read -p "Bucket to use for InfluxDB OpenRVDAS data? ($DEFAULT_INFLUXDB_BUCKET) " INFLUXDB_BUCKET
 INFLUXDB_BUCKET=${INFLUXDB_BUCKET:-$DEFAULT_INFLUXDB_BUCKET}
-
+echo
 read -p "HTTP/HTTPS proxy to use ($DEFAULT_HTTP_PROXY)? " HTTP_PROXY
 HTTP_PROXY=${HTTP_PROXY:-$DEFAULT_HTTP_PROXY}
 
