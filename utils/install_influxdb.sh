@@ -407,6 +407,54 @@ function install_openrvdas {
 }
 
 ###########################################################################
+# Set up Python packages
+function setup_python_packages {
+    # Expect the following shell variables to be appropriately set:
+    # INSTALL_ROOT - path where openrvdas/ is
+
+    # Set up virtual environment
+    VENV_PATH=$INSTALL_ROOT/openrvdas/venv
+
+    ## Bit of a challenge here - if our new install has a newer version of
+    ## Python or something, reusing the existing venv can cause subtle
+    ## havoc. But deleting and rebuilding it each time is a mess. Commenting
+    ## out the delete for now...
+    ##
+    # We'll rebuild the virtual environment each time to avoid version skew
+    #if [ -d $VENV_PATH ];then
+    #    mv $VENV_PATH ${VENV_PATH}.bak.$$
+    #fi
+
+    #if [ -e '${HOMEBREW_BASE}/bin/python3' ];then
+    #    eval "$(${HOMEBREW_BASE}/bin/brew shellenv)"
+    #    PYTHON_PATH=${HOMEBREW_BASE}/bin/python3
+    #elif [ -e '/usr/local/bin/python3' ];then
+    #    PYTHON_PATH=/usr/local/bin/python3
+    #elif [ -e '/usr/bin/python3' ];then
+    #    PYTHON_PATH=/usr/bin/python3
+    #else
+    #    echo 'No python3 found?!?'
+    #    exit_gracefully
+    #fi
+
+    echo "Creating virtual environment"
+    cd $INSTALL_ROOT/openrvdas
+    python3 -m venv $VENV_PATH
+    source $VENV_PATH/bin/activate  # activate virtual environment
+
+    echo "Installing Python packages - please enter sudo password if prompted."
+    # For some reason, locked down RHEL8 boxes require sudo here, and require
+    # us to execute pip via python. Lord love a duck...
+    venv/bin/python venv/bin/pip3 install \
+      --trusted-host pypi.org --trusted-host files.pythonhosted.org \
+      --upgrade pip
+    venv/bin/python venv/bin/pip3 install \
+      --trusted-host pypi.org --trusted-host files.pythonhosted.org \
+      wheel
+    venv/bin/python venv/bin/pip3 install -r utils/requirements.txt
+}
+
+###########################################################################
 ###########################################################################
 # Set up certificate files, if requested
 function setup_ssl_certificate {
@@ -1010,6 +1058,7 @@ if [ $STANDALONE_INSTALLATION == 'yes' ]; then
     echo "Setting up packages needed for standalone installation."
     install_packages
     install_openrvdas
+    setup_python_packages
 fi
 
 echo "Activating virtual environment in '${INSTALL_ROOT}/openrvdas'"
