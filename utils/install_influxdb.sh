@@ -982,6 +982,8 @@ if [ "$(whoami)" == "root" ]; then
   else
     exit_gracefully
   fi
+else
+    read -p "User to set system up as? ($DEFAULT_RVDAS_USER) " RVDAS_USER
 fi
 
 # Set creation mask so that everything we install is, by default,
