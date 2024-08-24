@@ -873,7 +873,6 @@ function set_up_supervisor {
         HTTP_HOST=127.0.0.1
         SUPERVISOR_SOCK=/usr/local/var/run/supervisor.sock
         COMMENT_SOCK_OWNER=';'
-        RVDAS_GROUP=wheel
 
     # If CentOS/Ubuntu/etc, different distributions hide them
     # different places. Sigh.
@@ -882,15 +881,11 @@ function set_up_supervisor {
         HTTP_HOST='*'
         SUPERVISOR_SOCK=/var/run/supervisor/supervisor.sock
         COMMENT_SOCK_OWNER=''
-        RVDAS_GROUP=nobody
-
     elif [ $OS_TYPE == 'Ubuntu' ]; then
         SUPERVISOR_FILE=/etc/supervisor/conf.d/influx.conf
         HTTP_HOST='*'
         SUPERVISOR_SOCK=/var/run/supervisor.sock
         COMMENT_SOCK_OWNER=''
-        RVDAS_GROUP=nobody
-
     else
         echo "ERROR: Unknown OS/architecture \"$OS_TYPE\"."
         exit_gracefully
@@ -906,6 +901,7 @@ ${COMMENT_SOCK_OWNER}chown=nobody:${RVDAS_GROUP}
 
 [inet_http_server]
 port=9001
+
 EOF
 
     ##########
@@ -1050,6 +1046,12 @@ if [ "$(whoami)" == "root" ]; then
   fi
 else
     read -p "User to set system up as? ($DEFAULT_RVDAS_USER) " RVDAS_USER
+fi
+if [ $OS_TYPE == 'MacOS' ]; then
+    RVDAS_GROUP=wheel
+# If we're on Linux
+else
+    RVDAS_GROUP=$RVDAS_USER
 fi
 
 # Set creation mask so that everything we install is, by default,
