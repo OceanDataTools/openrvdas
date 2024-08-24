@@ -992,20 +992,19 @@ echo "Will this be a standalone installation? (yes = OpenRVDAS is not installed"
 echo "on this machine, no = OpenRVDAS is/will be run on this machine)"
 yes_no "Standalone installation? " $DEFAULT_STANDALONE_INSTALLATION
 STANDALONE_INSTALLATION=$YES_NO_RESULT
-
-echo "#####################################################################"
-read -p "Path to openrvdas directory? ($DEFAULT_INSTALL_ROOT) " INSTALL_ROOT
+echo
+read -p "OpenRVDAS install root? ($DEFAULT_INSTALL_ROOT) " INSTALL_ROOT
 INSTALL_ROOT=${INSTALL_ROOT:-$DEFAULT_INSTALL_ROOT}
 echo
 read -p "Repository to install from? ($DEFAULT_OPENRVDAS_REPO) " OPENRVDAS_REPO
 OPENRVDAS_REPO=${OPENRVDAS_REPO:-$DEFAULT_OPENRVDAS_REPO}
-
 read -p "Repository branch to install? ($DEFAULT_OPENRVDAS_BRANCH) " OPENRVDAS_BRANCH
 OPENRVDAS_BRANCH=${OPENRVDAS_BRANCH:-$DEFAULT_OPENRVDAS_BRANCH}
 
 # If it's a standalone installation, we need to set some things up
 if [ $STANDALONE_INSTALLATION == 'yes' ]; then
     echo
+    echo "#####################################################################"
     echo "Setting up packages needed for standalone installation."
     install_packages
     install_openrvdas
