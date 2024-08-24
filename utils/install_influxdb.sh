@@ -865,6 +865,10 @@ function set_up_supervisor {
     echo "#####################################################################"
     echo Setting up supervisord file...
 
+    # Create directory where supervisor file is going to direct stderr
+    sudo mkdir -p /var/log/openrvdas /var/tmp/openrvdas
+    sudo chown $RVDAS_USER /var/log/openrvdas /var/tmp/openrvdas
+    sudo chgrp $RVDAS_GROUP /var/log/openrvdas /var/tmp/openrvdas
 
     TMP_SUPERVISOR_FILE=/tmp/influx.ini
 
