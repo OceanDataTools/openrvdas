@@ -65,6 +65,9 @@ PREFERENCES_FILE='.install_influxdb_preferences'
 # Defaults that will be overwritten by the preferences file, if it
 # exists.
 DEFAULT_RVDAS_USER=rvdas
+DEFAULT_RVDAS_USER=$RVDAS_USER
+DEFAULT_OPENRVDAS_REPO=https://github.com/oceandatatools/openrvdas
+
 DEFAULT_INSTALL_ROOT=/opt
 #DEFAULT_HTTP_PROXY=proxy.lmg.usap.gov:3128 #$HTTP_PROXY
 DEFAULT_HTTP_PROXY=$http_proxy
@@ -163,6 +166,9 @@ function save_default_variables {
 # Defaults written by/to be read by utils/install_influxdb.sh
 
 DEFAULT_RVDAS_USER=$RVDAS_USER
+DEFAULT_OPENRVDAS_REPO=OPENRVDAS_REPO
+DEFAULT_OPENRVDAS_BRANCH=OPENRVDAS_BRANCH
+
 DEFAULT_INSTALL_ROOT=$INSTALL_ROOT  # path where openrvdas is found
 #DEFAULT_HTTP_PROXY=proxy.lmg.usap.gov:3128 #$HTTP_PROXY
 DEFAULT_HTTP_PROXY=$HTTP_PROXY
@@ -990,6 +996,12 @@ STANDALONE_INSTALLATION=$YES_NO_RESULT
 echo "#####################################################################"
 read -p "Path to openrvdas directory? ($DEFAULT_INSTALL_ROOT) " INSTALL_ROOT
 INSTALL_ROOT=${INSTALL_ROOT:-$DEFAULT_INSTALL_ROOT}
+echo
+read -p "Repository to install from? ($DEFAULT_OPENRVDAS_REPO) " OPENRVDAS_REPO
+OPENRVDAS_REPO=${OPENRVDAS_REPO:-$DEFAULT_OPENRVDAS_REPO}
+
+read -p "Repository branch to install? ($DEFAULT_OPENRVDAS_BRANCH) " OPENRVDAS_BRANCH
+OPENRVDAS_BRANCH=${OPENRVDAS_BRANCH:-$DEFAULT_OPENRVDAS_BRANCH}
 
 # If it's a standalone installation, we need to set some things up
 if [ $STANDALONE_INSTALLATION == 'yes' ]; then
