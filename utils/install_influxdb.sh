@@ -65,7 +65,6 @@ PREFERENCES_FILE="${HOME}/.install_influxdb_preferences"
 # Defaults that will be overwritten by the preferences file, if it
 # exists.
 DEFAULT_RVDAS_USER=rvdas
-DEFAULT_RVDAS_USER=$RVDAS_USER
 DEFAULT_OPENRVDAS_REPO=https://github.com/oceandatatools/openrvdas
 
 DEFAULT_INSTALL_ROOT=/opt
