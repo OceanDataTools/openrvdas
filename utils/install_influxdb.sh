@@ -60,7 +60,7 @@
 # 4. Repeat this with /usr/local/bin/influxd
 #
 
-PREFERENCES_FILE='.install_influxdb_preferences'
+PREFERENCES_FILE="{$HOME}/.install_influxdb_preferences"
 
 # Defaults that will be overwritten by the preferences file, if it
 # exists.
