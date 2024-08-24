@@ -957,6 +957,10 @@ get_os_type
 # Read from the preferences file in $PREFERENCES_FILE, if it exists
 set_default_variables
 
+echo "#####################################################################"
+echo InfluxDB/Grafana/Telegraf configuration script
+echo
+
 if [ "$(whoami)" == "root" ]; then
   echo "ERROR: installation script must NOT be run as root."
   yes_no "Would you like to create a non-root user and switch to that uid? " 'yes'
@@ -985,9 +989,6 @@ fi
 # world readable/executable.
 umask 022
 
-echo "#####################################################################"
-echo InfluxDB/Grafana/Telegraf configuration script
-echo
 echo "Will this be a standalone installation? (yes = OpenRVDAS is not installed"
 echo "on this machine, no = OpenRVDAS is/will be run on this machine)"
 yes_no "Standalone installation? " $DEFAULT_STANDALONE_INSTALLATION
