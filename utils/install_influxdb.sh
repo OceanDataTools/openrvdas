@@ -895,9 +895,18 @@ function set_up_supervisor {
         exit_gracefully
     fi
 
+    ##########
+    # Initial stub for supervisor conf file.
     cat > $TMP_SUPERVISOR_FILE <<EOF
 ; Control file for InfluxDB, Grafana and Telegraf. Generated using the
 ; openrvdas/utils/install_influxdb.sh script
+EOF
+
+    ##########
+    # If this is a standalone installation, we need to also
+    # add the bits for supervisord control and access.
+    if [ $STANDALONE_INSTALLATION == 'yes' ]; then
+        cat >> $TMP_SUPERVISOR_FILE <<EOF
 [unix_http_server]
 file=$SUPERVISOR_SOCK   ; (the path to the socket file)
 chmod=0770              ; socket file mode (default 0700)
