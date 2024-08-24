@@ -451,7 +451,6 @@ function setup_python_packages {
     venv/bin/python venv/bin/pip3 install \
       --trusted-host pypi.org --trusted-host files.pythonhosted.org \
       wheel
-    venv/bin/python venv/bin/pip3 install -r utils/requirements.txt
 }
 
 ###########################################################################
