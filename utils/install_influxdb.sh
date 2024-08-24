@@ -563,8 +563,6 @@ function install_influxdb {
 
     echo "#####################################################################"
     echo Installing InfluxDB...
-
-
     # If we're on MacOS
     if [ $OS_TYPE == 'MacOS' ]; then
         INFLUX_PATH=/usr/local/bin
@@ -872,13 +870,27 @@ function set_up_supervisor {
 
     if [ $OS_TYPE == 'MacOS' ]; then
         SUPERVISOR_FILE=/usr/local/etc/supervisor.d/influx.ini
+        HTTP_HOST=127.0.0.1
+        SUPERVISOR_SOCK=/usr/local/var/run/supervisor.sock
+        COMMENT_SOCK_OWNER=';'
+        RVDAS_GROUP=wheel
 
     # If CentOS/Ubuntu/etc, different distributions hide them
     # different places. Sigh.
     elif [ $OS_TYPE == 'CentOS' ]; then
         SUPERVISOR_FILE=/etc/supervisord.d/influx.ini
+        HTTP_HOST='*'
+        SUPERVISOR_SOCK=/var/run/supervisor/supervisor.sock
+        COMMENT_SOCK_OWNER=''
+        RVDAS_GROUP=nobody
+
     elif [ $OS_TYPE == 'Ubuntu' ]; then
         SUPERVISOR_FILE=/etc/supervisor/conf.d/influx.conf
+        HTTP_HOST='*'
+        SUPERVISOR_SOCK=/var/run/supervisor.sock
+        COMMENT_SOCK_OWNER=''
+        RVDAS_GROUP=nobody
+
     else
         echo "ERROR: Unknown OS/architecture \"$OS_TYPE\"."
         exit_gracefully
@@ -887,6 +899,13 @@ function set_up_supervisor {
     cat > $TMP_SUPERVISOR_FILE <<EOF
 ; Control file for InfluxDB, Grafana and Telegraf. Generated using the
 ; openrvdas/utils/install_influxdb.sh script
+[unix_http_server]
+file=$SUPERVISOR_SOCK   ; (the path to the socket file)
+chmod=0770              ; socket file mode (default 0700)
+${COMMENT_SOCK_OWNER}chown=nobody:${RVDAS_GROUP}
+
+[inet_http_server]
+port=9001
 EOF
 
     ##########
