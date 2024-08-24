@@ -60,7 +60,7 @@
 # 4. Repeat this with /usr/local/bin/influxd
 #
 
-PREFERENCES_FILE="{$HOME}/.install_influxdb_preferences"
+PREFERENCES_FILE="${HOME}/.install_influxdb_preferences"
 
 # Defaults that will be overwritten by the preferences file, if it
 # exists.
@@ -996,7 +996,6 @@ STANDALONE_INSTALLATION=$YES_NO_RESULT
 echo
 read -p "OpenRVDAS install root? ($DEFAULT_INSTALL_ROOT) " INSTALL_ROOT
 INSTALL_ROOT=${INSTALL_ROOT:-$DEFAULT_INSTALL_ROOT}
-echo
 read -p "Repository to install from? ($DEFAULT_OPENRVDAS_REPO) " OPENRVDAS_REPO
 OPENRVDAS_REPO=${OPENRVDAS_REPO:-$DEFAULT_OPENRVDAS_REPO}
 read -p "Repository branch to install? ($DEFAULT_OPENRVDAS_BRANCH) " OPENRVDAS_BRANCH
