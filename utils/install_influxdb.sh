@@ -973,11 +973,10 @@ if [ "$(whoami)" == "root" ]; then
     fi
     RVDAS_USER=${RVDAS_USER:-$DEFAULT_RVDAS_USER}
     create_user $RVDAS_USER
-    echo "Switching UID to $RVDAS_USER"
-    sudo -u "$RVDAS_USER" -E bash -c "echo \"Effective UID: $(id -u)\""
-    echo "##############################"
-    echo "NEW USER: " `whoami`
-    echo "##############################"
+
+    echo "Restarting script as $RVDAS_USER"
+    sudo -u "$RVDAS_USER" "$0" "$@"
+    exit $?
   else
     exit_gracefully
   fi
