@@ -64,6 +64,7 @@ PREFERENCES_FILE='.install_influxdb_preferences'
 
 # Defaults that will be overwritten by the preferences file, if it
 # exists.
+DEFAULT_RVDAS_USER=rvdas
 DEFAULT_INSTALL_ROOT=/opt
 #DEFAULT_HTTP_PROXY=proxy.lmg.usap.gov:3128 #$HTTP_PROXY
 DEFAULT_HTTP_PROXY=$http_proxy
@@ -161,6 +162,7 @@ function save_default_variables {
     cat > $PREFERENCES_FILE <<EOF
 # Defaults written by/to be read by utils/install_influxdb.sh
 
+DEFAULT_RVDAS_USER=$RVDAS_USER
 DEFAULT_INSTALL_ROOT=$INSTALL_ROOT  # path where openrvdas is found
 #DEFAULT_HTTP_PROXY=proxy.lmg.usap.gov:3128 #$HTTP_PROXY
 DEFAULT_HTTP_PROXY=$HTTP_PROXY
@@ -972,7 +974,7 @@ if [ "$(whoami)" == "root" ]; then
     RVDAS_USER=${RVDAS_USER:-$DEFAULT_RVDAS_USER}
     create_user $RVDAS_USER
     echo "Switching UID to $RVDAS_USER"
-    sudo -u "$target_user" -E bash -c "echo \"Effective UID: $(id -u)\""
+    sudo -u "$RVDAS_USER" -E bash -c "echo \"Effective UID: $(id -u)\""
     echo "##############################"
     echo "NEW USER: " `whoami`
     echo "##############################"
