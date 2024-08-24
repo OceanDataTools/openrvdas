@@ -394,13 +394,6 @@ function install_openrvdas {
       cd openrvdas
     fi
 
-    # Copy widget settings into place and customize for this machine
-    cp display/js/widgets/settings.js.dist \
-       display/js/widgets/settings.js
-    sed -i -e "s/= 'ws'/= '${WEBSOCKET_PROTOCOL}'/g" display/js/widgets/settings.js
-    sed -i -e "s/localhost/${HOSTNAME}/g" display/js/widgets/settings.js
-    sed -i -e "s/ = 80/ = ${SERVER_PORT}/g" display/js/widgets/settings.js
-
     # Copy the database settings.py.dist into place so that other
     # routines can make the modifications they need to it.
     cp database/settings.py.dist database/settings.py
@@ -997,8 +990,17 @@ STANDALONE_INSTALLATION=$YES_NO_RESULT
 echo "#####################################################################"
 read -p "Path to openrvdas directory? ($DEFAULT_INSTALL_ROOT) " INSTALL_ROOT
 INSTALL_ROOT=${INSTALL_ROOT:-$DEFAULT_INSTALL_ROOT}
-#echo "Activating virtual environment in '${INSTALL_ROOT}/openrvdas'"
-#source $INSTALL_ROOT/openrvdas/venv/bin/activate
+
+# If it's a standalone installation, we need to set some things up
+if [ $STANDALONE_INSTALLATION == 'yes' ]; then
+    echo
+    echo "Setting up packages needed for standalone installation."
+    install_packages
+    install_openrvdas
+fi
+
+echo "Activating virtual environment in '${INSTALL_ROOT}/openrvdas'"
+source $INSTALL_ROOT/openrvdas/venv/bin/activate
 echo
 echo "#####################################################################"
 echo "InfluxDB and Grafana can use SSL via secure websockets for off-server"
