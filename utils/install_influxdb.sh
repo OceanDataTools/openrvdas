@@ -189,6 +189,225 @@ EOF
 
 ###########################################################################
 ###########################################################################
+# Create user
+function create_user {
+    RVDAS_USER=$1
+
+    echo Checking if user $RVDAS_USER exists yet
+    if id -u $RVDAS_USER > /dev/null; then
+        echo User "$RVDAS_USER" exists
+    else
+        # MacOS
+        if [ $OS_TYPE == 'MacOS' ]; then
+          echo No such pre-existing user: $RVDAS.
+          echo On MacOS, must install for pre-existing user. Exiting.
+          exit_gracefully
+
+        # CentOS/RHEL
+        elif [ $OS_TYPE == 'CentOS' ]; then
+            echo Creating $RVDAS_USER
+            sudo adduser $RVDAS_USER
+            sudo passwd $RVDAS_USER
+
+        # Ubuntu/Debian
+        elif [ $OS_TYPE == 'Ubuntu' ]; then
+              echo Creating $RVDAS_USER
+              sudo adduser --gecos "" $RVDAS_USER
+        fi
+    fi
+
+    # Set up user permissions, whether or not pre-existing.
+    # For MacOS we don't change anything
+    if [ $OS_TYPE == 'CentOS' ]; then
+        sudo usermod -a -G tty $RVDAS_USER
+        sudo usermod -a -G wheel $RVDAS_USER
+
+    # Ubuntu/Debian
+    elif [ $OS_TYPE == 'Ubuntu' ]; then
+          sudo usermod -a -G tty $RVDAS_USER
+          sudo usermod -a -G dialout $RVDAS_USER
+          sudo usermod -a -G sudo $RVDAS_USER
+    fi
+}
+
+###########################################################################
+###########################################################################
+# Install and configure required packages
+function install_packages {
+
+    # MacOS
+    if [ $OS_TYPE == 'MacOS' ]; then
+        # Install Homebrew - note: reinstalling is idempotent
+        echo 'Installing XCode Tools'
+        xcode-select --install || echo "XCode Tools already installed"
+        pushd /tmp
+        HOMEBREW_VERSION=4.1.21
+        HOMEBREW_TARGET=Homebrew-${HOMEBREW_VERSION}.pkg
+        HOMEBREW_PATH=https://github.com/Homebrew/brew/releases/download/${HOMEBREW_VERSION}/${HOMEBREW_TARGET}
+
+        curl -O -L ${HOMEBREW_PATH}
+
+        # The -target / specifies that the package should be installed on the root volume.
+        sudo installer -pkg ${HOMEBREW_TARGET} -target /
+        popd
+
+        brew install python git nginx supervisor
+
+        #brew upgrade openssh nginx supervisor || echo Upgraded packages
+        #brew link --overwrite python || echo Linking Python
+
+    # CentOS/RHEL
+    elif [ $OS_TYPE == 'CentOS' ]; then
+        if [ $OS_VERSION == '7' ]; then
+            sudo yum install -y deltarpm
+        fi
+
+        # Check if EPEL repository is installed by trying to install supervisor
+        if dnf list available supervisor --enablerepo=epel &> /dev/null; then
+            echo "EPEL is already available - skipping installation."
+        else
+          sudo dnf install -y epel-release
+          if [ $? -eq 0 ]; then
+            echo "EPEL repository installed successfully."
+          else
+            echo "Failed to install EPEL repository."
+            exit 1
+          fi
+        fi
+        sudo yum -y update
+
+        echo Installing required packages
+        sudo yum install -y wget git nginx gcc supervisor \
+            zlib-devel openssl-devel readline-devel libffi-devel \
+            sqlite libsqlite3x-devel
+
+            #sqlite-devel \
+            #python3 python3-devel python3-pip
+
+        # Django 3+ requires a more recent version of sqlite3 than is
+        # included in CentOS 7. So instead of yum installing python3 and
+        # sqlite3, we build them from scratch. Painfully slow, but hey -
+        # isn't that par for CentOS builds?
+        export LD_LIBRARY_PATH=/usr/local/lib
+        export LD_RUN_PATH=/usr/local/lib
+
+        # Check if correct SQLite3 is installed
+        SQLITE_VERSION=3320300
+        #required_version="3.32.3"
+
+        if ! command -v sqlite3 &> /dev/null
+        then
+            echo "SQLite3 is not installed. Installing ..."
+            sudo yum install -y sqlite sqlite-devel
+#        else
+#            # Get the current version of SQLite3
+#            current_version=$(sqlite3 --version | awk '{print $1}')
+#
+#            # Compare the current version with the required version
+#            if [[ "$current_version" != "$required_version" ]]
+#            then
+#                echo "SQLite3 version $required_version is required, but version $current_version is installed. Installing version $required_version..."
+#                sudo yum install -y sqlite-$required_version sqlite-devel
+#            else
+#                echo "SQLite3 version $required_version is already installed."
+#            fi
+        fi
+
+        if [ $OS_VERSION == '7' ] || [ $OS_VERSION == '8' ]; then
+            # Build Python, too, if we don't have right version
+            PYTHON_VERSION='3.8.3'
+            if [ "`/usr/local/bin/python3 --version`" == "Python $PYTHON_VERSION" ]; then
+                echo Already have appropriate version of Python3
+            else
+                OPENRVDAS_INSTALL_TMP_DIR=openrvdas_install_tmp
+                mkdir $OPENRVDAS_INSTALL_TMP_DIR
+                pushd $OPENRVDAS_INSTALL_TMP_DIR
+                yum install -y make
+                #cd /var/tmp    # Nope - some systems bar executing anything in /tmp
+                PYTHON_BASE=Python-${PYTHON_VERSION}
+                PYTHON_TGZ=${PYTHON_BASE}.tgz
+                [ -e $PYTHON_TGZ ] || wget https://www.python.org/ftp/python/${PYTHON_VERSION}/${PYTHON_TGZ}
+                tar xvf ${PYTHON_TGZ}
+                cd ${PYTHON_BASE}
+                sh ./configure # --enable-optimizations
+                sudo make altinstall
+
+                sudo ln -s -f /usr/local/bin/python3.8 /usr/local/bin/python3
+                sudo ln -s -f /usr/local/bin/pip3.8 /usr/local/bin/pip3
+                popd
+            fi
+        elif [ $OS_VERSION == '8' ] || [ $OS_VERSION == '9' ]; then
+            sudo yum install -y python3 python3-devel
+        else
+            echo "Install error: unknown OS_VERSION should have been caught earlier?!?"
+            echo "OS_VERSION = \"$OS_VERSION\""
+            exit_gracefully
+        fi
+
+    # Ubuntu/Debian
+    elif [ $OS_TYPE == 'Ubuntu' ]; then
+        sudo apt-get update
+        sudo apt install -y git nginx libreadline-dev \
+            python3-dev python3-pip python3-venv libsqlite3-dev \
+            openssh-server supervisor libssl-dev
+    fi
+}
+
+###########################################################################
+###########################################################################
+# Install OpenRVDAS
+function install_openrvdas {
+    # Expect the following shell variables to be appropriately set:
+    # INSTALL_ROOT - path where openrvdas/ is
+    # RVDAS_USER - valid userid
+    # OPENRVDAS_REPO - path to OpenRVDAS repo
+    # OPENRVDAS_BRANCH - branch of rep to install
+
+    if [ ! -d $INSTALL_ROOT ]; then
+      echo "Making install directory \"$INSTALL_ROOT\""
+      sudo mkdir -p $INSTALL_ROOT
+      sudo chown ${RVDAS_USER} $INSTALL_ROOT
+    fi
+
+    cd $INSTALL_ROOT
+    if [ ! -e openrvdas ]; then
+      echo "Making openrvdas directory."
+      sudo mkdir openrvdas
+      sudo chown ${RVDAS_USER} openrvdas
+    fi
+
+    # If FIPS is active, we need this to prevent it from complaining
+    git config --global --add safe.directory ${INSTALL_ROOT}/openrvdas
+
+    if [ -e openrvdas/.git ] ; then   # If we've already got an installation
+      cd openrvdas
+      git pull
+      git checkout $OPENRVDAS_BRANCH
+      git pull
+    else                              # If we don't already have an installation
+      sudo rm -rf openrvdas           # in case there's a non-git dir there
+      sudo mkdir openrvdas
+      sudo chown ${RVDAS_USER} openrvdas
+      git clone -b $OPENRVDAS_BRANCH $OPENRVDAS_REPO
+      cd openrvdas
+    fi
+
+    # Copy widget settings into place and customize for this machine
+    cp display/js/widgets/settings.js.dist \
+       display/js/widgets/settings.js
+    sed -i -e "s/= 'ws'/= '${WEBSOCKET_PROTOCOL}'/g" display/js/widgets/settings.js
+    sed -i -e "s/localhost/${HOSTNAME}/g" display/js/widgets/settings.js
+    sed -i -e "s/ = 80/ = ${SERVER_PORT}/g" display/js/widgets/settings.js
+
+    # Copy the database settings.py.dist into place so that other
+    # routines can make the modifications they need to it.
+    cp database/settings.py.dist database/settings.py
+    sed -i -e "s/DEFAULT_DATABASE_USER = 'rvdas'/DEFAULT_DATABASE_USER = '${RVDAS_USER}'/g" database/settings.py
+    sed -i -e "s/DEFAULT_DATABASE_PASSWORD = 'rvdas'/DEFAULT_DATABASE_PASSWORD = '${RVDAS_DATABASE_PASSWORD}'/g" database/settings.py
+}
+
+###########################################################################
+###########################################################################
 # Set up certificate files, if requested
 function setup_ssl_certificate {
     echo "Certificate will be placed in ${SSL_CRT_LOCATION}"
@@ -739,7 +958,27 @@ set_default_variables
 
 if [ "$(whoami)" == "root" ]; then
   echo "ERROR: installation script must NOT be run as root."
-  exit_gracefully
+  yes_no "Would you like to create a non-root user and switch to that uid? " 'yes'
+  CREATE_RVDAS_USER=$YES_NO_RESULT
+  if [ "$CREATE_RVDAS_USER" == "yes" ]; then
+    if [ $OS_TYPE == 'MacOS' ]; then
+      echo "Alas, on MacOS, we can't create a user via this script. Please create"
+      echo "or switch to another user, then re-run this script under that UID."
+      exit_gracefully
+    # If we're on Linux
+    elif [ $OS_TYPE == 'CentOS' ] || [ $OS_TYPE == 'Ubuntu' ]; then
+      read -p "OpenRVDAS user to create? ($DEFAULT_RVDAS_USER) " RVDAS_USER
+    fi
+    RVDAS_USER=${RVDAS_USER:-$DEFAULT_RVDAS_USER}
+    create_user $RVDAS_USER
+    echo "Switching UID to $RVDAS_USER"
+    sudo -u "$target_user" -E bash -c "echo \"Effective UID: $(id -u)\""
+    echo "##############################"
+    echo "NEW USER: " `whoami`
+    echo "##############################"
+  else
+    exit_gracefully
+  fi
 fi
 
 # Set creation mask so that everything we install is, by default,
