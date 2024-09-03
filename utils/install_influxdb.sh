@@ -901,7 +901,6 @@ function set_up_supervisor {
 ; Control file for InfluxDB, Grafana and Telegraf. Generated using the
 ; openrvdas/utils/install_influxdb.sh script
 EOF
-    fi
 
     ##########
     # If this is a standalone installation, we need to also
@@ -917,6 +916,7 @@ ${COMMENT_SOCK_OWNER}chown=nobody:${RVDAS_GROUP}
 port=9001
 
 EOF
+    fi
 
     ##########
     # If InfluxDB is installed, create an entry for it
