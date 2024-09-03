@@ -327,13 +327,14 @@ function install_packages {
         if [ $OS_VERSION == '7' ] || [ $OS_VERSION == '8' ]; then
             # Build Python, too, if we don't have right version
             PYTHON_VERSION='3.8.3'
-            if [ "`/usr/local/bin/python3 --version`" == "Python $PYTHON_VERSION" ]; then
+            if [ -e '/usr/local/bin/python3' ] && [ "`/usr/local/bin/python3 --version`" == "Python $PYTHON_VERSION" ]; then
                 echo Already have appropriate version of Python3
             else
                 OPENRVDAS_INSTALL_TMP_DIR=openrvdas_install_tmp
-                mkdir $OPENRVDAS_INSTALL_TMP_DIR
+
+                sudo yum install -y make
+                mkdir -p $OPENRVDAS_INSTALL_TMP_DIR
                 pushd $OPENRVDAS_INSTALL_TMP_DIR
-                yum install -y make
                 #cd /var/tmp    # Nope - some systems bar executing anything in /tmp
                 PYTHON_BASE=Python-${PYTHON_VERSION}
                 PYTHON_TGZ=${PYTHON_BASE}.tgz
