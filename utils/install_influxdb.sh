@@ -291,6 +291,10 @@ function install_packages {
             #sqlite-devel \
             #python3 python3-devel python3-pip
 
+        # Doesn't seem to automatically get started after installation
+        sudo systemctl enable supervisord
+        sudo systemctl start supervisord
+
         # Django 3+ requires a more recent version of sqlite3 than is
         # included in CentOS 7. So instead of yum installing python3 and
         # sqlite3, we build them from scratch. Painfully slow, but hey -
