@@ -41,12 +41,13 @@ import sys
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.utils.das_record import DASRecord  # noqa: E402
+from logger.utils.timestamp import time_str  # noqa: E402
 from logger.transforms.transform import Transform  # noqa: E402
 
 
 ################################################################################
 class FormatTransform(Transform):
-    def __init__(self, format_str, defaults=None):
+    def __init__(self, format_str, defaults=None, use_iso_timestamp=False):
         """
         Output a formatted string in which field values from a DASRecord or field
         dict have been substituted. An optional default_dict may be provided to
@@ -73,10 +74,14 @@ class FormatTransform(Transform):
                        from the input record, but would output None if S330SpeedKt
                        were missing (because no default was provided for
                        S330SpeedKt).
+
+        use_iso_timestamp - If True, ISO 8601 format timestamps when the {timestamp}
+                       tag is present. Otherwise use Unix numerical timestamps.
         """
 
         self.format_str = format_str
         self.defaults = defaults or {}
+        self.use_uso_timestamp = use_iso_timestamp
 
     def transform(self, record):
         # Make sure record is right format - DASRecord or dict
@@ -113,6 +118,11 @@ class FormatTransform(Transform):
             fields['timestamp'] = record.timestamp
         else:
             fields['timestamp'] = record.get('timestamp', 0)
+
+        # If we're supposed to be outputting USO 8601 timestamps,
+        # convert to appropriate format
+        if self.use_uso_timestamp:
+            fields['timestamp'] = time_str(fields['timestamp'])
 
         try:
             result = self.format_str.format(**fields)
