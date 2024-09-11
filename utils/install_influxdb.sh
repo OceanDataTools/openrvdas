@@ -1250,3 +1250,11 @@ deactivate
 echo "#########################################################################"
 echo Installation complete - happy logging!
 echo
+
+if [ $STANDALONE_INSTALLATION == 'yes' ]; then
+    echo
+    echo "NOTE: for OpenRVDAS installations on other machines to be able to write to"
+    echo "this server, you will need to copy the INFLUXDB_AUTH_TOKEN (or entire file)"
+    echo "from ${INSTALL_ROOT}/openrvdas/database/influxdb/settings.py on this machine"
+    echo "to the appropriate location on the client machine."
+fi
