@@ -8,7 +8,7 @@ devices:
     # Map from device_type field names to names specific for this
     # specific device.
     fields:
-      TalkerID: 'TalkerID'o
+      TalkerID: 'TalkerID'
       GPSTime: 'GPSTime'
       GPSStatus: 'GPSStatus'
       FixQuality: 'FixQuality'
