@@ -1,5 +1,5 @@
 includes:
-  -  contrib/csiro/test/*.yaml
+  -  contrib/csiro/test/Seapath_regex.yaml
 
 devices:
   seap:
