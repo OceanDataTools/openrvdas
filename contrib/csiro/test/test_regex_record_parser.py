@@ -6,7 +6,7 @@ from contrib.csiro.logger.utils.regex_parser import RegexRecordParser
 
 
 class TestRegexRecordParser(unittest.TestCase):
-    device_path = 'local/devices/regex.yaml'
+    device_path = 'contrib/csiro/test/CSIRO_device_catalogue.yaml'
     regex_record_parser = RegexRecordParser(definition_path=device_path)
 
     def assert_record_with_regex_parser(self, test_records, expected_results, func_assert_equal=None):

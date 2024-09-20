@@ -1,0 +1,46 @@
+includes:
+  -  contrib/csiro/test/*.yaml
+
+devices:
+  seap:
+    category: "device"
+    device_type: "Seapath330"
+    serial_number: "unknown"
+    description: "Just another device description."
+
+    # Map from device_type field names to names specific for this
+    # specific device.
+    fields:
+      TalkerID: 'TalkerID'
+      GPSTime: 'GPSTime'
+      GPSStatus: 'GPSStatus'
+      FixQuality: 'FixQuality'
+      NumSats: 'NumSats'
+      HDOP: 'HDOP'
+      AntennaHeight: 'AntennaHeight'
+      GeoidHeight: 'GeoidHeight'
+      LastDGPSUpdate: 'LastDGPSUpdate'
+      DGPSStationID: 'DGPSStationID'
+      CourseTrue: 'CourseTrue'
+      CourseMag: 'CourseMag'
+      SpeedOverGround: 'SpeedOverGround'
+      SpeedKm: 'SpeedKm'
+      Mode: 'Mode'
+      GPSDay: 'GPSDay'
+      GPSMonth: 'GPSMonth'
+      GPSYear: 'GPSYear'
+      GPSDate: 'GPSDate'
+      LocalZoneHours: 'LocalZoneHours'
+      LocalZoneMinutes: 'LocalZoneMinutes'
+      GyroCal: 'GyroCal'
+      GyroOffset: 'GyroOffset'
+      Roll: 'Roll'
+      Pitch: 'Pitch'
+      HeadingTrue: 'HeadingTrue'
+      Heave: 'Heave'
+      Latitude: 'Latitude'
+      NorS: 'NorS'
+      Longitude: 'Longitude'
+      EorW: 'EorW'
+      MagneticVar: 'MagneticVar'
+      MagneticVarEorW: 'MagneticVarEorW'
