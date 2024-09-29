@@ -1,0 +1,129 @@
+device_types:
+  Seapath330:
+    category: "device_type"
+    format:
+      GGA: \$(?P<TalkerID>\w{2})GGA,\s*(?P<GPSTime>\-?\d*\.?\d*),\s*(?P<Latitude>\-?\d*\.?\d*),\s*(?P<NorS>N|S),\s*(?P<Longitude>\-?\d*\.?\d*),\s*(?P<EorW>E|W),\s*(?P<FixQuality>\d*),\s*(?P<NumSats>\d*),\s*(?P<HDOP>\-?\d*\.?\d*),\s*(?P<AntennaHeight>\-?\d*\.?\d*),M,\s*(?P<GeoidHeight>\-?\d*\.?\d*),M,\s*(?P<LastDGPSUpdate>\-?\d*\.?\d*),\s*(?P<DGPSStationID>\d*)\*(?P<Checksum>[\da-fA-F]{2}) #e.g. $GPGGA,143357.30,4856.189306,S,10227.213911,E,2,12,1.0,-0.31,M,-6.40,M,9.0,1007*60
+      HDT: \$(?P<TalkerID>\w{2})HDT,\s*(?P<HeadingTrue>\-?\d*\.?\d*),\s*T\*(?P<Checksum>[\da-fA-F]{2}) #e.g. $GPHDT,213.02,T*07
+      VTG: \$(?P<TalkerID>\w{2})VTG,\s*(?P<CourseTrue>\-?\d*\.?\d*),\s*T,\s*(?P<CourseMag>\-?\d*\.?\d*),\s*M,\s*(?P<SpeedOverGround>\-?\d*\.?\d*),\s*N,\s*(?P<SpeedKm>\-?\d*\.?\d*),\s*K,\s*(?P<Mode>.*)\s*\*(?P<Checksum>[\da-fA-F]{2}) #e.g. $GPVTG,207.27,T,,M,8.7,N,16.2,K,D*02
+      ZDA: \$(?P<TalkerID>\w{2})ZDA,\s*(?P<GPSTime>\-?\d*\.?\d*),\s*(?P<GPSDay>\d*),\s*(?P<GPSMonth>\d*),\s*(?P<GPSYear>\d*),\s*(?P<LocalZoneHours>.*),\s*(?P<LocalZoneMinutes>.*)\s*\*(?P<Checksum>[\da-fA-F]{2}) #e.g. $GPZDA,143357.30,30,01,2023,,*63
+      RMC: \$(?P<TalkerID>\w{2})RMC,\s*(?P<GPSTime>\-?\d*\.?\d*),\s*(?P<GPSStatus>.*),\s*(?P<Latitude>\-?\d*\.?\d*),\s*(?P<NorS>N|S),\s*(?P<Longitude>\-?\d*\.?\d*),\s*(?P<EorW>E|W),\s*(?P<SpeedOverGround>\-?\d*\.?\d*),\s*(?P<CourseTrue>\-?\d*\.?\d*),\s*(?P<GPSDate>.*),\s*(?P<MagneticVar>\-?\d*\.?\d*),\s*(?P<MagneticVarEorW>.*),\s*(?P<Mode>.*)\*(?P<Checksum>[\da-fA-F]{2}) #e.g. $GPRMC,143357.30,A,4856.189306,S,10227.213911,E,8.7,207.27,300123,,,D*7B
+
+    fields:
+      TalkerID:
+        description: "NMEA Talker ID"
+      GPSTime:
+        description: "UTC time on format hhmmss.ss where hh is hours (00 - 23), mm is minutes (00 - 59) and ss.ss is seconds (00.00 - 59.99)."
+        data_type: float
+      GPSStatus:
+        description: "Indicates the status of the GPS fix: 'A' = Active (valid fix); 'V' = Void (no valid fix)"
+        data_type: str
+      FixQuality:
+        description: "GPS quality indicator: 0 = invalid position, 1 = GPS SPS used, 2 = DGPS used, 3 = GPS PPS used, 4 = GPS RTK used, 5 = GPS float RTK used, 6 = dead reckoning."
+        data_type: int
+      NumSats:
+        units: "count"
+        description: "Number of satellites in use (00 - 99)."
+        data_type: int
+      HDOP:
+        units: ""
+        description: "Horizontal dilution of precision"
+        data_type: float
+      AntennaHeight:
+        units: "meters"
+        description: "Height above ellipsoid in metres on format m.mm."
+        data_type: float
+      GeoidHeight:
+        units: "meters"
+        description: ""
+        data_type: float
+      LastDGPSUpdate:
+        units: "seconds"
+        description: "Age of DGPS corrections in seconds on format s.s."
+        data_type: float
+      DGPSStationID:
+        description: "DGPS reference station ID (0000 - 1023)."
+        data_type: int
+      CourseTrue:
+        units: "degrees"
+        description: "True course"
+        data_type: float
+      CourseMag:
+        units: "degrees"
+        description: "Magnetic course"
+        data_type: float
+      SpeedOverGround:
+        units: "knots"
+        description: "Speed over ground in knots"
+        data_type: float
+      SpeedKm:
+        units: "km/hour"
+        description: "Speed over ground in kilometers per hour"
+        data_type: float
+      Mode:
+        description: "Positioning mode: A = GPS used, D = DGPS used, E = dead reckoning, N = invalid position/velocity."
+        data_type: str
+      GPSDay:
+        description: "Day of month (01 - 31)."
+        data_type: int
+      GPSMonth:
+        description: "Month of year (01 - 12)."
+        data_type: int
+      GPSYear:
+        description: "Year on format yyyy."
+        data_type: int
+      GPSDate:
+        description: "Date: day, month, year on format xxxxxx."
+        data_type: int
+      LocalZoneHours:
+        units: ""
+        description: ""
+        data_type: int
+      LocalZoneMinutes:
+        units: ""
+        description: ""
+        data_type: int
+      GyroCal:
+        units: "degrees"
+        description: "Gyro calibration value since system start-up in degrees on format d.dd."
+        data_type: float
+      GyroOffset:
+        units: "degrees"
+        description: "Short-term gyro offset in degrees on format d.dd."
+        data_type: float
+      Roll:
+        units: "degrees"
+        description: "Roll, port side up is positive"
+        data_type: float
+      Pitch:
+        units: "degrees"
+        description: "Roll, bow up is positive"
+        data_type: float
+      HeadingTrue:
+        units: "degrees"
+        description: "True heading"
+        data_type: float
+      Heave:
+        units: "meters"
+        description: "Positive is down"
+        data_type: float
+      Latitude:
+        units: "degrees"
+        description: "Latitude in degrees; north or south depends on NorS"
+        data_type: float
+      NorS:
+        description: "N if Latitude value is north, S otherwise"
+        data_type: str
+      Longitude:
+        units: "degrees"
+        description: "Longitude in degrees; east or west depends on value of EorW"
+        data_type: float
+      EorW:
+        description: "E if Longitude value is east, W otherwise"
+        data_type: str
+      MagneticVar:
+        units: "degrees"
+        description: "Magnetic variation in degrees; east or west depends on value of MagneticVarEorW"
+        data_type: float
+      MagneticVarEorW:
+        description: "E if Magnetic variation value is east, W otherwise"
+        data_type: str
