@@ -120,3 +120,7 @@ pyproject.toml
 .tox*
 *coverage*
 pytest_report.xml
+
+# grafana datasource
+contrib/niwa/grafana/cache-datasource/node_modules
+contrib/niwa/grafana/cache-datasource/dist

@@ -1,0 +1,40 @@
+{
+  "$schema": "https://raw.githubusercontent.com/grafana/grafana/main/docs/sources/developers/plugins/plugin.schema.json",
+  "type": "datasource",
+  "name": "OpenRVDAS Cache",
+  "id": "openrvdas-cache",
+  "annotations": true,
+  "streaming": true,
+  "metrics": true,
+  "info": {
+    "description": "A grafana streaming datasource to connect to the OpenRVDAS cache server.",
+    "author": {
+      "name": "Lewis Wilkie",
+      "url": "https://wilkie.dev"
+    },
+    "keywords": [
+      "example"
+    ],
+    "logos": {
+      "small": "img/logo.svg",
+      "large": "img/logo.svg"
+    },
+    "links": [
+      {
+        "name": "Website",
+        "url": "https://github.com/grafana/grafana-plugin-examples"
+      },
+      {
+        "name": "License",
+        "url": "https://github.com/grafana/grafana-plugin-examples/blob/master/LICENSE"
+      }
+    ],
+    "screenshots": [],
+    "version": "%VERSION%",
+    "updated": "%TODAY%"
+  },
+  "dependencies": {
+    "grafanaDependency": ">=10.3.3",
+    "plugins": []
+  }
+}
