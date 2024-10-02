@@ -168,6 +168,54 @@ function get_os_type {
 
 ###########################################################################
 ###########################################################################
+function verify_existing_filename {
+    FILENAME_PROMPT=$1
+    EXISTING_FILENAME=$2
+    while true; do
+        # Check if the file exists
+        if [ -f "$EXISTING_FILENAME" ]; then
+            break  # Exit the loop if the file is found
+        else
+            echo "File '$EXISTING_FILENAME' not found. Please try again."
+            read -p "$FILENAME_PROMPT" EXISTING_FILENAME
+
+        fi
+    done
+}
+
+###########################################################################
+###########################################################################
+function verify_new_filename {
+    FILENAME_PROMPT=$1
+    NEW_FILENAME=$2
+
+    while true; do
+        # Check if the directory exists
+        dir=$(dirname "$NEW_FILENAME")
+        if [ ! -d "$dir" ]; then
+            echo "Directory '$dir' does not exist for path '$NEW_FILENAME'. Please try again."
+            read -p "$FILENAME_PROMPT" NEW_FILENAME
+            continue  # Skip the rest of the loop and prompt again
+        fi
+
+          # Check if the file already exists
+        if [ -e "$NEW_FILENAME" ]; then
+            read -p "File '$NEW_FILENAME' already exists. Overwrite? (y/n): " answer
+            case $answer in
+                [Yy]* ) break;;  # Break the loop if the user agrees to overwrite
+                [Nn]* )
+                    read -p "$FILENAME_PROMPT" NEW_FILENAME
+                    continue;;  # Continue the loop if the user does not want to overwrite
+                * ) echo "Please answer yes or no.";;
+            esac
+        else
+            break  # File does not exist and can be created, exit loop
+        fi
+    done
+}
+
+###########################################################################
+###########################################################################
 # Read any pre-saved default variables from file
 function set_default_variables {
     # Defaults that will be overwritten by the preferences file, if it
@@ -185,8 +233,8 @@ function set_default_variables {
 
     DEFAULT_USE_SSL=no
     DEFAULT_HAVE_SSL_CERTIFICATE=no
-    DEFAULT_SSL_CRT_LOCATION=
-    DEFAULT_SSL_KEY_LOCATION=
+    DEFAULT_SSL_CRT_LOCATION=${DEFAULT_INSTALL_ROOT}/openrvdas/openrvdas.crt
+    DEFAULT_SSL_KEY_LOCATION=${DEFAULT_INSTALL_ROOT}/openrvdas/openrvdas.key
 
     DEFAULT_RVDAS_USER=rvdas
 
@@ -362,7 +410,19 @@ function install_packages {
         if [ $OS_VERSION == '7' ]; then
             sudo yum install -y deltarpm
         fi
-        sudo yum install -y epel-release
+
+        # Check if EPEL repository is installed by trying to install supervisor
+        if dnf list available supervisor --enablerepo=epel &> /dev/null; then
+            echo "EPEL is already available - skipping installation."
+        else
+          sudo dnf install -y epel-release
+          if [ $? -eq 0 ]; then
+            echo "EPEL repository installed successfully."
+          else
+            echo "Failed to install EPEL repository."
+            exit 1
+          fi
+        fi
         sudo yum -y update
 
         echo Installing required packages
@@ -402,13 +462,17 @@ function install_packages {
 #            fi
         fi
 
-        if [ $OS_VERSION == '7' ]; then
+        if [ $OS_VERSION == '7' ] || [ $OS_VERSION == '8' ]; then
             # Build Python, too, if we don't have right version
             PYTHON_VERSION='3.8.3'
             if [ "`/usr/local/bin/python3 --version`" == "Python $PYTHON_VERSION" ]; then
                 echo Already have appropriate version of Python3
             else
-                cd /var/tmp
+                OPENRVDAS_INSTALL_TMP_DIR=openrvdas_install_tmp
+                mkdir $OPENRVDAS_INSTALL_TMP_DIR
+                pushd $OPENRVDAS_INSTALL_TMP_DIR
+                yum install -y make
+                #cd /var/tmp    # Nope - some systems bar executing anything in /tmp
                 PYTHON_BASE=Python-${PYTHON_VERSION}
                 PYTHON_TGZ=${PYTHON_BASE}.tgz
                 [ -e $PYTHON_TGZ ] || wget https://www.python.org/ftp/python/${PYTHON_VERSION}/${PYTHON_TGZ}
@@ -419,6 +483,7 @@ function install_packages {
 
                 sudo ln -s -f /usr/local/bin/python3.8 /usr/local/bin/python3
                 sudo ln -s -f /usr/local/bin/pip3.8 /usr/local/bin/pip3
+                popd
             fi
         elif [ $OS_VERSION == '8' ] || [ $OS_VERSION == '9' ]; then
             sudo yum install -y python3 python3-devel
@@ -459,6 +524,9 @@ function install_openrvdas {
       sudo mkdir openrvdas
       sudo chown ${RVDAS_USER} openrvdas
     fi
+
+    # If FIPS is active, we need this to prevent it from complaining
+    git config --global --add safe.directory ${INSTALL_ROOT}/openrvdas
 
     if [ -e openrvdas/.git ] ; then   # If we've already got an installation
       cd openrvdas
@@ -1073,7 +1141,6 @@ EOF
 # Start of actual script
 ###########################################################################
 ###########################################################################
-
 echo
 echo "OpenRVDAS configuration script"
 
@@ -1178,14 +1245,16 @@ if [ "$USE_SSL" == "yes" ]; then
     echo "below, and you will be prompted for their locations. Otherwise answer \"no\""
     echo "and you will be prompted to create a self-signed certificate."
     echo
-    yes_no "Do you already have a .key and a .crt file to use for this server? " $DEFAULT_HAVE_SSL_CERTIFICATE
+    yes_no "Do you already have a .key and a .crt file to use for this server?" $DEFAULT_HAVE_SSL_CERTIFICATE
     HAVE_SSL_CERTIFICATE=$YES_NO_RESULT
+
+    # We will sanity check these values later
     if [ $HAVE_SSL_CERTIFICATE == 'yes' ]; then
-        read -p "Location of .crt file? ($DEFAULT_SSL_CRT_LOCATION) " SSL_CRT_LOCATION
-        read -p "Location of .key file? ($DEFAULT_SSL_KEY_LOCATION) " SSL_KEY_LOCATION
+        read -p "Path and name of .crt file? ($DEFAULT_SSL_CRT_LOCATION) " SSL_CRT_LOCATION
+        read -p "Path and name of .key file? ($DEFAULT_SSL_KEY_LOCATION) " SSL_KEY_LOCATION
     else
-        read -p "Where to create .crt file? ($DEFAULT_SSL_CRT_LOCATION) " SSL_CRT_LOCATION
-        read -p "Where to create .key file? ($DEFAULT_SSL_KEY_LOCATION) " SSL_KEY_LOCATION
+        read -p "Path and name of .crt file to create? ($DEFAULT_SSL_CRT_LOCATION) " SSL_CRT_LOCATION
+        read -p "Path and name of .key file to create? ($DEFAULT_SSL_KEY_LOCATION) " SSL_KEY_LOCATION
     fi
     SSL_CRT_LOCATION=${SSL_CRT_LOCATION:-$DEFAULT_SSL_CRT_LOCATION}
     SSL_KEY_LOCATION=${SSL_KEY_LOCATION:-$DEFAULT_SSL_KEY_LOCATION}
@@ -1355,11 +1424,28 @@ fi
 #########################################################################
 #########################################################################
 # Create new self-signed SSL certificate, if that's what they want
-if [ $USE_SSL == "yes" ] && [ $HAVE_SSL_CERTIFICATE == 'no' ]; then
+if [ $USE_SSL == "yes" ]; then
+    if [ $HAVE_SSL_CERTIFICATE == 'yes' ]; then
+        # We have certs: verify that the files exist, or prompt for new names if they don't
+        verify_existing_filename "Please enter location of existing .crt file: " $SSL_CRT_LOCATION
+        SSL_CRT_LOCATION=$EXISTING_FILENAME
+        verify_existing_filename "Please enter location of existing .key file: " $SSL_KEY_LOCATION
+        SSL_KEY_LOCATION=$EXISTING_FILENAME
+        save_default_variables  # In case user updated locations
+    else
+        # We're going to create new certs. Verify that the directory where we're going to
+        # create them exists, and check that we're not overwriting an existing one.
+        echo "#####################################################################"
+        echo "Ready to set up new self-signed SSL certificates:"
+        verify_new_filename "Please enter a path and filename for the .crt file: " $SSL_CRT_LOCATION
+        SSL_CRT_LOCATION=$NEW_FILENAME
+        verify_new_filename "Please enter a path and filename for the .key file: " $SSL_KEY_LOCATION
+        SSL_KEY_LOCATION=$NEW_FILENAME
+        save_default_variables  # In case user updated locations
+
+        setup_ssl_certificate
+    fi
     echo
-    echo "#####################################################################"
-    echo "Ready to set up new self-signed SSL certificate."
-    setup_ssl_certificate
 fi
 
 #########################################################################

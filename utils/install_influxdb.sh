@@ -60,13 +60,18 @@
 # 4. Repeat this with /usr/local/bin/influxd
 #
 
-PREFERENCES_FILE='.install_influxdb_preferences'
+PREFERENCES_FILE="${HOME}/.install_influxdb_preferences"
 
 # Defaults that will be overwritten by the preferences file, if it
 # exists.
+DEFAULT_RVDAS_USER=rvdas
+DEFAULT_OPENRVDAS_REPO=https://github.com/oceandatatools/openrvdas
+DEFAULT_OPENRVDAS_BRANCH=master
 DEFAULT_INSTALL_ROOT=/opt
 #DEFAULT_HTTP_PROXY=proxy.lmg.usap.gov:3128 #$HTTP_PROXY
 DEFAULT_HTTP_PROXY=$http_proxy
+
+DEFAULT_STANDALONE_INSTALLATION=no
 
 DEFAULT_INFLUXDB_USER=rvdas
 DEFAULT_INFLUXDB_PASSWORD=rvdasrvdas
@@ -84,8 +89,8 @@ DEFAULT_RUN_TELEGRAF=no
 
 DEFAULT_USE_SSL=no
 DEFAULT_HAVE_SSL_CERTIFICATE=no
-DEFAULT_SSL_CRT_LOCATION=
-DEFAULT_SSL_KEY_LOCATION=
+DEFAULT_SSL_CRT_LOCATION=${DEFAULT_INSTALL_ROOT}/openrvdas/openrvdas.crt
+DEFAULT_SSL_KEY_LOCATION=${DEFAULT_INSTALL_ROOT}/openrvdas/openrvdas.key
 
 # Bucket Telegraf should write its data to
 TELEGRAF_BUCKET=_monitoring
@@ -159,9 +164,15 @@ function save_default_variables {
     cat > $PREFERENCES_FILE <<EOF
 # Defaults written by/to be read by utils/install_influxdb.sh
 
+DEFAULT_RVDAS_USER=$RVDAS_USER
+DEFAULT_OPENRVDAS_REPO=$OPENRVDAS_REPO
+DEFAULT_OPENRVDAS_BRANCH=$OPENRVDAS_BRANCH
+
 DEFAULT_INSTALL_ROOT=$INSTALL_ROOT  # path where openrvdas is found
 #DEFAULT_HTTP_PROXY=proxy.lmg.usap.gov:3128 #$HTTP_PROXY
 DEFAULT_HTTP_PROXY=$HTTP_PROXY
+
+DEFAULT_STANDALONE_INSTALLATION=$STANDALONE_INSTALLATION
 
 DEFAULT_INFLUXDB_USER=$INFLUXDB_USER
 DEFAULT_INFLUXDB_PASSWORD=$INFLUXDB_PASSWORD
@@ -181,6 +192,270 @@ DEFAULT_HAVE_SSL_CERTIFICATE=$HAVE_SSL_CERTIFICATE
 DEFAULT_SSL_CRT_LOCATION=$SSL_CRT_LOCATION
 DEFAULT_SSL_KEY_LOCATION=$SSL_KEY_LOCATION
 EOF
+}
+
+###########################################################################
+###########################################################################
+# Create user
+function create_user {
+    RVDAS_USER=$1
+
+    echo Checking if user $RVDAS_USER exists yet
+    if id -u $RVDAS_USER > /dev/null; then
+        echo User "$RVDAS_USER" exists
+    else
+        # MacOS
+        if [ $OS_TYPE == 'MacOS' ]; then
+          echo No such pre-existing user: $RVDAS.
+          echo On MacOS, must install for pre-existing user. Exiting.
+          exit_gracefully
+
+        # CentOS/RHEL
+        elif [ $OS_TYPE == 'CentOS' ]; then
+            echo Creating $RVDAS_USER
+            sudo adduser $RVDAS_USER
+            sudo passwd $RVDAS_USER
+
+        # Ubuntu/Debian
+        elif [ $OS_TYPE == 'Ubuntu' ]; then
+              echo Creating $RVDAS_USER
+              sudo adduser --gecos "" $RVDAS_USER
+        fi
+    fi
+
+    # Set up user permissions, whether or not pre-existing.
+    # For MacOS we don't change anything
+    if [ $OS_TYPE == 'CentOS' ]; then
+        sudo usermod -a -G tty $RVDAS_USER
+        sudo usermod -a -G wheel $RVDAS_USER
+
+    # Ubuntu/Debian
+    elif [ $OS_TYPE == 'Ubuntu' ]; then
+          sudo usermod -a -G tty $RVDAS_USER
+          sudo usermod -a -G dialout $RVDAS_USER
+          sudo usermod -a -G sudo $RVDAS_USER
+    fi
+}
+
+###########################################################################
+###########################################################################
+# Install and configure required packages
+function install_packages {
+
+    # MacOS
+    if [ $OS_TYPE == 'MacOS' ]; then
+        # Install Homebrew - note: reinstalling is idempotent
+        echo 'Installing XCode Tools'
+        xcode-select --install || echo "XCode Tools already installed"
+        pushd /tmp
+        HOMEBREW_VERSION=4.1.21
+        HOMEBREW_TARGET=Homebrew-${HOMEBREW_VERSION}.pkg
+        HOMEBREW_PATH=https://github.com/Homebrew/brew/releases/download/${HOMEBREW_VERSION}/${HOMEBREW_TARGET}
+
+        curl -O -L ${HOMEBREW_PATH}
+
+        # The -target / specifies that the package should be installed on the root volume.
+        sudo installer -pkg ${HOMEBREW_TARGET} -target /
+        popd
+
+        brew install python git nginx supervisor
+
+        #brew upgrade openssh nginx supervisor || echo Upgraded packages
+        #brew link --overwrite python || echo Linking Python
+
+    # CentOS/RHEL
+    elif [ $OS_TYPE == 'CentOS' ]; then
+        if [ $OS_VERSION == '7' ]; then
+            sudo yum install -y deltarpm
+        fi
+
+        # Check if EPEL repository is installed by trying to install supervisor
+        if dnf list available supervisor --enablerepo=epel &> /dev/null; then
+            echo "EPEL is already available - skipping installation."
+        else
+          sudo dnf install -y epel-release
+          if [ $? -eq 0 ]; then
+            echo "EPEL repository installed successfully."
+          else
+            echo "Failed to install EPEL repository."
+            exit 1
+          fi
+        fi
+        sudo yum -y update
+
+        echo Installing required packages
+        sudo yum install -y wget git nginx gcc supervisor \
+            zlib-devel openssl-devel readline-devel libffi-devel \
+            sqlite libsqlite3x-devel
+
+            #sqlite-devel \
+            #python3 python3-devel python3-pip
+
+        # Doesn't seem to automatically get started after installation
+        sudo systemctl enable supervisord
+        sudo systemctl start supervisord
+
+        # Django 3+ requires a more recent version of sqlite3 than is
+        # included in CentOS 7. So instead of yum installing python3 and
+        # sqlite3, we build them from scratch. Painfully slow, but hey -
+        # isn't that par for CentOS builds?
+        export LD_LIBRARY_PATH=/usr/local/lib
+        export LD_RUN_PATH=/usr/local/lib
+
+        # Check if correct SQLite3 is installed
+        SQLITE_VERSION=3320300
+        #required_version="3.32.3"
+
+        if ! command -v sqlite3 &> /dev/null
+        then
+            echo "SQLite3 is not installed. Installing ..."
+            sudo yum install -y sqlite sqlite-devel
+#        else
+#            # Get the current version of SQLite3
+#            current_version=$(sqlite3 --version | awk '{print $1}')
+#
+#            # Compare the current version with the required version
+#            if [[ "$current_version" != "$required_version" ]]
+#            then
+#                echo "SQLite3 version $required_version is required, but version $current_version is installed. Installing version $required_version..."
+#                sudo yum install -y sqlite-$required_version sqlite-devel
+#            else
+#                echo "SQLite3 version $required_version is already installed."
+#            fi
+        fi
+
+        if [ $OS_VERSION == '7' ] || [ $OS_VERSION == '8' ]; then
+            # Build Python, too, if we don't have right version
+            PYTHON_VERSION='3.8.3'
+            if [ -e '/usr/local/bin/python3' ] && [ "`/usr/local/bin/python3 --version`" == "Python $PYTHON_VERSION" ]; then
+                echo Already have appropriate version of Python3
+            else
+                OPENRVDAS_INSTALL_TMP_DIR=openrvdas_install_tmp
+
+                sudo yum install -y make
+                mkdir -p $OPENRVDAS_INSTALL_TMP_DIR
+                pushd $OPENRVDAS_INSTALL_TMP_DIR
+                #cd /var/tmp    # Nope - some systems bar executing anything in /tmp
+                PYTHON_BASE=Python-${PYTHON_VERSION}
+                PYTHON_TGZ=${PYTHON_BASE}.tgz
+                [ -e $PYTHON_TGZ ] || wget https://www.python.org/ftp/python/${PYTHON_VERSION}/${PYTHON_TGZ}
+                tar xvf ${PYTHON_TGZ}
+                cd ${PYTHON_BASE}
+                sh ./configure # --enable-optimizations
+                sudo make altinstall
+
+                sudo ln -s -f /usr/local/bin/python3.8 /usr/local/bin/python3
+                sudo ln -s -f /usr/local/bin/pip3.8 /usr/local/bin/pip3
+                popd
+            fi
+        elif [ $OS_VERSION == '8' ] || [ $OS_VERSION == '9' ]; then
+            sudo yum install -y python3 python3-devel
+        else
+            echo "Install error: unknown OS_VERSION should have been caught earlier?!?"
+            echo "OS_VERSION = \"$OS_VERSION\""
+            exit_gracefully
+        fi
+
+    # Ubuntu/Debian
+    elif [ $OS_TYPE == 'Ubuntu' ]; then
+        sudo apt-get update
+        sudo apt install -y git nginx libreadline-dev \
+            python3-dev python3-pip python3-venv libsqlite3-dev \
+            openssh-server supervisor libssl-dev
+    fi
+}
+
+###########################################################################
+###########################################################################
+# Install OpenRVDAS
+function install_openrvdas {
+    # Expect the following shell variables to be appropriately set:
+    # INSTALL_ROOT - path where openrvdas/ is
+    # RVDAS_USER - valid userid
+    # OPENRVDAS_REPO - path to OpenRVDAS repo
+    # OPENRVDAS_BRANCH - branch of rep to install
+
+    if [ ! -d $INSTALL_ROOT ]; then
+      echo "Making install directory \"$INSTALL_ROOT\""
+      sudo mkdir -p $INSTALL_ROOT
+      sudo chown ${RVDAS_USER} $INSTALL_ROOT
+    fi
+
+    cd $INSTALL_ROOT
+    if [ ! -e openrvdas ]; then
+      echo "Making openrvdas directory."
+      sudo mkdir openrvdas
+      sudo chown ${RVDAS_USER} openrvdas
+    fi
+
+    # If FIPS is active, we need this to prevent it from complaining
+    git config --global --add safe.directory ${INSTALL_ROOT}/openrvdas
+
+    if [ -e openrvdas/.git ] ; then   # If we've already got an installation
+      cd openrvdas
+      git pull
+      git checkout $OPENRVDAS_BRANCH
+      git pull
+    else                              # If we don't already have an installation
+      sudo rm -rf openrvdas           # in case there's a non-git dir there
+      sudo mkdir openrvdas
+      sudo chown ${RVDAS_USER} openrvdas
+      git clone -b $OPENRVDAS_BRANCH $OPENRVDAS_REPO
+      cd openrvdas
+    fi
+
+    # Copy the database settings.py.dist into place so that other
+    # routines can make the modifications they need to it.
+    cp database/settings.py.dist database/settings.py
+    sed -i -e "s/DEFAULT_DATABASE_USER = 'rvdas'/DEFAULT_DATABASE_USER = '${RVDAS_USER}'/g" database/settings.py
+    sed -i -e "s/DEFAULT_DATABASE_PASSWORD = 'rvdas'/DEFAULT_DATABASE_PASSWORD = '${RVDAS_DATABASE_PASSWORD}'/g" database/settings.py
+}
+
+###########################################################################
+# Set up Python packages
+function setup_python_packages {
+    # Expect the following shell variables to be appropriately set:
+    # INSTALL_ROOT - path where openrvdas/ is
+
+    # Set up virtual environment
+    VENV_PATH=$INSTALL_ROOT/openrvdas/venv
+
+    ## Bit of a challenge here - if our new install has a newer version of
+    ## Python or something, reusing the existing venv can cause subtle
+    ## havoc. But deleting and rebuilding it each time is a mess. Commenting
+    ## out the delete for now...
+    ##
+    # We'll rebuild the virtual environment each time to avoid version skew
+    #if [ -d $VENV_PATH ];then
+    #    mv $VENV_PATH ${VENV_PATH}.bak.$$
+    #fi
+
+    #if [ -e '${HOMEBREW_BASE}/bin/python3' ];then
+    #    eval "$(${HOMEBREW_BASE}/bin/brew shellenv)"
+    #    PYTHON_PATH=${HOMEBREW_BASE}/bin/python3
+    #elif [ -e '/usr/local/bin/python3' ];then
+    #    PYTHON_PATH=/usr/local/bin/python3
+    #elif [ -e '/usr/bin/python3' ];then
+    #    PYTHON_PATH=/usr/bin/python3
+    #else
+    #    echo 'No python3 found?!?'
+    #    exit_gracefully
+    #fi
+
+    echo "Creating virtual environment"
+    cd $INSTALL_ROOT/openrvdas
+    python3 -m venv $VENV_PATH
+    source $VENV_PATH/bin/activate  # activate virtual environment
+
+    echo "Installing Python packages - please enter sudo password if prompted."
+    # For some reason, locked down RHEL8 boxes require sudo here, and require
+    # us to execute pip via python. Lord love a duck...
+    venv/bin/python venv/bin/pip3 install \
+      --trusted-host pypi.org --trusted-host files.pythonhosted.org \
+      --upgrade pip
+    venv/bin/python venv/bin/pip3 install \
+      --trusted-host pypi.org --trusted-host files.pythonhosted.org \
+      wheel
 }
 
 ###########################################################################
@@ -293,8 +568,6 @@ function install_influxdb {
 
     echo "#####################################################################"
     echo Installing InfluxDB...
-
-
     # If we're on MacOS
     if [ $OS_TYPE == 'MacOS' ]; then
         INFLUX_PATH=/usr/local/bin
@@ -351,7 +624,11 @@ EOF
         if [ $OS_VERSION == '7' ]; then
             sudo yum install -y influxdb2 influxdb2-cli
         else
-            sudo yum install -y --nobest influxdb2 influxdb2-cli
+            # Need to accommodate FIPS in RHEL8, which will complain
+            # if we try to MD5. Sheesh.
+            # sudo yum install -y --nobest influxdb2 influxdb2-cli
+            dnf download influxdb2 influxdb2-cli
+            sudo rpm -ivh --nofiledigest --replacepkgs --replacefiles influxdb*.rpm
         fi
     elif [ $OS_TYPE == 'Ubuntu' ]; then
         # influxdata-archive_compat.key GPG Fingerprint: 9D539D90D3328DC7D6C8D3B9D8FF8E1F7DF8B07E
@@ -593,27 +870,58 @@ function set_up_supervisor {
     echo "#####################################################################"
     echo Setting up supervisord file...
 
+    # Create directory where supervisor file is going to direct stderr
+    sudo mkdir -p /var/log/openrvdas /var/tmp/openrvdas
+    sudo chown $RVDAS_USER /var/log/openrvdas /var/tmp/openrvdas
+    sudo chgrp $RVDAS_GROUP /var/log/openrvdas /var/tmp/openrvdas
 
     TMP_SUPERVISOR_FILE=/tmp/influx.ini
 
     if [ $OS_TYPE == 'MacOS' ]; then
         SUPERVISOR_FILE=/usr/local/etc/supervisor.d/influx.ini
+        HTTP_HOST=127.0.0.1
+        SUPERVISOR_SOCK=/usr/local/var/run/supervisor.sock
+        COMMENT_SOCK_OWNER=';'
 
     # If CentOS/Ubuntu/etc, different distributions hide them
     # different places. Sigh.
     elif [ $OS_TYPE == 'CentOS' ]; then
         SUPERVISOR_FILE=/etc/supervisord.d/influx.ini
+        HTTP_HOST='*'
+        SUPERVISOR_SOCK=/var/run/supervisor/supervisor.sock
+        COMMENT_SOCK_OWNER=''
     elif [ $OS_TYPE == 'Ubuntu' ]; then
         SUPERVISOR_FILE=/etc/supervisor/conf.d/influx.conf
+        HTTP_HOST='*'
+        SUPERVISOR_SOCK=/var/run/supervisor.sock
+        COMMENT_SOCK_OWNER=''
     else
         echo "ERROR: Unknown OS/architecture \"$OS_TYPE\"."
         exit_gracefully
     fi
 
+    ##########
+    # Initial stub for supervisor conf file.
     cat > $TMP_SUPERVISOR_FILE <<EOF
 ; Control file for InfluxDB, Grafana and Telegraf. Generated using the
 ; openrvdas/utils/install_influxdb.sh script
 EOF
+
+    ##########
+    # If this is a standalone installation, we need to also
+    # add the bits for supervisord control and access.
+    if [ $STANDALONE_INSTALLATION == 'yes' ]; then
+        cat >> $TMP_SUPERVISOR_FILE <<EOF
+[unix_http_server]
+file=$SUPERVISOR_SOCK   ; (the path to the socket file)
+chmod=0770              ; socket file mode (default 0700)
+${COMMENT_SOCK_OWNER}chown=nobody:${RVDAS_GROUP}
+
+[inet_http_server]
+port=9001
+
+EOF
+    fi
 
     ##########
     # If InfluxDB is installed, create an entry for it
@@ -729,21 +1037,71 @@ get_os_type
 # Read from the preferences file in $PREFERENCES_FILE, if it exists
 set_default_variables
 
+echo "#####################################################################"
+echo InfluxDB/Grafana/Telegraf configuration script
+echo
+
 if [ "$(whoami)" == "root" ]; then
   echo "ERROR: installation script must NOT be run as root."
-  exit_gracefully
+  yes_no "Would you like to create a non-root user and switch to that uid? " 'yes'
+  CREATE_RVDAS_USER=$YES_NO_RESULT
+  if [ "$CREATE_RVDAS_USER" == "yes" ]; then
+    if [ $OS_TYPE == 'MacOS' ]; then
+      echo "Alas, on MacOS, we can't create a user via this script. Please create"
+      echo "or switch to another user, then re-run this script under that UID."
+      exit_gracefully
+    fi
+    # If we're on Linux
+    read -p "OpenRVDAS user to create? ($DEFAULT_RVDAS_USER) " RVDAS_USER
+    RVDAS_USER=${RVDAS_USER:-$DEFAULT_RVDAS_USER}
+    create_user $RVDAS_USER
+
+    echo "Restarting script as $RVDAS_USER"
+    sudo -u "$RVDAS_USER" "$0" "$@"
+    exit $?
+  else
+    exit_gracefully
+  fi
+else
+    read -p "User to set system up as? ($DEFAULT_RVDAS_USER) " RVDAS_USER
+    RVDAS_USER=${RVDAS_USER:-$DEFAULT_RVDAS_USER}
+fi
+if [ $OS_TYPE == 'MacOS' ]; then
+    RVDAS_GROUP=wheel
+# If we're on Linux
+else
+    RVDAS_GROUP=$RVDAS_USER
 fi
 
 # Set creation mask so that everything we install is, by default,
 # world readable/executable.
 umask 022
 
-echo "#####################################################################"
-echo InfluxDB/Grafana/Telegraf configuration script
-
-echo "#####################################################################"
-read -p "Path to openrvdas directory? ($DEFAULT_INSTALL_ROOT) " INSTALL_ROOT
+echo "Will this be a standalone installation? (yes = OpenRVDAS is not installed"
+echo "on this machine, no = OpenRVDAS is/will also be run on this machine)"
+yes_no "Standalone installation? " $DEFAULT_STANDALONE_INSTALLATION
+STANDALONE_INSTALLATION=$YES_NO_RESULT
+echo
+read -p "OpenRVDAS install root? ($DEFAULT_INSTALL_ROOT) " INSTALL_ROOT
 INSTALL_ROOT=${INSTALL_ROOT:-$DEFAULT_INSTALL_ROOT}
+read -p "Repository to install from? ($DEFAULT_OPENRVDAS_REPO) " OPENRVDAS_REPO
+OPENRVDAS_REPO=${OPENRVDAS_REPO:-$DEFAULT_OPENRVDAS_REPO}
+read -p "Repository branch to install? ($DEFAULT_OPENRVDAS_BRANCH) " OPENRVDAS_BRANCH
+OPENRVDAS_BRANCH=${OPENRVDAS_BRANCH:-$DEFAULT_OPENRVDAS_BRANCH}
+read -p "HTTP/HTTPS proxy to use ($DEFAULT_HTTP_PROXY)? " HTTP_PROXY
+HTTP_PROXY=${HTTP_PROXY:-$DEFAULT_HTTP_PROXY}
+save_default_variables
+
+# If it's a standalone installation, we need to set some things up
+if [ $STANDALONE_INSTALLATION == 'yes' ]; then
+    echo
+    echo "#####################################################################"
+    echo "Setting up packages needed for standalone installation."
+    install_packages
+    install_openrvdas
+    setup_python_packages
+fi
+
 echo "Activating virtual environment in '${INSTALL_ROOT}/openrvdas'"
 source $INSTALL_ROOT/openrvdas/venv/bin/activate
 echo
@@ -774,11 +1132,11 @@ if [ "$USE_SSL" == "yes" ]; then
     yes_no "Do you already have a .key and a .crt file to use for this server? " $DEFAULT_HAVE_SSL_CERTIFICATE
     HAVE_SSL_CERTIFICATE=$YES_NO_RESULT
     if [ $HAVE_SSL_CERTIFICATE == 'yes' ]; then
-        read -p "Location of .crt file? ($DEFAULT_SSL_CRT_LOCATION) " SSL_CRT_LOCATION
-        read -p "Location of .key file? ($DEFAULT_SSL_KEY_LOCATION) " SSL_KEY_LOCATION
+        read -p "Path and name of .crt file? ($DEFAULT_SSL_CRT_LOCATION) " SSL_CRT_LOCATION
+        read -p "Path and name of .key file? ($DEFAULT_SSL_KEY_LOCATION) " SSL_KEY_LOCATION
     else
-        read -p "Where to create .crt file? ($DEFAULT_SSL_CRT_LOCATION) " SSL_CRT_LOCATION
-        read -p "Where to create .key file? ($DEFAULT_SSL_KEY_LOCATION) " SSL_KEY_LOCATION
+        read -p "Path and name of .crt file to create? ($DEFAULT_SSL_CRT_LOCATION) " SSL_CRT_LOCATION
+        read -p "Path and name of .key file to create? ($DEFAULT_SSL_KEY_LOCATION) " SSL_KEY_LOCATION
     fi
     SSL_CRT_LOCATION=${SSL_CRT_LOCATION:-$DEFAULT_SSL_CRT_LOCATION}
     SSL_KEY_LOCATION=${SSL_KEY_LOCATION:-$DEFAULT_SSL_KEY_LOCATION}
@@ -847,16 +1205,10 @@ while true; do
       break
     fi
 done
-
-echo
 read -p "'Organization' to use for InfluxDB OpenRVDAS data? ($DEFAULT_INFLUXDB_ORGANIZATION) " INFLUXDB_ORGANIZATION
 INFLUXDB_ORGANIZATION=${INFLUXDB_ORGANIZATION:-$DEFAULT_INFLUXDB_ORGANIZATION}
-echo
 read -p "Bucket to use for InfluxDB OpenRVDAS data? ($DEFAULT_INFLUXDB_BUCKET) " INFLUXDB_BUCKET
 INFLUXDB_BUCKET=${INFLUXDB_BUCKET:-$DEFAULT_INFLUXDB_BUCKET}
-
-read -p "HTTP/HTTPS proxy to use ($DEFAULT_HTTP_PROXY)? " HTTP_PROXY
-HTTP_PROXY=${HTTP_PROXY:-$DEFAULT_HTTP_PROXY}
 
 #########################################################################
 # Save defaults in a preferences file for the next time we run.
@@ -898,3 +1250,11 @@ deactivate
 echo "#########################################################################"
 echo Installation complete - happy logging!
 echo
+
+if [ $STANDALONE_INSTALLATION == 'yes' ]; then
+    echo
+    echo "NOTE: for OpenRVDAS installations on other machines to be able to write to"
+    echo "this server, you will need to copy the INFLUXDB_AUTH_TOKEN (or entire file)"
+    echo "from ${INSTALL_ROOT}/openrvdas/database/influxdb/settings.py on this machine"
+    echo "to the appropriate location on the client machine."
+fi
