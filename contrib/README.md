@@ -1,5 +1,8 @@
 # How to Use the 'contrib/' Directory
 
+__NOTE:__ This directory and the current instructions are maintained for compatibility reasons, but as of 2024-10-01, the preferred way to contribute code to OpenRVDAS is to open pull requests to the [openrvdas_contrib](https://github.com/OceanDataTools/openrvdas_contrib) repository.
+----
+
 In short, this is where you should put code that you wish to
 contribute to the OpenRVDAS project.
 
