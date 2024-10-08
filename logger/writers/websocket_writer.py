@@ -5,7 +5,12 @@ import asyncio
 import logging
 import ssl
 import threading
-import websockets
+
+try:
+    import websockets
+    WEBSOCKETS_INSTALLED = True
+except ImportError:
+    WEBSOCKETS_INSTALLED = False
 
 from urllib.parse import urlparse
 
@@ -24,6 +29,9 @@ class WebsocketWriter():
         key_file
         ```
         """
+        if not WEBSOCKETS_INSTALLED:
+            raise ImportError('WebsocketWriter requires Python "websockets" module; '
+                              'please run "pip install websockets"')
         self.uri = uri
         parsed_uri = urlparse(uri)
         self.host = parsed_uri.hostname
