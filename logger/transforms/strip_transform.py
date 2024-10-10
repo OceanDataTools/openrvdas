@@ -6,11 +6,11 @@ import sys
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
-from logger.transforms.transform import Transform  # noqa: E402
+from logger.transforms.base_transform import BaseTransform  # noqa: E402
 
 
 ################################################################################
-class StripTransform(Transform):
+class StripTransform(BaseTransform):
     def __init__(self, chars=None, unprintable=False,
                  strip_prefix=False, strip_suffix=False):
         """
@@ -38,20 +38,8 @@ class StripTransform(Transform):
         self.strip_suffix = strip_suffix
 
     ############################
-    def transform(self, record):
+    def _transform_single_record(self, record):
         """Strip and return only the requested fields."""
-        if record is None:
-            return None
-
-        # If we've got a list, hope it's a list of records. Recurse,
-        # calling transform() on each of the list elements in order and
-        # return the resulting list.
-        if type(record) is list:
-            results = []
-            for single_record in record:
-                results.append(self.transform(single_record))
-            return results
-
         if not type(record) is str:
             logging.warning('SplitTransform received non-string input: %s', record)
             return None

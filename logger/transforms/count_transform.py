@@ -7,12 +7,12 @@ from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.utils import formats  # noqa: E402
 from logger.utils.das_record import DASRecord  # noqa: E402
-from logger.transforms.transform import Transform  # noqa: E402
+from logger.transforms.base_transform import BaseTransform  # noqa: E402
 
 
 ################################################################################
 #
-class CountTransform(Transform):
+class CountTransform(BaseTransform):
     """Return number of times the passed fields have been seen as a dict
     (or DASRecord, depending on what was passed in) where the keys are
     'field_name:count' and the values are the number of times the passed
@@ -33,20 +33,8 @@ class CountTransform(Transform):
         self.counts = {}
 
     ############################
-    def transform(self, record):
+    def _transform_single_record(self, record):
         """Return counts of the previous times we've seen these field names."""
-        if not record:
-            return None
-
-        # If we've got a list, hope it's a list of records. Recurse,
-        # calling transform() on each of the list elements in order and
-        # return the resulting list.
-        if type(record) is list:
-            results = []
-            for single_record in record:
-                results.append(self.transform(single_record))
-            return results
-
         if type(record) is DASRecord:
             fields = record.fields
         elif type(record) is dict:

@@ -131,20 +131,10 @@ class SubsampleTransform(DerivedDataTransform):
                     break
 
     ############################
-    def transform(self, record):
+    def _transform_single_record(self, record):
         """Incorporate any useable fields in this record, and if it gives
         us any new subsampled values, aggregate and return them.
         """
-
-        # If we've got a list, hope it's a list of records. Recurse,
-        # calling transform() on each of the list elements in order and
-        # return the resulting list.
-        if type(record) is list:
-            results = []
-            for single_record in record:
-                results.append(self.transform(single_record))
-            return results
-
         # Clean out old data
         self._add_record(record)
 

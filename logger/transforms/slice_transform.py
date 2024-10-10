@@ -7,11 +7,11 @@ import sys
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.utils import formats  # noqa: E402
-from logger.transforms.transform import Transform  # noqa: E402
+from logger.transforms.base_transform import BaseTransform  # noqa: E402
 
 
 ################################################################################
-class SliceTransform(Transform):
+class SliceTransform(BaseTransform):
     def __init__(self, fields=None, sep=None):
         """
         ```
@@ -64,20 +64,8 @@ class SliceTransform(Transform):
             raise e
 
     ############################
-    def transform(self, record):
-        """Strip and return only the requested fields."""
-        if record is None:
-            return None
-
-        # If we've got a list, hope it's a list of records. Recurse,
-        # calling transform() on each of the list elements in order and
-        # return the resulting list.
-        if type(record) is list:
-            results = []
-            for single_record in record:
-                results.append(self.transform(single_record))
-            return results
-
+    def _transform_single_record(self, record):
+        """Split record into array of records along separator."""
         if not type(record) is str:
             logging.warning('SliceTransform received non-string input: %s', record)
             return None

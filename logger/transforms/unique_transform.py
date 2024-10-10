@@ -8,11 +8,11 @@ import sys
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.utils import formats  # noqa: E402
-from logger.transforms.transform import Transform  # noqa: E402
+from logger.transforms.base_transform import BaseTransform  # noqa: E402
 
 
 ################################################################################
-class UniqueTransform(Transform):
+class UniqueTransform(BaseTransform):
     """Return the record only if it has changed from the previous value."""
 
     def __init__(self):
@@ -21,7 +21,7 @@ class UniqueTransform(Transform):
         self.prev_record = ""
 
     ############################
-    def transform(self, record):
+    def _transform_single_record(self, record):
         """If same as previous, return None, else record."""
         if record == self.prev_record:
             return None

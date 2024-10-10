@@ -6,11 +6,11 @@ import sys
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.utils import formats  # noqa: E402
-from logger.transforms.transform import Transform  # noqa: E402
+from logger.transforms.base_transform import BaseTransform  # noqa: E402
 
 
 ################################################################################
-class RegexFilterTransform(Transform):
+class RegexFilterTransform(BaseTransform):
     """Only return records matching the specified regular expression."""
     ############################
 
@@ -21,20 +21,8 @@ class RegexFilterTransform(Transform):
         self.negate = negate
 
     ############################
-    def transform(self, record):
+    def _transform_single_record(self, record):
         """Does record contain pattern?"""
-        if not record:
-            return None
-
-        # If we've got a list, hope it's a list of records. Recurse,
-        # calling transform() on each of the list elements in order and
-        # return the resulting list.
-        if type(record) is list:
-            results = []
-            for single_record in record:
-                results.append(self.transform(single_record))
-            return results
-
         match = self.pattern.search(record)
         if match is None:
             if self.negate:

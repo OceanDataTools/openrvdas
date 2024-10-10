@@ -7,7 +7,7 @@ from logger.utils import formats  # noqa: E402
 
 
 ################################################################################
-class Transform:
+class BaseTransform:
     """
     Base class Transform about which we know nothing else. By default the
     input and output formats are Unknown unless overridden.
@@ -44,7 +44,15 @@ class Transform:
 
     ############################
     def transform(self, record):
-        """Should return None if the result of transformation is empty record"""
-        raise NotImplementedError('Class %s (subclass of Transform) is missing '
-                                  'implementation of transform() method.'
+        if record is None:
+            return None
+        if isinstance(record, list):
+            return [self.transform(single_record) for single_record in record]
+
+        return self._transform_single_record(record)
+
+    ############################
+    def _transform_single_record(self, record):
+        raise NotImplementedError('Class %s (subclass of BaseTransform) is missing '
+                                  'implementation of _transform_single() method.'
                                   % self.__class__.__name__)

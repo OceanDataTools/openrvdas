@@ -3,6 +3,7 @@ import logging
 # For efficient checksum code
 from functools import reduce
 from operator import xor
+from logger.transforms.base_transform import BaseTransform
 
 
 ############################
@@ -38,7 +39,7 @@ def compute_checksum(source):
 
 
 ################################################################################
-class NMEAChecksumTransform:
+class NMEAChecksumTransform(BaseTransform):
     """
     NMEAChecksumTransform checks the integrity/completeness of a record by confirming
     whether or not the checksum matches. If the checksum matches, it returns the record,
@@ -70,16 +71,13 @@ class NMEAChecksumTransform:
                               'write() method!')
                 self.writer = None
 
-    def transform(self, record):
+    def _transform_single_record(self, record):
         """
         Checks if computed checksum matches parsed checksum. If True, it returns the record,
         otherwise it calls send_error_message().
 
         record - the record in question
         """
-        if not record:
-            return None
-
         if not type(record) is str:
             logging.warning('NMEAChecksumTransform passed non-string record '
                             '(type %s): %s', type(record), record)

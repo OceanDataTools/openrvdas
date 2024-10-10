@@ -42,11 +42,11 @@ from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.utils.das_record import DASRecord  # noqa: E402
 from logger.utils.timestamp import time_str  # noqa: E402
-from logger.transforms.transform import Transform  # noqa: E402
+from logger.transforms.base_transform import BaseTransform  # noqa: E402
 
 
 ################################################################################
-class FormatTransform(Transform):
+class FormatTransform(BaseTransform):
     def __init__(self, format_str, defaults=None, use_iso_timestamp=False):
         """
         Output a formatted string in which field values from a DASRecord or field
@@ -83,20 +83,8 @@ class FormatTransform(Transform):
         self.defaults = defaults or {}
         self.use_uso_timestamp = use_iso_timestamp
 
-    def transform(self, record):
+    def _transform_single_record(self, record):
         # Make sure record is right format - DASRecord or dict
-        if not record:
-            return None
-
-        # If we've got a list, hope it's a list of records. Recurse,
-        # calling transform() on each of the list elements in order and
-        # return the resulting list.
-        if type(record) is list:
-            results = []
-            for single_record in record:
-                results.append(self.transform(single_record))
-            return results
-
         if type(record) is DASRecord:
             record_fields = record.fields
         elif type(record) is dict:

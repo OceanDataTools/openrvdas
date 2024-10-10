@@ -8,12 +8,12 @@ from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.utils import formats  # noqa: E402
 from logger.utils.das_record import DASRecord  # noqa: E402
-from logger.transforms.transform import Transform  # noqa: E402
+from logger.transforms.base_transform import BaseTransform  # noqa: E402
 
 
 ################################################################################
 #
-class FromJSONTransform(Transform):
+class FromJSONTransform(BaseTransform):
     """Convert passed JSON to either a DASRecord or a dict.
     """
 
@@ -28,20 +28,8 @@ class FromJSONTransform(Transform):
         self.das_record = das_record
 
     ############################
-    def transform(self, record):
+    def _transform_single_record(self, record):
         """Parse JSON record to Python data struct or DASRecord."""
-        if not record:
-            return None
-
-        # If we've got a list, hope it's a list of records. Recurse,
-        # calling transform() on each of the list elements in order and
-        # return the resulting list.
-        if type(record) is list:
-            results = []
-            for single_record in record:
-                results.append(self.transform(single_record))
-            return results
-
         if not type(record) is str:
             logging.warning('FromJSON transform received non-string input, '
                             'type: "%s"', type(record))
