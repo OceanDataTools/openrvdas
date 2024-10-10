@@ -1,9 +1,16 @@
 #!/usr/bin/env python3
 
 import logging
-import serial
 import sys
 import time
+
+# Don't freak out if pyserial isn't installed - unless they actually
+# try to instantiate a SerialReader
+try:
+    import serial
+    SERIAL_MODULE_FOUND = True
+except ModuleNotFoundError:
+    SERIAL_MODULE_FOUND = False
 
 sys.path.append('.')
 from logger.readers.serial_reader import SerialReader  # noqa: E402
@@ -40,7 +47,9 @@ class PolledSerialReader(SerialReader):
                          dsrdtr=dsrdtr, inter_byte_timeout=inter_byte_timeout,
                          exclusive=exclusive, max_bytes=max_bytes, eol=eol,
                          encoding=encoding, encoding_errors=encoding_errors)
-
+        if not SERIAL_MODULE_FOUND:
+            raise RuntimeError('Serial port functionality not available. Please '
+                               'install Python module pyserial.')
         if self.start_cmd:
             try:
                 self._send_command(start_cmd)
