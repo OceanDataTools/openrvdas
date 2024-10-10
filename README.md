@@ -61,7 +61,7 @@ YOUR PEERS WHO WILL TELL YOU THAT YOU REALLY SHOULD HAVE KNOWN BETTER.
 
 ## Documentation
 
-Most OpenRVDAS documentation is gathered in the [docs/](docs/) subdirectory of this project. We recommend beginning with [OpenRVDAS Introduction and Overview](docs/intro_and_overview.md), [Introduction to Loggers](docs/intro_to_loggers.md) and [Controlling Loggers](docs/controlling_loggers.md) to get started.
+Most OpenRVDAS documentation is gathered in the [docs/](docs/) subdirectory of this project. We recommend beginning with [docs/README.md](docs/README.md) for an overview on where and how to get started.
 
 Extensive online documentation, including quick start guides, is also available on the project's home page at [https://openrvdas.org/](https://openrvdas.org/).
 
