@@ -10,11 +10,11 @@ import sys
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.utils.das_record import DASRecord  # noqa: E402
-from logger.transforms.transform import Transform  # noqa: E402
+from logger.transforms.base_transform import BaseTransform  # noqa: E402
 
 
 ################################################################################
-class SelectFieldsTransform(Transform):
+class SelectFieldsTransform(BaseTransform):
     """Cull key:value pairs from a record's field dict. Can accept a
     top-level dict, a field dict or a DASRecord, and will return a
     record in the same format as it received.
@@ -47,7 +47,7 @@ class SelectFieldsTransform(Transform):
                             '"delete" arguments will be ignored.')
 
     ############################
-    def transform(self, record):
+    def _transform_single_record(self, record):
         """
         Return a copy of the passed record with the relevant fields kept/deleted.
         """
@@ -67,14 +67,6 @@ class SelectFieldsTransform(Transform):
         # we're going to pass records through unchanged.
         if self.keep and self.delete:
             return new_record
-
-        # If we've got a list, hope it's a list of records. Try to add
-        # them all.
-        if type(new_record) is list:
-            new_record_list = []
-            for single_new_record in new_record:
-                new_record_list.append(self.transform(single_new_record))
-            return new_record_list
 
         # If it's a dict, hope it's a single record.
         elif type(new_record) is DASRecord:

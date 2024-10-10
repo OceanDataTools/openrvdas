@@ -5,11 +5,11 @@ import sys
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.utils import record_parser  # noqa: E402
-from logger.transforms.transform import Transform  # noqa: E402
+from logger.transforms.base_transform import BaseTransform  # noqa: E402
 
 
 ################################################################################
-class ParseTransform(Transform):
+class ParseTransform(BaseTransform):
     """Parse a "<data_id> <timestamp> <message>" record and return
     corresponding dict of values (or JSON or DASRecord if specified)."""
 
@@ -79,18 +79,6 @@ class ParseTransform(Transform):
             delimiter=delimiter)
 
     ############################
-    def transform(self, record):
+    def _transform_single_record(self, record):
         """Parse record and return DASRecord."""
-        if record is None:
-            return None
-
-        # If we've got a list, hope it's a list of records. Recurse,
-        # calling transform() on each of the list elements in order and
-        # return the resulting list.
-        if type(record) is list:
-            results = []
-            for single_record in record:
-                results.append(self.transform(single_record))
-            return results
-
         return self.parser.parse_record(record)

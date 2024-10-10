@@ -7,12 +7,12 @@ from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.utils import formats  # noqa: E402
 from logger.utils.das_record import DASRecord  # noqa: E402
-from logger.transforms.transform import Transform  # noqa: E402
+from logger.transforms.base_transform import BaseTransform  # noqa: E402
 
 
 ################################################################################
 #
-class ToDASRecordTransform(Transform):
+class ToDASRecordTransform(BaseTransform):
     """Convert passed record to DASRecord. If initialized with a
     field_name, expect to be passed strings, and use those strings as
     the corresponding field values. Otherwise, expect a dict, and use it
@@ -26,20 +26,8 @@ class ToDASRecordTransform(Transform):
         self.field_name = field_name
 
     ############################
-    def transform(self, record):
+    def _transform_single_record(self, record):
         """Convert record to DASRecord."""
-        if not record:
-            return None
-
-        # If we've got a list, hope it's a list of records. Recurse,
-        # calling transform() on each of the list elements in order and
-        # return the resulting list.
-        if type(record) is list:
-            results = []
-            for single_record in record:
-                results.append(self.transform(single_record))
-            return results
-
         if self.field_name:
             if type(record) is str:
                 das_record = DASRecord(data_id=self.data_id, fields={self.field_name: record})

@@ -10,11 +10,11 @@ from xml.sax import make_parser
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.utils import formats  # noqa: E402
-from logger.transforms.transform import Transform  # noqa: E402
+from logger.transforms.base_transform import BaseTransform  # noqa: E402
 
 
 ################################################################################
-class XMLAggregatorTransform(Transform):
+class XMLAggregatorTransform(BaseTransform):
     """Aggregate passed lines of XML until a complete XML record whose
     outermost element matches 'tag' has been seen, then pass it on as a
     single record."""
@@ -39,20 +39,8 @@ class XMLAggregatorTransform(Transform):
         self.parser.setContentHandler(self.handler)
 
     ############################
-    def transform(self, record):
+    def _transform_single_record(self, record):
         """Aggregate, returning None until we're done, then return record."""
-        if record is None:
-            return None
-
-        # If we've got a list, hope it's a list of records. Recurse,
-        # calling transform() on each of the list elements in order and
-        # return the resulting list.
-        if type(record) is list:
-            results = []
-            for single_record in record:
-                results.append(self.transform(single_record))
-            return results
-
         with self.buffer_lock:
             # Feed record to the incremental parser
             self.buffer += record + '\n'

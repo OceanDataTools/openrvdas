@@ -4,7 +4,7 @@ import sys
 import unittest
 
 sys.path.append('.')
-from logger.transforms.transform import Transform  # noqa: E402
+from logger.transforms.base_transform import BaseTransform  # noqa: E402
 from logger.utils import formats  # noqa: E402
 
 
@@ -13,8 +13,8 @@ class TestTransform(unittest.TestCase):
     ############################
     # Check that transform input/output_formats work the way we expect
     def test_formats(self):
-        transform = Transform(input_format=formats.Text,
-                              output_format=formats.Text)
+        transform = BaseTransform(input_format=formats.Text,
+                                  output_format=formats.Text)
 
         self.assertEqual(transform.input_format(), formats.Text)
         self.assertEqual(transform.input_format(formats.NMEA), formats.NMEA)
