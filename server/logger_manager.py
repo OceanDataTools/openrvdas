@@ -202,8 +202,8 @@ class LoggerManager:
         send an updated cruise definition to the console.
         """
         logging.info('Fetching new cruise definitions from API')
-        try:
-            with self.config_lock:
+        with self.config_lock:
+            try:
                 self.loggers = self.api.get_loggers()
                 self.config_to_logger = {}
                 for logger, logger_configs in self.loggers.items():
@@ -233,8 +233,8 @@ class LoggerManager:
                 logging.info('Sending updated cruise definitions to CDS.')
                 self._write_record_to_data_server(
                     'status:cruise_definition', cruise_dict)
-        except (AttributeError, ValueError, TypeError) as e:
-            logging.info('Failed to update cruise definition: %s', e)
+            except (AttributeError, ValueError, TypeError) as e:
+                logging.info('Failed to update cruise definition: %s', e)
 
     ############################
     def _check_logger_status_loop(self):
@@ -545,10 +545,6 @@ if __name__ == '__main__':  # noqa: C901
     api.on_load(callback=logger_manager._load_new_definition_from_api)
 
     ############################
-    # Start all the various LoggerManager threads running
-    logger_manager.start()
-
-    ############################
     # If they've given us an initial configuration, get and load it.
     if args.config:
         config = read_config(args.config)
@@ -564,6 +560,10 @@ if __name__ == '__main__':  # noqa: C901
                         log_level=api.INFO,
                         message='started with: %s, mode %s' %
                         (args.config, active_mode))
+
+    ############################
+    # Start all the various LoggerManager threads running
+    logger_manager.start()
 
     try:
         # If no console, just wait for the configuration update thread to
