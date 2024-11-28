@@ -121,6 +121,16 @@ function get_os_type {
                 exit_gracefully
             fi
 
+        # Mint Linux
+        elif [[ ! -z `grep "NAME=\"Linux Mint\"" /etc/os-release` ]];then
+            OS_TYPE=Ubuntu
+            if [[ ! -z `grep "VERSION_ID=\"22" /etc/os-release` ]];then
+                OS_VERSION=22
+            else
+                echo "Sorry - unknown mint-Ubuntu OS Version! - exiting."
+                exit_gracefully
+            fi
+
         # With Debian (Raspbian) we're mapping to Ubuntu. Not clear that
         # version 10 -> 18 is the right map, but 11 (bullseye)-> 20 seems to work
         elif [[ ! -z `grep "NAME=\"Debian" /etc/os-release` ]] || [[ ! -z `grep "NAME=\"Raspbian" /etc/os-release` ]];then
