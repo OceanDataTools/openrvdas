@@ -79,9 +79,9 @@ class LoggerSupervisor:
 
     ###################
     def quit(self):
-        self.quit_flag = True
-
         with self.logger_map_lock:
+            self.quit_flag = True
+
             loggers = set(self.logger_runner_map)
             for logger in loggers:
                 self._delete_logger(logger)
@@ -170,6 +170,11 @@ class LoggerSupervisor:
             logging.warning('No logger configs to run!')
 
         with self.logger_map_lock:
+            # If we're in the process of quitting, go home - a different thread is
+            # already shutting things down.
+            if self.quit_flag:
+                return
+
             stale_loggers = set(self.logger_config_map) - set(configs)
             new_loggers = set(configs) - set(self.logger_config_map)
             other_loggers = set(self.logger_config_map) - stale_loggers - new_loggers
