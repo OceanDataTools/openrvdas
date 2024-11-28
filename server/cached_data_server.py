@@ -233,8 +233,8 @@ class RecordCache:
             if metadata:
                 metadata_fields = metadata.get('fields', {})
                 with self.metadata_lock:
-                    for field, value in metadata_fields.items():
-                        self.metadata[field] = value
+                    for mfield, value in metadata_fields.items():
+                        self.metadata[mfield] = value
 
     ############################
     def _add_tuple(self, field, value_tuple):
@@ -961,17 +961,16 @@ class CachedDataServer:
         """
         logging.info('Starting WebSocketServer on port %d', self.port)
         try:
-            # Note: unittest raises a deprecation warning here:
-            #    DeprecationWarning: remove loop argument
-            # but removing the loop arg causes errors.
-            self.websocket_server = websockets.serve(
-                ws_handler=self._serve_websocket_data,
-                host='', port=self.port, loop=self.event_loop)
+            try:  # Websockets 14 omits event loop from invocation, so try both ways.
+                self.websocket_server = websockets.serve(ws_handler=self._serve_websocket_data,
+                    host='', port=self.port)
+            except RuntimeError:
+                self.websocket_server = websockets.serve(ws_handler=self._serve_websocket_data,
+                    host='', port=self.port, loop=self.event_loop)
 
             # If event loop is already running, just add server to task list
             if self.event_loop.is_running():
-                asyncio.ensure_future(
-                    self.websocket_server, loop=self.event_loop)
+                asyncio.ensure_future(self.websocket_server, loop=self.event_loop)
 
             # Otherwise, fire up the event loop now
             else:
@@ -988,10 +987,10 @@ class CachedDataServer:
     def quit(self):
         """Exit the loop and shut down all loggers.
         """
-        self.quit_flag = True
-
         # Close any connections
         with self._connection_lock:
+            self.quit_flag = True
+
             for connection in self._connections:
                 connection.quit()
         logging.info('WebSocketServer closed')
@@ -1130,7 +1129,7 @@ if __name__ == '__main__':
             group_port = udp_spec.split(':')
             port = int(group_port[-1])
             multicast_group = group_port[-2] if len(group_port) == 2 else ''
-            readers.append(UDPReader(port=port, source=multicast_group))
+            readers.append(UDPReader(port=port, mc_group=multicast_group))
         transform = FromJSONTransform()
         reader = ComposedReader(readers=readers, transforms=[transform])
 
