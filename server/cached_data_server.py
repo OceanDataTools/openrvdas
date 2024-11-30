@@ -995,7 +995,9 @@ class CachedDataServer:
 
     ############################
     """Top-level coroutine for running CachedDataServer."""
-    async def _serve_websocket_data(self, websocket):
+    async def _serve_websocket_data(self, websocket, unused_loop_arg=None):
+        # Legacy websocket code passes in event loop as third argument; we don't need it,
+        # but include so code works both pre and post WS14.
 
         # Here is where we see the anomalous behavior - when constructed
         # directly, self.cache is as it should be: a shared cache. But
