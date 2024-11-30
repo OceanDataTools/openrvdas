@@ -926,7 +926,6 @@ class CachedDataServer:
         except Exception as e:
             logging.error('Failed to start event loop: %s', str(e))
 
-
     ############################
     def __del__(self):
         if self.event_loop:
@@ -953,7 +952,6 @@ class CachedDataServer:
             if self.disk_cache:
                 self.cache.save_to_disk(self.disk_cache)
 
-
     ############################
     def _run_websocket_server(self):
         """Start serving on the specified websocket."""
@@ -973,7 +971,6 @@ class CachedDataServer:
 
         # Use asyncio.run to manage the event loop
         asyncio.run(start_server())
-
 
     ############################
     def quit(self):
