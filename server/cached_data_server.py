@@ -867,8 +867,7 @@ class CachedDataServer:
             max_records=60 * 24,
             min_back_records=100,
             cleanup_interval=60,
-            disk_cache=None,
-            event_loop=None):
+            disk_cache=None):
         """
         port         Port on which to serve websocket connections
         interval     How frequently to serve updates
@@ -883,7 +882,6 @@ class CachedDataServer:
                      and save to disk (if disk_cache is specified)
         disk_cache   If not None, name of directory in which to backup values
                      from in-memory cache
-        event_loop   If not None, the event loop to use for websocket events
         """
         self.port = port
         self.interval = interval
@@ -891,7 +889,6 @@ class CachedDataServer:
         self.max_records = max_records
         self.min_back_records = min_back_records
         self.cleanup_interval = cleanup_interval
-        self.event_loop = event_loop
 
         self.cache = RecordCache()
 
@@ -907,15 +904,6 @@ class CachedDataServer:
         self._connections = []
         self._connection_lock = threading.Lock()
 
-        # If we've received an event loop, use it, otherwise create a new one
-        # of our own.
-        if not event_loop:
-            self.event_loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(self.event_loop)
-        else:
-            self.event_loop = None
-            asyncio.set_event_loop(event_loop)
-
         self.quit_flag = False
 
         # Start a thread to loop through, cleaning up the cache and (if we've
@@ -926,8 +914,18 @@ class CachedDataServer:
         # event loop. Calling quit() it will close any remaining
         # connections and stop the event loop, terminating the server.
         self.server_thread = threading.Thread(
-            target=self._run_websocket_server, daemon=True)
+            target=self._start_event_loop, daemon=True)
         self.server_thread.start()
+
+    def _start_event_loop(self):
+        """Initialize and run the asyncio event loop in the current thread."""
+        try:
+            self.event_loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(self.event_loop)  # Bind the loop to this thread
+            self._run_websocket_server()
+        except Exception as e:
+            logging.error('Failed to start event loop: %s', str(e))
+
 
     ############################
     def __del__(self):
@@ -955,33 +953,27 @@ class CachedDataServer:
             if self.disk_cache:
                 self.cache.save_to_disk(self.disk_cache)
 
+
     ############################
     def _run_websocket_server(self):
-        """Start serving on the specified websocket.
-        """
-        logging.info('Starting WebSocketServer on port %d', self.port)
-        try:
-            try:  # Websockets 14 omits event loop from invocation, so try both ways.
-                self.websocket_server = websockets.serve(ws_handler=self._serve_websocket_data,
-                    host='', port=self.port)
-            except RuntimeError:
-                self.websocket_server = websockets.serve(ws_handler=self._serve_websocket_data,
-                    host='', port=self.port, loop=self.event_loop)
+        """Start serving on the specified websocket."""
+        async def start_server():
+            logging.info('Starting WebSocketServer on port %d', self.port)
+            try:
+                self.websocket_server = await websockets.serve(
+                    self._serve_websocket_data,
+                    host='',
+                    port=self.port
+                )
+                logging.info('WebSocket server running on port %d', self.port)
+                await self.websocket_server.wait_closed()
+            except OSError as e:
+                logging.fatal('Failed to open websocket on port %d: %s', self.port, e)
+                raise e
 
-            # If event loop is already running, just add server to task list
-            if self.event_loop.is_running():
-                asyncio.ensure_future(self.websocket_server, loop=self.event_loop)
+        # Use asyncio.run to manage the event loop
+        asyncio.run(start_server())
 
-            # Otherwise, fire up the event loop now
-            else:
-                self.event_loop.run_until_complete(self.websocket_server)
-                self.event_loop.run_forever()
-        except OSError as e:
-            logging.fatal(
-                'Failed to open websocket on port %s: %s',
-                self.port,
-                str(e))
-            raise e
 
     ############################
     def quit(self):
@@ -1003,8 +995,7 @@ class CachedDataServer:
 
     ############################
     """Top-level coroutine for running CachedDataServer."""
-    async def _serve_websocket_data(self, websocket, path):
-        logging.debug('New data websocket client attached: %s', path)
+    async def _serve_websocket_data(self, websocket):
 
         # Here is where we see the anomalous behavior - when constructed
         # directly, self.cache is as it should be: a shared cache. But
