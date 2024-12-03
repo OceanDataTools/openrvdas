@@ -184,22 +184,9 @@ class TrueWindsTransform(DerivedDataTransform):
         return metadata_fields
 
     ############################
-    def transform(self, record):
+    def _transform_single_record(self, record):
         """Incorporate any useable fields in this record, and if it gives
         us a new true wind value, return the results."""
-
-        if record is None:
-            return None
-
-        # If we've got a list, hope it's a list of records. Recurse,
-        # calling transform() on each of the list elements in order and
-        # return the resulting list.
-        if type(record) is list:
-            results = []
-            for single_record in record:
-                results.append(self.transform(single_record))
-            return results
-
         results = []
         for das_record in to_das_record_list(record):
             # If they haven't specified specific fields we should wait for

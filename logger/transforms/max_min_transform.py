@@ -7,12 +7,12 @@ from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.utils import formats  # noqa: E402
 from logger.utils.das_record import DASRecord  # noqa: E402
-from logger.transforms.transform import Transform  # noqa: E402
+from logger.transforms.base_transform import BaseTransform  # noqa: E402
 
 
 ################################################################################
 #
-class MaxMinTransform(Transform):
+class MaxMinTransform(BaseTransform):
     """Transform that returns None unless values in passed DASRecord or
     dict are greater than/less than the largest/smallest values seen for
     their respective variables. Otherwise returns dict of colon-suffixed
@@ -36,20 +36,8 @@ class MaxMinTransform(Transform):
         self.min = {}
 
     ############################
-    def transform(self, record):
+    def _transform_single_record(self, record):
         """Does record exceed any previously-observed bounds?"""
-        if not record:
-            return None
-
-        # If we've got a list, hope it's a list of records. Recurse,
-        # calling transform() on each of the list elements in order and
-        # return the resulting list.
-        if type(record) is list:
-            results = []
-            for single_record in record:
-                results.append(self.transform(single_record))
-            return results
-
         if type(record) is DASRecord:
             fields = record.fields
         elif type(record) is dict:

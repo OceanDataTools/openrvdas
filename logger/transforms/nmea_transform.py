@@ -29,6 +29,7 @@ import inspect
 # For efficient checksum code
 from functools import reduce
 from operator import xor
+from logger.transforms.base_transform import BaseTransform
 
 
 ############################
@@ -38,7 +39,7 @@ def checksum(source):
 
 
 ################################################################################
-class NMEATransform:
+class NMEATransform(BaseTransform):
     """Call our various component transforms and generate NMEA strings from them.
     """
 
@@ -129,7 +130,7 @@ direction, so omit if not available.
 ################################################################################
 
 
-class MWDTransform:
+class MWDTransform(BaseTransform):
     """Output a NMEA MWD string, given true wind and (when available)
     magnetic variation.
     """
@@ -166,7 +167,7 @@ class MWDTransform:
         self.magnetic_variation = None
 
     ############################
-    def transform(self, record):
+    def _transform_single_record(self, record):
         """Incorporate any useable fields in this record. If it gives us a
         new MWD record, return it.
         """
@@ -260,7 +261,7 @@ TextFileWriter, for example) acting appropriately.
 ################################################################################
 
 
-class XDRTransform:
+class XDRTransform(BaseTransform):
     """Output a NMEA XDR string, given whatever variables we can find.
     """
 
@@ -300,7 +301,7 @@ class XDRTransform:
         self.xdr_talker_id = kwargs.get('xdr_talker_id', None)
 
     ############################
-    def transform(self, record):
+    def _transform_single_record(self, record):
         """Incorporate any useable fields in this record, and if it gives us a
         new true wind value, return the results.
         """
@@ -341,7 +342,7 @@ class XDRTransform:
 
 ################################################################################
 
-class DPTTransform:
+class DPTTransform(BaseTransform):
     """Take in records and emit a NMEA DPT string, as per format:
       $--DPT,x.x,x.x,*nn<CR><LF> \\
     Field Number:
@@ -375,7 +376,7 @@ class DPTTransform:
         self.dpt_talker_id = kwargs.get('dpt_talker_id', None)
 
     ############################
-    def transform(self, record):
+    def _transform_single_record(self, record):
         """Incorporate any useable fields in this record, and if it gives us a
         new true wind value, return the results.
         """
@@ -386,7 +387,7 @@ class DPTTransform:
             return None
         fields = record.get('fields', None)
         if not fields:
-            logging.debug('MWDTransform got record with no fields: %s', record)
+            logging.debug('DPTTransform got record with no fields: %s', record)
             return None
 
         depth = fields.get(self.depth_field)
@@ -402,7 +403,7 @@ class DPTTransform:
 
 ################################################################################
 
-class STNTransform:
+class STNTransform(BaseTransform):
     """This sentence is transmitted before each individual sentence where there is a need for the
     Listener to determine the exact source of data in the system. Examples might include
     dual-frequency depth sounding equipment or equipment that integrates data from a
@@ -433,7 +434,7 @@ class STNTransform:
         self.stn_talker_id = kwargs.get('stn_talker_id', None)
 
     ############################
-    def transform(self, record):
+    def _transform_single_record(self, record):
         """Incorporate any useable fields in this record.
         """
         # Check that we've got the right record type - it should be a
@@ -443,7 +444,7 @@ class STNTransform:
             return None
         fields = record.get('fields', None)
         if not fields:
-            logging.debug('MWDTransform got record with no fields: %s', record)
+            logging.debug('STNTransform got record with no fields: %s', record)
             return None
 
         id = fields.get(self.id_field)

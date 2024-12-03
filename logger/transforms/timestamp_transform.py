@@ -6,14 +6,14 @@ from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.utils import formats  # noqa: E402
 from logger.utils import timestamp  # noqa: E402
-from logger.transforms.transform import Transform  # noqa: E402
+from logger.transforms.base_transform import BaseTransform  # noqa: E402
 
 
 ################################################################################
 """Prepend a timestamp to a text record."""
 
 
-class TimestampTransform(Transform):
+class TimestampTransform(BaseTransform):
     def __init__(self, time_format=timestamp.TIME_FORMAT,
                  time_zone=timestamp.timezone.utc, sep=' '):
         """If timestamp_format is not specified, use default format"""

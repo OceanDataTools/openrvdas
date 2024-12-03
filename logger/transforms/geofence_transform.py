@@ -51,8 +51,11 @@ import sys
 import time
 
 from os.path import dirname, realpath
-sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
+from logger.transforms.base_transform import BaseTransform
 from logger.utils.das_record import DASRecord  # noqa: E402
+
+sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
+
 
 # Load the transform-specific packages we need
 import_errors = False
@@ -73,7 +76,7 @@ except ImportError:
 
 
 ################################################################################
-class GeofenceTransform():
+class GeofenceTransform(BaseTransform):
     """Class that reads lat/lon from passed records and compare to a geofence loaded at
     initialization time. Emit pre-defined messages if lat/lon transition between inside
     and outside of fence.
@@ -211,7 +214,7 @@ class GeofenceTransform():
         return self.buffered_eez.contains(point).any()
 
     ############################
-    def transform(self, record):
+    def _transform_single_record(self, record):
         """Look for the named lat/lon fields in the passed dict. If the previous
         lat/lon pair was on one side of the geofence and this lat/lon pair is on
         the other, return the appropriate string defined in either
@@ -223,9 +226,6 @@ class GeofenceTransform():
                 DASRecords/dicts in which to look for the specified latitude_field_name
                 and longitude_field_name.
         """
-        if record is None:
-            return None
-
         # If we've checked too recently, skip check. Note that because this decision
         # is made for computational efficiency rather than data efficiency, it is made
         # based on system time, not the timestamp of the record.
@@ -235,15 +235,6 @@ class GeofenceTransform():
             logging.debug(f'Only {time_since_last} seconds since last GeofenceTransform check; '
                           f'less than the {self.seconds_between_checks} required.')
             return None
-
-        # If we've got a list, hope it's a list of records. Recurse,
-        # calling transform() on each of the list elements in order and
-        # return the resulting list.
-        if type(record) is list:
-            results = []
-            for single_record in record:
-                results.append(self.transform(single_record))
-            return results
 
         # Does this record have a lat/lon?
         (lat, lon) = self._get_lat_lon(record)

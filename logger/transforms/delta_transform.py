@@ -1,5 +1,6 @@
 import logging
 
+from logger.transforms.base_transform import BaseTransform
 from logger.utils.das_record import DASRecord  # noqa: E402
 
 KNOWN_FIELD_TYPES = ['polar']
@@ -11,7 +12,7 @@ def polar_diff(last_value, value):
 
 
 ################################################################################
-class DeltaTransform:
+class DeltaTransform(BaseTransform):
     def __init__(self, rate=False, field_type=None):
         """Return a DASRecord (or dict, depending on input record type) with
         each field's delta in value from it's previous value. If a field
@@ -49,12 +50,7 @@ class DeltaTransform:
         self.last_value_dict = {}
 
     ############################
-    def transform(self, record):
-        if not record:
-            return None
-
-        fields = {}
-
+    def _transform_single_record(self, record):
         if type(record) is DASRecord:
             fields = record.fields
             timestamp = record.timestamp
@@ -62,12 +58,6 @@ class DeltaTransform:
         elif type(record) is dict:
             fields = record.get('fields', None)
             timestamp = record.get('timestamp', None)
-
-        elif type(record) is list:
-            results = []
-            for single_record in record:
-                results.append(self.transform(single_record))
-            return results
 
         else:
             logging.info('Record passed to DeltaTransform was neither a dict nor a '
