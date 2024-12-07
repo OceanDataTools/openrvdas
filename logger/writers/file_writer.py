@@ -4,7 +4,6 @@ import logging
 import os.path
 import sys
 import math
-import pprint
 
 from datetime import datetime, timedelta, timezone
 
@@ -307,8 +306,6 @@ class FileWriter(Writer):
             if not self.file:
                 self._set_file(self.filename)
 
-        if not isinstance(record, str):
-            record = pprint.pformat(record, indent=2)
         # Write the record and flush if requested
         self.file.write(record)
         if self.delimiter is not None:
