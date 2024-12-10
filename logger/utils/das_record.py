@@ -26,9 +26,9 @@ class DASRecord:
         """
         if json_str:
             parsed = json.loads(json_str)
-            self.data_id = parsed.get('data_id', None)
-            self.message_type = parsed.get('message_type', None)
-            self.timestamp = parsed.get('timestamp', None)
+            self.data_id = parsed.get('data_id')
+            self.message_type = parsed.get('message_type')
+            self.timestamp = parsed.get('timestamp')
             self.fields = parsed.get('fields', {})
             self.metadata = parsed.get('metadata', {})
         else:
@@ -117,7 +117,7 @@ def to_das_record_list(record):
     elif 'timestamp' in record and 'fields' in record:
         return [DASRecord(timestamp=record['timestamp'],
                           fields=record['fields'],
-                          metadata=record.get('metadata', None))]
+                          metadata=record.get('metadata'))]
 
     # If here, we believe we've received a field dict, in which each
     # field may have multiple [timestamp, value] pairs. First thing we

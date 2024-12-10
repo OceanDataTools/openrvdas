@@ -64,8 +64,8 @@ class RedisReader(Reader):
         while True:
             message = next(iter(self.pubsub.listen()))
             logging.debug('Got message "%s"', message)
-            if message.get('type', None) == 'message':
-                data = message.get('data', None)
+            if message.get('type') == 'message':
+                data = message.get('data')
                 if data:
                     return data
 
@@ -73,6 +73,6 @@ class RedisReader(Reader):
         # while True:
         #  message = self.pubsub.get_message(timeout=10)
         #  if message:
-        #    record = message.get('data', None)
+        #    record = message.get('data')
         #    if record:
         #      return record

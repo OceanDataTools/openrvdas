@@ -185,8 +185,8 @@ class RecordCache:
             metadata = record.metadata
         elif isinstance(record, dict):
             record_timestamp = record.get('timestamp', time.time())
-            fields = record.get('fields', None)
-            metadata = record.get('metadata', None)
+            fields = record.get('fields')
+            metadata = record.get('metadata')
             if fields is None:
                 logging.debug(
                     'Dict record passed to cache_record() has no '
@@ -503,7 +503,7 @@ class WebSocketConnection:
                 # otherwise send everything.
                 elif request['type'] == 'describe':
                     logging.debug('describe request')
-                    fields = request.get('fields', None)
+                    fields = request.get('fields')
                     result = self.cache.get_metadata(fields)
                     await self.send_json_response(
                         {'type': 'describe', 'status': 200, 'data': result})
@@ -511,7 +511,7 @@ class WebSocketConnection:
                 # Client wants to publish to cache and provides a dict of data
                 elif request['type'] == 'publish':
                     logging.debug('publish request')
-                    data = request.get('data', None)
+                    data = request.get('data')
                     if data is None:
                         await self.send_json_response(
                             {'type': 'publish', 'status': 400,
@@ -531,7 +531,7 @@ class WebSocketConnection:
                 elif request['type'] == 'subscribe':
                     logging.debug('subscribe request')
                     # Have they given us a new subscription interval?
-                    requested_interval = request.get('interval', None)
+                    requested_interval = request.get('interval')
                     if requested_interval is not None:
                         try:
                             interval = float(requested_interval)
@@ -543,7 +543,7 @@ class WebSocketConnection:
                             continue
 
                     # Which fields do they want?
-                    raw_requested_fields = request.get('fields', None)
+                    raw_requested_fields = request.get('fields')
                     if not raw_requested_fields:
                         await self.send_json_response(
                             {'type': 'subscribe', 'status': 400,
@@ -591,7 +591,7 @@ class WebSocketConnection:
                                 logging.debug('No data for requested field %s', matching_field_name)
                                 continue
                             with self.cache.locks[field_name]:
-                                field_cache = self.cache.data.get(matching_field_name, None)
+                                field_cache = self.cache.data.get(matching_field_name)
                                 if field_cache is None:
                                     logging.debug('No cached data for %s', matching_field_name)
                                     continue
@@ -676,7 +676,7 @@ class WebSocketConnection:
                                 continue
 
                             with self.cache.locks[field_name]:
-                                field_cache = self.cache.data.get(field_name, None)
+                                field_cache = self.cache.data.get(field_name)
                                 if field_cache is None:
                                     logging.debug(
                                         'No cached data for %s', field_name)

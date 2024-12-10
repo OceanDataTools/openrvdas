@@ -37,12 +37,12 @@ class ExtractFieldTransform(Transform):
             return results
 
         if type(record) is DASRecord:
-            return record.fields.get(self.field_name, None)
+            return record.fields.get(self.field_name)
         elif type(record) is dict:
-            fields = record.get('fields', None)
+            fields = record.get('fields')
             if not fields:
                 return None
-            return fields.get(self.field_name, None)
+            return fields.get(self.field_name)
 
         logging.warning('ExtractFieldTransform found no field "%s" in record "%s"',
                         self.field_name, record)

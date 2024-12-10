@@ -262,11 +262,11 @@ def choose_file(request, selection=None):
 
     # If post, figure out what user selected
     if request.method == 'POST':
-        dir_name = request.POST.get('dir_name', None)
+        dir_name = request.POST.get('dir_name')
         selection = [request.POST.get('select_file', '')]
 
         # Was this a request to load the target file?
-        target_file = request.POST.get('target_file', None)
+        target_file = request.POST.get('target_file')
         if target_file:
             try:
                 # Load the file to memory and parse to a dict. Add the name of

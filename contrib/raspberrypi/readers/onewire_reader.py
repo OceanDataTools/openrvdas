@@ -129,7 +129,7 @@ class OneWireReader():
         if self.mac_addresses:
             results = []
             for mac in self.mac_addresses:
-                sensor = self.mac_map.get(mac, None)
+                sensor = self.mac_map.get(mac)
                 results.append(self._safe_get_temperature(sensor))
         else:
             results = [self._safe_get_temperature(sensor) for sensor in self.sensors]

@@ -178,9 +178,9 @@ class InfluxDBWriter(Writer):
                 fields = record.fields
                 timestamp = record.timestamp
             else:
-                data_id = record.get('data_id', None)
+                data_id = record.get('data_id')
                 fields = record.get('fields', {})
-                timestamp = record.get('timestamp', None) or time.time()
+                timestamp = record.get('timestamp') or time.time()
             influxDB_record = {
                 'measurement': self.measurement_name or data_id,
                 'tags': {'sensor': data_id or self.measurement_name or self.bucket_name},

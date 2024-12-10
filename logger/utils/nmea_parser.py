@@ -51,13 +51,13 @@ class NMEAParser:
             return None
 
         # Figure out what kind of message we're expecting, based on data_id
-        sensor = self.sensors.get(data_id, None)
+        sensor = self.sensors.get(data_id)
         if not sensor:
             logging.error('Unrecognized data_id ("%s") in record: %s',
                           data_id, nmea_record)
             return None
 
-        model_name = sensor.get('model', None)
+        model_name = sensor.get('model')
         if not model_name:
             logging.error('No "model" for sensor %s', sensor)
             return None
@@ -71,14 +71,14 @@ class NMEAParser:
             return None
 
         # Finally, convert field values to variable names specific to sensor
-        sensor_fields = sensor.get('fields', None)
+        sensor_fields = sensor.get('fields')
         if not sensor_fields:
             logging.error('No "fields" definition found for sensor %s', data_id)
             return None
 
         named_fields = {}
         for field_name in fields:
-            var_name = sensor_fields.get(field_name, None)
+            var_name = sensor_fields.get(field_name)
             if var_name:
                 named_fields[var_name] = fields[field_name]
 
@@ -109,7 +109,7 @@ class NMEAParser:
         # instruments use spaces or other characters (Gravimeter, for
         # example, uses both spaces and ':'). Look up sensor model and see
         # if we have a non-default delimiter defined.
-        sensor_model = self.sensor_models.get(sensor_model_name, None)
+        sensor_model = self.sensor_models.get(sensor_model_name)
         if not sensor_model:
             raise ValueError('No sensor_model  matching "%s"' % sensor_model_name)
 
@@ -133,7 +133,7 @@ class NMEAParser:
                           'in definition_base: %s', message_type, definition_base)
 
             # If there's no 'fields', there ought to be a 'messages'
-            sensor_messages = definition_base.get('messages', None)
+            sensor_messages = definition_base.get('messages')
             if not sensor_messages:
                 raise ValueError('Sensor model %s must have either "fields" or '
                                  '"messages" definition.' % sensor_model_name)
@@ -143,7 +143,7 @@ class NMEAParser:
             element = fields.pop(0)
             message_type = message_type + '-' + element if message_type else element
 
-            definition = sensor_messages.get(element, None)
+            definition = sensor_messages.get(element)
             if not definition:
                 raise ValueError('Message "%s" is not one defined by model %s (%s)'
                                  % (message_type, sensor_model_name, sensor_messages))
@@ -159,7 +159,7 @@ class NMEAParser:
             # previously loaded into self.messages. Look it up, make that
             # our new definition_base and loop.
             if isinstance(definition, str):
-                definition_base = self.messages.get(definition, None)
+                definition_base = self.messages.get(definition)
                 logging.debug('Definition is reference to message "%s"; loaded: %s',
                               definition, definition_base)
                 if not definition_base:

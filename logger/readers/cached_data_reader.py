@@ -95,15 +95,15 @@ class CachedDataReader(Reader):
     ############################
     def _parse_response(self, response):
         """Parse a CachedDataServer response and enqueue the resulting data."""
-        if not response.get('type', None) == 'data':
+        if not response.get('type') == 'data':
             logging.info('Non-"data" response received from data '
                          'server: %s', response)
             return
-        if not response.get('status', None) == 200:
+        if not response.get('status') == 200:
             logging.warning('Non-"200" status received from data '
                             'server: %s', response)
             return
-        data = response.get('data', None)
+        data = response.get('data')
         if not data:
             logging.debug('No data found in data server response?: %s', response)
             return

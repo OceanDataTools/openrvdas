@@ -562,7 +562,7 @@ class LoadConfigurationFileAPIView(APIView):
         if serializer.validated_data.get("target_file"):
             # try to load it.
             load_errors = []
-            target_file = serializer.validated_data.get("target_file", None)
+            target_file = serializer.validated_data.get("target_file")
 
             if target_file is None:
                 return Response({"status": f"File not found. {target_file}"}, 404)

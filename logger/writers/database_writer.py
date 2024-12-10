@@ -97,7 +97,7 @@ class DatabaseWriter(Writer):
         if isinstance(record, dict):
             try:
                 data_id = record.get('data_id', 'no_data_id')
-                timestamp = record.get('timestamp', None)
+                timestamp = record.get('timestamp')
                 fields = record['fields']
                 record = DASRecord(data_id=data_id, timestamp=timestamp, fields=fields)
             except KeyError:
@@ -137,9 +137,9 @@ class DatabaseWriter(Writer):
 
         # If here, our record is a dict, figure out whether it is a top-level
         # field dict or not.
-        data_id = record.get('data_id', None)
+        data_id = record.get('data_id')
         timestamp = record.get('timestamp', time.time())
-        fields = record.get('fields', None)
+        fields = record.get('fields')
         if fields is None:
             logging.error('Dict record passed to DatabaseWriter has no "fields" '
                           'key, which either means it\'s not a dict you should be '

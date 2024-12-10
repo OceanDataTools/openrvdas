@@ -27,7 +27,7 @@ def subsample(algorithm, values, latest_timestamp, now):
         logging.info('Function subsample() handed empty values list')
         return None
 
-    alg_type = algorithm.get('type', None)
+    alg_type = algorithm.get('type')
 
     ##################
     # Select algorithm

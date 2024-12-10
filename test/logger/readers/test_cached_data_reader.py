@@ -46,13 +46,13 @@ class TestCachedDataReader(unittest.TestCase):
 
         time.sleep(0.05)
         response = cdr.read()
-        self.assertDictEqual(response.get('fields', None),
+        self.assertDictEqual(response.get('fields'),
                              {'field_1': 'value_11',
                               'field_2': 'value_21',
                               'field_3': 'value_31'})
         time.sleep(0.05)
         response = cdr.read()
-        self.assertDictEqual(response.get('fields', None),
+        self.assertDictEqual(response.get('fields'),
                              {'field_1': 'value_12',
                               'field_2': 'value_22',
                               'field_3': 'value_32'})
@@ -61,7 +61,7 @@ class TestCachedDataReader(unittest.TestCase):
                                      'field_2': 'value_23'}})
         time.sleep(0.05)
         response = cdr.read()
-        self.assertDictEqual(response.get('fields', None),
+        self.assertDictEqual(response.get('fields'),
                              {'field_1': 'value_13',
                               'field_2': 'value_23'})
 

@@ -180,15 +180,15 @@ class GeofenceTransform():
 
         if type(record) is dict:
             # Is it a simple dict with lat/lon defined at the top level?
-            lat = record.get(self.latitude_field_name, None)
-            lon = record.get(self.longitude_field_name, None)
+            lat = record.get(self.latitude_field_name)
+            lon = record.get(self.longitude_field_name)
             if lat is not None and lon is not None:
                 return (lat, lon)
 
             # Is it a dict with a 'fields' subdict?
             if record.get('fields') is not None:
-                lat = record['fields'].get(self.latitude_field_name, None)
-                lon = record['fields'].get(self.longitude_field_name, None)
+                lat = record['fields'].get(self.latitude_field_name)
+                lon = record['fields'].get(self.longitude_field_name)
                 if lat is not None and lon is not None:
                     return (lat, lon)
 
@@ -197,8 +197,8 @@ class GeofenceTransform():
 
         # Maybe they've passed us a DASRecord
         if type(record) is DASRecord:
-            lat = record.fields.get(self.latitude_field_name, None)
-            lon = record.fields.get(self.longitude_field_name, None)
+            lat = record.fields.get(self.latitude_field_name)
+            lon = record.fields.get(self.longitude_field_name)
             if lat is not None and lon is not None:
                 return (lat, lon)
             else:
