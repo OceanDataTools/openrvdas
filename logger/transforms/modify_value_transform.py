@@ -65,48 +65,39 @@ class ModifyValueTransform(DerivedDataTransform):
         self.quiet = quiet
         self.metadata_interval = metadata_interval or 0
 
-        # Some sanity checking of the keys and values up front
-        expected_fields = set(['mult_factor', 'add_factor', 'output_name',
-                               'metadata', 'delete_original'])
-
-        for field, spec in fields.items():
-            extraneous_fields = set(spec) - expected_fields
-            if extraneous_fields:
-                raise ValueError(f'Found unexpected keys in ModifyValueTransform definition: '
-                                 f'{extraneous_fields}. Allowed keys are {expected_fields}')
-
-            # Check that our numerical factors are, in fact, numerical
-            mult_factor = spec.get('mult_factor')
-            if mult_factor is not None and not isinstance(mult_factor, (int, float)):
-                raise ValueError(f'Bad value for mult_factor in field {field}: "{mult_factor}". '
-                                 f'Must be numeric.')
-            add_factor = spec.get('add_factor')
-            if add_factor is not None and not isinstance(add_factor, (int, float)):
-                raise ValueError(f'Bad value for add_factor in field {field}: "{add_factor}". '
-                                 f'Must be numeric.')
-
-        # Internal state to keep track of
-        self.last_metadata_send = 0  # last time we've sent metadata
-
-        # For now, just send all metadata we've got when it's time
+        self._validate_fields()
+        self.last_metadata_send = 0
         self.metadata = {
-            field: field_data.get('metadata')
-            for field, field_data in fields.items()
-            if field_data.get('metadata')
+            field: spec.get('metadata')
+            for field, spec in fields.items() if spec.get('metadata')
         }
 
     ############################
-    def _metadata_fields(self, record):
-        """Return a dict of metadata for our derived fields."""
-        metadata = record.metadata or {}
-        for field in self.fields:
-            metadata[field] = self.fields[field]['metadata']
+    def _validate_fields(self):
+        """Validate the configuration of fields."""
+        allowed_keys = {'mult_factor', 'add_factor', 'output_name', 'metadata', 'delete_original'}
 
-        return metadata
+        for field, spec in self.fields.items():
+            extraneous_keys = set(spec) - allowed_keys
+            if extraneous_keys:
+                raise ValueError(f'Unexpected keys in field "{field}": {extraneous_keys}. '
+                                 f'Allowed keys are {allowed_keys}')
+
+            if not isinstance(spec.get('mult_factor', 1), (int, float)):
+                raise ValueError(f'Invalid "mult_factor" for field "{field}". Must be numeric.')
+            if not isinstance(spec.get('add_factor', 0), (int, float)):
+                raise ValueError(f'Invalid "add_factor" for field "{field}". Must be numeric.')
 
     ############################
     def transform(self, record):
         """
+        Transform a record or list of records.
+
+        Args:
+            record (DASRecord or list): The input record(s).
+
+        Returns:
+            Transformed record(s) or None if the input is invalid.
         """
         # If we've got a list, hope it's a list of records. Try to add
         # them all.
@@ -165,9 +156,16 @@ class ModifyValueTransform(DerivedDataTransform):
 
         # We're now done going through the record fields. If it's time to send metadata,
         # add it to any existing metadata for record, overwriting existing fields.
+        if self._should_attach_metadata(record):
+            result.metadata.update(self.metadata)
+
+        return result
+
+    ############################
+    def _should_attach_metadata(self, record):
+        """Determine if metadata should be attached to the record."""
         now = record.timestamp or time.time()
         if self.metadata_interval and now > self.last_metadata_send + self.metadata_interval:
             self.last_metadata_send = now
-            result.metadata |= self.metadata
-
-        return result
+            return True
+        return False
