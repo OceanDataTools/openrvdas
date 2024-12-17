@@ -21,8 +21,9 @@ class ModifyValueTransform(DerivedDataTransform):
     def __init__(self, fields, delete_unmatched=False, quiet=False,
                  metadata_interval=None):
         """
-        fields - a dict of fields to match. Key of each is the field to match. Values are
-           a dict of what to do with the value. E.g.:
+        fields
+           A dict of fields to match. Key of each is the field to match. Values are
+           a dict of what to do with the field value. E.g.:
 
             fields:
               FieldName:
