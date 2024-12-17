@@ -9,6 +9,7 @@ from .from_json_transform import FromJSONTransform
 from .geofence_transform import GeofenceTransform
 from .interpolation_transform import InterpolationTransform
 from .max_min_transform import MaxMinTransform
+from .modify_value_transform import ModifyValueTransform
 from .nmea_checksum_transform import NMEAChecksumTransform
 from .nmea_transform import NMEATransform
 from .parse_nmea_transform import ParseNMEATransform

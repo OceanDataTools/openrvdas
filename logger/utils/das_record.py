@@ -80,6 +80,29 @@ class DASRecord:
                 self.fields == other.fields and
                 self.metadata == other.metadata)
 
+    ############################
+    def __setitem__(self, field, value):
+        self.fields[field] = value
+
+    ############################
+    def __getitem__(self, field):
+        try:
+            return self.fields[field]
+        except KeyError:
+            logging.error(f'No field "{field}" found in DASRecord {self}')
+            raise
+
+    ############################
+    def __delitem__(self, field):
+        try:
+            del self.fields[field]
+        except KeyError:
+            logging.error(f'Attempt to delete non-existent field "{field}" in DASRecord: {self}')
+
+    ############################
+    def get(self, field, default=None):
+        return self.fields.get(field, default)
+
 
 def to_das_record_list(record):
     """Utility function to normalize different types of records into a
