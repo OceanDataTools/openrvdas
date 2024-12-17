@@ -21,7 +21,8 @@ class ModifyValueTransform(DerivedDataTransform):
     def __init__(self, fields, delete_unmatched=False, quiet=False,
                  metadata_interval=None):
         """
-        fields - a dict of fields to match.
+        fields - a dict of fields to match. Key of each is the field to match. Values are
+           a dict of what to do with the value. E.g.:
 
             fields:
               FieldName:
@@ -35,25 +36,24 @@ class ModifyValueTransform(DerivedDataTransform):
                 output_name: CorrectedFieldName2
               ....
 
-              Key of each is the field to match. Values are a dict of what to do with
-              the value, including:
-                mult_factor (default=1), add_factor (default=0)
-                  result = mult_factor * value + add_factor
+            Currently implemented manipulations for a field are:
+              mult_factor (default=1), add_factor (default=0)
+                result = mult_factor * value + add_factor
 
-                output_name (default is original field name)
-                  Add the result to the record as a new field
+              output_name (default is original field name)
+                Add the result to the record as a new field
 
-                delete_original (default=False)
-                  If true, and if output_name is specified, delete original field from record
+              delete_original (default=False)
+                If true, and if output_name is specified, delete original field from record
 
-                metadata (default=None)
-                  If specified, any metadata associated with the new value
+              metadata (default=None)
+                If specified, any metadata associated with the new value
 
         delete_unmatched (default=False)
           If true, delete any unmatched fields from the record
 
         quiet (default=False)
-          If True, don't warn if can't convert, or overwriting existing values
+          If True, don't warn if can't convert, or if overwriting existing values
 
         metadata_interval (default=None)
           If not None, how frequently, in seconds to attach field metadata to records
