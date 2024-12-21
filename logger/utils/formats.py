@@ -1,6 +1,13 @@
 #!/usr/bin/env python3
 
-"""Set of hierarchical utility classes used to check for input/output
+"""
+###############################################################################
+DEPRECATED!  Please see logger/utils/type_checking.py and
+logger/transforms/transform.py for the now-preferred way to validate
+component inputs.
+###############################################################################
+
+Set of hierarchical utility classes used to check for input/output
 compatibility between Readers, Writers and Transforms.
 
 The idea is that each class defined here (or elsewhere) represents a

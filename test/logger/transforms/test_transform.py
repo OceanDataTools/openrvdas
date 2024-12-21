@@ -1,34 +1,109 @@
 #!/usr/bin/env python3
 
+import logging
 import sys
 import unittest
 
+from typing import Union
+
 sys.path.append('.')
 from logger.transforms.transform import Transform  # noqa: E402
-from logger.utils import formats  # noqa: E402
 
 
+#############################
+# Concrete transform class that stringifies and appends '+'
+class ChildTransform(Transform):
+    def __init__(self, quiet=False):
+        super().__init__(quiet=quiet)  # types of records we can handle
+
+    def transform(self, record):
+        # If record is not of a type we know how to process, see if we can
+        # digest it into something we *can* process, then call transform()
+        # recursively.
+        if not self.can_process_record(record):  # inherited from Transform()
+            return self.digest_record(record)  # inherited from Transform()
+
+        # Do the actual transformation
+        result = str(record) + '+'
+        return result
+
+
+############################
 class TestTransform(unittest.TestCase):
+    ############################
+    def test_type_hints(self):
+        class ChildTransform(Transform):
+            def __init__(self, quiet=False):
+                super().__init__(quiet=quiet)  # types of records we can handle
+
+            def transform(self, record: Union[int, str, float]):
+                if not self.can_process_record(record):  # inherited from Transform()
+                    return self.digest_record(record)  # inherited from Transform()
+                return str(record) + '+'
+
+        t = ChildTransform()
+        self.assertFalse(t.can_process_record([1, 2, 3]))
+        self.assertFalse(t.can_process_record({1: 2, 2: 3}))
+        self.assertTrue(t.can_process_record('str'))
+
+        # Hand transform something it can't handle. Should warn us
+        with self.assertLogs(logging.getLogger(), logging.WARNING):
+            result = t.transform({1: 2, 2: 3})
+            self.assertEqual(result, None)
+
+        result = t.transform(5)
+        self.assertEqual(result, '5+')
+
+        result = t.transform(['a', 'b', 3.14])
+        self.assertEqual(result, ['a+', 'b+', '3.14+'])
+
+        result = t.transform(['a', 'b', None, 3.14])
+        self.assertEqual(result, ['a+', 'b+', '3.14+'])
+
+        # Should complain, but parse everything else in list
+        with self.assertLogs(logging.getLogger(), logging.WARNING):
+            result = t.transform(['a', {1: 2, 2: 3}, 'b', None, 3.14])
+            self.assertEqual(result, ['a+', 'b+', '3.14+'])
+
+        # Now tell it to not complain
+        t = ChildTransform(quiet=True)
+        # Hand transform something it can't handle. Should remain quiet, but
+        # return None
+        result = t.transform({1: 2, 2: 3})
+        self.assertEqual(result, None)
+
+        result = t.transform(['a', {1: 2, 2: 3}, 'b', None, 3.14])
+        self.assertEqual(result, ['a+', 'b+', '3.14+'])
 
     ############################
-    # Check that transform input/output_formats work the way we expect
-    def test_formats(self):
-        transform = Transform(input_format=formats.Text,
-                              output_format=formats.Text)
+    def test_no_type_hints(self):
 
-        self.assertEqual(transform.input_format(), formats.Text)
-        self.assertEqual(transform.input_format(formats.NMEA), formats.NMEA)
-        self.assertEqual(transform.input_format(), formats.NMEA)
+        class ChildTransform(Transform):
+            def __init__(self, quiet=False):
+                super().__init__(quiet=quiet)  # types of records we can handle
 
-        with self.assertRaises(TypeError):
-            transform.input_format('not a format')
+            def transform(self, record):
+                if not self.can_process_record(record):  # inherited from Transform()
+                    return self.digest_record(record)  # inherited from Transform()
+                return str(record) + '+'
 
-        self.assertEqual(transform.output_format(), formats.Text)
-        self.assertEqual(transform.output_format(formats.NMEA), formats.NMEA)
-        self.assertEqual(transform.output_format(), formats.NMEA)
+        t = ChildTransform()
+        self.assertTrue(t.can_process_record('str'))
+        self.assertTrue(t.can_process_record({1: 2, 3: 4}))
+        self.assertFalse(t.can_process_record([1, 2, 3]))
+        self.assertFalse(t.can_process_record(None))
 
-        with self.assertRaises(TypeError):
-            transform.output_format('not a format')
+        result = t.transform({1: 2, 2: 3})
+        self.assertEqual(result, '{1: 2, 2: 3}+')
+
+        result = t.transform(5)
+        self.assertEqual(result, '5+')
+
+        result = t.transform(['a', 'b', 3.14])
+        self.assertEqual(result, ['a+', 'b+', '3.14+'])
+
+        result = t.transform(['a', 'b', None, 3.14])
+        self.assertEqual(result, ['a+', 'b+', '3.14+'])
 
 
 if __name__ == '__main__':
