@@ -36,7 +36,7 @@ class TestToDASRecordTransform(unittest.TestCase):
 
         with self.assertLogs(level='WARNING'):
             das_record = t.transform(['this should log a warning'])
-        self.assertEqual(das_record, [None])
+        self.assertEqual(das_record, [])
 
 
 ################################################################################

@@ -9,7 +9,6 @@ from xml.sax import make_parser
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
-from logger.utils import formats  # noqa: E402
 from logger.transforms.transform import Transform  # noqa: E402
 
 
@@ -25,7 +24,6 @@ class XMLAggregatorTransform(Transform):
         'tag' should be the identity of the top-level XML element that
         we're expecting to read, e.g. 'OSU_DAS_Record'.
         """
-        super().__init__(input_format=formats.Text, output_format=formats.XML)
         self.tag = tag
 
         # Only let one thread touch buffer at a time. Of course, if we're
@@ -39,19 +37,12 @@ class XMLAggregatorTransform(Transform):
         self.parser.setContentHandler(self.handler)
 
     ############################
-    def transform(self, record):
+    def transform(self, record: str):
         """Aggregate, returning None until we're done, then return record."""
-        if record is None:
-            return None
 
-        # If we've got a list, hope it's a list of records. Recurse,
-        # calling transform() on each of the list elements in order and
-        # return the resulting list.
-        if type(record) is list:
-            results = []
-            for single_record in record:
-                results.append(self.transform(single_record))
-            return results
+        # See if it's something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from Transform()
+            return self.digest_record(record)  # inherited from Transform()
 
         with self.buffer_lock:
             # Feed record to the incremental parser

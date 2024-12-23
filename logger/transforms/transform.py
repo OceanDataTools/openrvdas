@@ -42,7 +42,7 @@ class Transform:
     ############################
     def __init__(self, quiet=False, input_format=None, output_format=None):
         self.quiet = quiet
-        self._initialize_type_hints()
+        self._initialize_type_hints(quiet=quiet)
 
         if input_format or output_format:
             logging.warning(f'Code warning: {self.__class__.__name__} use of '
@@ -50,7 +50,7 @@ class Transform:
                             f'Please see Transform code documentation.')
 
     ############################
-    def _initialize_type_hints(self):
+    def _initialize_type_hints(self, quiet=False):
         """ Retrieve any type hints for child transform() method so we can
         check whether the type of record we've received can be parsed
         natively or not."""
@@ -62,8 +62,8 @@ class Transform:
         # logging.warning(f'return_types: {self.return_types}')
 
         # Other things we'd want to make sure are defined.
+        self.quiet = quiet
         self.class_name = self.__class__.__name__
-        self.quiet = self.quiet or False
         self.initialized = True
 
     ############################

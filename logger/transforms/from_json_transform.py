@@ -6,7 +6,6 @@ import sys
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
-from logger.utils import formats  # noqa: E402
 from logger.utils.das_record import DASRecord  # noqa: E402
 from logger.transforms.transform import Transform  # noqa: E402
 
@@ -22,30 +21,15 @@ class FromJSONTransform(Transform):
         structure. If das_record == True, assume we've been passed a dict
         of field:value pairs, and try to embed them into a DASRecord.
         """
-        super().__init__(input_format=formats.Python_Record,
-                         output_format=formats.Text)
-
         self.das_record = das_record
 
     ############################
-    def transform(self, record):
+    def transform(self, record: str):
         """Parse JSON record to Python data struct or DASRecord."""
-        if not record:
-            return None
 
-        # If we've got a list, hope it's a list of records. Recurse,
-        # calling transform() on each of the list elements in order and
-        # return the resulting list.
-        if type(record) is list:
-            results = []
-            for single_record in record:
-                results.append(self.transform(single_record))
-            return results
-
-        if not type(record) is str:
-            logging.warning('FromJSON transform received non-string input, '
-                            'type: "%s"', type(record))
-            return None
+        # See if it's something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from Transform()
+            return self.digest_record(record)  # inherited from Transform()
 
         try:
             data = json.loads(record)

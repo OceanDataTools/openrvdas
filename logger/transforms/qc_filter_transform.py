@@ -7,11 +7,12 @@ DASRecords or dictionary, or...?
 
 """
 
+import logging
 import sys
 
 from os.path import dirname, realpath
+from typing import Union
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
-from logger.utils import formats  # noqa: E402
 from logger.utils.das_record import DASRecord  # noqa: E402
 from logger.transforms.transform import Transform  # noqa: E402
 
@@ -21,8 +22,15 @@ from logger.transforms.transform import Transform  # noqa: E402
 class QCFilterTransform(Transform):
     """
     Transform that returns None unless values in passed DASRecord are out of
-    bounds, in which case return a warning message."""
+    bounds, in which case return a warning message. Also return warning if
+    something other than a DASRecord or dict (or list of DASRecord or dict)
+    is passed.
 
+    Note that this module is due to be replaced by a more general value
+    matching transform, as per GitHub feature request:
+
+    https://github.com/OceanDataTools/openrvdas/issues/406
+    """
     def __init__(self, bounds, message=None):
         """
         ```
@@ -36,9 +44,6 @@ class QCFilterTransform(Transform):
                  are violated
         ```
         """
-        super().__init__(input_format=formats.Python_Record,
-                         output_format=formats.Text)
-
         self.message = message
         self.bounds = {}
         for condition in bounds.split(','):
@@ -53,20 +58,14 @@ class QCFilterTransform(Transform):
                                  'Found "%s" instead.' % condition)
 
     ############################
-    def transform(self, record):
+    def transform(self, record: Union[DASRecord, dict]):
         """Does record violate any bounds?"""
-        if not record:
-            return None
 
-        # If we've got a list, hope it's a list of records. Recurse,
-        # calling transform() on each of the list elements in order and
-        # return the resulting list.
-        if type(record) is list:
-            results = []
-            for single_record in record:
-                results.append(self.transform(single_record))
-            return results
+        # See if it's something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from Transform()
+            return self.digest_record(record)  # inherited from Transform()
 
+        # If here, we must be either a DASRecord or dict
         if type(record) is DASRecord:
             fields = record.fields
         elif type(record) is dict:
@@ -75,23 +74,29 @@ class QCFilterTransform(Transform):
             else:
                 fields = record
         else:
-            return ('Record passed to QCFilterTransform was neither a dict nor a '
-                    'DASRecord. Type was %s: %s' % (type(record), str(record)[:80]))
+            logging.warning(f'QCFilterTransform code error. Non-conforming record '
+                            f'of type {type(record)} got through checks: {record}')
 
         errors = []
         for bound in self.bounds:
             if bound not in fields:
                 continue
-            value = fields.get(bound)
-            (lower, upper) = self.bounds[bound]
-            if type(value) is not int and type(value) is not float:
-                errors.append('%s: non-numeric value: "%s"' % (bound, value))
-                continue
 
-            if lower is not None and value < lower:
-                errors.append('%s: %g < lower bound %g' % (bound, value, lower))
-            if upper is not None and value > upper:
-                errors.append('%s: %g > upper bound %g' % (bound, value, upper))
+            value = fields[bound]  # Already checked for existence
+            lower, upper = self.bounds[bound]  # Unpack bounds
+
+            if not isinstance(value, (int, float)):
+                err = f'{bound}: non-numeric value: "{value}"'
+                logging.warning(err)
+                errors.append(err)
+            elif lower is not None and value < lower:
+                err = f'{bound}: {value} < lower bound {lower}'
+                logging.warning(err)
+                errors.append(err)
+            elif upper is not None and value > upper:
+                err = f'{bound}: {value} > upper bound {upper}'
+                logging.warning(err)
+                errors.append(err)
 
         # If no errors, return None. Otherwise either return the specified
         # message (if we've been given one), or the joined string of

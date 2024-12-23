@@ -4,7 +4,6 @@ import sys
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
-from logger.utils import formats  # noqa: E402
 from logger.utils import nmea_parser  # noqa: E402
 from logger.transforms.transform import Transform  # noqa: E402
 
@@ -29,27 +28,18 @@ class ParseNMEATransform(Transform):
                 sensors and sensor models.
         ```
         """
-        super().__init__(input_format=formats.NMEA,
-                         output_format=formats.Python_Record)
         self.json = json
         self.parser = nmea_parser.NMEAParser(message_path, sensor_path,
                                              sensor_model_path,
                                              time_format=time_format)
 
     ############################
-    def transform(self, record):
+    def transform(self, record: str):
         """Parse record and return DASRecord."""
-        if record is None:
-            return None
 
-        # If we've got a list, hope it's a list of records. Recurse,
-        # calling transform() on each of the list elements in order and
-        # return the resulting list.
-        if type(record) is list:
-            results = []
-            for single_record in record:
-                results.append(self.transform(single_record))
-            return results
+        # See if it's something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from Transform()
+            return self.digest_record(record)  # inherited from Transform()
 
         result = self.parser.parse_record(record)
         if not result:

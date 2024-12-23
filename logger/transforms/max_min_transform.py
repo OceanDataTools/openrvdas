@@ -4,8 +4,9 @@ import logging
 import sys
 
 from os.path import dirname, realpath
+
+from typing import Union
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
-from logger.utils import formats  # noqa: E402
 from logger.utils.das_record import DASRecord  # noqa: E402
 from logger.transforms.transform import Transform  # noqa: E402
 
@@ -28,27 +29,18 @@ class MaxMinTransform(Transform):
     """
 
     def __init__(self):
-        """
-        """
-        super().__init__(input_format=formats.Python_Record,
-                         output_format=formats.Text)
         self.max = {}
         self.min = {}
 
     ############################
-    def transform(self, record):
+    def transform(self, record: Union[DASRecord, dict]):
         """Does record exceed any previously-observed bounds?"""
         if not record:
             return None
 
-        # If we've got a list, hope it's a list of records. Recurse,
-        # calling transform() on each of the list elements in order and
-        # return the resulting list.
-        if type(record) is list:
-            results = []
-            for single_record in record:
-                results.append(self.transform(single_record))
-            return results
+        # See if it's something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from Transform()
+            return self.digest_record(record)  # inherited from Transform()
 
         if type(record) is DASRecord:
             fields = record.fields

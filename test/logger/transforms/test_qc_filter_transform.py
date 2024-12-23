@@ -36,13 +36,15 @@ class TestQCFilterTransform(unittest.TestCase):
         self.assertIsNone(q.transform(record))
 
         record = p.transform('grv1 2017-11-04T05:12:21.273413Z 01:023013 00')
-        self.assertEqual(q.transform(record),
-                         'GravValue: 23013 > upper bound 23000')
+        with self.assertLogs(logging.getLogger(), logging.WARNING):
+            self.assertEqual(q.transform(record),
+                             'GravValue: 23013 > upper bound 23000.0')
 
         record = p.transform('grv1 2017-11-04T05:12:21.273413Z 01:023013 03')
-
-        self.assertEqual(q.transform(record).split(';').sort(),
-                         'GravValue: 23013 > upper bound 23000; GravError: 3 > upper bound 2'.split(';').sort())
+        with self.assertLogs(logging.getLogger(), logging.WARNING):
+            self.assertEqual(q.transform(record).split(';').sort(),
+                             'GravValue: 23013 > upper bound 23000; '
+                             'GravError: 3 > upper bound 2'.split(';').sort())
 
     ############################
     def test_error(self):
@@ -50,14 +52,18 @@ class TestQCFilterTransform(unittest.TestCase):
             field_patterns=['{LF:nc},{LFDepth:of},{LFValid:od},{HF:nc},{HFDepth:of},{HFValid:od},{SoundSpeed:og},{Latitude:f},{Longitude:f}'])
         q = QCFilterTransform(bounds='LFDepth:0:6000,HFDepth:0:5000')
 
+        # Hand in a string rather than a dict
         record = 'knud 2017-11-04T05:12:21.981359Z'
-        self.assertEqual(q.transform(record),
-                         'Record passed to QCFilterTransform was neither a dict nor a DASRecord. Type was <class \'str\'>: knud 2017-11-04T05:12:21.981359Z')
+        with self.assertLogs(logging.getLogger(), logging.WARNING):
+            result = q.transform(record)
+            self.assertEqual(result, None)
 
-        record = p.transform(
+        # Parses, but has invalid value
+        parsed = p.transform(
             'knud 2017-11-04T05:12:21.981359Z 3.5kHz,5146.29,0,,,,1500,-39.583558,-37.466183')
-        self.assertEqual(q.transform(record),
-                         'HFDepth: non-numeric value: "None"')
+        with self.assertLogs(logging.getLogger(), logging.WARNING):
+            result = q.transform(parsed)
+            self.assertEqual(result, 'HFDepth: non-numeric value: "None"')
 
     ############################
 
@@ -68,7 +74,8 @@ class TestQCFilterTransform(unittest.TestCase):
         self.assertEqual(q.transform(record), None)
 
         record = {'LFDepth': 6001}
-        self.assertEqual(q.transform(record), 'The sky is falling!')
+        with self.assertLogs(logging.getLogger(), logging.WARNING):
+            self.assertEqual(q.transform(record), 'The sky is falling!')
 
 
 ################################################################################
