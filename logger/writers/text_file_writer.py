@@ -6,7 +6,6 @@ import datetime
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
-from logger.utils.formats import Text  # noqa: E402
 from logger.writers.writer import Writer  # noqa: E402
 
 
@@ -35,8 +34,6 @@ class TextFileWriter(Writer):
         header_file  Add the content of the specified file to each file.
       ```
         """
-        super().__init__(input_format=Text)
-
         self.filename = filename
         self.flush = flush
         self.truncate = truncate
@@ -139,16 +136,11 @@ class TextFileWriter(Writer):
             self.file.write(self.header)
 
     ############################
-    def write(self, record):
+    def write(self, record: str):
         """ Write out record, appending a newline at end."""
-        if record is None:
-            return
 
-        # If we've got a list, hope it's a list of records. Recurse,
-        # calling write() on each of the list elements in order.
-        if isinstance(record, list):
-            for single_record in record:
-                self.write(single_record)
+        if not self.can_process_record(record):  # inherited from BaseModule()
+            self.digest_record(record)           # inherited from BaseModule()
             return
 
         # If we're splitting by date, make sure that we're still writing

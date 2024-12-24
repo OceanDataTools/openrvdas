@@ -6,14 +6,12 @@ import threading
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
-
 from logger.writers.writer import Writer  # noqa: E402
-from logger.utils import formats  # noqa: E402
 
 
 class ComposedWriter(Writer):
     ############################
-    def __init__(self, transforms=[], writers=[], check_format=False):
+    def __init__(self, transforms=[], writers=[], quiet=False):
         """
         Apply zero or more Transforms (in series) to passed records, then
         write them (in parallel threads) using the specified Writers.
@@ -22,11 +20,6 @@ class ComposedWriter(Writer):
         transforms     A single Transform, a list of Transforms, or None.
 
         writers        A single Writer or a list of Writers.
-
-        check_format   If True, attempt to check that Transform/Writer formats
-                       are compatible, and throw a ValueError if they are not.
-                       If check_format is False (the default) the output_format()
-                       of the whole reader will be formats.Unknown.
         ```
         Example:
         ```
@@ -34,7 +27,7 @@ class ComposedWriter(Writer):
                                             PrefixTransform('gyr1')],
                                 writers=[NetworkWriter(':6221'),
                                          LogfileWriter('/logs/gyr1')],
-                                check_format=True)
+                                )
         ```
         NOTE: we make the rash assumption that transforms are thread-safe,
         that is, that no mischief or corrupted internal state will result if
@@ -46,13 +39,13 @@ class ComposedWriter(Writer):
         time if the first has not yet completed.
         """
         # Make transforms a list if it's not. Even if it's only one transform.
-        if not isinstance(transforms, type([])):
+        if not isinstance(transforms, list):
             self.transforms = [transforms]
         else:
             self.transforms = transforms
 
         # Make writers a list if it's not. Even if it's only one writer.
-        if not isinstance(writers, type([])):
+        if not isinstance(writers, list):
             self.writers = [writers]
         else:
             self.writers = writers
@@ -62,16 +55,7 @@ class ComposedWriter(Writer):
         self.writer_lock = [threading.Lock() for w in self.writers]
         self.exceptions = [None for w in self.writers]
 
-        # If they want, check that our writers and transforms have
-        # compatible input/output formats.
-        input_format = formats.Unknown
-        if check_format:
-            input_format = self._check_writer_formats()
-            if not input_format:
-                raise ValueError('ComposedWriter: No common format found '
-                                 'for passed transforms (%s) and writers (%s)'
-                                 % (self.transforms, self.writers))
-        super().__init__(input_format=input_format)
+        super().__init__(quiet=quiet)
 
     ############################
 
@@ -138,46 +122,3 @@ class ComposedWriter(Writer):
             logging.error(e)
         if exceptions:
             raise exceptions[0]
-
-    ############################
-    def _check_writer_formats(self):
-        """Check that Writer outputs are compatible with each other and with
-        Transform inputs. Return None if not."""
-
-        # Begin with output format of first transform and work way to end;
-        # the output of each is input of next one.
-        for i in range(1, len(self.transforms)):
-            transform_input = self.transforms[i].input_format()
-            previous_output = self.transforms[i - 1].output_format()
-            if not transform_input.can_accept(previous_output):
-                logging.error('Transform %s can not accept input format %s',
-                              self.transform[i], previous_output)
-                return None
-
-        # Make sure that all the writers can accept the output of the last
-        # transform.
-        if self.transforms:
-            transform_output = self.transforms[-1].output_format()
-            for writer in self.writers:
-                if not writer.input_format().can_accept(transform_output):
-                    logging.error('Writer %s can not accept input format %s',
-                                  writer, transform_output)
-                    return None
-
-        # Finally, return the input_format that we can take.
-        if self.transforms:
-            return self.transforms[0].input_format()
-
-        # If no transform, our input_format is the lowest common format of
-        # our writers. If no writers, then we've got nothing - right?
-        if not self.writers:
-            logging.error('ComposedWriter has no transforms or writers?!?')
-            return None
-
-        lowest_common = self.writers[0].input_format()
-        for writer in self.writers:
-            lowest_common = writer.input_format().common(lowest_common)
-            if not lowest_common:
-                logging.error('No common input format among writers')
-                return None
-        return lowest_common

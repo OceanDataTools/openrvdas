@@ -7,9 +7,7 @@ import time
 import unittest
 
 sys.path.append('.')
-from logger.readers.text_file_reader import TextFileReader  # noqa: E402
 from logger.writers.text_file_writer import TextFileWriter  # noqa: E402
-from logger.utils import formats  # noqa: E402
 
 SAMPLE_DATA = ['f1 line 1',
                'f1 line 2',
@@ -18,6 +16,7 @@ SAMPLE_DATA = ['f1 line 1',
 SAMPLE_HEADER = 'Hi, I\'m a header'
 
 
+############################
 def create_file(filename, lines, interval=0, pre_sleep_interval=0):
     time.sleep(pre_sleep_interval)
     logging.info('creating file "%s"', filename)
@@ -29,6 +28,7 @@ def create_file(filename, lines, interval=0, pre_sleep_interval=0):
     f.close()
 
 
+########################################################
 class TodayTextFileWriter(TextFileWriter):
     """A hacked version of TextFileWriter where we can tweak what "today" is."""
 
@@ -44,11 +44,9 @@ class TodayTextFileWriter(TextFileWriter):
         """Manual version of _today()."""
         return self.today
 
+
 ########################################################
-
-
 class TestTextFileWriter(unittest.TestCase):
-
     ############################
     def test_write(self):
         with tempfile.TemporaryDirectory() as tmpdirname:
@@ -72,23 +70,11 @@ class TestTextFileWriter(unittest.TestCase):
 
     ############################
     def test_compatible(self):
-        # Don't specify 'tail' and expect there to be no data
         with tempfile.TemporaryDirectory() as tmpdirname:
             writer = TextFileWriter(tmpdirname + '/f')
-            reader = TextFileReader(tmpdirname + '/f')
-            self.assertTrue(writer.can_accept(reader))
-
-    ############################
-    # Check that writer input_formats work the way we expect
-    def test_formats(self):
-        writer = TextFileWriter(filename=None)
-
-        self.assertEqual(writer.input_format(), formats.Text)
-        self.assertEqual(writer.input_format(formats.NMEA), formats.NMEA)
-        self.assertEqual(writer.input_format(), formats.NMEA)
-
-        with self.assertRaises(TypeError):
-            writer.input_format('not a format')
+            writer.write('str')  # Should not complain
+            with self.assertLogs(logging.getLogger(), logging.WARNING):
+                writer.write({1: 2})  # Should complain that can't write dicts
 
     ############################
     def test_split(self):

@@ -1,47 +1,57 @@
 #!/usr/bin/env python3
+"""
+The biggest thing that the abstract parent class Writer now does is help
+with (optional) type checking of the child class' inputs. In the past, an
+explicit, but very awkward, form of type checking was used, with child classes
+passing the Transform class a list of input_format and output_format specifications.
 
+That is now deprecated in favor of using Python's type hints. Type hints should be
+specified for the child class' write() method. Then the write() method can
+call self.can_process_record(record) to see whether it's one of the input types it
+can handle. If not, it can "return self.digest_record(record) to have the parent
+class try to deal with it:
+
+E.g.:
+     def write(self, record: Union[int, str, float]):
+        if not self.can_process_record(record):  # inherited from BaseModule()
+            self.digest_record(record)           # inherited from BaseModule()
+            return
+        [do normal writing here...
+
+If no type hints are specified, can_process_record() will return True for all
+records *except* those of type "None" or "list". The logic is that digest_record()
+will return a None when given a None, and when given a list, will iteratively
+apply the write() to every element of the list in order.
+
+Note that the child class can explicitly call super().__init__(quiet=True) or such
+to initialize the type checking and set its debugging level. If it is not explicitly
+initialized, it will be done implicitly the first time can_process_record() or
+digest_record() are called, but with the default of quiet=False.
+"""
 import logging
 import sys
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
-from logger.utils import formats  # noqa: E402
+from logger.utils.base_module import BaseModule  # noqa: E402
 
 
-class Writer:
+class Writer(BaseModule):
     """
     Base class Writer about which we know nothing else. By default the
     input format is Unknown unless overridden.
     """
     ############################
 
-    def __init__(self, input_format=formats.Unknown,
+    def __init__(self, quiet=False, input_format=None,
                  encoding='utf-8', encoding_errors='ignore'):
         """Abstract base class for data Writers.
+        ```
 
-        Concrete classes should implement the write(record) method and assign
-        an input format that the writer accepts.
-
-        A subclassed writer that accepts, e.g. text format records, should
-        specify that in its init definition by, for example:
-        ```
-        class TextFileWriter(Writer):
-          def __init__(self, filename):
-            super().__init__(input_format=formats.Text)
-            ...other things...
-        ```
-        The can_accept() method is intended to take an instance of a Reader or
-        Transform - something that produces data and implements an
-        output_format() method. To determine whether a writer can take input
-        from a reader, call
-        ```
-          writer.can_accept(reader)
-        ```
-        The test will also return False if either the reader or writer have
-        format specification of "Unknown".
+        quiet - if type checking should log type errors or operate silently.
 
         Two additional arguments govern how records will be encoded/decoded
-        from bytes, if desired by the Reader subclass when it calls
+        from bytes, if desired by the Writer subclass when it calls
         _encode_str() or _decode_bytes:
 
         encoding - 'utf-8' by default. If empty or None, do not attempt any
@@ -52,10 +62,15 @@ class Writer:
         encoding_errors - 'ignore' by default. Other error strategies are
                 'strict', 'replace', and 'backslashreplace', described here:
                 https://docs.python.org/3/howto/unicode.html#encodings
-
         """
-        self.input_format(input_format)
-        # make sure '' behaves the same as None, which is what all the
+        self._initialize_type_hints(quiet=quiet)
+
+        if input_format:
+            logging.warning(f'Code warning: {self.__class__.__name__} use of '
+                            '"input_format" is deprecated. '
+                            'Please see Transform code documentation.')
+
+        # Make sure '' behaves the same as None, which is what all the
         # docstrings say, and would be logical... but then certain things treat
         # them differently (e.g., file.open(mode='ab', encoding='') throws
         # ValueError: binary mode doesn't take an encoding argument)
@@ -63,6 +78,15 @@ class Writer:
             encoding = None
         self.encoding = encoding
         self.encoding_errors = encoding_errors
+
+    ############################
+    def _initialize_type_hints(self, quiet=False):
+        """ Retrieve any type hints for child write() method so we can
+        check whether the type of record we've received can be parsed
+        natively or not."""
+        super()._initialize_type_hints(module_type='write',
+                                       module_method=self.__class__.write,
+                                       quiet=quiet)
 
     ############################
     def _unescape_str(self, the_str):
@@ -105,46 +129,25 @@ class Writer:
             return None
 
     ############################
-    def input_format(self, new_format=None):
-        """Return our input format, or set a new input format."""
-        if new_format is not None:
-            if not formats.is_format(new_format):
-                raise TypeError('Argument %s is not a known format type', new_format)
-            self.in_format = new_format
-        return self.in_format
-
-    ############################
-    def can_accept(self, source):
-        """Can we accept input from 'source'?"""
-        # If source doesn't have an output_format() method, we don't know
-        # whether or not we can accept its output, so return False
-        output_format = getattr(source, 'output_format', None)
-        if not callable(output_format):
-            return False
-
-        # Otherwise, check compatibility
-        return self.input_format().can_accept(source.output_format())
-
-    ############################
     def write(self, record):
         """Core method - write a record that we've been passed."""
         raise NotImplementedError('Class %s (subclass of Writer is missing '
                                   'implementation of write () method.'
                                   % self.__class__.__name__)
 
+
 ################################################################################
-
-
 class TimestampedWriter(Writer):
     """
     A TimestampedWriter is a special case of a Writer where we
     can write out the timestamp associated with a record.
     """
 
-    def __init__(self, input_format=formats.Unknown):
-        super().__init__(input_format=input_format)
-        pass
+    ############################
+    def __init__(self, quiet=False, input_format=None):
+        super().__init__(quiet=quiet, input_format=input_format)
 
+    ############################
     def write_timestamp(self, record, timestamp=None):
         raise NotImplementedError('Abstract base class TimestampedWriter has no '
                                   'implementation of write_timestamp() method.')
