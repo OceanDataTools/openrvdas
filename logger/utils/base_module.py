@@ -158,6 +158,10 @@ class BaseModule:
             result = [self.module_method(self, r) for r in record if r is not None]
             return [r for r in result if r is not None]  # remove Nones
 
+        # Is record a number we can convert to a string?
+        if str in self.input_types and isinstance(record, (int, float)):
+            return str(record)
+
         # If we don't know how to deal with it
         if not self.quiet:
             logging.warning(f'Unable to convert record to format "{self.class_name}" can process')
