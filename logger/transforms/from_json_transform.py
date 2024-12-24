@@ -28,8 +28,8 @@ class FromJSONTransform(Transform):
         """Parse JSON record to Python data struct or DASRecord."""
 
         # See if it's something we can process, and if not, try digesting
-        if not self.can_process_record(record):  # inherited from Transform()
-            return self.digest_record(record)  # inherited from Transform()
+        if not self.can_process_record(record):  # inherited from BaseModule()
+            return self.digest_record(record)  # inherited from BaseModule()
 
         try:
             data = json.loads(record)
