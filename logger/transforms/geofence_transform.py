@@ -259,10 +259,10 @@ class GeofenceTransform():
 
         self.last_position_inside = is_inside
         if is_inside:
-            logging.info(f'GeofenceTransform entered boundary')
+            logging.info('GeofenceTransform entered boundary')
             logging.info(f'Issuing message: {self.entering_boundary_message}')
             return self.entering_boundary_message
         else:
-            logging.info(f'GeofenceTransform exited boundary')
+            logging.info('GeofenceTransform exited boundary')
             logging.info(f'Issuing message: {self.leaving_boundary_message}')
             return self.leaving_boundary_message

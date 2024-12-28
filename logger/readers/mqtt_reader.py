@@ -85,7 +85,7 @@ class MQTTReader(Reader):
         if not PAHO_ENABLED:
             raise ModuleNotFoundError('MQTTReader(): paho-mqtt is not installed. Please '
                                       'try "pip install paho-mqtt" prior to use.')
-        if not qos in [0, 1, 2]:
+        if qos not in [0, 1, 2]:
             raise ValueError('MQTTReader parameter qos must be integer value 0, 1 or 2. '
                              f'Found type "{type(qos).__name__}", value "{qos}".')
 
@@ -120,7 +120,7 @@ class MQTTReader(Reader):
                 self.client.subscribe(channel, qos=self.qos)
             else:
                 self.client.connect(broker, port, clean_start=clean_start)
-                self.client.subscribe(channel, options=SubscribeOptions(qos=qos))
+                self.client.subscribe(channel, options=SubscribeOptions(qos=qos))  # noqa: F821
 
         except (mqtt.WebsocketConnectionError, ConnectionRefusedError) as e:
             logging.error(f'Unable to connect to broker at {broker}:{port} {channel}')
