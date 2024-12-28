@@ -43,7 +43,7 @@ class MQTTWriter(Writer):
         if not PAHO_ENABLED:
             raise ModuleNotFoundError('MQTTReader(): paho-mqtt is not installed. Please '
                                       'try "pip install paho-mqtt" prior to use.')
-        if not qos in [0, 1, 2]:
+        if qos not in [0, 1, 2]:
             raise ValueError('MQTTWriter parameter qos must be integer value 0, 1 or 2. '
                              f'Found type "{type(qos).__name__}", value "{qos}".')
         self.broker = broker
@@ -74,16 +74,11 @@ class MQTTWriter(Writer):
         self.client.disconnect()
 
     ############################
-    def write(self, record):
-        """Write the record to the broker channel."""
-        if not record:
-            return
+    def write(self, record: str):
 
-        # If we've got a list, hope it's a list of records. Recurse,
-        # calling write() on each of the list elements in order.
-        if isinstance(record, list):
-            for single_record in record:
-                self.write(single_record)
+        # See if it's something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from BaseModule()
+            self.digest_record(record)  # inherited from BaseModule()
             return
 
         # If record is not a string, try converting to JSON. If we don't know

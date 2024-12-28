@@ -6,6 +6,8 @@ import socket
 import struct
 import sys
 
+from typing import Union
+
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.writers.writer import Writer  # noqa E402
@@ -75,7 +77,7 @@ class UDPWriter(Writer):
 
     def __init__(self, destination=None, port=None,
                  mc_interface=None, mc_ttl=3, num_retry=2, warning_limit=5, eol='',
-                 reuseaddr=False, reuseport=False,
+                 reuseaddr=False, reuseport=False, quiet=False,
                  encoding='utf-8', encoding_errors='ignore'):
         """Write records to a UDP network socket.
         ```
@@ -120,7 +122,7 @@ class UDPWriter(Writer):
         ```
 
         """
-        super().__init__(encoding=encoding,
+        super().__init__(quiet=quiet, encoding=encoding,
                          encoding_errors=encoding_errors)
 
         self.num_retry = num_retry
@@ -225,17 +227,12 @@ class UDPWriter(Writer):
             return None
 
     ############################
-    def write(self, record):
+    def write(self, record: Union[str, bytes]):
         """Write the record to the network."""
-        # If we don't have a record, there's nothing to do
-        if not record:
-            return
 
-        # If we've got a list, hope it's a list of records. Recurse,
-        # calling write() on each of the list elements in order.
-        if isinstance(record, list):
-            for single_record in record:
-                self.write(single_record)
+        # See if it's something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from BaseModule()
+            self.digest_record(record)  # inherited from BaseModule()
             return
 
         # Append eol if configured

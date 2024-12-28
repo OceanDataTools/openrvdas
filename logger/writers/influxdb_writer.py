@@ -3,7 +3,7 @@
 import time
 import logging
 import sys
-
+from typing import Union
 try:
     import urllib3
     URLLIB3_INSTALLED = True
@@ -14,7 +14,6 @@ from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
 from logger.utils.das_record import DASRecord  # noqa: E402
-from logger.utils.formats import Text  # noqa: E402
 from logger.writers.writer import Writer  # noqa: E402
 
 INFLUXDB_AUTH_TOKEN = INFLUXDB_ORG = INFLUXDB_URL = INFLUXDB_BUCKET = None
@@ -41,7 +40,7 @@ class InfluxDBWriter(Writer):
     def __init__(self, bucket_name=INFLUXDB_BUCKET, measurement_name=None,
                  auth_token=INFLUXDB_AUTH_TOKEN,
                  org=INFLUXDB_ORG, url=INFLUXDB_URL,
-                 verify_ssl=INFLUXDB_VERIFY_SSL):
+                 verify_ssl=INFLUXDB_VERIFY_SSL, quiet=False):
         """Write data records to the InfluxDB.
         ```
         bucket_name - the name of the bucket in InfluxDB.  If the bucket does
@@ -67,7 +66,7 @@ class InfluxDBWriter(Writer):
                   attempt to verify the validity of the relevant SSL certificate.
         ```
         """
-        super().__init__(input_format=Text)  # type: ignore
+        super().__init__(quiet=quiet)
         if not URLLIB3_INSTALLED:
             raise ImportError('InfluxDBWriter requires Python "urllib3" module; '
                               'please run "pip install urllib3"')
@@ -164,7 +163,7 @@ class InfluxDBWriter(Writer):
             self.write_api = client.write_api(write_options=ASYNCHRONOUS)
 
     ############################
-    def write(self, record):
+    def write(self, record: Union[DASRecord, dict]):
         """Note: Assume record is a dict or DASRecord or list of
         dict/DASRecord. In each record look for 'fields', 'data_id' and
         'timestamp' (UTC epoch seconds). If data_id is missing, use the
@@ -189,25 +188,20 @@ class InfluxDBWriter(Writer):
             }
             return influxDB_record
 
-        if not record:
+        # See if it's something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from BaseModule()
+            self.digest_record(record)  # inherited from BaseModule()
             return
 
-        logging.debug('InfluxDBWriter writing record: %s', record)
-
-        if not type(record) in [dict, list, DASRecord]:
-            logging.warning('InfluxDBWriter received record that was not dict, '
-                            'list or DASRecord format. Type %s: %s',
-                            type(record), str(record))
         try:
-            if isinstance(record, list):
-                influxDB_record = [record_to_influx(r) for r in record]
-            else:
-                influxDB_record = record_to_influx(record)
+            logging.debug('InfluxDBWriter writing record: %s', record)
+            influxDB_record = record_to_influx(record)
             # logging.info('influxdb\n bucket: %s\nrecord: %s',
             #             self.bucket_name, pprint.pformat(influxDB_record))
             self.write_api.write(self.bucket_id, self.org_id, influxDB_record)
 
         except Exception as e:
-            logging.warning('InfluxDBWriter exception: %s', str(e))
-            logging.warning('InfluxDBWriter could not ingest record '
-                            'type %s: %s', type(record), str(record))
+            if not self.quiet:
+                logging.warning('InfluxDBWriter exception: %s', str(e))
+                logging.warning('InfluxDBWriter could not ingest record '
+                                'type %s: %s', type(record), str(record))

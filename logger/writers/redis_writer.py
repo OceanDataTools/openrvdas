@@ -13,7 +13,6 @@ except ModuleNotFoundError:
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
-from logger.utils.formats import Text  # noqa: E402
 from logger.writers.writer import Writer  # noqa: E402
 
 DEFAULT_HOST = 'localhost'
@@ -30,8 +29,6 @@ class RedisWriter(Writer):
         channel      Redis channel to write to, format channel[@hostname[:port]]
         ```
         """
-        super().__init__(input_format=Text)
-
         if not REDIS_ENABLED:
             raise ModuleNotFoundError('RedisReader(): Redis is not installed. Please '
                                       'try "pip3 install redis" prior to use.')
@@ -60,14 +57,9 @@ class RedisWriter(Writer):
     def write(self, record):
         """Write the record to the pubsub channel."""
 
-        if not record:
-            return
-
-        # If we've got a list, hope it's a list of records. Recurse,
-        # calling write() on each of the list elements in order.
-        if isinstance(record, list):
-            for single_record in record:
-                self.write(single_record)
+        # See if it's something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from BaseModule()
+            self.digest_record(record)  # inherited from BaseModule()
             return
 
         # If record is not a string, try converting to JSON. If we don't know

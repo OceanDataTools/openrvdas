@@ -12,14 +12,13 @@ from email.message import EmailMessage
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
-from logger.utils.formats import Text  # noqa: E402
 from logger.writers.writer import Writer  # noqa: E402
 
 
 class EmailWriter(Writer):
     """Send the record as an email message."""
 
-    def __init__(self, to, sender=None, subject=None, max_freq=3 * 60):
+    def __init__(self, to, sender=None, subject=None, max_freq=3 * 60, quiet=False):
         """
         ```
         to           Comma-separated list of email addresses
@@ -36,7 +35,7 @@ class EmailWriter(Writer):
         configured and running if you wish to send email anywhere other than
         localhost.
         """
-        super().__init__(input_format=Text)
+        super().__init__(quiet=quiet)
 
         if not sender:
             username = getpass.getuser()

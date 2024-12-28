@@ -5,10 +5,10 @@ import pprint
 import sys
 import time
 
+from typing import Union
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
-from logger.utils.formats import Python_Record  # noqa: E402
 from logger.utils.das_record import DASRecord  # noqa: E402
 from logger.writers.writer import Writer  # noqa: E402
 
@@ -28,7 +28,7 @@ except ModuleNotFoundError:
 class DatabaseWriter(Writer):
     def __init__(self, database=DEFAULT_DATABASE, host=DEFAULT_DATABASE_HOST,
                  user=DEFAULT_DATABASE_USER, password=DEFAULT_DATABASE_PASSWORD,
-                 save_source=True):
+                 save_source=True, quiet=False):
         """Write to the passed record to a database table. With connectors
         written so far (MySQL and Mongo), writes values in the records as
         timestamped field-value pairs. If save_source=True, also save the
@@ -69,7 +69,7 @@ class DatabaseWriter(Writer):
            }
         ```
         """
-        super().__init__(input_format=Python_Record)
+        super().__init__(quiet=quiet)
 
         if not DATABASE_SETTINGS_FOUND:
             raise RuntimeError('File database/settings.py not found. Database '
@@ -111,18 +111,13 @@ class DatabaseWriter(Writer):
         self.db.delete_table(table_name)
 
     ############################
-    def write(self, record):
+    def write(self, record: Union[DASRecord, dict]):
         """Write out record. Connectors assume we've got a DASRecord, so check
         what we've got and convert as necessary.
         """
-        if not record:
-            return
-
-        # If we've got a list, hope it's a list of records. Recurse,
-        # calling write() on each of the list elements in order.
-        if isinstance(record, list):
-            for single_record in record:
-                self.write(single_record)
+        # See if it's something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from BaseModule()
+            self.digest_record(record)  # inherited from BaseModule()
             return
 
         # If we've been passed a DASRecord, things are easy: write it and return.
@@ -131,8 +126,9 @@ class DatabaseWriter(Writer):
             return
 
         if not isinstance(record, dict):
-            logging.error('Record passed to DatabaseWriter is not of type '
-                          '"DASRecord" or dict; is type "%s"', type(record))
+            if not self.quiet:
+                logging.error('Record passed to DatabaseWriter is not of type '
+                              '"DASRecord" or dict; is type "%s"', type(record))
             return
 
         # If here, our record is a dict, figure out whether it is a top-level
@@ -141,11 +137,12 @@ class DatabaseWriter(Writer):
         timestamp = record.get('timestamp', time.time())
         fields = record.get('fields')
         if fields is None:
-            logging.error('Dict record passed to DatabaseWriter has no "fields" '
-                          'key, which either means it\'s not a dict you should be '
-                          'passing, or it is in the old "field_dict" format that '
-                          'assumes key:value pairs are at the top level.')
-            logging.error('The record in question: %s', str(record))
+            if not self.quiet:
+                logging.error('Dict record passed to DatabaseWriter has no "fields" '
+                              'key, which either means it\'s not a dict you should be '
+                              'passing, or it is in the old "field_dict" format that '
+                              'assumes key:value pairs are at the top level.')
+                logging.error('The record in question: %s', str(record))
             return
 
         # Now check whether our 'values' are singletons (in which case
@@ -178,8 +175,9 @@ class DatabaseWriter(Writer):
                         values_by_timestamp[timestamp] = {}
                     values_by_timestamp[timestamp][field] = value
         except ValueError:
-            logging.error('Badly-structured field dictionary: %s: %s',
-                          field, pprint.pformat(ts_value_list))
+            if not self.quiet:
+                logging.error('Badly-structured field dictionary: %s: %s',
+                              field, pprint.pformat(ts_value_list))
 
         # Now go through each timestamp, generate a DASRecord from its
         # values, and write them.

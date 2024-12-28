@@ -59,6 +59,7 @@ class RegexLogfileWriter(Writer):
                         any mapped prefix
         ```
         """
+        super().__init__(quiet=quiet)
         self.filebase = filebase
         self.flush = flush
         self.time_format = time_format
@@ -68,7 +69,6 @@ class RegexLogfileWriter(Writer):
         self.header = header
         self.header_file = header_file
         self.rollover_hourly = rollover_hourly
-        self.quiet = quiet
 
         # If our filebase is a dict, we're going to be doing our
         # fancy pattern->filebase mapping.
@@ -83,23 +83,12 @@ class RegexLogfileWriter(Writer):
         self.writer = {}
 
     ############################
-    def write(self, record):
+    def write(self, record: str):
         """Note: Assume record begins with a timestamp string."""
-        # If record is None, or an empty string
-        if not record:
-            return
 
-        # If we've got a list, hope it's a list of records. Recurse,
-        # calling write() on each of the list elements in order.
-        if isinstance(record, list):
-            for single_record in record:
-                self.write(single_record)
-            return
-
-        if not isinstance(record, str):
-            if not self.quiet:
-                logging.error(f'LogfileWriter.write() - record not '
-                              f'timestamped: {record}')
+        # See if it's something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from BaseModule()
+            self.digest_record(record)  # inherited from BaseModule()
             return
 
         # Get the timestamp we'll be using

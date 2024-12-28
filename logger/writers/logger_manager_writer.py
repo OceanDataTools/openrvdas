@@ -119,22 +119,12 @@ class LoggerManagerWriter(Writer):
         self.allowed_prefixes = allowed_prefixes
 
     ############################
-    def write(self, record):
+    def write(self, record: str):
         """ Write out record, appending a newline at end."""
-        if record is None:
-            return
 
-        # If we've got a list, assume it's a list of records. Recurse,
-        # calling write() on each of the list elements in order.
-        if isinstance(record, list):
-            for single_record in record:
-                self.write(single_record)
-            return
-
-        # Complain and go home if not string
-        if type(record) is not str:
-            logging.warning(f'Received non-string command for LoggerManager '
-                            f'(type {type(record)}): "{record}"')
+        # See if it's something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from BaseModule()
+            self.digest_record(record)  # inherited from BaseModule()
             return
 
         # If there are semicolons, split into list and process sequentially
@@ -146,7 +136,8 @@ class LoggerManagerWriter(Writer):
         # Can we find our command in any of the allowed prefixes?
         approved = True in [record.find(prefix) == 0 for prefix in self.allowed_prefixes]
         if self.allowed_prefixes and not approved:
-            logging.error(f'Command does not match any allowed prefixes: "{record}"')
+            if not self.quiet:
+                logging.error(f'Command does not match any allowed prefixes: "{record}"')
 
         # If it's our special "sleep" command
         elif record.find('sleep') == 0:
@@ -154,11 +145,14 @@ class LoggerManagerWriter(Writer):
                 cmd, interval_str = record.split(' ')
                 interval = float(interval_str)
             except ValueError:
-                logging.error(f'Could not parse command into "sleep [seconds]": {record}')
+                if not self.quiet:
+                    logging.error(f'Could not parse command into "sleep [seconds]": {record}')
                 return
-            logging.info(f'Sleeping {interval} seconds')
+            if not self.quiet:
+                logging.info(f'Sleeping {interval} seconds')
             time.sleep(interval)
 
         else:
-            logging.info(f'Writing command: {record}')
+            if not self.quiet:
+                logging.info(f'Writing command: {record}')
             self.command_parser.process_command(record)

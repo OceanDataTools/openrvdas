@@ -7,6 +7,7 @@ import ssl
 import sys
 import threading
 
+from typing import Union
 try:
     import websockets
     WEBSOCKETS_INSTALLED = True
@@ -22,7 +23,7 @@ from logger.utils.das_record import DASRecord  # noqa: E402
 class CachedDataWriter(Writer):
     def __init__(self, data_server, start_server=False, back_seconds=480,
                  cleanup_interval=6, update_interval=1,
-                 max_backup=60 * 60 * 24,
+                 max_backup=60 * 60 * 24, quiet=False,
                  use_wss=False, check_cert=False):
         """Feed passed records to a CachedDataServer via a websocket. Expects
         records in DASRecord or dict formats.
@@ -42,6 +43,8 @@ class CachedDataWriter(Writer):
                       oldest records. By default, cache one day's worth of
                       records at 1 Hz (86,400 records). If max_backup is zero,
                       cache size is unbounded.
+
+        quiet - Silence errors in input records.
 
         use_wss -     If True, use secure websockets
 
@@ -159,7 +162,7 @@ class CachedDataWriter(Writer):
         self.event_loop.close()
 
     ############################
-    def write(self, record):
+    def write(self, record: Union[DASRecord, dict]):
         """Write out record. Expects passed records to be in one of three
         formats:
 
@@ -199,14 +202,9 @@ class CachedDataWriter(Writer):
            }
 
         """
-        if not record:
-            return
-
-        # If we've got a list, (hope) it's a list of DASRecords. Recurse,
-        # calling write() on each of the list elements in order.
-        if isinstance(record, list):
-            for single_record in record:
-                self.write(single_record)
+        # See if it's something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from BaseModule()
+            self.digest_record(record)  # inherited from BaseModule()
             return
 
         # Convert to a dict - inefficient, I know...
@@ -227,5 +225,6 @@ class CachedDataWriter(Writer):
             except asyncio.queues.QueueFull:
                 logging.warning('CachedDataWriter unable to write: write queue full')
         else:
-            logging.warning('CachedDataWriter got non-dict/DASRecord object of '
-                            'type %s: %s', type(record), str(record))
+            if not self.quiet:
+                logging.warning('CachedDataWriter got non-dict/DASRecord object of '
+                                'type %s: %s', type(record), str(record))

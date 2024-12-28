@@ -5,6 +5,7 @@ import logging
 import re
 import sys
 
+from typing import Union
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.utils.das_record import DASRecord  # noqa: E402
@@ -68,6 +69,8 @@ class LogfileWriter(Writer):
                         any mapped prefix
         ```
         """
+        super().__init__(quiet=quiet)
+
         self.filebase = filebase
         self.flush = flush
         self.time_format = time_format
@@ -77,7 +80,6 @@ class LogfileWriter(Writer):
         self.header = header
         self.header_file = header_file
         self.rollover_hourly = rollover_hourly
-        self.quiet = quiet
 
         # If our filebase is a dict, we're going to be doing our
         # fancy pattern->filebase mapping.
@@ -92,17 +94,13 @@ class LogfileWriter(Writer):
         self.writer = {}
 
     ############################
-    def write(self, record):
-        if record is None:
-            return
+    def write(self, record: Union[str, DASRecord, dict]):
         if record == '':
             return
 
-        # If we've got a list, hope it's a list of records. Recurse,
-        # calling write() on each of the list elements in order.
-        if isinstance(record, list):
-            for single_record in record:
-                self.write(single_record)
+        # See if it's something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from BaseModule()
+            self.digest_record(record)  # inherited from BaseModule()
             return
 
         # Look for the timestamp

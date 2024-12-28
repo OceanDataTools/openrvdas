@@ -3,6 +3,8 @@
 import logging
 import sys
 
+from typing import Union
+
 # Don't freak out if pyserial isn't installed - unless they actually
 # try to instantiate a SerialWriter
 try:
@@ -24,8 +26,8 @@ class SerialWriter(Writer):
     def __init__(self,  port, baudrate=9600, bytesize=8, parity='N',
                  stopbits=1, timeout=None, xonxoff=False, rtscts=False,
                  write_timeout=None, dsrdtr=False, inter_byte_timeout=None,
-                 exclusive=None, eol='\n',
-                 encoding='utf-8', encoding_errors='ignore', quiet=False):
+                 exclusive=None, eol='\n', quiet=False,
+                 encoding='utf-8', encoding_errors='ignore'):
         """
         By default, the SerialWriter write records to the specified serial port encoded by UTF-8
         and will ignore non unicode characters it encounters. These defaults may be changed by
@@ -44,7 +46,7 @@ class SerialWriter(Writer):
         quiet - allows for the logger to silence warnings if not all the bits were succesfully
                 written to the serial port.
         """
-        super().__init__(encoding=encoding,
+        super().__init__(quiet=quiet, encoding=encoding,
                          encoding_errors=encoding_errors)
 
         if not SERIAL_MODULE_FOUND:
@@ -80,9 +82,13 @@ class SerialWriter(Writer):
         self.eol = eol
 
     ############################
-    def write(self, record):
-        if not record:
+    def write(self, record: Union[str, bytes]):
+
+        # See if it's something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from BaseModule()
+            self.digest_record(record)  # inherited from BaseModule()
             return
+
         try:
             if self.eol:
                 record += self.eol

@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
 
-import logging
 import shutil
 import sys
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
-from logger.utils.formats import Python_Record  # noqa: E402
 from logger.utils.das_record import DASRecord  # noqa: E402
 from logger.writers.writer import Writer  # noqa: E402
 
@@ -16,8 +14,6 @@ class RecordScreenWriter(Writer):
     format. Mostly intended for debugging."""
 
     def __init__(self):
-        super().__init__(input_format=Python_Record)
-
         self.values = {}
         self.timestamps = {}
         self.latest = 0
@@ -28,19 +24,11 @@ class RecordScreenWriter(Writer):
 
     ############################
     # receives a DASRecord
-    def write(self, record):
-        if not record:
-            return
+    def write(self, record: DASRecord):
 
-        # If we've got a list, hope it's a list of records. Recurse,
-        # calling write() on each of the list elements in order.
-        if isinstance(record, list):
-            for single_record in record:
-                self.write(single_record)
-            return
-
-        if not isinstance(record, DASRecord):
-            logging.error('ScreenWriter got non-DASRecord: %s', str(type(record)))
+        # See if it's something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from BaseModule()
+            self.digest_record(record)  # inherited from BaseModule()
             return
 
         # Incorporate the values from the record

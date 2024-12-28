@@ -6,6 +6,7 @@ import sys
 import math
 
 from datetime import datetime, timedelta, timezone
+from typing import Union
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
@@ -20,7 +21,7 @@ class FileWriter(Writer):
     def __init__(self, filename=None, mode='a', delimiter='\n', flush=True,
                  split_by_time=False, split_interval=None, header=None,
                  header_file=None, time_format='-' + DATE_FORMAT,
-                 time_zone=timezone.utc, create_path=True,
+                 time_zone=timezone.utc, create_path=True, quiet=False,
                  encoding='utf-8', encoding_errors='ignore'):
         """Write text records to a file. If no filename is specified, write to
         stdout.
@@ -61,7 +62,9 @@ class FileWriter(Writer):
 
         time_zone    Time zone to use for determining splits. By default UTC.
 
-        create_path  Create directory path to file if it doesn't exist ```
+        create_path  Create directory path to file if it doesn't exist
+
+        quiet - Silence errors in input records.
 
         encoding - 'utf-8' by default. If empty or None, do not attempt any
                 decoding and return raw bytes. Other possible encodings are
@@ -72,9 +75,8 @@ class FileWriter(Writer):
                 'strict', 'replace', and 'backslashreplace', described here:
                 https://docs.python.org/3/howto/unicode.html#encodings
         ```
-
         """
-        super().__init__(encoding=encoding,
+        super().__init__(quiet=quiet, encoding=encoding,
                          encoding_errors=encoding_errors)
 
         self.filename = filename
@@ -267,16 +269,12 @@ class FileWriter(Writer):
             self.file.write(self.header)
 
     ############################
-    def write(self, record):
+    def write(self, record: Union[str, bytes]):
         """ Write out record, appending a newline at end."""
-        if record is None:
-            return
 
-        # If we've got a list, assume it's a list of records. Recurse,
-        # calling write() on each of the list elements in order.
-        if isinstance(record, list):
-            for single_record in record:
-                self.write(single_record)
+        # See if it's something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from BaseModule()
+            self.digest_record(record)  # inherited from BaseModule()
             return
 
         # If we're splitting by some time interval, see if it's time to

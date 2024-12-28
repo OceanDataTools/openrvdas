@@ -121,6 +121,12 @@ class BaseModule:
             # OpenRVDASModule._initialize_type_hints()
             self._initialize_type_hints()
 
+        # Special case: we want to turn empty str records into None. By saying
+        # no, record should get punted to digest_record(), which will do the
+        # right thing.
+        if isinstance(record, str) and not len(record):
+            return False
+
         if self.input_types:
             return isinstance(record, self.input_types)
 
@@ -142,7 +148,11 @@ class BaseModule:
         except AttributeError:
             self._initialize_type_hints()
 
+        # Go through our litany of things that reduce to None
         if record is None:
+            return None
+
+        if isinstance(record, str) and not len(record):
             return None
 
         # If it's a type the method can handle directly (though, if so,

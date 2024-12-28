@@ -4,6 +4,8 @@ import logging
 import socket
 import sys
 
+from typing import Union
+
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.writers.writer import Writer  # noqa: E402
@@ -13,7 +15,7 @@ class TCPWriter(Writer):
     """Write TCP packtes to network."""
     def __init__(self, destination, port,
                  num_retry=2, warning_limit=5, eol='',
-                 reuseaddr=False, reuseport=False,
+                 reuseaddr=False, reuseport=False, quiet=False,
                  encoding='utf-8', encoding_errors='ignore'):
         """
         Write records to a TCP network socket.
@@ -50,8 +52,7 @@ class TCPWriter(Writer):
 
         ```
         """
-
-        super().__init__(encoding=encoding,
+        super().__init__(quiet=quiet, encoding=encoding,
                          encoding_errors=encoding_errors)
 
         self.num_retry = num_retry
@@ -141,17 +142,12 @@ class TCPWriter(Writer):
             logging.debug('Unable to close socket')
 
     ############################
-    def write(self, record):
+    def write(self, record: Union[str, bytes]):
         """Write the record to the network."""
-        # If we don't have a record, there's nothing to do
-        if not record:
-            return
 
-        # If we've got a list, hope it's a list of records. Recurse,
-        # calling write() on each of the list elements in order.
-        if isinstance(record, list):
-            for single_record in record:
-                self.write(single_record)
+        # See if it's something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from BaseModule()
+            self.digest_record(record)  # inherited from BaseModule()
             return
 
         # Append eol if configured
@@ -246,7 +242,7 @@ class TCPWriter(Writer):
                 continue
 
             # check to see if we really wrote it all
-            if bytes_sent < rec_len:
+            if bytes_sent < rec_len and not self.quiet:
                 logging.warning('TCPWriter: send() did not send the whole record: '
                                 'bytes_sent=%d, rec_len=%d', bytes_sent, rec_len)
 
