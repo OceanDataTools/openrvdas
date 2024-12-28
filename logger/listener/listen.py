@@ -506,8 +506,7 @@ if __name__ == '__main__':
     ############################
     # Miscellaneous args
     parser.add_argument('--check_format', dest='check_format',
-                        action='store_true', default=False, help='Check '
-                        'reader/transform/writer format compatibility')
+                        action='store_true', default=False, help='Deprecated ')
 
     parser.add_argument('-v', '--verbosity', dest='verbosity',
                         default=0, action='count',
@@ -858,6 +857,9 @@ if __name__ == '__main__':
                 data_server = new_args.write_cached_data_server
                 writers.append(CachedDataWriter(data_server=data_server))
 
+        if all_args.check_format:
+            logging.warning('Argument --check_format is deprecated and no longer '
+                            'serves any function.')
         ##########################
         # If we don't have any readers, read from stdin, if we don't have
         # any writers, write to stdout.
@@ -871,8 +873,7 @@ if __name__ == '__main__':
         # create the Listener.
         listener = Listener(readers=readers, transforms=transforms, writers=writers,
                             stderr_writers=stderr_writers,
-                            interval=all_args.interval,
-                            check_format=all_args.check_format)
+                            interval=all_args.interval)
 
     ############################
     # Whichever way we created the listener, run it.

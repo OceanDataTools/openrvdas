@@ -26,9 +26,9 @@ class Listener:
     ############################
 
     def __init__(self, readers=[], transforms=[], writers=[], stderr_writers=[],
-                 host_id='', interval=0, name=None, check_format=False):
+                 host_id='', interval=0, name=None):
         """listener = Listener(readers, transforms=[], writers=[],
-                            interval=0, check_format=False)
+                            interval=0)
 
         readers        A single Reader or a list of Readers.
 
@@ -42,12 +42,6 @@ class Listener:
         interval       How long to sleep before reading sequential records
 
         name           Optional human-readable short name to be used in displays
-
-        check_format   If True, attempt to check that Reader/Transform/Writer
-                       formats are compatible, and throw a ValueError if they
-                       are not. If check_format is False (the default) the
-                       output_format() of the whole reader will be
-                       formats.Unknown.
 
         Sample use:
 
@@ -66,9 +60,8 @@ class Listener:
 
         ###########
         # Create readers, writers, etc.
-        self.reader = ComposedReader(readers=readers, check_format=check_format)
-        self.writer = ComposedWriter(transforms=transforms, writers=writers,
-                                     check_format=check_format)
+        self.reader = ComposedReader(readers=readers)
+        self.writer = ComposedWriter(transforms=transforms, writers=writers)
         self.interval = interval
         self.name = name or 'Unnamed listener'
         self.last_read = 0
