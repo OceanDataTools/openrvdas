@@ -10,6 +10,7 @@ import warnings
 sys.path.append('.')
 from logger.readers.text_file_reader import TextFileReader  # noqa: E402
 from logger.transforms.prefix_transform import PrefixTransform  # noqa: E402
+from logger.transforms.to_das_record_transform import ToDASRecordTransform  # noqa: E402
 from logger.writers.text_file_writer import TextFileWriter  # noqa: E402
 from logger.listener.listener import Listener  # noqa: E402
 
@@ -56,21 +57,20 @@ class TestListener(unittest.TestCase):
             create_file(tmpfilename, SAMPLE_DATA[f])
 
     ############################
-    def test_check_format(self):
+    def test_type_hints(self):
+        # Test that type hint warnings get triggered
+        outfilename = self.tmpdirname + '/type_hints_out.txt'
 
-        # This should be okay - for now it warns us that check_format
-        # is not implemented for ComposedWriter
+        l1 = Listener(readers=[TextFileReader(self.tmpfilenames[0])],
+                      transforms=[ToDASRecordTransform(field_name='test')],
+                      writers=[TextFileWriter(filename=outfilename)])
+
         with self.assertLogs(logging.getLogger(), logging.WARNING):
-            with self.assertRaises(ValueError):
-                Listener([TextFileReader(self.tmpfilenames[0]),
-                          TextFileReader(self.tmpfilenames[1])],
-                         check_format=True)
+            l1.run()
 
-        # No longer raises exception - only logs warning
-        # This should not be - no common reader format
-        # with self.assertRaises(ValueError):
-        #  Listener([TextFileReader(self.tmpfilenames[0]), Reader()],
-        #                 check_format=True)
+        # Shouldn't be any output
+        t = TextFileReader(outfilename)
+        self.assertIsNone(t.read())
 
     ############################
     def test_read_all_write_one(self):
