@@ -60,8 +60,8 @@ class DeltaTransform:
             timestamp = record.timestamp
 
         elif type(record) is dict:
-            fields = record.get('fields', None)
-            timestamp = record.get('timestamp', None)
+            fields = record.get('fields')
+            timestamp = record.get('timestamp')
 
         elif type(record) is list:
             results = []
@@ -95,7 +95,7 @@ class DeltaTransform:
 
             # Does this field have a special type?
             if type(self.field_type) is dict:
-                this_field_type = self.field_type.get(key, None)
+                this_field_type = self.field_type.get(key)
             else:
                 this_field_type = self.field_type
 

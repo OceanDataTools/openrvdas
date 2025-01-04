@@ -30,7 +30,7 @@ class TestDeltaTransform(unittest.TestCase):
         beta = {'timestamp': 3, 'fields': {'gyroheading': 359, 'seatemp': 20}}
         results = t.transform(beta)
         self.assertEqual(results['fields'].get('gyroheading'), -16)
-        self.assertEqual(results['fields'].get('seatemp', None), None)
+        self.assertEqual(results['fields'].get('seatemp'), None)
 
         # Simple transform with no special field types
         t = DeltaTransform()

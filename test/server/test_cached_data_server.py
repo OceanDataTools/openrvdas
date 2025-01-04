@@ -45,7 +45,7 @@ class TestCachedDataServer(unittest.TestCase):
                 result = await ws.recv()
                 logging.info('got fields result: %s', result)
                 response = json.loads(result)
-                self.assertEqual(response.get('data', None),
+                self.assertEqual(response.get('data'),
                                  ['basic_field_1', 'basic_field_2', 'basic_field_3'])
                 #####
                 to_send = {'type': 'publish',
@@ -149,7 +149,7 @@ class TestCachedDataServer(unittest.TestCase):
                 result = await ws.recv()
                 logging.info('got fields result: %s', result)
                 response = json.loads(result)
-                self.assertEqual(response.get('data', None),
+                self.assertEqual(response.get('data'),
                                  ['wild_field_1', 'wild_field_2', 'wild_field_3',
                                   'wild_field_4', 'wild_field_51', 'wild_field_61'])
                 #####
@@ -251,7 +251,7 @@ class TestCachedDataServer(unittest.TestCase):
                 result = await ws.recv()
                 logging.info('got fields result: %s', result)
                 response = json.loads(result)
-                self.assertEqual(response.get('data', None),
+                self.assertEqual(response.get('data'),
                                  ['field_1', 'field_2', 'field_3'])
                 #####
                 to_send = {'type': 'publish',

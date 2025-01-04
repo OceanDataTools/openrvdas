@@ -523,11 +523,11 @@ class DjangoServerAPI(ServerAPI):
                 try:
                     try:
                         for logger_id, logger_report in status.items():
-                            logger_config = logger_report.get('config', None)
-                            logger_errors = logger_report.get('errors', None)
-                            logger_pid = logger_report.get('pid', None)
-                            logger_failed = logger_report.get('failed', None)
-                            logger_running = logger_report.get('running', None)
+                            logger_config = logger_report.get('config')
+                            logger_errors = logger_report.get('errors')
+                            logger_pid = logger_report.get('pid')
+                            logger_failed = logger_report.get('failed')
+                            logger_running = logger_report.get('running')
 
                             # Get the most recent corresponding LoggerConfigState from
                             # datastore. If there isn't a most recent, create one and
@@ -709,10 +709,10 @@ class DjangoServerAPI(ServerAPI):
         with self.config_rlock:
             with transaction.atomic():
                 cruise_def = configuration.get('cruise', {})
-                loggers = configuration.get('loggers', None)
-                modes = configuration.get('modes', None)
-                default_mode_name = configuration.get('default_mode', None)
-                configs = configuration.get('configs', None)
+                loggers = configuration.get('loggers')
+                modes = configuration.get('modes')
+                default_mode_name = configuration.get('default_mode')
+                configs = configuration.get('configs')
 
                 # If preserve_mode is True, don't reset mode to the new configuration's
                 # default_mode, and leave all loggers running their current configs.
@@ -760,13 +760,13 @@ class DjangoServerAPI(ServerAPI):
                 # Assemble the top-level information about the cruise
                 # definition. If no cruise name, just call it 'Cruise'.
                 cruise_id = cruise_def.get('id', 'Cruise')
-                cruise_start = cruise_def.get('start', None)
+                cruise_start = cruise_def.get('start')
                 if cruise_start:
                     cruise_start = datetime_obj(cruise_start, time_format=DATE_FORMAT)
-                cruise_end = cruise_def.get('end', None)
+                cruise_end = cruise_def.get('end')
                 if cruise_end:
                     cruise_end = datetime_obj(cruise_end, time_format=DATE_FORMAT)
-                config_filename = cruise_def.get('config_filename', None)
+                config_filename = cruise_def.get('config_filename')
 
                 # Delete old cruise. There should be only one, but...
                 for old_cruise in Cruise.objects.all():
@@ -816,14 +816,14 @@ class DjangoServerAPI(ServerAPI):
                     logger.save()
 
                     # Create and associate all relevant modes for the logger
-                    logger_configs = logger_spec.get('configs', None)
+                    logger_configs = logger_spec.get('configs')
                     if logger_configs is None:
                         raise ValueError('Logger %s (cruise %s) has no config declaration' %
                                          (logger_name, cruise_id))
 
                     # Find the corresponding configuration
                     for config_name in logger_configs:
-                        config_spec = configs.get(config_name, None)
+                        config_spec = configs.get(config_name)
                         if config_spec is None:
                             raise ValueError('Config %s (declared by logger %s) not found' %
                                              (config_name, logger_name))
@@ -840,7 +840,7 @@ class DjangoServerAPI(ServerAPI):
                         config.save()
                         # Is this logger config part of a mode?
                         for mode_name, mode_dict in modes.items():
-                            logger_config_name = mode_dict.get(logger_name, None)
+                            logger_config_name = mode_dict.get(logger_name)
                             if logger_config_name and logger_config_name == config_name:
                                 try:
                                     logging.debug('modes: %s',
@@ -856,7 +856,7 @@ class DjangoServerAPI(ServerAPI):
 
                     # What mode should this logger be in now?
                     if preserve_mode:  # if we want to keep old mode, assuming we can find it
-                        old_config_name = old_loggers.get(logger_name, {}).get('active', None)
+                        old_config_name = old_loggers.get(logger_name, {}).get('active')
                         if old_config_name:
                             # Can we find a new config with the old name?
                             try:

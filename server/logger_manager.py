@@ -216,7 +216,7 @@ class LoggerManager:
                 # from a callback when the API alerts us that something has
                 # changed. So we need to re-grab self.cruise
                 self.cruise = self.api.get_configuration()  # a Cruise object
-                self.cruise_filename = self.cruise.get('config_filename', None)
+                self.cruise_filename = self.cruise.get('config_filename')
                 loaded_time = self.cruise.get('loaded_time')
                 self.cruise_loaded_time = datetime.datetime.timestamp(loaded_time)
                 self.active_mode = self.api.get_active_mode()
@@ -322,7 +322,7 @@ class LoggerManager:
                     logging.info('No cruise definition found in API')
                     time.sleep(self.interval * 2)
                     continue
-                self.cruise_filename = self.cruise.get('config_filename', None)
+                self.cruise_filename = self.cruise.get('config_filename')
                 loaded_time = self.cruise.get('loaded_time')
                 self.cruise_loaded_time = datetime.datetime.timestamp(loaded_time)
 

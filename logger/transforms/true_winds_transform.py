@@ -317,34 +317,34 @@ class TrueWindsTransform(DerivedDataTransform):
                           self.wind_speed_field, self.wind_speed_val)
             return True
 
-        course_max_age = self.max_field_age.get(self.course_field, None)
+        course_max_age = self.max_field_age.get(self.course_field)
         if (course_max_age and timestamp - self.course_val_time > course_max_age):
             logging.debug('course_field too old - max age %g, age %g',
                           course_max_age, timestamp - self.course_val_time)
             return True
 
-        speed_max_age = self.max_field_age.get(self.speed_field, None)
+        speed_max_age = self.max_field_age.get(self.speed_field)
         if speed_max_age:
             if timestamp - self.speed_val_time > speed_max_age:
                 logging.debug('speed_field too old - max age %g, age %g',
                               speed_max_age, timestamp - self.speed_val_time)
                 return True
 
-        heading_max_age = self.max_field_age.get(self.heading_field, None)
+        heading_max_age = self.max_field_age.get(self.heading_field)
         if heading_max_age:
             if timestamp - self.heading_val_time > heading_max_age:
                 logging.debug('heading_field too old - max age %g, age %g',
                               heading_max_age, timestamp - self.heading_val_time)
                 return True
 
-        wind_dir_max_age = self.max_field_age.get(self.wind_dir_field, None)
+        wind_dir_max_age = self.max_field_age.get(self.wind_dir_field)
         if wind_dir_max_age:
             if timestamp - self.wind_dir_val_time > wind_dir_max_age:
                 logging.debug('wind_dir_field too old - max age %g, age %g',
                               wind_dir_max_age, timestamp - self.wind_dir_val_time)
                 return True
 
-        wind_speed_max_age = self.max_field_age.get(self.wind_speed_field, None)
+        wind_speed_max_age = self.max_field_age.get(self.wind_speed_field)
         if wind_speed_max_age:
             if timestamp - self.wind_speed_val_time > wind_speed_max_age:
                 logging.debug('wind_speed_field too old - max age %g, age %g',

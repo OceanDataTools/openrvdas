@@ -94,8 +94,8 @@ class SubsampleTransform(DerivedDataTransform):
             timestamp = record.timestamp
             fields = record.fields
         else:
-            timestamp = record.get('timestamp', None)
-            fields = record.get('fields', None)
+            timestamp = record.get('timestamp')
+            fields = record.get('fields')
 
         if not fields:
             logging.error('SubsampleTransform: no fields found in record: %s', record)
@@ -103,7 +103,7 @@ class SubsampleTransform(DerivedDataTransform):
 
         # First, copy the new data into our cache
         for field in self.field_list:
-            new_vals = fields.get(field, None)
+            new_vals = fields.get(field)
             if not new_vals:
                 continue
             # If list, we assume it's [(ts, value), (ts, value),...]
@@ -158,11 +158,11 @@ class SubsampleTransform(DerivedDataTransform):
             if not self.cached_values[field]:
                 continue
 
-            output_field = self.field_spec[field].get('output', None)
+            output_field = self.field_spec[field].get('output')
             if not output_field:
                 logging.warning('No "output" spec found for field %s', field)
                 continue
-            algorithm = self.field_spec[field].get('subsample', None)
+            algorithm = self.field_spec[field].get('subsample')
             if not algorithm:
                 logging.warning('No "subsample" spec found for field %s', field)
                 continue

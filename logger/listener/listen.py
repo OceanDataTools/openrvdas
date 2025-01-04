@@ -95,7 +95,7 @@ class ListenerFromLoggerConfig(Listener):
         # that we can catch and properly route stderr output from
         # parsing/creation of the other keyword args.
         kwargs = {}
-        stderr_writers_spec = config_dict.get('stderr_writers', None)
+        stderr_writers_spec = config_dict.get('stderr_writers')
         if stderr_writers_spec:
             stderr_writers = self._class_kwargs_from_config(stderr_writers_spec)
             logging.getLogger().addHandler(StdErrLoggingHandler(stderr_writers))
@@ -135,12 +135,12 @@ class ListenerFromLoggerConfig(Listener):
             return [self._class_kwargs_from_config(c) for c in class_json]
 
         # Get name and constructor for component we're going to instantiate
-        class_name = class_json.get('class', None)
+        class_name = class_json.get('class')
         if class_name is None:
             raise ValueError('missing "class" definition in "{}"'.format(class_json))
 
         # Are they telling us where the class definition is? If so import it
-        class_module_name = class_json.get('module', None)
+        class_module_name = class_json.get('module')
         if class_module_name is not None:
             module = importlib.import_module(class_module_name)
             class_const = getattr(module, class_name, None)
@@ -150,7 +150,7 @@ class ListenerFromLoggerConfig(Listener):
         else:
             # If they haven't given us a 'module' declaration, assume class
             # is something that's already defined.
-            class_const = globals().get(class_name, None)
+            class_const = globals().get(class_name)
             if not class_const:
                 raise ValueError('No component class "{}" found: "{}"'.format(
                     class_name, class_json))
@@ -205,12 +205,12 @@ class ListenerFromLoggerConfigFile(ListenerFromLoggerConfig):
         config = read_config.read_config(config_file)
 
         if config_name:
-            config_dict = config.get('configs', None)
+            config_dict = config.get('configs')
             if not config_dict:
                 raise ValueError('Configuration name "%s" specified, but no '
                                  '"configs" section found in file "%s"'
                                  % (config_name, config_file))
-            config = config_dict.get(config_name, None)
+            config = config_dict.get(config_name)
             if not config:
                 raise ValueError('Configuration name "%s" not found in file "%s"'
                                  % (config_name, config_file))

@@ -88,12 +88,12 @@ def config_from_filename(filename):
     config = read_config(filename)
 
     if config_name:
-        config_dict = config.get('configs', None)
+        config_dict = config.get('configs')
         if not config_dict:
             raise ValueError('Configuration name "%s" specified, but no '
                              '"configs" section found in file "%s"'
                              % (config_name, filename))
-        config = config_dict.get(config_name, None)
+        config = config_dict.get(config_name)
         if not config:
             raise ValueError('Configuration name "%s" not found in file "%s"'
                              % (config_name, filename))

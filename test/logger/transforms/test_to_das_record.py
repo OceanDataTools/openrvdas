@@ -19,7 +19,7 @@ class TestToDASRecordTransform(unittest.TestCase):
         self.assertDictEqual(das_record.fields, {'my_field_name': 'my_value'})
 
         das_record = t.transform(['this should show up as a field value'])
-        self.assertEqual(das_record[0].fields.get('my_field_name', None),
+        self.assertEqual(das_record[0].fields.get('my_field_name'),
                          'this should show up as a field value')
 
     ############################

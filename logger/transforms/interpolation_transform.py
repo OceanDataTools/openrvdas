@@ -109,8 +109,8 @@ class InterpolationTransform(DerivedDataTransform):
             timestamp = record.timestamp
             fields = record.fields
         else:
-            timestamp = record.get('timestamp', None)
-            fields = record.get('fields', None)
+            timestamp = record.get('timestamp')
+            fields = record.get('fields')
 
         if not fields:
             logging.info('InterpolationTransform: record has no fields: %s', record)
@@ -196,7 +196,7 @@ class InterpolationTransform(DerivedDataTransform):
 
         non_empty = {}
         for dest, spec in self.field_spec.items():
-            source = spec.get('source', None)
+            source = spec.get('source')
             if source:
                 values = self.cached_values.get(source, [])
                 if len(values):
@@ -254,7 +254,7 @@ def interpolate(algorithm, values, timestamp, now):
 
     ##################
     # Select algorithm
-    alg_type = algorithm.get('type', None)
+    alg_type = algorithm.get('type')
 
     # boxcar_average: all values within symmetric interval window get
     # same weight.

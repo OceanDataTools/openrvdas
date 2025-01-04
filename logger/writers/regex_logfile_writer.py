@@ -138,7 +138,7 @@ class RegexLogfileWriter(Writer):
         the map for the relevant pattern."""
 
         # Are we currently writing to this file? If not, open/create it.
-        if not filename == self.current_filename.get(pattern, None):
+        if not filename == self.current_filename.get(pattern):
             logging.info('LogfileWriter opening new file: %s', filename)
             self.current_filename[pattern] = filename
             self.writer[pattern] = FileWriter(filename=filename,
@@ -153,7 +153,7 @@ class RegexLogfileWriter(Writer):
     def write_if_match(self, record, pattern, time_str):
         """If the record matches the pattern, write to the matching filebase."""
         # Find the compiled regex matching the pattern
-        regex = self.compiled_filebase_map.get(pattern, None)
+        regex = self.compiled_filebase_map.get(pattern)
         if not regex:
             logging.error(f'System error: found no regex pattern matching "{pattern}"!')
             return None
@@ -163,7 +163,7 @@ class RegexLogfileWriter(Writer):
             return None
 
         # Otherwise, we write.
-        filebase = self.filebase.get(pattern, None)
+        filebase = self.filebase.get(pattern)
         if filebase is None:
             logging.error(f'System error: found no filebase matching pattern "{pattern}"!')
             return None

@@ -33,6 +33,7 @@ broker_address = 'localhost'
 channel = 'test'
 client_name = 'Instance1'
 
+
 ##############################
 class ReaderTimeout(StopIteration):
     """A custom exception we can raise when we hit timeout."""
@@ -44,7 +45,6 @@ class TestMQTTReader(unittest.TestCase):
 
     @unittest.skipUnless(PAHO_ENABLED, 'Paho MQTT not installed; tests of MQTT '
                          'functionality will not be run.')
-
     ############################
     def _handler(self, signum, frame):
         """If timeout fires, raise our custom exception"""
@@ -79,7 +79,7 @@ class TestMQTTReader(unittest.TestCase):
             signal.alarm(0)
 
         except ConnectionRefusedError:  # noqa: E722
-            self.skipTest(f'No local MQTT broker found - skipped test_mqtt_reader')
+            self.skipTest('No local MQTT broker found - skipped test_mqtt_reader')
 
 
 ################################################################################
