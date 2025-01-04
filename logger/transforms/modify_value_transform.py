@@ -61,9 +61,10 @@ class ModifyValueTransform(DerivedDataTransform):
           (NOTE: need to address which fields' metadata is sent along - all specified,
           or only fields that have appeared since last send, or...?)
         """
+        super().__init__(quiet=quiet)
+
         self.fields = fields
         self.delete_unmatched = delete_unmatched
-        self.quiet = quiet
         self.metadata_interval = metadata_interval or 0
 
         self._validate_fields()
@@ -90,7 +91,7 @@ class ModifyValueTransform(DerivedDataTransform):
                 raise ValueError(f'Invalid "add_factor" for field "{field}". Must be numeric.')
 
     ############################
-    def transform(self, record):
+    def transform(self, record: DASRecord):
         """
         Transform a record or list of records.
 
@@ -100,16 +101,10 @@ class ModifyValueTransform(DerivedDataTransform):
         Returns:
             Transformed record(s) or None if the input is invalid.
         """
-        # If we've got a list, hope it's a list of records. Try to add
-        # them all.
-        if type(record) is list:
-            result_list = [self.transform(single_record) for single_record in record]
-            return [r for r in result_list if r is not None]
 
-        if not isinstance(record, DASRecord):
-            logging.warning(f'ModifyValueTransform received non-DASRecord: {type(record)}')
-            logging.warning(f'{record}')
-            return None
+        # See if it's something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from Transform()
+            return self.digest_record(record)  # inherited from Transform()
 
         # Make a copy of the original record we're going to munge
         result = copy.deepcopy(record)
