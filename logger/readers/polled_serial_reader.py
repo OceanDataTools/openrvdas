@@ -3,6 +3,7 @@
 import logging
 import sys
 import time
+from itertools import cycle
 
 # Don't freak out if pyserial isn't installed - unless they actually
 # try to instantiate a SerialReader
@@ -14,6 +15,24 @@ except ModuleNotFoundError:
 
 sys.path.append('.')
 from logger.readers.serial_reader import SerialReader  # noqa: E402
+
+
+############################
+def is_string_or_list_of_strings(cmd):
+    if isinstance(cmd, str):
+        return True
+    elif isinstance(cmd, list):
+        return all(isinstance(item, str) for item in cmd)
+    return False
+
+
+############################
+def is_dict_of_lists_of_strings(cmd):
+    if isinstance(cmd, dict):
+        return all(isinstance(value, list) and
+                   all(isinstance(item, str) for item in value)
+                   for value in cmd.values())
+    return False
 
 
 ################################################################################
@@ -32,14 +51,58 @@ class PolledSerialReader(SerialReader):
         strings to send to the serial host on startup, before each read and
         just prior to the reader being destroyed.
 
-        If start_cmd, pre_read_cmd or stop_cmd are lists of strings, send
-        as sequential commands. The string ``__PAUSE__``, followed by a
-        number, is interpreted as a command to pause for that many seconds
-        prior to sending the next command.
+        Notable arguments:
+
+        start_cmd
+            If not None, may be string or list of strings. If a single string,
+            it is sent to the serial port as soon as it is opened. If a list of
+            strings, each string in the list is sent in sequence.
+
+        stop_cmd
+            Much as start_cmd, but is sent when the PolledSerialReader is closed
+            or destroyed.
+
+        pre_read_cmd
+            Much as start_cmd and stop_cmd, except the string or list of strings
+            are sent each time the PolledSerialReader's read() method is called,
+            prior to trying to read from the port.
+
+            In addition to a string or list of strings, pre_read_cmd may be a *dict*
+            of lists of strings:
+
+                pre_read_cmd:
+                  key1: ['command 1_1', 'command 1_2]
+                  key2: ['command 2_1', 'command 2_2]
+                  key3: ...
+                ...
+            The first time read() is called, the strings associated with key1 will be
+            sent. The second time, those associated with key2, and so on. When the end
+            of the dict is reached, it will start again with key1.
+
+        For all of these arguments, a special string, ``__PAUSE__``, is recognized. If
+        followed by a number (e.g. ``__PAUSE__ 5``), it will be interpreted as a command
+        to pause for that many seconds prior to sending the next command. If no number
+        is given, it will pause for one second.
         """
+
+        # Type check our pre_read commands
+        if start_cmd and not is_string_or_list_of_strings(start_cmd):
+            raise ValueError('PolledSerialReader start_cmd must either be None, '
+                             f'a string, or a list of strings. Found: {start_cmd}')
+        if stop_cmd and not is_string_or_list_of_strings(stop_cmd):
+            raise ValueError('PolledSerialReader stop_cmd must either be None, '
+                             f'a string, or a list of strings. Found: {stop_cmd}')
+        if pre_read_cmd and not (is_string_or_list_of_strings(pre_read_cmd) or
+                                 is_dict_of_lists_of_strings(pre_read_cmd)):
+            raise ValueError('PolledSerialReader pre_read_cmd must either be None, '
+                             'a string, or a list of strings, or a dict of lists of '
+                             f'strings. Found: {pre_read_cmd}')
+
         self.start_cmd = start_cmd
         self.pre_read_cmd = pre_read_cmd
         self.stop_cmd = stop_cmd
+        if isinstance(pre_read_cmd, dict):
+            self.command_cycle = cycle(pre_read_cmd.items())
 
         super().__init__(port=port, baudrate=baudrate, bytesize=bytesize,
                          parity=parity, stopbits=stopbits, timeout=timeout,
@@ -57,45 +120,41 @@ class PolledSerialReader(SerialReader):
                 logging.error(str(e))
 
     ############################
-    def _send_command(self, command):
-        """Send a command, or list of commands to the serial port."""
-        if not command:
-            return
-        if type(command) is str:
-            # Do some craziness to unescape escape sequences like '\n'
-            self.serial.write(self._encode_str(command, unescape=True))
-            return
-
-        if not type(command) is list:
-            raise ValueError('PolledSerialReader commands must be either strings or '
-                             'lists. Received: type %s: %s' % (type(command), command))
-
-        # Iterate through commands, pausing as necessary
-        for cmd in command:
-            # Is it our special 'pause' command?
-            if cmd.find('__PAUSE__') == 0:
-                pause_cmd = cmd.split()
-                if len(pause_cmd) == 1:
-                    pause_length = 1
-                elif len(pause_cmd) == 2:
-                    try:
-                        pause_length = float(pause_cmd[1])
-                    except ValueError:
-                        raise ValueError('__PAUSE__ interval in PolledSerialReader must be '
-                                         'a float. Found: %s' % cmd)
-                else:
-                    raise ValueError('Pause format "__PAUSE__ <seconds>"; found %s' % cmd)
-                logging.info('Pausing %g seconds', pause_length)
-                time.sleep(pause_length)
+    def _send_command(self, cmd):
+        """Check if command is a 'pause'; if so, sleep, otherwise send it to serial port."""
+        if cmd.find('__PAUSE__') == 0:
+            pause_cmd = cmd.split()
+            if len(pause_cmd) == 1:
+                pause_length = 1
+            elif len(pause_cmd) == 2:
+                try:
+                    pause_length = float(pause_cmd[1])
+                except ValueError:
+                    raise ValueError('__PAUSE__ interval in PolledSerialReader must be '
+                                     'a float. Found: %s' % cmd)
             else:
-                # If it's a normal command we're sending
-                logging.info('Sending serial command "%s"', cmd)
-                self.serial.write(self._encode_str(cmd, unescape=True))
+                raise ValueError('Pause format "__PAUSE__ <seconds>"; found %s' % cmd)
+            logging.info('Pausing %g seconds', pause_length)
+            time.sleep(pause_length)
+        else:
+            # If it's a normal command we're sending
+            logging.info('Sending serial command "%s"', cmd)
+            self.serial.write(self._encode_str(cmd, unescape=True))
 
     ############################
     def read(self):
         try:
-            if self.pre_read_cmd:
+            # Do we need to send anything prior to reading?
+            if not self.pre_read_cmd:  # no pre_read_cmd
+                pass
+            elif isinstance(self.pre_read_cmd, list):  # list of commands
+                for cmd in self.pre_read_cmd:
+                    self._send_command(cmd)
+            elif isinstance(self.pre_read_cmd, dict):  # dict of lists of commands
+                key, commands = next(self.command_cycle)
+                for cmd in commands:
+                    self._send_command(cmd)
+            elif self.pre_read_cmd:   # simple string command
                 self._send_command(self.pre_read_cmd)
 
             record = super().read()
