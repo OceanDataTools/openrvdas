@@ -28,12 +28,22 @@ def is_string_or_list_of_strings(cmd):
 
 ############################
 def is_dict_of_lists_of_strings(cmd):
-    if isinstance(cmd, dict):
-        return all(isinstance(value, list) and
-                   all(isinstance(item, str) for item in value)
-                   for value in cmd.values())
-    return False
+    if not isinstance(cmd, dict):
+        return False
 
+    # So we have a dict. Check that all values are either strings
+    # or lists of strings
+    for value in cmd.values():
+        if isinstance(value, str):
+            continue
+        elif (isinstance(value, list) and
+              all(isinstance(item, str) for item in value)):
+            continue
+        else:
+            return False
+
+    # If got this far, it all checks out
+    return True
 
 ################################################################################
 class PolledSerialReader(SerialReader):
@@ -84,6 +94,9 @@ class PolledSerialReader(SerialReader):
         to pause for that many seconds prior to sending the next command. If no number
         is given, it will pause for one second.
         """
+        self.start_cmd = start_cmd
+        self.pre_read_cmd = pre_read_cmd
+        self.stop_cmd = stop_cmd
 
         # Type check our pre_read commands
         if start_cmd and not is_string_or_list_of_strings(start_cmd):
@@ -98,9 +111,6 @@ class PolledSerialReader(SerialReader):
                              'a string, or a list of strings, or a dict of lists of '
                              f'strings. Found: {pre_read_cmd}')
 
-        self.start_cmd = start_cmd
-        self.pre_read_cmd = pre_read_cmd
-        self.stop_cmd = stop_cmd
         if isinstance(pre_read_cmd, dict):
             self.command_cycle = cycle(pre_read_cmd.items())
 
