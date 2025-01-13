@@ -125,13 +125,18 @@ class PolledSerialReader(SerialReader):
                                'install Python module pyserial.')
         if self.start_cmd:
             try:
-                self._send_command(start_cmd)
+                if isinstance(self.start_cmd, list):  # list of commands
+                    for cmd in self.start_cmd:
+                        self._send_command(cmd)
+                else:
+                    self._send_command(start_cmd)
             except serial.serialutil.SerialException as e:
                 logging.error(str(e))
 
     ############################
     def _send_command(self, cmd):
         """Check if command is a 'pause'; if so, sleep, otherwise send it to serial port."""
+        logging.debug(f'Sending {cmd}')
         if cmd.find('__PAUSE__') == 0:
             pause_cmd = cmd.split()
             if len(pause_cmd) == 1:
@@ -150,6 +155,10 @@ class PolledSerialReader(SerialReader):
             # If it's a normal command we're sending
             logging.info('Sending serial command "%s"', cmd)
             self.serial.write(self._encode_str(cmd, unescape=True))
+            #self.serial.write(self._encode_str(cmd))
+            self.serial.flush()
+
+        logging.debug(f'Done sending {cmd}')
 
     ############################
     def read(self):
@@ -167,7 +176,9 @@ class PolledSerialReader(SerialReader):
             elif self.pre_read_cmd:   # simple string command
                 self._send_command(self.pre_read_cmd)
 
+            logging.debug(f'read() is being called')
             record = super().read()
+            logging.debug(f'Returned from read() with: {record}')
             return record
         except serial.serialutil.SerialException as e:
             logging.error(str(e))
@@ -177,6 +188,10 @@ class PolledSerialReader(SerialReader):
     def __del__(self):
         if self.stop_cmd:
             try:
-                self._send_command(self.stop_cmd)
+                if isinstance(self.stop_cmd, list):  # list of commands
+                    for cmd in self.stop_cmd:
+                        self._send_command(cmd)
+                else:
+                    self._send_command(self.stop_cmd)
             except serial.serialutil.SerialException as e:
                 logging.error(str(e))
