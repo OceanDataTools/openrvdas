@@ -163,23 +163,28 @@ class PolledSerialReader(SerialReader):
     ############################
     def read(self):
         try:
-            # Do we need to send anything prior to reading?
-            if not self.pre_read_cmd:  # no pre_read_cmd
-                pass
-            elif isinstance(self.pre_read_cmd, list):  # list of commands
-                for cmd in self.pre_read_cmd:
-                    self._send_command(cmd)
-            elif isinstance(self.pre_read_cmd, dict):  # dict of lists of commands
-                key, commands = next(self.command_cycle)
-                for cmd in commands:
-                    self._send_command(cmd)
-            elif self.pre_read_cmd:   # simple string command
-                self._send_command(self.pre_read_cmd)
+            # Try again if our read times out, or our serial port returns None
+            while True:
+                # Do we need to send anything prior to reading?
+                if not self.pre_read_cmd:  # no pre_read_cmd
+                    pass
+                elif isinstance(self.pre_read_cmd, list):  # list of commands
+                    for cmd in self.pre_read_cmd:
+                        self._send_command(cmd)
+                elif isinstance(self.pre_read_cmd, dict):  # dict of lists of commands
+                    key, commands = next(self.command_cycle)
+                    for cmd in commands:
+                        self._send_command(cmd)
+                elif self.pre_read_cmd:   # simple string command
+                    self._send_command(self.pre_read_cmd)
 
-            logging.debug(f'read() is being called')
-            record = super().read()
-            logging.debug(f'Returned from read() with: {record}')
-            return record
+                logging.debug(f'read() is being called')
+                record = super().read()
+                logging.debug(f'Returned from read() with: {record}')
+                if record is not None:
+                    return record
+                logging.debug('Serial read returned None; trying again.')
+
         except serial.serialutil.SerialException as e:
             logging.error(str(e))
             return None
