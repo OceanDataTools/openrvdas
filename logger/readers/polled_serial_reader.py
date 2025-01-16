@@ -45,6 +45,7 @@ def is_dict_of_lists_of_strings(cmd):
     # If got this far, it all checks out
     return True
 
+
 ################################################################################
 class PolledSerialReader(SerialReader):
     """
@@ -155,7 +156,6 @@ class PolledSerialReader(SerialReader):
             # If it's a normal command we're sending
             logging.info('Sending serial command "%s"', cmd)
             self.serial.write(self._encode_str(cmd, unescape=True))
-            #self.serial.write(self._encode_str(cmd))
             self.serial.flush()
 
         logging.debug(f'Done sending {cmd}')
@@ -178,7 +178,7 @@ class PolledSerialReader(SerialReader):
                 elif self.pre_read_cmd:   # simple string command
                     self._send_command(self.pre_read_cmd)
 
-                logging.debug(f'read() is being called')
+                logging.debug('read() is being called')
                 record = super().read()
                 logging.debug(f'Returned from read() with: {record}')
                 if record is not None:
