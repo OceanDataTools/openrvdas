@@ -90,6 +90,12 @@ class PolledSerialReader(SerialReader):
             sent. The second time, those associated with key2, and so on. When the end
             of the dict is reached, it will start again with key1.
 
+        timeout <seconds>
+            If timeout is specified, then the serial read will time out after this many
+            seconds. It will then reissue the pre_read_cmds, if there is one, and try
+            reading again. If there is a dict of pre_read_cmds, it will progress to the
+            next one in the dict.
+
         For all of these arguments, a special string, ``__PAUSE__``, is recognized. If
         followed by a number (e.g. ``__PAUSE__ 5``), it will be interpreted as a command
         to pause for that many seconds prior to sending the next command. If no number
