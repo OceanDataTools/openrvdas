@@ -29,12 +29,49 @@
 <pre><code class="python">#!/usr/bin/env python3
 
 import logging
-import serial
 import sys
 import time
+from itertools import cycle
+
+# Don&#39;t freak out if pyserial isn&#39;t installed - unless they actually
+# try to instantiate a SerialReader
+try:
+    import serial
+    SERIAL_MODULE_FOUND = True
+except ModuleNotFoundError:
+    SERIAL_MODULE_FOUND = False
 
 sys.path.append(&#39;.&#39;)
 from logger.readers.serial_reader import SerialReader  # noqa: E402
+
+
+############################
+def is_string_or_list_of_strings(cmd):
+    if isinstance(cmd, str):
+        return True
+    elif isinstance(cmd, list):
+        return all(isinstance(item, str) for item in cmd)
+    return False
+
+
+############################
+def is_dict_of_lists_of_strings(cmd):
+    if not isinstance(cmd, dict):
+        return False
+
+    # So we have a dict. Check that all values are either strings
+    # or lists of strings
+    for value in cmd.values():
+        if isinstance(value, str):
+            continue
+        elif (isinstance(value, list) and
+              all(isinstance(item, str) for item in value)):
+            continue
+        else:
+            return False
+
+    # If got this far, it all checks out
+    return True
 
 
 ################################################################################
@@ -53,14 +90,64 @@ class PolledSerialReader(SerialReader):
         strings to send to the serial host on startup, before each read and
         just prior to the reader being destroyed.
 
-        If start_cmd, pre_read_cmd or stop_cmd are lists of strings, send
-        as sequential commands. The string ``__PAUSE__``, followed by a
-        number, is interpreted as a command to pause for that many seconds
-        prior to sending the next command.
+        Notable arguments:
+
+        start_cmd
+            If not None, may be string or list of strings. If a single string,
+            it is sent to the serial port as soon as it is opened. If a list of
+            strings, each string in the list is sent in sequence.
+
+        stop_cmd
+            Much as start_cmd, but is sent when the PolledSerialReader is closed
+            or destroyed.
+
+        pre_read_cmd
+            Much as start_cmd and stop_cmd, except the string or list of strings
+            are sent each time the PolledSerialReader&#39;s read() method is called,
+            prior to trying to read from the port.
+
+            In addition to a string or list of strings, pre_read_cmd may be a *dict*
+            of lists of strings:
+
+                pre_read_cmd:
+                  key1: [&#39;command 1_1&#39;, &#39;command 1_2]
+                  key2: [&#39;command 2_1&#39;, &#39;command 2_2]
+                  key3: ...
+                ...
+            The first time read() is called, the strings associated with key1 will be
+            sent. The second time, those associated with key2, and so on. When the end
+            of the dict is reached, it will start again with key1.
+
+        timeout &lt;seconds&gt;
+            If timeout is specified, then the serial read will time out after this many
+            seconds. It will then reissue the pre_read_cmds, if there is one, and try
+            reading again. If there is a dict of pre_read_cmds, it will progress to the
+            next one in the dict.
+
+        For all of these arguments, a special string, ``__PAUSE__``, is recognized. If
+        followed by a number (e.g. ``__PAUSE__ 5``), it will be interpreted as a command
+        to pause for that many seconds prior to sending the next command. If no number
+        is given, it will pause for one second.
         &#34;&#34;&#34;
         self.start_cmd = start_cmd
         self.pre_read_cmd = pre_read_cmd
         self.stop_cmd = stop_cmd
+
+        # Type check our pre_read commands
+        if start_cmd and not is_string_or_list_of_strings(start_cmd):
+            raise ValueError(&#39;PolledSerialReader start_cmd must either be None, &#39;
+                             f&#39;a string, or a list of strings. Found: {start_cmd}&#39;)
+        if stop_cmd and not is_string_or_list_of_strings(stop_cmd):
+            raise ValueError(&#39;PolledSerialReader stop_cmd must either be None, &#39;
+                             f&#39;a string, or a list of strings. Found: {stop_cmd}&#39;)
+        if pre_read_cmd and not (is_string_or_list_of_strings(pre_read_cmd) or
+                                 is_dict_of_lists_of_strings(pre_read_cmd)):
+            raise ValueError(&#39;PolledSerialReader pre_read_cmd must either be None, &#39;
+                             &#39;a string, or a list of strings, or a dict of lists of &#39;
+                             f&#39;strings. Found: {pre_read_cmd}&#39;)
+
+        if isinstance(pre_read_cmd, dict):
+            self.command_cycle = cycle(pre_read_cmd.items())
 
         super().__init__(port=port, baudrate=baudrate, bytesize=bytesize,
                          parity=parity, stopbits=stopbits, timeout=timeout,
@@ -68,57 +155,70 @@ class PolledSerialReader(SerialReader):
                          dsrdtr=dsrdtr, inter_byte_timeout=inter_byte_timeout,
                          exclusive=exclusive, max_bytes=max_bytes, eol=eol,
                          encoding=encoding, encoding_errors=encoding_errors)
-
+        if not SERIAL_MODULE_FOUND:
+            raise RuntimeError(&#39;Serial port functionality not available. Please &#39;
+                               &#39;install Python module pyserial.&#39;)
         if self.start_cmd:
             try:
-                self._send_command(start_cmd)
+                if isinstance(self.start_cmd, list):  # list of commands
+                    for cmd in self.start_cmd:
+                        self._send_command(cmd)
+                else:
+                    self._send_command(start_cmd)
             except serial.serialutil.SerialException as e:
                 logging.error(str(e))
 
     ############################
-    def _send_command(self, command):
-        &#34;&#34;&#34;Send a command, or list of commands to the serial port.&#34;&#34;&#34;
-        if not command:
-            return
-        if type(command) is str:
-            # Do some craziness to unescape escape sequences like &#39;\n&#39;
-            self.serial.write(self._encode_str(command, unescape=True))
-            return
-
-        if not type(command) is list:
-            raise ValueError(&#39;PolledSerialReader commands must be either strings or &#39;
-                             &#39;lists. Received: type %s: %s&#39; % (type(command), command))
-
-        # Iterate through commands, pausing as necessary
-        for cmd in command:
-            # Is it our special &#39;pause&#39; command?
-            if cmd.find(&#39;__PAUSE__&#39;) == 0:
-                pause_cmd = cmd.split()
-                if len(pause_cmd) == 1:
-                    pause_length = 1
-                elif len(pause_cmd) == 2:
-                    try:
-                        pause_length = float(pause_cmd[1])
-                    except ValueError:
-                        raise ValueError(&#39;__PAUSE__ interval in PolledSerialReader must be &#39;
-                                         &#39;a float. Found: %s&#39; % cmd)
-                else:
-                    raise ValueError(&#39;Pause format &#34;__PAUSE__ &lt;seconds&gt;&#34;; found %s&#39; % cmd)
-                logging.info(&#39;Pausing %g seconds&#39;, pause_length)
-                time.sleep(pause_length)
+    def _send_command(self, cmd):
+        &#34;&#34;&#34;Check if command is a &#39;pause&#39;; if so, sleep, otherwise send it to serial port.&#34;&#34;&#34;
+        logging.debug(f&#39;Sending {cmd}&#39;)
+        if cmd.find(&#39;__PAUSE__&#39;) == 0:
+            pause_cmd = cmd.split()
+            if len(pause_cmd) == 1:
+                pause_length = 1
+            elif len(pause_cmd) == 2:
+                try:
+                    pause_length = float(pause_cmd[1])
+                except ValueError:
+                    raise ValueError(&#39;__PAUSE__ interval in PolledSerialReader must be &#39;
+                                     &#39;a float. Found: %s&#39; % cmd)
             else:
-                # If it&#39;s a normal command we&#39;re sending
-                logging.info(&#39;Sending serial command &#34;%s&#34;&#39;, cmd)
-                self.serial.write(self._encode_str(cmd, unescape=True))
+                raise ValueError(&#39;Pause format &#34;__PAUSE__ &lt;seconds&gt;&#34;; found %s&#39; % cmd)
+            logging.info(&#39;Pausing %g seconds&#39;, pause_length)
+            time.sleep(pause_length)
+        else:
+            # If it&#39;s a normal command we&#39;re sending
+            logging.info(&#39;Sending serial command &#34;%s&#34;&#39;, cmd)
+            self.serial.write(self._encode_str(cmd, unescape=True))
+            self.serial.flush()
+
+        logging.debug(f&#39;Done sending {cmd}&#39;)
 
     ############################
     def read(self):
         try:
-            if self.pre_read_cmd:
-                self._send_command(self.pre_read_cmd)
+            # Try again if our read times out, or our serial port returns None
+            while True:
+                # Do we need to send anything prior to reading?
+                if not self.pre_read_cmd:  # no pre_read_cmd
+                    pass
+                elif isinstance(self.pre_read_cmd, list):  # list of commands
+                    for cmd in self.pre_read_cmd:
+                        self._send_command(cmd)
+                elif isinstance(self.pre_read_cmd, dict):  # dict of lists of commands
+                    key, commands = next(self.command_cycle)
+                    for cmd in commands:
+                        self._send_command(cmd)
+                elif self.pre_read_cmd:   # simple string command
+                    self._send_command(self.pre_read_cmd)
 
-            record = super().read()
-            return record
+                logging.debug(&#39;read() is being called&#39;)
+                record = super().read()
+                logging.debug(f&#39;Returned from read() with: {record}&#39;)
+                if record is not None:
+                    return record
+                logging.debug(&#39;Serial read returned None; trying again.&#39;)
+
         except serial.serialutil.SerialException as e:
             logging.error(str(e))
             return None
@@ -127,7 +227,11 @@ class PolledSerialReader(SerialReader):
     def __del__(self):
         if self.stop_cmd:
             try:
-                self._send_command(self.stop_cmd)
+                if isinstance(self.stop_cmd, list):  # list of commands
+                    for cmd in self.stop_cmd:
+                        self._send_command(cmd)
+                else:
+                    self._send_command(self.stop_cmd)
             except serial.serialutil.SerialException as e:
                 logging.error(str(e))</code></pre>
 </details>
@@ -137,6 +241,54 @@ class PolledSerialReader(SerialReader):
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="logger.readers.polled_serial_reader.is_dict_of_lists_of_strings"><code class="name flex">
+<span>def <span class="ident">is_dict_of_lists_of_strings</span></span>(<span>cmd)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_dict_of_lists_of_strings(cmd):
+    if not isinstance(cmd, dict):
+        return False
+
+    # So we have a dict. Check that all values are either strings
+    # or lists of strings
+    for value in cmd.values():
+        if isinstance(value, str):
+            continue
+        elif (isinstance(value, list) and
+              all(isinstance(item, str) for item in value)):
+            continue
+        else:
+            return False
+
+    # If got this far, it all checks out
+    return True</code></pre>
+</details>
+</dd>
+<dt id="logger.readers.polled_serial_reader.is_string_or_list_of_strings"><code class="name flex">
+<span>def <span class="ident">is_string_or_list_of_strings</span></span>(<span>cmd)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_string_or_list_of_strings(cmd):
+    if isinstance(cmd, str):
+        return True
+    elif isinstance(cmd, list):
+        return all(isinstance(item, str) for item in cmd)
+    return False</code></pre>
+</details>
+</dd>
+</dl>
 </section>
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
@@ -150,10 +302,39 @@ class PolledSerialReader(SerialReader):
 <p>Extends the standard serial reader by allowing the user to define
 strings to send to the serial host on startup, before each read and
 just prior to the reader being destroyed.</p>
-<p>If start_cmd, pre_read_cmd or stop_cmd are lists of strings, send
-as sequential commands. The string <code>__PAUSE__</code>, followed by a
-number, is interpreted as a command to pause for that many seconds
-prior to sending the next command.</p></div>
+<p>Notable arguments:</p>
+<p>start_cmd
+If not None, may be string or list of strings. If a single string,
+it is sent to the serial port as soon as it is opened. If a list of
+strings, each string in the list is sent in sequence.</p>
+<p>stop_cmd
+Much as start_cmd, but is sent when the PolledSerialReader is closed
+or destroyed.</p>
+<p>pre_read_cmd
+Much as start_cmd and stop_cmd, except the string or list of strings
+are sent each time the PolledSerialReader's read() method is called,
+prior to trying to read from the port.</p>
+<pre><code>In addition to a string or list of strings, pre_read_cmd may be a *dict*
+of lists of strings:
+
+    pre_read_cmd:
+      key1: ['command 1_1', 'command 1_2]
+      key2: ['command 2_1', 'command 2_2]
+      key3: ...
+    ...
+The first time read() is called, the strings associated with key1 will be
+sent. The second time, those associated with key2, and so on. When the end
+of the dict is reached, it will start again with key1.
+</code></pre>
+<p>timeout <seconds>
+If timeout is specified, then the serial read will time out after this many
+seconds. It will then reissue the pre_read_cmds, if there is one, and try
+reading again. If there is a dict of pre_read_cmds, it will progress to the
+next one in the dict.</p>
+<p>For all of these arguments, a special string, <code>__PAUSE__</code>, is recognized. If
+followed by a number (e.g. <code>__PAUSE__ 5</code>), it will be interpreted as a command
+to pause for that many seconds prior to sending the next command. If no number
+is given, it will pause for one second.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -173,14 +354,64 @@ prior to sending the next command.</p></div>
         strings to send to the serial host on startup, before each read and
         just prior to the reader being destroyed.
 
-        If start_cmd, pre_read_cmd or stop_cmd are lists of strings, send
-        as sequential commands. The string ``__PAUSE__``, followed by a
-        number, is interpreted as a command to pause for that many seconds
-        prior to sending the next command.
+        Notable arguments:
+
+        start_cmd
+            If not None, may be string or list of strings. If a single string,
+            it is sent to the serial port as soon as it is opened. If a list of
+            strings, each string in the list is sent in sequence.
+
+        stop_cmd
+            Much as start_cmd, but is sent when the PolledSerialReader is closed
+            or destroyed.
+
+        pre_read_cmd
+            Much as start_cmd and stop_cmd, except the string or list of strings
+            are sent each time the PolledSerialReader&#39;s read() method is called,
+            prior to trying to read from the port.
+
+            In addition to a string or list of strings, pre_read_cmd may be a *dict*
+            of lists of strings:
+
+                pre_read_cmd:
+                  key1: [&#39;command 1_1&#39;, &#39;command 1_2]
+                  key2: [&#39;command 2_1&#39;, &#39;command 2_2]
+                  key3: ...
+                ...
+            The first time read() is called, the strings associated with key1 will be
+            sent. The second time, those associated with key2, and so on. When the end
+            of the dict is reached, it will start again with key1.
+
+        timeout &lt;seconds&gt;
+            If timeout is specified, then the serial read will time out after this many
+            seconds. It will then reissue the pre_read_cmds, if there is one, and try
+            reading again. If there is a dict of pre_read_cmds, it will progress to the
+            next one in the dict.
+
+        For all of these arguments, a special string, ``__PAUSE__``, is recognized. If
+        followed by a number (e.g. ``__PAUSE__ 5``), it will be interpreted as a command
+        to pause for that many seconds prior to sending the next command. If no number
+        is given, it will pause for one second.
         &#34;&#34;&#34;
         self.start_cmd = start_cmd
         self.pre_read_cmd = pre_read_cmd
         self.stop_cmd = stop_cmd
+
+        # Type check our pre_read commands
+        if start_cmd and not is_string_or_list_of_strings(start_cmd):
+            raise ValueError(&#39;PolledSerialReader start_cmd must either be None, &#39;
+                             f&#39;a string, or a list of strings. Found: {start_cmd}&#39;)
+        if stop_cmd and not is_string_or_list_of_strings(stop_cmd):
+            raise ValueError(&#39;PolledSerialReader stop_cmd must either be None, &#39;
+                             f&#39;a string, or a list of strings. Found: {stop_cmd}&#39;)
+        if pre_read_cmd and not (is_string_or_list_of_strings(pre_read_cmd) or
+                                 is_dict_of_lists_of_strings(pre_read_cmd)):
+            raise ValueError(&#39;PolledSerialReader pre_read_cmd must either be None, &#39;
+                             &#39;a string, or a list of strings, or a dict of lists of &#39;
+                             f&#39;strings. Found: {pre_read_cmd}&#39;)
+
+        if isinstance(pre_read_cmd, dict):
+            self.command_cycle = cycle(pre_read_cmd.items())
 
         super().__init__(port=port, baudrate=baudrate, bytesize=bytesize,
                          parity=parity, stopbits=stopbits, timeout=timeout,
@@ -188,57 +419,70 @@ prior to sending the next command.</p></div>
                          dsrdtr=dsrdtr, inter_byte_timeout=inter_byte_timeout,
                          exclusive=exclusive, max_bytes=max_bytes, eol=eol,
                          encoding=encoding, encoding_errors=encoding_errors)
-
+        if not SERIAL_MODULE_FOUND:
+            raise RuntimeError(&#39;Serial port functionality not available. Please &#39;
+                               &#39;install Python module pyserial.&#39;)
         if self.start_cmd:
             try:
-                self._send_command(start_cmd)
+                if isinstance(self.start_cmd, list):  # list of commands
+                    for cmd in self.start_cmd:
+                        self._send_command(cmd)
+                else:
+                    self._send_command(start_cmd)
             except serial.serialutil.SerialException as e:
                 logging.error(str(e))
 
     ############################
-    def _send_command(self, command):
-        &#34;&#34;&#34;Send a command, or list of commands to the serial port.&#34;&#34;&#34;
-        if not command:
-            return
-        if type(command) is str:
-            # Do some craziness to unescape escape sequences like &#39;\n&#39;
-            self.serial.write(self._encode_str(command, unescape=True))
-            return
-
-        if not type(command) is list:
-            raise ValueError(&#39;PolledSerialReader commands must be either strings or &#39;
-                             &#39;lists. Received: type %s: %s&#39; % (type(command), command))
-
-        # Iterate through commands, pausing as necessary
-        for cmd in command:
-            # Is it our special &#39;pause&#39; command?
-            if cmd.find(&#39;__PAUSE__&#39;) == 0:
-                pause_cmd = cmd.split()
-                if len(pause_cmd) == 1:
-                    pause_length = 1
-                elif len(pause_cmd) == 2:
-                    try:
-                        pause_length = float(pause_cmd[1])
-                    except ValueError:
-                        raise ValueError(&#39;__PAUSE__ interval in PolledSerialReader must be &#39;
-                                         &#39;a float. Found: %s&#39; % cmd)
-                else:
-                    raise ValueError(&#39;Pause format &#34;__PAUSE__ &lt;seconds&gt;&#34;; found %s&#39; % cmd)
-                logging.info(&#39;Pausing %g seconds&#39;, pause_length)
-                time.sleep(pause_length)
+    def _send_command(self, cmd):
+        &#34;&#34;&#34;Check if command is a &#39;pause&#39;; if so, sleep, otherwise send it to serial port.&#34;&#34;&#34;
+        logging.debug(f&#39;Sending {cmd}&#39;)
+        if cmd.find(&#39;__PAUSE__&#39;) == 0:
+            pause_cmd = cmd.split()
+            if len(pause_cmd) == 1:
+                pause_length = 1
+            elif len(pause_cmd) == 2:
+                try:
+                    pause_length = float(pause_cmd[1])
+                except ValueError:
+                    raise ValueError(&#39;__PAUSE__ interval in PolledSerialReader must be &#39;
+                                     &#39;a float. Found: %s&#39; % cmd)
             else:
-                # If it&#39;s a normal command we&#39;re sending
-                logging.info(&#39;Sending serial command &#34;%s&#34;&#39;, cmd)
-                self.serial.write(self._encode_str(cmd, unescape=True))
+                raise ValueError(&#39;Pause format &#34;__PAUSE__ &lt;seconds&gt;&#34;; found %s&#39; % cmd)
+            logging.info(&#39;Pausing %g seconds&#39;, pause_length)
+            time.sleep(pause_length)
+        else:
+            # If it&#39;s a normal command we&#39;re sending
+            logging.info(&#39;Sending serial command &#34;%s&#34;&#39;, cmd)
+            self.serial.write(self._encode_str(cmd, unescape=True))
+            self.serial.flush()
+
+        logging.debug(f&#39;Done sending {cmd}&#39;)
 
     ############################
     def read(self):
         try:
-            if self.pre_read_cmd:
-                self._send_command(self.pre_read_cmd)
+            # Try again if our read times out, or our serial port returns None
+            while True:
+                # Do we need to send anything prior to reading?
+                if not self.pre_read_cmd:  # no pre_read_cmd
+                    pass
+                elif isinstance(self.pre_read_cmd, list):  # list of commands
+                    for cmd in self.pre_read_cmd:
+                        self._send_command(cmd)
+                elif isinstance(self.pre_read_cmd, dict):  # dict of lists of commands
+                    key, commands = next(self.command_cycle)
+                    for cmd in commands:
+                        self._send_command(cmd)
+                elif self.pre_read_cmd:   # simple string command
+                    self._send_command(self.pre_read_cmd)
 
-            record = super().read()
-            return record
+                logging.debug(&#39;read() is being called&#39;)
+                record = super().read()
+                logging.debug(f&#39;Returned from read() with: {record}&#39;)
+                if record is not None:
+                    return record
+                logging.debug(&#39;Serial read returned None; trying again.&#39;)
+
         except serial.serialutil.SerialException as e:
             logging.error(str(e))
             return None
@@ -247,7 +491,11 @@ prior to sending the next command.</p></div>
     def __del__(self):
         if self.stop_cmd:
             try:
-                self._send_command(self.stop_cmd)
+                if isinstance(self.stop_cmd, list):  # list of commands
+                    for cmd in self.stop_cmd:
+                        self._send_command(cmd)
+                else:
+                    self._send_command(self.stop_cmd)
             except serial.serialutil.SerialException as e:
                 logging.error(str(e))</code></pre>
 </details>
@@ -278,6 +526,12 @@ prior to sending the next command.</p></div>
 <li><h3>Super-module</h3>
 <ul>
 <li><code><a title="logger.readers" href="index.html">logger.readers</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="logger.readers.polled_serial_reader.is_dict_of_lists_of_strings" href="#logger.readers.polled_serial_reader.is_dict_of_lists_of_strings">is_dict_of_lists_of_strings</a></code></li>
+<li><code><a title="logger.readers.polled_serial_reader.is_string_or_list_of_strings" href="#logger.readers.polled_serial_reader.is_string_or_list_of_strings">is_string_or_list_of_strings</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>

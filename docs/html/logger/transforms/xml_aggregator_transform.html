@@ -37,7 +37,6 @@ from xml.sax import make_parser
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
-from logger.utils import formats  # noqa: E402
 from logger.transforms.transform import Transform  # noqa: E402
 
 
@@ -53,7 +52,6 @@ class XMLAggregatorTransform(Transform):
         &#39;tag&#39; should be the identity of the top-level XML element that
         we&#39;re expecting to read, e.g. &#39;OSU_DAS_Record&#39;.
         &#34;&#34;&#34;
-        super().__init__(input_format=formats.Text, output_format=formats.XML)
         self.tag = tag
 
         # Only let one thread touch buffer at a time. Of course, if we&#39;re
@@ -67,19 +65,12 @@ class XMLAggregatorTransform(Transform):
         self.parser.setContentHandler(self.handler)
 
     ############################
-    def transform(self, record):
+    def transform(self, record: str):
         &#34;&#34;&#34;Aggregate, returning None until we&#39;re done, then return record.&#34;&#34;&#34;
-        if record is None:
-            return None
 
-        # If we&#39;ve got a list, hope it&#39;s a list of records. Recurse,
-        # calling transform() on each of the list elements in order and
-        # return the resulting list.
-        if type(record) is list:
-            results = []
-            for single_record in record:
-                results.append(self.transform(single_record))
-            return results
+        # See if it&#39;s something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from Transform()
+            return self.digest_record(record)  # inherited from Transform()
 
         with self.buffer_lock:
             # Feed record to the incremental parser
@@ -167,7 +158,6 @@ we're expecting to read, e.g. 'OSU_DAS_Record'.</p></div>
         &#39;tag&#39; should be the identity of the top-level XML element that
         we&#39;re expecting to read, e.g. &#39;OSU_DAS_Record&#39;.
         &#34;&#34;&#34;
-        super().__init__(input_format=formats.Text, output_format=formats.XML)
         self.tag = tag
 
         # Only let one thread touch buffer at a time. Of course, if we&#39;re
@@ -181,19 +171,12 @@ we're expecting to read, e.g. 'OSU_DAS_Record'.</p></div>
         self.parser.setContentHandler(self.handler)
 
     ############################
-    def transform(self, record):
+    def transform(self, record: str):
         &#34;&#34;&#34;Aggregate, returning None until we&#39;re done, then return record.&#34;&#34;&#34;
-        if record is None:
-            return None
 
-        # If we&#39;ve got a list, hope it&#39;s a list of records. Recurse,
-        # calling transform() on each of the list elements in order and
-        # return the resulting list.
-        if type(record) is list:
-            results = []
-            for single_record in record:
-                results.append(self.transform(single_record))
-            return results
+        # See if it&#39;s something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from Transform()
+            return self.digest_record(record)  # inherited from Transform()
 
         with self.buffer_lock:
             # Feed record to the incremental parser
@@ -218,11 +201,12 @@ we're expecting to read, e.g. 'OSU_DAS_Record'.</p></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="logger.transforms.transform.Transform" href="transform.html#logger.transforms.transform.Transform">Transform</a></li>
+<li><a title="logger.utils.base_module.BaseModule" href="../utils/base_module.html#logger.utils.base_module.BaseModule">BaseModule</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
 <dt id="logger.transforms.xml_aggregator_transform.XMLAggregatorTransform.transform"><code class="name flex">
-<span>def <span class="ident">transform</span></span>(<span>self, record)</span>
+<span>def <span class="ident">transform</span></span>(<span>self, record: str)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Aggregate, returning None until we're done, then return record.</p></div>
@@ -230,19 +214,12 @@ we're expecting to read, e.g. 'OSU_DAS_Record'.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def transform(self, record):
+<pre><code class="python">def transform(self, record: str):
     &#34;&#34;&#34;Aggregate, returning None until we&#39;re done, then return record.&#34;&#34;&#34;
-    if record is None:
-        return None
 
-    # If we&#39;ve got a list, hope it&#39;s a list of records. Recurse,
-    # calling transform() on each of the list elements in order and
-    # return the resulting list.
-    if type(record) is list:
-        results = []
-        for single_record in record:
-            results.append(self.transform(single_record))
-        return results
+    # See if it&#39;s something we can process, and if not, try digesting
+    if not self.can_process_record(record):  # inherited from Transform()
+        return self.digest_record(record)  # inherited from Transform()
 
     with self.buffer_lock:
         # Feed record to the incremental parser
@@ -270,8 +247,8 @@ we're expecting to read, e.g. 'OSU_DAS_Record'.</p></div>
 <ul class="hlist">
 <li><code><b><a title="logger.transforms.transform.Transform" href="transform.html#logger.transforms.transform.Transform">Transform</a></b></code>:
 <ul class="hlist">
-<li><code><a title="logger.transforms.transform.Transform.input_format" href="transform.html#logger.transforms.transform.Transform.input_format">input_format</a></code></li>
-<li><code><a title="logger.transforms.transform.Transform.output_format" href="transform.html#logger.transforms.transform.Transform.output_format">output_format</a></code></li>
+<li><code><a title="logger.transforms.transform.Transform.can_process_record" href="../utils/base_module.html#logger.utils.base_module.BaseModule.can_process_record">can_process_record</a></code></li>
+<li><code><a title="logger.transforms.transform.Transform.digest_record" href="../utils/base_module.html#logger.utils.base_module.BaseModule.digest_record">digest_record</a></code></li>
 </ul>
 </li>
 </ul>

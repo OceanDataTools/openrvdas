@@ -12,8 +12,4 @@ pip3 install pdoc3
 # Generate docs for logger components and some server scripts
 pdoc3 --force --html -o docs/html logger
 pdoc3 --force --html --filter logger_,server_api,cached -o docs/html server
-
-# Get rid of docs for all test_*.py files
-rm docs/html/logger/*/test_*.html docs/html/server/test_*.html
-sed -i '' '/test_/d' docs/html/logger/*/index.html docs/html/server/index.html
 ```

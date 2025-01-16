@@ -32,7 +32,6 @@ import sys
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
-from logger.utils import formats  # noqa: E402
 from logger.utils import nmea_parser  # noqa: E402
 from logger.transforms.transform import Transform  # noqa: E402
 
@@ -57,27 +56,18 @@ class ParseNMEATransform(Transform):
                 sensors and sensor models.
         ```
         &#34;&#34;&#34;
-        super().__init__(input_format=formats.NMEA,
-                         output_format=formats.Python_Record)
         self.json = json
         self.parser = nmea_parser.NMEAParser(message_path, sensor_path,
                                              sensor_model_path,
                                              time_format=time_format)
 
     ############################
-    def transform(self, record):
+    def transform(self, record: str):
         &#34;&#34;&#34;Parse record and return DASRecord.&#34;&#34;&#34;
-        if record is None:
-            return None
 
-        # If we&#39;ve got a list, hope it&#39;s a list of records. Recurse,
-        # calling transform() on each of the list elements in order and
-        # return the resulting list.
-        if type(record) is list:
-            results = []
-            for single_record in record:
-                results.append(self.transform(single_record))
-            return results
+        # See if it&#39;s something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from Transform()
+            return self.digest_record(record)  # inherited from Transform()
 
         result = self.parser.parse_record(record)
         if not result:
@@ -133,27 +123,18 @@ message_path, sensor_path, sensor_model_path
                 sensors and sensor models.
         ```
         &#34;&#34;&#34;
-        super().__init__(input_format=formats.NMEA,
-                         output_format=formats.Python_Record)
         self.json = json
         self.parser = nmea_parser.NMEAParser(message_path, sensor_path,
                                              sensor_model_path,
                                              time_format=time_format)
 
     ############################
-    def transform(self, record):
+    def transform(self, record: str):
         &#34;&#34;&#34;Parse record and return DASRecord.&#34;&#34;&#34;
-        if record is None:
-            return None
 
-        # If we&#39;ve got a list, hope it&#39;s a list of records. Recurse,
-        # calling transform() on each of the list elements in order and
-        # return the resulting list.
-        if type(record) is list:
-            results = []
-            for single_record in record:
-                results.append(self.transform(single_record))
-            return results
+        # See if it&#39;s something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from Transform()
+            return self.digest_record(record)  # inherited from Transform()
 
         result = self.parser.parse_record(record)
         if not result:
@@ -165,11 +146,12 @@ message_path, sensor_path, sensor_model_path
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="logger.transforms.transform.Transform" href="transform.html#logger.transforms.transform.Transform">Transform</a></li>
+<li><a title="logger.utils.base_module.BaseModule" href="../utils/base_module.html#logger.utils.base_module.BaseModule">BaseModule</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
 <dt id="logger.transforms.parse_nmea_transform.ParseNMEATransform.transform"><code class="name flex">
-<span>def <span class="ident">transform</span></span>(<span>self, record)</span>
+<span>def <span class="ident">transform</span></span>(<span>self, record: str)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Parse record and return DASRecord.</p></div>
@@ -177,19 +159,12 @@ message_path, sensor_path, sensor_model_path
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def transform(self, record):
+<pre><code class="python">def transform(self, record: str):
     &#34;&#34;&#34;Parse record and return DASRecord.&#34;&#34;&#34;
-    if record is None:
-        return None
 
-    # If we&#39;ve got a list, hope it&#39;s a list of records. Recurse,
-    # calling transform() on each of the list elements in order and
-    # return the resulting list.
-    if type(record) is list:
-        results = []
-        for single_record in record:
-            results.append(self.transform(single_record))
-        return results
+    # See if it&#39;s something we can process, and if not, try digesting
+    if not self.can_process_record(record):  # inherited from Transform()
+        return self.digest_record(record)  # inherited from Transform()
 
     result = self.parser.parse_record(record)
     if not result:
@@ -204,8 +179,8 @@ message_path, sensor_path, sensor_model_path
 <ul class="hlist">
 <li><code><b><a title="logger.transforms.transform.Transform" href="transform.html#logger.transforms.transform.Transform">Transform</a></b></code>:
 <ul class="hlist">
-<li><code><a title="logger.transforms.transform.Transform.input_format" href="transform.html#logger.transforms.transform.Transform.input_format">input_format</a></code></li>
-<li><code><a title="logger.transforms.transform.Transform.output_format" href="transform.html#logger.transforms.transform.Transform.output_format">output_format</a></code></li>
+<li><code><a title="logger.transforms.transform.Transform.can_process_record" href="../utils/base_module.html#logger.utils.base_module.BaseModule.can_process_record">can_process_record</a></code></li>
+<li><code><a title="logger.transforms.transform.Transform.digest_record" href="../utils/base_module.html#logger.utils.base_module.BaseModule.digest_record">digest_record</a></code></li>
 </ul>
 </li>
 </ul>

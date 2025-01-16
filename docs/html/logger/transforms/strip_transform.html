@@ -122,11 +122,10 @@ class StripTransform(Transform):
 <span>(</span><span>chars=None, unprintable=False, strip_prefix=False, strip_suffix=False)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Base class Transform about which we know nothing else. By default the
-input and output formats are Unknown unless overridden.</p>
-<p>Note that when a Transform is first instantiated, it may not yet know
-what its inputs are going to be, so we provide methods to override the
-input/output formats after the fact.</p>
+<div class="desc"><p>Base class Transform about which we know nothing else.</p>
+<p>Inherits methods for checking whether a received record is in a format
+that the derived class can process, and for splitting a list of input
+records into its elements and calling subclass method() on them.</p>
 <pre><code>chars     A string of characters that are to be stripped out of the
           record. By default, the transform will remove them regardless
           of where in the record they occur. If omitted, will strip standard
@@ -216,6 +215,7 @@ strip_suffix - If true, strip characters at the end of the record,
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="logger.transforms.transform.Transform" href="transform.html#logger.transforms.transform.Transform">Transform</a></li>
+<li><a title="logger.utils.base_module.BaseModule" href="../utils/base_module.html#logger.utils.base_module.BaseModule">BaseModule</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -274,8 +274,8 @@ strip_suffix - If true, strip characters at the end of the record,
 <ul class="hlist">
 <li><code><b><a title="logger.transforms.transform.Transform" href="transform.html#logger.transforms.transform.Transform">Transform</a></b></code>:
 <ul class="hlist">
-<li><code><a title="logger.transforms.transform.Transform.input_format" href="transform.html#logger.transforms.transform.Transform.input_format">input_format</a></code></li>
-<li><code><a title="logger.transforms.transform.Transform.output_format" href="transform.html#logger.transforms.transform.Transform.output_format">output_format</a></code></li>
+<li><code><a title="logger.transforms.transform.Transform.can_process_record" href="../utils/base_module.html#logger.utils.base_module.BaseModule.can_process_record">can_process_record</a></code></li>
+<li><code><a title="logger.transforms.transform.Transform.digest_record" href="../utils/base_module.html#logger.utils.base_module.BaseModule.digest_record">digest_record</a></code></li>
 </ul>
 </li>
 </ul>

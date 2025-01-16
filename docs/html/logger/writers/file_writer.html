@@ -34,6 +34,7 @@ import sys
 import math
 
 from datetime import datetime, timedelta, timezone
+from typing import Union
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
@@ -48,7 +49,7 @@ class FileWriter(Writer):
     def __init__(self, filename=None, mode=&#39;a&#39;, delimiter=&#39;\n&#39;, flush=True,
                  split_by_time=False, split_interval=None, header=None,
                  header_file=None, time_format=&#39;-&#39; + DATE_FORMAT,
-                 time_zone=timezone.utc, create_path=True,
+                 time_zone=timezone.utc, create_path=True, quiet=False,
                  encoding=&#39;utf-8&#39;, encoding_errors=&#39;ignore&#39;):
         &#34;&#34;&#34;Write text records to a file. If no filename is specified, write to
         stdout.
@@ -89,7 +90,9 @@ class FileWriter(Writer):
 
         time_zone    Time zone to use for determining splits. By default UTC.
 
-        create_path  Create directory path to file if it doesn&#39;t exist ```
+        create_path  Create directory path to file if it doesn&#39;t exist
+
+        quiet - Silence errors in input records.
 
         encoding - &#39;utf-8&#39; by default. If empty or None, do not attempt any
                 decoding and return raw bytes. Other possible encodings are
@@ -100,9 +103,8 @@ class FileWriter(Writer):
                 &#39;strict&#39;, &#39;replace&#39;, and &#39;backslashreplace&#39;, described here:
                 https://docs.python.org/3/howto/unicode.html#encodings
         ```
-
         &#34;&#34;&#34;
-        super().__init__(encoding=encoding,
+        super().__init__(quiet=quiet, encoding=encoding,
                          encoding_errors=encoding_errors)
 
         self.filename = filename
@@ -295,16 +297,12 @@ class FileWriter(Writer):
             self.file.write(self.header)
 
     ############################
-    def write(self, record):
+    def write(self, record: Union[str, bytes]):
         &#34;&#34;&#34; Write out record, appending a newline at end.&#34;&#34;&#34;
-        if record is None:
-            return
 
-        # If we&#39;ve got a list, assume it&#39;s a list of records. Recurse,
-        # calling write() on each of the list elements in order.
-        if isinstance(record, list):
-            for single_record in record:
-                self.write(single_record)
+        # See if it&#39;s something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from BaseModule()
+            self.digest_record(record)  # inherited from BaseModule()
             return
 
         # If we&#39;re splitting by some time interval, see if it&#39;s time to
@@ -353,7 +351,7 @@ class FileWriter(Writer):
 <dl>
 <dt id="logger.writers.file_writer.FileWriter"><code class="flex name class">
 <span>class <span class="ident">FileWriter</span></span>
-<span>(</span><span>filename=None, mode='a', delimiter='\n', flush=True, split_by_time=False, split_interval=None, header=None, header_file=None, time_format='-%Y-%m-%d', time_zone=datetime.timezone.utc, create_path=True, encoding='utf-8', encoding_errors='ignore')</span>
+<span>(</span><span>filename=None, mode='a', delimiter='\n', flush=True, split_by_time=False, split_interval=None, header=None, header_file=None, time_format='-%Y-%m-%d', time_zone=datetime.timezone.utc, create_path=True, quiet=False, encoding='utf-8', encoding_errors='ignore')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Write to the specified file. If filename is empty, write to stdout.</p>
@@ -395,7 +393,9 @@ time_format  By default ISO 8601-compliant '-%Y-%m-%d'. If,
 
 time_zone    Time zone to use for determining splits. By default UTC.
 
-create_path  Create directory path to file if it doesn't exist ```
+create_path  Create directory path to file if it doesn't exist
+
+quiet - Silence errors in input records.
 
 encoding - 'utf-8' by default. If empty or None, do not attempt any
         decoding and return raw bytes. Other possible encodings are
@@ -416,7 +416,7 @@ encoding_errors - 'ignore' by default. Other error strategies are
     def __init__(self, filename=None, mode=&#39;a&#39;, delimiter=&#39;\n&#39;, flush=True,
                  split_by_time=False, split_interval=None, header=None,
                  header_file=None, time_format=&#39;-&#39; + DATE_FORMAT,
-                 time_zone=timezone.utc, create_path=True,
+                 time_zone=timezone.utc, create_path=True, quiet=False,
                  encoding=&#39;utf-8&#39;, encoding_errors=&#39;ignore&#39;):
         &#34;&#34;&#34;Write text records to a file. If no filename is specified, write to
         stdout.
@@ -457,7 +457,9 @@ encoding_errors - 'ignore' by default. Other error strategies are
 
         time_zone    Time zone to use for determining splits. By default UTC.
 
-        create_path  Create directory path to file if it doesn&#39;t exist ```
+        create_path  Create directory path to file if it doesn&#39;t exist
+
+        quiet - Silence errors in input records.
 
         encoding - &#39;utf-8&#39; by default. If empty or None, do not attempt any
                 decoding and return raw bytes. Other possible encodings are
@@ -468,9 +470,8 @@ encoding_errors - 'ignore' by default. Other error strategies are
                 &#39;strict&#39;, &#39;replace&#39;, and &#39;backslashreplace&#39;, described here:
                 https://docs.python.org/3/howto/unicode.html#encodings
         ```
-
         &#34;&#34;&#34;
-        super().__init__(encoding=encoding,
+        super().__init__(quiet=quiet, encoding=encoding,
                          encoding_errors=encoding_errors)
 
         self.filename = filename
@@ -663,16 +664,12 @@ encoding_errors - 'ignore' by default. Other error strategies are
             self.file.write(self.header)
 
     ############################
-    def write(self, record):
+    def write(self, record: Union[str, bytes]):
         &#34;&#34;&#34; Write out record, appending a newline at end.&#34;&#34;&#34;
-        if record is None:
-            return
 
-        # If we&#39;ve got a list, assume it&#39;s a list of records. Recurse,
-        # calling write() on each of the list elements in order.
-        if isinstance(record, list):
-            for single_record in record:
-                self.write(single_record)
+        # See if it&#39;s something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from BaseModule()
+            self.digest_record(record)  # inherited from BaseModule()
             return
 
         # If we&#39;re splitting by some time interval, see if it&#39;s time to
@@ -712,11 +709,12 @@ encoding_errors - 'ignore' by default. Other error strategies are
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="logger.writers.writer.Writer" href="writer.html#logger.writers.writer.Writer">Writer</a></li>
+<li><a title="logger.utils.base_module.BaseModule" href="../utils/base_module.html#logger.utils.base_module.BaseModule">BaseModule</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
 <dt id="logger.writers.file_writer.FileWriter.write"><code class="name flex">
-<span>def <span class="ident">write</span></span>(<span>self, record)</span>
+<span>def <span class="ident">write</span></span>(<span>self, record: Union[str, bytes])</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Write out record, appending a newline at end.</p></div>
@@ -724,16 +722,12 @@ encoding_errors - 'ignore' by default. Other error strategies are
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def write(self, record):
+<pre><code class="python">def write(self, record: Union[str, bytes]):
     &#34;&#34;&#34; Write out record, appending a newline at end.&#34;&#34;&#34;
-    if record is None:
-        return
 
-    # If we&#39;ve got a list, assume it&#39;s a list of records. Recurse,
-    # calling write() on each of the list elements in order.
-    if isinstance(record, list):
-        for single_record in record:
-            self.write(single_record)
+    # See if it&#39;s something we can process, and if not, try digesting
+    if not self.can_process_record(record):  # inherited from BaseModule()
+        self.digest_record(record)  # inherited from BaseModule()
         return
 
     # If we&#39;re splitting by some time interval, see if it&#39;s time to
@@ -776,8 +770,8 @@ encoding_errors - 'ignore' by default. Other error strategies are
 <ul class="hlist">
 <li><code><b><a title="logger.writers.writer.Writer" href="writer.html#logger.writers.writer.Writer">Writer</a></b></code>:
 <ul class="hlist">
-<li><code><a title="logger.writers.writer.Writer.can_accept" href="writer.html#logger.writers.writer.Writer.can_accept">can_accept</a></code></li>
-<li><code><a title="logger.writers.writer.Writer.input_format" href="writer.html#logger.writers.writer.Writer.input_format">input_format</a></code></li>
+<li><code><a title="logger.writers.writer.Writer.can_process_record" href="../utils/base_module.html#logger.utils.base_module.BaseModule.can_process_record">can_process_record</a></code></li>
+<li><code><a title="logger.writers.writer.Writer.digest_record" href="../utils/base_module.html#logger.utils.base_module.BaseModule.digest_record">digest_record</a></code></li>
 </ul>
 </li>
 </ul>

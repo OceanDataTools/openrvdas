@@ -28,13 +28,11 @@
 </summary>
 <pre><code class="python">#!/usr/bin/env python3
 
-import logging
 import shutil
 import sys
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
-from logger.utils.formats import Python_Record  # noqa: E402
 from logger.utils.das_record import DASRecord  # noqa: E402
 from logger.writers.writer import Writer  # noqa: E402
 
@@ -44,8 +42,6 @@ class RecordScreenWriter(Writer):
     format. Mostly intended for debugging.&#34;&#34;&#34;
 
     def __init__(self):
-        super().__init__(input_format=Python_Record)
-
         self.values = {}
         self.timestamps = {}
         self.latest = 0
@@ -56,19 +52,11 @@ class RecordScreenWriter(Writer):
 
     ############################
     # receives a DASRecord
-    def write(self, record):
-        if not record:
-            return
+    def write(self, record: DASRecord):
 
-        # If we&#39;ve got a list, hope it&#39;s a list of records. Recurse,
-        # calling write() on each of the list elements in order.
-        if isinstance(record, list):
-            for single_record in record:
-                self.write(single_record)
-            return
-
-        if not isinstance(record, DASRecord):
-            logging.error(&#39;ScreenWriter got non-DASRecord: %s&#39;, str(type(record)))
+        # See if it&#39;s something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from BaseModule()
+            self.digest_record(record)  # inherited from BaseModule()
             return
 
         # Incorporate the values from the record
@@ -114,26 +102,11 @@ class RecordScreenWriter(Writer):
 <dd>
 <div class="desc"><p>Write DASRecords to terminal screen in some survivable
 format. Mostly intended for debugging.</p>
-<p>Abstract base class for data Writers.</p>
-<p>Concrete classes should implement the write(record) method and assign
-an input format that the writer accepts.</p>
-<p>A subclassed writer that accepts, e.g. text format records, should
-specify that in its init definition by, for example:</p>
-<pre><code>class TextFileWriter(Writer):
-  def __init__(self, filename):
-    super().__init__(input_format=formats.Text)
-    ...other things...
-</code></pre>
-<p>The can_accept() method is intended to take an instance of a Reader or
-Transform - something that produces data and implements an
-output_format() method. To determine whether a writer can take input
-from a reader, call</p>
-<pre><code>  writer.can_accept(reader)
-</code></pre>
-<p>The test will also return False if either the reader or writer have
-format specification of "Unknown".</p>
+<p>Abstract base class for data Writers.
+```</p>
+<p>quiet - if type checking should log type errors or operate silently.</p>
 <p>Two additional arguments govern how records will be encoded/decoded
-from bytes, if desired by the Reader subclass when it calls
+from bytes, if desired by the Writer subclass when it calls
 _encode_str() or _decode_bytes:</p>
 <p>encoding - 'utf-8' by default. If empty or None, do not attempt any
 decoding and return raw bytes. Other possible encodings are
@@ -151,8 +124,6 @@ listed in online documentation here:
     format. Mostly intended for debugging.&#34;&#34;&#34;
 
     def __init__(self):
-        super().__init__(input_format=Python_Record)
-
         self.values = {}
         self.timestamps = {}
         self.latest = 0
@@ -163,19 +134,11 @@ listed in online documentation here:
 
     ############################
     # receives a DASRecord
-    def write(self, record):
-        if not record:
-            return
+    def write(self, record: DASRecord):
 
-        # If we&#39;ve got a list, hope it&#39;s a list of records. Recurse,
-        # calling write() on each of the list elements in order.
-        if isinstance(record, list):
-            for single_record in record:
-                self.write(single_record)
-            return
-
-        if not isinstance(record, DASRecord):
-            logging.error(&#39;ScreenWriter got non-DASRecord: %s&#39;, str(type(record)))
+        # See if it&#39;s something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from BaseModule()
+            self.digest_record(record)  # inherited from BaseModule()
             return
 
         # Incorporate the values from the record
@@ -208,6 +171,7 @@ listed in online documentation here:
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="logger.writers.writer.Writer" href="writer.html#logger.writers.writer.Writer">Writer</a></li>
+<li><a title="logger.utils.base_module.BaseModule" href="../utils/base_module.html#logger.utils.base_module.BaseModule">BaseModule</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -229,8 +193,8 @@ listed in online documentation here:
 <ul class="hlist">
 <li><code><b><a title="logger.writers.writer.Writer" href="writer.html#logger.writers.writer.Writer">Writer</a></b></code>:
 <ul class="hlist">
-<li><code><a title="logger.writers.writer.Writer.can_accept" href="writer.html#logger.writers.writer.Writer.can_accept">can_accept</a></code></li>
-<li><code><a title="logger.writers.writer.Writer.input_format" href="writer.html#logger.writers.writer.Writer.input_format">input_format</a></code></li>
+<li><code><a title="logger.writers.writer.Writer.can_process_record" href="../utils/base_module.html#logger.utils.base_module.BaseModule.can_process_record">can_process_record</a></code></li>
+<li><code><a title="logger.writers.writer.Writer.digest_record" href="../utils/base_module.html#logger.utils.base_module.BaseModule.digest_record">digest_record</a></code></li>
 <li><code><a title="logger.writers.writer.Writer.write" href="writer.html#logger.writers.writer.Writer.write">write</a></code></li>
 </ul>
 </li>

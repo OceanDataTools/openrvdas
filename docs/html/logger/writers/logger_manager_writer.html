@@ -193,22 +193,12 @@ class LoggerManagerWriter(Writer):
         self.allowed_prefixes = allowed_prefixes
 
     ############################
-    def write(self, record):
+    def write(self, record: str):
         &#34;&#34;&#34; Write out record, appending a newline at end.&#34;&#34;&#34;
-        if record is None:
-            return
 
-        # If we&#39;ve got a list, assume it&#39;s a list of records. Recurse,
-        # calling write() on each of the list elements in order.
-        if isinstance(record, list):
-            for single_record in record:
-                self.write(single_record)
-            return
-
-        # Complain and go home if not string
-        if type(record) is not str:
-            logging.warning(f&#39;Received non-string command for LoggerManager &#39;
-                            f&#39;(type {type(record)}): &#34;{record}&#34;&#39;)
+        # See if it&#39;s something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from BaseModule()
+            self.digest_record(record)  # inherited from BaseModule()
             return
 
         # If there are semicolons, split into list and process sequentially
@@ -220,7 +210,8 @@ class LoggerManagerWriter(Writer):
         # Can we find our command in any of the allowed prefixes?
         approved = True in [record.find(prefix) == 0 for prefix in self.allowed_prefixes]
         if self.allowed_prefixes and not approved:
-            logging.error(f&#39;Command does not match any allowed prefixes: &#34;{record}&#34;&#39;)
+            if not self.quiet:
+                logging.error(f&#39;Command does not match any allowed prefixes: &#34;{record}&#34;&#39;)
 
         # If it&#39;s our special &#34;sleep&#34; command
         elif record.find(&#39;sleep&#39;) == 0:
@@ -228,13 +219,16 @@ class LoggerManagerWriter(Writer):
                 cmd, interval_str = record.split(&#39; &#39;)
                 interval = float(interval_str)
             except ValueError:
-                logging.error(f&#39;Could not parse command into &#34;sleep [seconds]&#34;: {record}&#39;)
+                if not self.quiet:
+                    logging.error(f&#39;Could not parse command into &#34;sleep [seconds]&#34;: {record}&#39;)
                 return
-            logging.info(f&#39;Sleeping {interval} seconds&#39;)
+            if not self.quiet:
+                logging.info(f&#39;Sleeping {interval} seconds&#39;)
             time.sleep(interval)
 
         else:
-            logging.info(f&#39;Writing command: {record}&#39;)
+            if not self.quiet:
+                logging.info(f&#39;Writing command: {record}&#39;)
             self.command_parser.process_command(record)</code></pre>
 </details>
 </section>
@@ -339,22 +333,12 @@ of prior commands to settle.
         self.allowed_prefixes = allowed_prefixes
 
     ############################
-    def write(self, record):
+    def write(self, record: str):
         &#34;&#34;&#34; Write out record, appending a newline at end.&#34;&#34;&#34;
-        if record is None:
-            return
 
-        # If we&#39;ve got a list, assume it&#39;s a list of records. Recurse,
-        # calling write() on each of the list elements in order.
-        if isinstance(record, list):
-            for single_record in record:
-                self.write(single_record)
-            return
-
-        # Complain and go home if not string
-        if type(record) is not str:
-            logging.warning(f&#39;Received non-string command for LoggerManager &#39;
-                            f&#39;(type {type(record)}): &#34;{record}&#34;&#39;)
+        # See if it&#39;s something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from BaseModule()
+            self.digest_record(record)  # inherited from BaseModule()
             return
 
         # If there are semicolons, split into list and process sequentially
@@ -366,7 +350,8 @@ of prior commands to settle.
         # Can we find our command in any of the allowed prefixes?
         approved = True in [record.find(prefix) == 0 for prefix in self.allowed_prefixes]
         if self.allowed_prefixes and not approved:
-            logging.error(f&#39;Command does not match any allowed prefixes: &#34;{record}&#34;&#39;)
+            if not self.quiet:
+                logging.error(f&#39;Command does not match any allowed prefixes: &#34;{record}&#34;&#39;)
 
         # If it&#39;s our special &#34;sleep&#34; command
         elif record.find(&#39;sleep&#39;) == 0:
@@ -374,23 +359,27 @@ of prior commands to settle.
                 cmd, interval_str = record.split(&#39; &#39;)
                 interval = float(interval_str)
             except ValueError:
-                logging.error(f&#39;Could not parse command into &#34;sleep [seconds]&#34;: {record}&#39;)
+                if not self.quiet:
+                    logging.error(f&#39;Could not parse command into &#34;sleep [seconds]&#34;: {record}&#39;)
                 return
-            logging.info(f&#39;Sleeping {interval} seconds&#39;)
+            if not self.quiet:
+                logging.info(f&#39;Sleeping {interval} seconds&#39;)
             time.sleep(interval)
 
         else:
-            logging.info(f&#39;Writing command: {record}&#39;)
+            if not self.quiet:
+                logging.info(f&#39;Writing command: {record}&#39;)
             self.command_parser.process_command(record)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="logger.writers.writer.Writer" href="writer.html#logger.writers.writer.Writer">Writer</a></li>
+<li><a title="logger.utils.base_module.BaseModule" href="../utils/base_module.html#logger.utils.base_module.BaseModule">BaseModule</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
 <dt id="logger.writers.logger_manager_writer.LoggerManagerWriter.write"><code class="name flex">
-<span>def <span class="ident">write</span></span>(<span>self, record)</span>
+<span>def <span class="ident">write</span></span>(<span>self, record: str)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Write out record, appending a newline at end.</p></div>
@@ -398,22 +387,12 @@ of prior commands to settle.
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def write(self, record):
+<pre><code class="python">def write(self, record: str):
     &#34;&#34;&#34; Write out record, appending a newline at end.&#34;&#34;&#34;
-    if record is None:
-        return
 
-    # If we&#39;ve got a list, assume it&#39;s a list of records. Recurse,
-    # calling write() on each of the list elements in order.
-    if isinstance(record, list):
-        for single_record in record:
-            self.write(single_record)
-        return
-
-    # Complain and go home if not string
-    if type(record) is not str:
-        logging.warning(f&#39;Received non-string command for LoggerManager &#39;
-                        f&#39;(type {type(record)}): &#34;{record}&#34;&#39;)
+    # See if it&#39;s something we can process, and if not, try digesting
+    if not self.can_process_record(record):  # inherited from BaseModule()
+        self.digest_record(record)  # inherited from BaseModule()
         return
 
     # If there are semicolons, split into list and process sequentially
@@ -425,7 +404,8 @@ of prior commands to settle.
     # Can we find our command in any of the allowed prefixes?
     approved = True in [record.find(prefix) == 0 for prefix in self.allowed_prefixes]
     if self.allowed_prefixes and not approved:
-        logging.error(f&#39;Command does not match any allowed prefixes: &#34;{record}&#34;&#39;)
+        if not self.quiet:
+            logging.error(f&#39;Command does not match any allowed prefixes: &#34;{record}&#34;&#39;)
 
     # If it&#39;s our special &#34;sleep&#34; command
     elif record.find(&#39;sleep&#39;) == 0:
@@ -433,13 +413,16 @@ of prior commands to settle.
             cmd, interval_str = record.split(&#39; &#39;)
             interval = float(interval_str)
         except ValueError:
-            logging.error(f&#39;Could not parse command into &#34;sleep [seconds]&#34;: {record}&#39;)
+            if not self.quiet:
+                logging.error(f&#39;Could not parse command into &#34;sleep [seconds]&#34;: {record}&#39;)
             return
-        logging.info(f&#39;Sleeping {interval} seconds&#39;)
+        if not self.quiet:
+            logging.info(f&#39;Sleeping {interval} seconds&#39;)
         time.sleep(interval)
 
     else:
-        logging.info(f&#39;Writing command: {record}&#39;)
+        if not self.quiet:
+            logging.info(f&#39;Writing command: {record}&#39;)
         self.command_parser.process_command(record)</code></pre>
 </details>
 </dd>
@@ -448,8 +431,8 @@ of prior commands to settle.
 <ul class="hlist">
 <li><code><b><a title="logger.writers.writer.Writer" href="writer.html#logger.writers.writer.Writer">Writer</a></b></code>:
 <ul class="hlist">
-<li><code><a title="logger.writers.writer.Writer.can_accept" href="writer.html#logger.writers.writer.Writer.can_accept">can_accept</a></code></li>
-<li><code><a title="logger.writers.writer.Writer.input_format" href="writer.html#logger.writers.writer.Writer.input_format">input_format</a></code></li>
+<li><code><a title="logger.writers.writer.Writer.can_process_record" href="../utils/base_module.html#logger.utils.base_module.BaseModule.can_process_record">can_process_record</a></code></li>
+<li><code><a title="logger.writers.writer.Writer.digest_record" href="../utils/base_module.html#logger.utils.base_module.BaseModule.digest_record">digest_record</a></code></li>
 </ul>
 </li>
 </ul>

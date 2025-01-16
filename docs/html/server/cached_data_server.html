@@ -272,8 +272,8 @@ class RecordCache:
             metadata = record.metadata
         elif isinstance(record, dict):
             record_timestamp = record.get(&#39;timestamp&#39;, time.time())
-            fields = record.get(&#39;fields&#39;, None)
-            metadata = record.get(&#39;metadata&#39;, None)
+            fields = record.get(&#39;fields&#39;)
+            metadata = record.get(&#39;metadata&#39;)
             if fields is None:
                 logging.debug(
                     &#39;Dict record passed to cache_record() has no &#39;
@@ -320,8 +320,8 @@ class RecordCache:
             if metadata:
                 metadata_fields = metadata.get(&#39;fields&#39;, {})
                 with self.metadata_lock:
-                    for field, value in metadata_fields.items():
-                        self.metadata[field] = value
+                    for mfield, value in metadata_fields.items():
+                        self.metadata[mfield] = value
 
     ############################
     def _add_tuple(self, field, value_tuple):
@@ -590,7 +590,7 @@ class WebSocketConnection:
                 # otherwise send everything.
                 elif request[&#39;type&#39;] == &#39;describe&#39;:
                     logging.debug(&#39;describe request&#39;)
-                    fields = request.get(&#39;fields&#39;, None)
+                    fields = request.get(&#39;fields&#39;)
                     result = self.cache.get_metadata(fields)
                     await self.send_json_response(
                         {&#39;type&#39;: &#39;describe&#39;, &#39;status&#39;: 200, &#39;data&#39;: result})
@@ -598,7 +598,7 @@ class WebSocketConnection:
                 # Client wants to publish to cache and provides a dict of data
                 elif request[&#39;type&#39;] == &#39;publish&#39;:
                     logging.debug(&#39;publish request&#39;)
-                    data = request.get(&#39;data&#39;, None)
+                    data = request.get(&#39;data&#39;)
                     if data is None:
                         await self.send_json_response(
                             {&#39;type&#39;: &#39;publish&#39;, &#39;status&#39;: 400,
@@ -618,7 +618,7 @@ class WebSocketConnection:
                 elif request[&#39;type&#39;] == &#39;subscribe&#39;:
                     logging.debug(&#39;subscribe request&#39;)
                     # Have they given us a new subscription interval?
-                    requested_interval = request.get(&#39;interval&#39;, None)
+                    requested_interval = request.get(&#39;interval&#39;)
                     if requested_interval is not None:
                         try:
                             interval = float(requested_interval)
@@ -630,7 +630,7 @@ class WebSocketConnection:
                             continue
 
                     # Which fields do they want?
-                    raw_requested_fields = request.get(&#39;fields&#39;, None)
+                    raw_requested_fields = request.get(&#39;fields&#39;)
                     if not raw_requested_fields:
                         await self.send_json_response(
                             {&#39;type&#39;: &#39;subscribe&#39;, &#39;status&#39;: 400,
@@ -678,7 +678,7 @@ class WebSocketConnection:
                                 logging.debug(&#39;No data for requested field %s&#39;, matching_field_name)
                                 continue
                             with self.cache.locks[field_name]:
-                                field_cache = self.cache.data.get(matching_field_name, None)
+                                field_cache = self.cache.data.get(matching_field_name)
                                 if field_cache is None:
                                     logging.debug(&#39;No cached data for %s&#39;, matching_field_name)
                                     continue
@@ -763,7 +763,7 @@ class WebSocketConnection:
                                 continue
 
                             with self.cache.locks[field_name]:
-                                field_cache = self.cache.data.get(field_name, None)
+                                field_cache = self.cache.data.get(field_name)
                                 if field_cache is None:
                                     logging.debug(
                                         &#39;No cached data for %s&#39;, field_name)
@@ -954,8 +954,7 @@ class CachedDataServer:
             max_records=60 * 24,
             min_back_records=100,
             cleanup_interval=60,
-            disk_cache=None,
-            event_loop=None):
+            disk_cache=None):
         &#34;&#34;&#34;
         port         Port on which to serve websocket connections
         interval     How frequently to serve updates
@@ -970,7 +969,6 @@ class CachedDataServer:
                      and save to disk (if disk_cache is specified)
         disk_cache   If not None, name of directory in which to backup values
                      from in-memory cache
-        event_loop   If not None, the event loop to use for websocket events
         &#34;&#34;&#34;
         self.port = port
         self.interval = interval
@@ -978,7 +976,6 @@ class CachedDataServer:
         self.max_records = max_records
         self.min_back_records = min_back_records
         self.cleanup_interval = cleanup_interval
-        self.event_loop = event_loop
 
         self.cache = RecordCache()
 
@@ -994,15 +991,6 @@ class CachedDataServer:
         self._connections = []
         self._connection_lock = threading.Lock()
 
-        # If we&#39;ve received an event loop, use it, otherwise create a new one
-        # of our own.
-        if not event_loop:
-            self.event_loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(self.event_loop)
-        else:
-            self.event_loop = None
-            asyncio.set_event_loop(event_loop)
-
         self.quit_flag = False
 
         # Start a thread to loop through, cleaning up the cache and (if we&#39;ve
@@ -1013,8 +1001,17 @@ class CachedDataServer:
         # event loop. Calling quit() it will close any remaining
         # connections and stop the event loop, terminating the server.
         self.server_thread = threading.Thread(
-            target=self._run_websocket_server, daemon=True)
+            target=self._start_event_loop, daemon=True)
         self.server_thread.start()
+
+    def _start_event_loop(self):
+        &#34;&#34;&#34;Initialize and run the asyncio event loop in the current thread.&#34;&#34;&#34;
+        try:
+            self.event_loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(self.event_loop)  # Bind the loop to this thread
+            self._run_websocket_server()
+        except Exception as e:
+            logging.error(&#39;Failed to start event loop: %s&#39;, str(e))
 
     ############################
     def __del__(self):
@@ -1044,41 +1041,32 @@ class CachedDataServer:
 
     ############################
     def _run_websocket_server(self):
-        &#34;&#34;&#34;Start serving on the specified websocket.
-        &#34;&#34;&#34;
-        logging.info(&#39;Starting WebSocketServer on port %d&#39;, self.port)
-        try:
-            # Note: unittest raises a deprecation warning here:
-            #    DeprecationWarning: remove loop argument
-            # but removing the loop arg causes errors.
-            self.websocket_server = websockets.serve(
-                ws_handler=self._serve_websocket_data,
-                host=&#39;&#39;, port=self.port, loop=self.event_loop)
+        &#34;&#34;&#34;Start serving on the specified websocket.&#34;&#34;&#34;
+        async def start_server():
+            logging.info(&#39;Starting WebSocketServer on port %d&#39;, self.port)
+            try:
+                self.websocket_server = await websockets.serve(
+                    self._serve_websocket_data,
+                    host=&#39;&#39;,
+                    port=self.port
+                )
+                logging.info(&#39;WebSocket server running on port %d&#39;, self.port)
+                await self.websocket_server.wait_closed()
+            except OSError as e:
+                logging.fatal(&#39;Failed to open websocket on port %d: %s&#39;, self.port, e)
+                raise e
 
-            # If event loop is already running, just add server to task list
-            if self.event_loop.is_running():
-                asyncio.ensure_future(
-                    self.websocket_server, loop=self.event_loop)
-
-            # Otherwise, fire up the event loop now
-            else:
-                self.event_loop.run_until_complete(self.websocket_server)
-                self.event_loop.run_forever()
-        except OSError as e:
-            logging.fatal(
-                &#39;Failed to open websocket on port %s: %s&#39;,
-                self.port,
-                str(e))
-            raise e
+        # Use asyncio.run to manage the event loop
+        asyncio.run(start_server())
 
     ############################
     def quit(self):
         &#34;&#34;&#34;Exit the loop and shut down all loggers.
         &#34;&#34;&#34;
-        self.quit_flag = True
-
         # Close any connections
         with self._connection_lock:
+            self.quit_flag = True
+
             for connection in self._connections:
                 connection.quit()
         logging.info(&#39;WebSocketServer closed&#39;)
@@ -1091,8 +1079,9 @@ class CachedDataServer:
 
     ############################
     &#34;&#34;&#34;Top-level coroutine for running CachedDataServer.&#34;&#34;&#34;
-    async def _serve_websocket_data(self, websocket, path):
-        logging.debug(&#39;New data websocket client attached: %s&#39;, path)
+    async def _serve_websocket_data(self, websocket, unused_loop_arg=None):
+        # Legacy websocket code passes in event loop as third argument; we don&#39;t need it,
+        # but include so code works both pre and post WS14.
 
         # Here is where we see the anomalous behavior - when constructed
         # directly, self.cache is as it should be: a shared cache. But
@@ -1217,7 +1206,7 @@ if __name__ == &#39;__main__&#39;:
             group_port = udp_spec.split(&#39;:&#39;)
             port = int(group_port[-1])
             multicast_group = group_port[-2] if len(group_port) == 2 else &#39;&#39;
-            readers.append(UDPReader(port=port, source=multicast_group))
+            readers.append(UDPReader(port=port, mc_group=multicast_group))
         transform = FromJSONTransform()
         reader = ComposedReader(readers=readers, transforms=[transform])
 
@@ -1250,7 +1239,7 @@ if __name__ == &#39;__main__&#39;:
 <dl>
 <dt id="server.cached_data_server.CachedDataServer"><code class="flex name class">
 <span>class <span class="ident">CachedDataServer</span></span>
-<span>(</span><span>port, interval=1, back_seconds=3600, max_records=1440, min_back_records=100, cleanup_interval=60, disk_cache=None, event_loop=None)</span>
+<span>(</span><span>port, interval=1, back_seconds=3600, max_records=1440, min_back_records=100, cleanup_interval=60, disk_cache=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Class that caches field:value pairs passed to it in either a
@@ -1298,9 +1287,7 @@ How many seconds between calls to cleanup old cache entries
 and save to disk (if disk_cache is specified)
 disk_cache
 If not None, name of directory in which to backup values
-from in-memory cache
-event_loop
-If not None, the event loop to use for websocket events</p></div>
+from in-memory cache</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1349,8 +1336,7 @@ If not None, the event loop to use for websocket events</p></div>
             max_records=60 * 24,
             min_back_records=100,
             cleanup_interval=60,
-            disk_cache=None,
-            event_loop=None):
+            disk_cache=None):
         &#34;&#34;&#34;
         port         Port on which to serve websocket connections
         interval     How frequently to serve updates
@@ -1365,7 +1351,6 @@ If not None, the event loop to use for websocket events</p></div>
                      and save to disk (if disk_cache is specified)
         disk_cache   If not None, name of directory in which to backup values
                      from in-memory cache
-        event_loop   If not None, the event loop to use for websocket events
         &#34;&#34;&#34;
         self.port = port
         self.interval = interval
@@ -1373,7 +1358,6 @@ If not None, the event loop to use for websocket events</p></div>
         self.max_records = max_records
         self.min_back_records = min_back_records
         self.cleanup_interval = cleanup_interval
-        self.event_loop = event_loop
 
         self.cache = RecordCache()
 
@@ -1389,15 +1373,6 @@ If not None, the event loop to use for websocket events</p></div>
         self._connections = []
         self._connection_lock = threading.Lock()
 
-        # If we&#39;ve received an event loop, use it, otherwise create a new one
-        # of our own.
-        if not event_loop:
-            self.event_loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(self.event_loop)
-        else:
-            self.event_loop = None
-            asyncio.set_event_loop(event_loop)
-
         self.quit_flag = False
 
         # Start a thread to loop through, cleaning up the cache and (if we&#39;ve
@@ -1408,8 +1383,17 @@ If not None, the event loop to use for websocket events</p></div>
         # event loop. Calling quit() it will close any remaining
         # connections and stop the event loop, terminating the server.
         self.server_thread = threading.Thread(
-            target=self._run_websocket_server, daemon=True)
+            target=self._start_event_loop, daemon=True)
         self.server_thread.start()
+
+    def _start_event_loop(self):
+        &#34;&#34;&#34;Initialize and run the asyncio event loop in the current thread.&#34;&#34;&#34;
+        try:
+            self.event_loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(self.event_loop)  # Bind the loop to this thread
+            self._run_websocket_server()
+        except Exception as e:
+            logging.error(&#39;Failed to start event loop: %s&#39;, str(e))
 
     ############################
     def __del__(self):
@@ -1439,41 +1423,32 @@ If not None, the event loop to use for websocket events</p></div>
 
     ############################
     def _run_websocket_server(self):
-        &#34;&#34;&#34;Start serving on the specified websocket.
-        &#34;&#34;&#34;
-        logging.info(&#39;Starting WebSocketServer on port %d&#39;, self.port)
-        try:
-            # Note: unittest raises a deprecation warning here:
-            #    DeprecationWarning: remove loop argument
-            # but removing the loop arg causes errors.
-            self.websocket_server = websockets.serve(
-                ws_handler=self._serve_websocket_data,
-                host=&#39;&#39;, port=self.port, loop=self.event_loop)
+        &#34;&#34;&#34;Start serving on the specified websocket.&#34;&#34;&#34;
+        async def start_server():
+            logging.info(&#39;Starting WebSocketServer on port %d&#39;, self.port)
+            try:
+                self.websocket_server = await websockets.serve(
+                    self._serve_websocket_data,
+                    host=&#39;&#39;,
+                    port=self.port
+                )
+                logging.info(&#39;WebSocket server running on port %d&#39;, self.port)
+                await self.websocket_server.wait_closed()
+            except OSError as e:
+                logging.fatal(&#39;Failed to open websocket on port %d: %s&#39;, self.port, e)
+                raise e
 
-            # If event loop is already running, just add server to task list
-            if self.event_loop.is_running():
-                asyncio.ensure_future(
-                    self.websocket_server, loop=self.event_loop)
-
-            # Otherwise, fire up the event loop now
-            else:
-                self.event_loop.run_until_complete(self.websocket_server)
-                self.event_loop.run_forever()
-        except OSError as e:
-            logging.fatal(
-                &#39;Failed to open websocket on port %s: %s&#39;,
-                self.port,
-                str(e))
-            raise e
+        # Use asyncio.run to manage the event loop
+        asyncio.run(start_server())
 
     ############################
     def quit(self):
         &#34;&#34;&#34;Exit the loop and shut down all loggers.
         &#34;&#34;&#34;
-        self.quit_flag = True
-
         # Close any connections
         with self._connection_lock:
+            self.quit_flag = True
+
             for connection in self._connections:
                 connection.quit()
         logging.info(&#39;WebSocketServer closed&#39;)
@@ -1486,8 +1461,9 @@ If not None, the event loop to use for websocket events</p></div>
 
     ############################
     &#34;&#34;&#34;Top-level coroutine for running CachedDataServer.&#34;&#34;&#34;
-    async def _serve_websocket_data(self, websocket, path):
-        logging.debug(&#39;New data websocket client attached: %s&#39;, path)
+    async def _serve_websocket_data(self, websocket, unused_loop_arg=None):
+        # Legacy websocket code passes in event loop as third argument; we don&#39;t need it,
+        # but include so code works both pre and post WS14.
 
         # Here is where we see the anomalous behavior - when constructed
         # directly, self.cache is as it should be: a shared cache. But
@@ -1577,10 +1553,10 @@ If not None, the event loop to use for websocket events</p></div>
 <pre><code class="python">def quit(self):
     &#34;&#34;&#34;Exit the loop and shut down all loggers.
     &#34;&#34;&#34;
-    self.quit_flag = True
-
     # Close any connections
     with self._connection_lock:
+        self.quit_flag = True
+
         for connection in self._connections:
             connection.quit()
     logging.info(&#39;WebSocketServer closed&#39;)
@@ -1697,8 +1673,8 @@ If not None, the event loop to use for websocket events</p></div>
             metadata = record.metadata
         elif isinstance(record, dict):
             record_timestamp = record.get(&#39;timestamp&#39;, time.time())
-            fields = record.get(&#39;fields&#39;, None)
-            metadata = record.get(&#39;metadata&#39;, None)
+            fields = record.get(&#39;fields&#39;)
+            metadata = record.get(&#39;metadata&#39;)
             if fields is None:
                 logging.debug(
                     &#39;Dict record passed to cache_record() has no &#39;
@@ -1745,8 +1721,8 @@ If not None, the event loop to use for websocket events</p></div>
             if metadata:
                 metadata_fields = metadata.get(&#39;fields&#39;, {})
                 with self.metadata_lock:
-                    for field, value in metadata_fields.items():
-                        self.metadata[field] = value
+                    for mfield, value in metadata_fields.items():
+                        self.metadata[mfield] = value
 
     ############################
     def _add_tuple(self, field, value_tuple):
@@ -2008,8 +1984,8 @@ RecordParser (and its enclosing ParseTransform) if the parser's
         metadata = record.metadata
     elif isinstance(record, dict):
         record_timestamp = record.get(&#39;timestamp&#39;, time.time())
-        fields = record.get(&#39;fields&#39;, None)
-        metadata = record.get(&#39;metadata&#39;, None)
+        fields = record.get(&#39;fields&#39;)
+        metadata = record.get(&#39;metadata&#39;)
         if fields is None:
             logging.debug(
                 &#39;Dict record passed to cache_record() has no &#39;
@@ -2056,8 +2032,8 @@ RecordParser (and its enclosing ParseTransform) if the parser's
         if metadata:
             metadata_fields = metadata.get(&#39;fields&#39;, {})
             with self.metadata_lock:
-                for field, value in metadata_fields.items():
-                    self.metadata[field] = value</code></pre>
+                for mfield, value in metadata_fields.items():
+                    self.metadata[mfield] = value</code></pre>
 </details>
 </dd>
 <dt id="server.cached_data_server.RecordCache.cleanup"><code class="name flex">
@@ -2383,7 +2359,7 @@ by disk_cache.</p></div>
                 # otherwise send everything.
                 elif request[&#39;type&#39;] == &#39;describe&#39;:
                     logging.debug(&#39;describe request&#39;)
-                    fields = request.get(&#39;fields&#39;, None)
+                    fields = request.get(&#39;fields&#39;)
                     result = self.cache.get_metadata(fields)
                     await self.send_json_response(
                         {&#39;type&#39;: &#39;describe&#39;, &#39;status&#39;: 200, &#39;data&#39;: result})
@@ -2391,7 +2367,7 @@ by disk_cache.</p></div>
                 # Client wants to publish to cache and provides a dict of data
                 elif request[&#39;type&#39;] == &#39;publish&#39;:
                     logging.debug(&#39;publish request&#39;)
-                    data = request.get(&#39;data&#39;, None)
+                    data = request.get(&#39;data&#39;)
                     if data is None:
                         await self.send_json_response(
                             {&#39;type&#39;: &#39;publish&#39;, &#39;status&#39;: 400,
@@ -2411,7 +2387,7 @@ by disk_cache.</p></div>
                 elif request[&#39;type&#39;] == &#39;subscribe&#39;:
                     logging.debug(&#39;subscribe request&#39;)
                     # Have they given us a new subscription interval?
-                    requested_interval = request.get(&#39;interval&#39;, None)
+                    requested_interval = request.get(&#39;interval&#39;)
                     if requested_interval is not None:
                         try:
                             interval = float(requested_interval)
@@ -2423,7 +2399,7 @@ by disk_cache.</p></div>
                             continue
 
                     # Which fields do they want?
-                    raw_requested_fields = request.get(&#39;fields&#39;, None)
+                    raw_requested_fields = request.get(&#39;fields&#39;)
                     if not raw_requested_fields:
                         await self.send_json_response(
                             {&#39;type&#39;: &#39;subscribe&#39;, &#39;status&#39;: 400,
@@ -2471,7 +2447,7 @@ by disk_cache.</p></div>
                                 logging.debug(&#39;No data for requested field %s&#39;, matching_field_name)
                                 continue
                             with self.cache.locks[field_name]:
-                                field_cache = self.cache.data.get(matching_field_name, None)
+                                field_cache = self.cache.data.get(matching_field_name)
                                 if field_cache is None:
                                     logging.debug(&#39;No cached data for %s&#39;, matching_field_name)
                                     continue
@@ -2556,7 +2532,7 @@ by disk_cache.</p></div>
                                 continue
 
                             with self.cache.locks[field_name]:
-                                field_cache = self.cache.data.get(field_name, None)
+                                field_cache = self.cache.data.get(field_name)
                                 if field_cache is None:
                                     logging.debug(
                                         &#39;No cached data for %s&#39;, field_name)
@@ -2921,7 +2897,7 @@ ready - client has processed the previous data message and is ready
             # otherwise send everything.
             elif request[&#39;type&#39;] == &#39;describe&#39;:
                 logging.debug(&#39;describe request&#39;)
-                fields = request.get(&#39;fields&#39;, None)
+                fields = request.get(&#39;fields&#39;)
                 result = self.cache.get_metadata(fields)
                 await self.send_json_response(
                     {&#39;type&#39;: &#39;describe&#39;, &#39;status&#39;: 200, &#39;data&#39;: result})
@@ -2929,7 +2905,7 @@ ready - client has processed the previous data message and is ready
             # Client wants to publish to cache and provides a dict of data
             elif request[&#39;type&#39;] == &#39;publish&#39;:
                 logging.debug(&#39;publish request&#39;)
-                data = request.get(&#39;data&#39;, None)
+                data = request.get(&#39;data&#39;)
                 if data is None:
                     await self.send_json_response(
                         {&#39;type&#39;: &#39;publish&#39;, &#39;status&#39;: 400,
@@ -2949,7 +2925,7 @@ ready - client has processed the previous data message and is ready
             elif request[&#39;type&#39;] == &#39;subscribe&#39;:
                 logging.debug(&#39;subscribe request&#39;)
                 # Have they given us a new subscription interval?
-                requested_interval = request.get(&#39;interval&#39;, None)
+                requested_interval = request.get(&#39;interval&#39;)
                 if requested_interval is not None:
                     try:
                         interval = float(requested_interval)
@@ -2961,7 +2937,7 @@ ready - client has processed the previous data message and is ready
                         continue
 
                 # Which fields do they want?
-                raw_requested_fields = request.get(&#39;fields&#39;, None)
+                raw_requested_fields = request.get(&#39;fields&#39;)
                 if not raw_requested_fields:
                     await self.send_json_response(
                         {&#39;type&#39;: &#39;subscribe&#39;, &#39;status&#39;: 400,
@@ -3009,7 +2985,7 @@ ready - client has processed the previous data message and is ready
                             logging.debug(&#39;No data for requested field %s&#39;, matching_field_name)
                             continue
                         with self.cache.locks[field_name]:
-                            field_cache = self.cache.data.get(matching_field_name, None)
+                            field_cache = self.cache.data.get(matching_field_name)
                             if field_cache is None:
                                 logging.debug(&#39;No cached data for %s&#39;, matching_field_name)
                                 continue
@@ -3094,7 +3070,7 @@ ready - client has processed the previous data message and is ready
                             continue
 
                         with self.cache.locks[field_name]:
-                            field_cache = self.cache.data.get(field_name, None)
+                            field_cache = self.cache.data.get(field_name)
                             if field_cache is None:
                                 logging.debug(
                                     &#39;No cached data for %s&#39;, field_name)

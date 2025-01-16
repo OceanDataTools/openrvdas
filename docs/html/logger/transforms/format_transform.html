@@ -103,12 +103,13 @@ import sys
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.utils.das_record import DASRecord  # noqa: E402
+from logger.utils.timestamp import time_str  # noqa: E402
 from logger.transforms.transform import Transform  # noqa: E402
 
 
 ################################################################################
 class FormatTransform(Transform):
-    def __init__(self, format_str, defaults=None):
+    def __init__(self, format_str, defaults=None, use_iso_timestamp=False):
         &#34;&#34;&#34;
         Output a formatted string in which field values from a DASRecord or field
         dict have been substituted. An optional default_dict may be provided to
@@ -135,10 +136,14 @@ class FormatTransform(Transform):
                        from the input record, but would output None if S330SpeedKt
                        were missing (because no default was provided for
                        S330SpeedKt).
+
+        use_iso_timestamp - If True, ISO 8601 format timestamps when the {timestamp}
+                       tag is present. Otherwise use Unix numerical timestamps.
         &#34;&#34;&#34;
 
         self.format_str = format_str
         self.defaults = defaults or {}
+        self.use_uso_timestamp = use_iso_timestamp
 
     def transform(self, record):
         # Make sure record is right format - DASRecord or dict
@@ -175,6 +180,11 @@ class FormatTransform(Transform):
             fields[&#39;timestamp&#39;] = record.timestamp
         else:
             fields[&#39;timestamp&#39;] = record.get(&#39;timestamp&#39;, 0)
+
+        # If we&#39;re supposed to be outputting USO 8601 timestamps,
+        # convert to appropriate format
+        if self.use_uso_timestamp:
+            fields[&#39;timestamp&#39;] = time_str(fields[&#39;timestamp&#39;])
 
         try:
             result = self.format_str.format(**fields)
@@ -198,14 +208,13 @@ class FormatTransform(Transform):
 <dl>
 <dt id="logger.transforms.format_transform.FormatTransform"><code class="flex name class">
 <span>class <span class="ident">FormatTransform</span></span>
-<span>(</span><span>format_str, defaults=None)</span>
+<span>(</span><span>format_str, defaults=None, use_iso_timestamp=False)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Base class Transform about which we know nothing else. By default the
-input and output formats are Unknown unless overridden.</p>
-<p>Note that when a Transform is first instantiated, it may not yet know
-what its inputs are going to be, so we provide methods to override the
-input/output formats after the fact.</p>
+<div class="desc"><p>Base class Transform about which we know nothing else.</p>
+<p>Inherits methods for checking whether a received record is in a format
+that the derived class can process, and for splitting a list of input
+records into its elements and calling subclass method() on them.</p>
 <p>Output a formatted string in which field values from a DASRecord or field
 dict have been substituted. An optional default_dict may be provided to
 indicate what value should be substituted in if the relevant record is
@@ -228,13 +237,15 @@ requested in the format string are missing.</p>
            from the input record, but would output None if S330SpeedKt
            were missing (because no default was provided for
            S330SpeedKt).
-</code></pre></div>
+</code></pre>
+<p>use_iso_timestamp - If True, ISO 8601 format timestamps when the {timestamp}
+tag is present. Otherwise use Unix numerical timestamps.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class FormatTransform(Transform):
-    def __init__(self, format_str, defaults=None):
+    def __init__(self, format_str, defaults=None, use_iso_timestamp=False):
         &#34;&#34;&#34;
         Output a formatted string in which field values from a DASRecord or field
         dict have been substituted. An optional default_dict may be provided to
@@ -261,10 +272,14 @@ requested in the format string are missing.</p>
                        from the input record, but would output None if S330SpeedKt
                        were missing (because no default was provided for
                        S330SpeedKt).
+
+        use_iso_timestamp - If True, ISO 8601 format timestamps when the {timestamp}
+                       tag is present. Otherwise use Unix numerical timestamps.
         &#34;&#34;&#34;
 
         self.format_str = format_str
         self.defaults = defaults or {}
+        self.use_uso_timestamp = use_iso_timestamp
 
     def transform(self, record):
         # Make sure record is right format - DASRecord or dict
@@ -302,6 +317,11 @@ requested in the format string are missing.</p>
         else:
             fields[&#39;timestamp&#39;] = record.get(&#39;timestamp&#39;, 0)
 
+        # If we&#39;re supposed to be outputting USO 8601 timestamps,
+        # convert to appropriate format
+        if self.use_uso_timestamp:
+            fields[&#39;timestamp&#39;] = time_str(fields[&#39;timestamp&#39;])
+
         try:
             result = self.format_str.format(**fields)
 
@@ -315,14 +335,78 @@ requested in the format string are missing.</p>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="logger.transforms.transform.Transform" href="transform.html#logger.transforms.transform.Transform">Transform</a></li>
+<li><a title="logger.utils.base_module.BaseModule" href="../utils/base_module.html#logger.utils.base_module.BaseModule">BaseModule</a></li>
 </ul>
+<h3>Methods</h3>
+<dl>
+<dt id="logger.transforms.format_transform.FormatTransform.transform"><code class="name flex">
+<span>def <span class="ident">transform</span></span>(<span>self, record)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def transform(self, record):
+    # Make sure record is right format - DASRecord or dict
+    if not record:
+        return None
+
+    # If we&#39;ve got a list, hope it&#39;s a list of records. Recurse,
+    # calling transform() on each of the list elements in order and
+    # return the resulting list.
+    if type(record) is list:
+        results = []
+        for single_record in record:
+            results.append(self.transform(single_record))
+        return results
+
+    if type(record) is DASRecord:
+        record_fields = record.fields
+    elif type(record) is dict:
+        if &#39;fields&#39; in record:
+            record_fields = record[&#39;fields&#39;]
+        else:
+            record_fields = record
+    else:
+        return (&#39;Record passed to FormatTransform was neither a dict nor a &#39;
+                &#39;DASRecord. Type was %s: %s&#39; % (type(record), str(record)[:80]))
+
+    fields = self.defaults.copy()
+
+    for field, value in record_fields.items():
+        fields[field] = value
+
+    # Add the timestamp as a field as well.
+    if type(record) is DASRecord:
+        fields[&#39;timestamp&#39;] = record.timestamp
+    else:
+        fields[&#39;timestamp&#39;] = record.get(&#39;timestamp&#39;, 0)
+
+    # If we&#39;re supposed to be outputting USO 8601 timestamps,
+    # convert to appropriate format
+    if self.use_uso_timestamp:
+        fields[&#39;timestamp&#39;] = time_str(fields[&#39;timestamp&#39;])
+
+    try:
+        result = self.format_str.format(**fields)
+
+    except KeyError:
+        result = None
+
+    if result:
+        return result
+    return None</code></pre>
+</details>
+</dd>
+</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="logger.transforms.transform.Transform" href="transform.html#logger.transforms.transform.Transform">Transform</a></b></code>:
 <ul class="hlist">
-<li><code><a title="logger.transforms.transform.Transform.input_format" href="transform.html#logger.transforms.transform.Transform.input_format">input_format</a></code></li>
-<li><code><a title="logger.transforms.transform.Transform.output_format" href="transform.html#logger.transforms.transform.Transform.output_format">output_format</a></code></li>
-<li><code><a title="logger.transforms.transform.Transform.transform" href="transform.html#logger.transforms.transform.Transform.transform">transform</a></code></li>
+<li><code><a title="logger.transforms.transform.Transform.can_process_record" href="../utils/base_module.html#logger.utils.base_module.BaseModule.can_process_record">can_process_record</a></code></li>
+<li><code><a title="logger.transforms.transform.Transform.digest_record" href="../utils/base_module.html#logger.utils.base_module.BaseModule.digest_record">digest_record</a></code></li>
 </ul>
 </li>
 </ul>
@@ -345,6 +429,9 @@ requested in the format string are missing.</p>
 <ul>
 <li>
 <h4><code><a title="logger.transforms.format_transform.FormatTransform" href="#logger.transforms.format_transform.FormatTransform">FormatTransform</a></code></h4>
+<ul class="">
+<li><code><a title="logger.transforms.format_transform.FormatTransform.transform" href="#logger.transforms.format_transform.FormatTransform.transform">transform</a></code></li>
+</ul>
 </li>
 </ul>
 </li>

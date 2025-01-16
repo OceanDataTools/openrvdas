@@ -56,14 +56,13 @@ class DerivedDataTransform(Transform):
 <dl>
 <dt id="logger.transforms.derived_data_transform.DerivedDataTransform"><code class="flex name class">
 <span>class <span class="ident">DerivedDataTransform</span></span>
-<span>(</span><span>input_format=logger.utils.formats.Unknown, output_format=logger.utils.formats.Unknown)</span>
+<span>(</span><span>quiet=False, input_format=None, output_format=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Trivial base class for derived data transforms. Derived data
 transforms used to have some complicated invocation process to make
 them more efficient, but we've opted to make them just like any
-other transform for simplicity.</p>
-<p>Abstract base class for data Transforms.</p></div>
+other transform for simplicity.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -79,10 +78,12 @@ other transform for simplicity.</p>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="logger.transforms.transform.Transform" href="transform.html#logger.transforms.transform.Transform">Transform</a></li>
+<li><a title="logger.utils.base_module.BaseModule" href="../utils/base_module.html#logger.utils.base_module.BaseModule">BaseModule</a></li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
 <li><a title="logger.transforms.interpolation_transform.InterpolationTransform" href="interpolation_transform.html#logger.transforms.interpolation_transform.InterpolationTransform">InterpolationTransform</a></li>
+<li><a title="logger.transforms.modify_value_transform.ModifyValueTransform" href="modify_value_transform.html#logger.transforms.modify_value_transform.ModifyValueTransform">ModifyValueTransform</a></li>
 <li><a title="logger.transforms.subsample_transform.SubsampleTransform" href="subsample_transform.html#logger.transforms.subsample_transform.SubsampleTransform">SubsampleTransform</a></li>
 <li><a title="logger.transforms.true_winds_transform.TrueWindsTransform" href="true_winds_transform.html#logger.transforms.true_winds_transform.TrueWindsTransform">TrueWindsTransform</a></li>
 </ul>
@@ -90,9 +91,8 @@ other transform for simplicity.</p>
 <ul class="hlist">
 <li><code><b><a title="logger.transforms.transform.Transform" href="transform.html#logger.transforms.transform.Transform">Transform</a></b></code>:
 <ul class="hlist">
-<li><code><a title="logger.transforms.transform.Transform.input_format" href="transform.html#logger.transforms.transform.Transform.input_format">input_format</a></code></li>
-<li><code><a title="logger.transforms.transform.Transform.output_format" href="transform.html#logger.transforms.transform.Transform.output_format">output_format</a></code></li>
-<li><code><a title="logger.transforms.transform.Transform.transform" href="transform.html#logger.transforms.transform.Transform.transform">transform</a></code></li>
+<li><code><a title="logger.transforms.transform.Transform.can_process_record" href="../utils/base_module.html#logger.utils.base_module.BaseModule.can_process_record">can_process_record</a></code></li>
+<li><code><a title="logger.transforms.transform.Transform.digest_record" href="../utils/base_module.html#logger.utils.base_module.BaseModule.digest_record">digest_record</a></code></li>
 </ul>
 </li>
 </ul>

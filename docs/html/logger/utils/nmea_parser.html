@@ -80,13 +80,13 @@ class NMEAParser:
             return None
 
         # Figure out what kind of message we&#39;re expecting, based on data_id
-        sensor = self.sensors.get(data_id, None)
+        sensor = self.sensors.get(data_id)
         if not sensor:
             logging.error(&#39;Unrecognized data_id (&#34;%s&#34;) in record: %s&#39;,
                           data_id, nmea_record)
             return None
 
-        model_name = sensor.get(&#39;model&#39;, None)
+        model_name = sensor.get(&#39;model&#39;)
         if not model_name:
             logging.error(&#39;No &#34;model&#34; for sensor %s&#39;, sensor)
             return None
@@ -100,14 +100,14 @@ class NMEAParser:
             return None
 
         # Finally, convert field values to variable names specific to sensor
-        sensor_fields = sensor.get(&#39;fields&#39;, None)
+        sensor_fields = sensor.get(&#39;fields&#39;)
         if not sensor_fields:
             logging.error(&#39;No &#34;fields&#34; definition found for sensor %s&#39;, data_id)
             return None
 
         named_fields = {}
         for field_name in fields:
-            var_name = sensor_fields.get(field_name, None)
+            var_name = sensor_fields.get(field_name)
             if var_name:
                 named_fields[var_name] = fields[field_name]
 
@@ -138,7 +138,7 @@ class NMEAParser:
         # instruments use spaces or other characters (Gravimeter, for
         # example, uses both spaces and &#39;:&#39;). Look up sensor model and see
         # if we have a non-default delimiter defined.
-        sensor_model = self.sensor_models.get(sensor_model_name, None)
+        sensor_model = self.sensor_models.get(sensor_model_name)
         if not sensor_model:
             raise ValueError(&#39;No sensor_model  matching &#34;%s&#34;&#39; % sensor_model_name)
 
@@ -162,7 +162,7 @@ class NMEAParser:
                           &#39;in definition_base: %s&#39;, message_type, definition_base)
 
             # If there&#39;s no &#39;fields&#39;, there ought to be a &#39;messages&#39;
-            sensor_messages = definition_base.get(&#39;messages&#39;, None)
+            sensor_messages = definition_base.get(&#39;messages&#39;)
             if not sensor_messages:
                 raise ValueError(&#39;Sensor model %s must have either &#34;fields&#34; or &#39;
                                  &#39;&#34;messages&#34; definition.&#39; % sensor_model_name)
@@ -172,7 +172,7 @@ class NMEAParser:
             element = fields.pop(0)
             message_type = message_type + &#39;-&#39; + element if message_type else element
 
-            definition = sensor_messages.get(element, None)
+            definition = sensor_messages.get(element)
             if not definition:
                 raise ValueError(&#39;Message &#34;%s&#34; is not one defined by model %s (%s)&#39;
                                  % (message_type, sensor_model_name, sensor_messages))
@@ -188,7 +188,7 @@ class NMEAParser:
             # previously loaded into self.messages. Look it up, make that
             # our new definition_base and loop.
             if isinstance(definition, str):
-                definition_base = self.messages.get(definition, None)
+                definition_base = self.messages.get(definition)
                 logging.debug(&#39;Definition is reference to message &#34;%s&#34;; loaded: %s&#39;,
                               definition, definition_base)
                 if not definition_base:
@@ -300,13 +300,13 @@ class NMEAParser:
             return None
 
         # Figure out what kind of message we&#39;re expecting, based on data_id
-        sensor = self.sensors.get(data_id, None)
+        sensor = self.sensors.get(data_id)
         if not sensor:
             logging.error(&#39;Unrecognized data_id (&#34;%s&#34;) in record: %s&#39;,
                           data_id, nmea_record)
             return None
 
-        model_name = sensor.get(&#39;model&#39;, None)
+        model_name = sensor.get(&#39;model&#39;)
         if not model_name:
             logging.error(&#39;No &#34;model&#34; for sensor %s&#39;, sensor)
             return None
@@ -320,14 +320,14 @@ class NMEAParser:
             return None
 
         # Finally, convert field values to variable names specific to sensor
-        sensor_fields = sensor.get(&#39;fields&#39;, None)
+        sensor_fields = sensor.get(&#39;fields&#39;)
         if not sensor_fields:
             logging.error(&#39;No &#34;fields&#34; definition found for sensor %s&#39;, data_id)
             return None
 
         named_fields = {}
         for field_name in fields:
-            var_name = sensor_fields.get(field_name, None)
+            var_name = sensor_fields.get(field_name)
             if var_name:
                 named_fields[var_name] = fields[field_name]
 
@@ -358,7 +358,7 @@ class NMEAParser:
         # instruments use spaces or other characters (Gravimeter, for
         # example, uses both spaces and &#39;:&#39;). Look up sensor model and see
         # if we have a non-default delimiter defined.
-        sensor_model = self.sensor_models.get(sensor_model_name, None)
+        sensor_model = self.sensor_models.get(sensor_model_name)
         if not sensor_model:
             raise ValueError(&#39;No sensor_model  matching &#34;%s&#34;&#39; % sensor_model_name)
 
@@ -382,7 +382,7 @@ class NMEAParser:
                           &#39;in definition_base: %s&#39;, message_type, definition_base)
 
             # If there&#39;s no &#39;fields&#39;, there ought to be a &#39;messages&#39;
-            sensor_messages = definition_base.get(&#39;messages&#39;, None)
+            sensor_messages = definition_base.get(&#39;messages&#39;)
             if not sensor_messages:
                 raise ValueError(&#39;Sensor model %s must have either &#34;fields&#34; or &#39;
                                  &#39;&#34;messages&#34; definition.&#39; % sensor_model_name)
@@ -392,7 +392,7 @@ class NMEAParser:
             element = fields.pop(0)
             message_type = message_type + &#39;-&#39; + element if message_type else element
 
-            definition = sensor_messages.get(element, None)
+            definition = sensor_messages.get(element)
             if not definition:
                 raise ValueError(&#39;Message &#34;%s&#34; is not one defined by model %s (%s)&#39;
                                  % (message_type, sensor_model_name, sensor_messages))
@@ -408,7 +408,7 @@ class NMEAParser:
             # previously loaded into self.messages. Look it up, make that
             # our new definition_base and loop.
             if isinstance(definition, str):
-                definition_base = self.messages.get(definition, None)
+                definition_base = self.messages.get(definition)
                 logging.debug(&#39;Definition is reference to message &#34;%s&#34;; loaded: %s&#39;,
                               definition, definition_base)
                 if not definition_base:
@@ -504,7 +504,7 @@ class NMEAParser:
     # instruments use spaces or other characters (Gravimeter, for
     # example, uses both spaces and &#39;:&#39;). Look up sensor model and see
     # if we have a non-default delimiter defined.
-    sensor_model = self.sensor_models.get(sensor_model_name, None)
+    sensor_model = self.sensor_models.get(sensor_model_name)
     if not sensor_model:
         raise ValueError(&#39;No sensor_model  matching &#34;%s&#34;&#39; % sensor_model_name)
 
@@ -528,7 +528,7 @@ class NMEAParser:
                       &#39;in definition_base: %s&#39;, message_type, definition_base)
 
         # If there&#39;s no &#39;fields&#39;, there ought to be a &#39;messages&#39;
-        sensor_messages = definition_base.get(&#39;messages&#39;, None)
+        sensor_messages = definition_base.get(&#39;messages&#39;)
         if not sensor_messages:
             raise ValueError(&#39;Sensor model %s must have either &#34;fields&#34; or &#39;
                              &#39;&#34;messages&#34; definition.&#39; % sensor_model_name)
@@ -538,7 +538,7 @@ class NMEAParser:
         element = fields.pop(0)
         message_type = message_type + &#39;-&#39; + element if message_type else element
 
-        definition = sensor_messages.get(element, None)
+        definition = sensor_messages.get(element)
         if not definition:
             raise ValueError(&#39;Message &#34;%s&#34; is not one defined by model %s (%s)&#39;
                              % (message_type, sensor_model_name, sensor_messages))
@@ -554,7 +554,7 @@ class NMEAParser:
         # previously loaded into self.messages. Look it up, make that
         # our new definition_base and loop.
         if isinstance(definition, str):
-            definition_base = self.messages.get(definition, None)
+            definition_base = self.messages.get(definition)
             logging.debug(&#39;Definition is reference to message &#34;%s&#34;; loaded: %s&#39;,
                           definition, definition_base)
             if not definition_base:
@@ -615,13 +615,13 @@ class NMEAParser:
         return None
 
     # Figure out what kind of message we&#39;re expecting, based on data_id
-    sensor = self.sensors.get(data_id, None)
+    sensor = self.sensors.get(data_id)
     if not sensor:
         logging.error(&#39;Unrecognized data_id (&#34;%s&#34;) in record: %s&#39;,
                       data_id, nmea_record)
         return None
 
-    model_name = sensor.get(&#39;model&#39;, None)
+    model_name = sensor.get(&#39;model&#39;)
     if not model_name:
         logging.error(&#39;No &#34;model&#34; for sensor %s&#39;, sensor)
         return None
@@ -635,14 +635,14 @@ class NMEAParser:
         return None
 
     # Finally, convert field values to variable names specific to sensor
-    sensor_fields = sensor.get(&#39;fields&#39;, None)
+    sensor_fields = sensor.get(&#39;fields&#39;)
     if not sensor_fields:
         logging.error(&#39;No &#34;fields&#34; definition found for sensor %s&#39;, data_id)
         return None
 
     named_fields = {}
     for field_name in fields:
-        var_name = sensor_fields.get(field_name, None)
+        var_name = sensor_fields.get(field_name)
         if var_name:
             named_fields[var_name] = fields[field_name]
 

@@ -33,6 +33,7 @@ import logging
 import re
 import sys
 
+from typing import Union
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.utils.das_record import DASRecord  # noqa: E402
@@ -96,6 +97,8 @@ class LogfileWriter(Writer):
                         any mapped prefix
         ```
         &#34;&#34;&#34;
+        super().__init__(quiet=quiet)
+
         self.filebase = filebase
         self.flush = flush
         self.time_format = time_format
@@ -105,7 +108,6 @@ class LogfileWriter(Writer):
         self.header = header
         self.header_file = header_file
         self.rollover_hourly = rollover_hourly
-        self.quiet = quiet
 
         # If our filebase is a dict, we&#39;re going to be doing our
         # fancy pattern-&gt;filebase mapping.
@@ -120,17 +122,13 @@ class LogfileWriter(Writer):
         self.writer = {}
 
     ############################
-    def write(self, record):
-        if record is None:
-            return
+    def write(self, record: Union[str, DASRecord, dict]):
         if record == &#39;&#39;:
             return
 
-        # If we&#39;ve got a list, hope it&#39;s a list of records. Recurse,
-        # calling write() on each of the list elements in order.
-        if isinstance(record, list):
-            for single_record in record:
-                self.write(single_record)
+        # See if it&#39;s something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from BaseModule()
+            self.digest_record(record)  # inherited from BaseModule()
             return
 
         # Look for the timestamp
@@ -139,7 +137,7 @@ class LogfileWriter(Writer):
             record = record.as_json()
 
         elif isinstance(record, dict):
-            ts = record.get(&#39;timestamp&#39;, None)
+            ts = record.get(&#39;timestamp&#39;)
             if ts is None:
                 if not self.quiet:
                     logging.error(&#39;LogfileWriter.write() - bad timestamp: &#34;%s&#34;&#39;, record)
@@ -184,7 +182,7 @@ class LogfileWriter(Writer):
     def write_if_match(self, record, pattern, time_str):
         &#34;&#34;&#34;If the record matches the pattern, write to the matching filebase.&#34;&#34;&#34;
         # Find the compiled regex matching the pattern
-        regex = self.compiled_filebase_map.get(pattern, None)
+        regex = self.compiled_filebase_map.get(pattern)
         if not regex:
             logging.error(f&#39;System error: found no regex pattern matching &#34;{pattern}&#34;!&#39;)
             return None
@@ -194,7 +192,7 @@ class LogfileWriter(Writer):
             return None
 
         # Otherwise, we write.
-        filebase = self.filebase.get(pattern, None)
+        filebase = self.filebase.get(pattern)
         if filebase is None:
             logging.error(f&#39;System error: found no filebase matching pattern &#34;{pattern}&#34;!&#39;)
             return None
@@ -210,7 +208,7 @@ class LogfileWriter(Writer):
         the map for the relevant pattern.&#34;&#34;&#34;
 
         # Are we currently writing to this file? If not, open/create it.
-        if not filename == self.current_filename.get(pattern, None):
+        if not filename == self.current_filename.get(pattern):
             logging.info(&#39;LogfileWriter opening new file: %s&#39;, filename)
             self.current_filename[pattern] = filename
             self.writer[pattern] = FileWriter(filename=filename,
@@ -337,6 +335,8 @@ quiet           If True, don't complain if a record doesn't match
                         any mapped prefix
         ```
         &#34;&#34;&#34;
+        super().__init__(quiet=quiet)
+
         self.filebase = filebase
         self.flush = flush
         self.time_format = time_format
@@ -346,7 +346,6 @@ quiet           If True, don't complain if a record doesn't match
         self.header = header
         self.header_file = header_file
         self.rollover_hourly = rollover_hourly
-        self.quiet = quiet
 
         # If our filebase is a dict, we&#39;re going to be doing our
         # fancy pattern-&gt;filebase mapping.
@@ -361,17 +360,13 @@ quiet           If True, don't complain if a record doesn't match
         self.writer = {}
 
     ############################
-    def write(self, record):
-        if record is None:
-            return
+    def write(self, record: Union[str, DASRecord, dict]):
         if record == &#39;&#39;:
             return
 
-        # If we&#39;ve got a list, hope it&#39;s a list of records. Recurse,
-        # calling write() on each of the list elements in order.
-        if isinstance(record, list):
-            for single_record in record:
-                self.write(single_record)
+        # See if it&#39;s something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from BaseModule()
+            self.digest_record(record)  # inherited from BaseModule()
             return
 
         # Look for the timestamp
@@ -380,7 +375,7 @@ quiet           If True, don't complain if a record doesn't match
             record = record.as_json()
 
         elif isinstance(record, dict):
-            ts = record.get(&#39;timestamp&#39;, None)
+            ts = record.get(&#39;timestamp&#39;)
             if ts is None:
                 if not self.quiet:
                     logging.error(&#39;LogfileWriter.write() - bad timestamp: &#34;%s&#34;&#39;, record)
@@ -425,7 +420,7 @@ quiet           If True, don't complain if a record doesn't match
     def write_if_match(self, record, pattern, time_str):
         &#34;&#34;&#34;If the record matches the pattern, write to the matching filebase.&#34;&#34;&#34;
         # Find the compiled regex matching the pattern
-        regex = self.compiled_filebase_map.get(pattern, None)
+        regex = self.compiled_filebase_map.get(pattern)
         if not regex:
             logging.error(f&#39;System error: found no regex pattern matching &#34;{pattern}&#34;!&#39;)
             return None
@@ -435,7 +430,7 @@ quiet           If True, don't complain if a record doesn't match
             return None
 
         # Otherwise, we write.
-        filebase = self.filebase.get(pattern, None)
+        filebase = self.filebase.get(pattern)
         if filebase is None:
             logging.error(f&#39;System error: found no filebase matching pattern &#34;{pattern}&#34;!&#39;)
             return None
@@ -451,7 +446,7 @@ quiet           If True, don't complain if a record doesn't match
         the map for the relevant pattern.&#34;&#34;&#34;
 
         # Are we currently writing to this file? If not, open/create it.
-        if not filename == self.current_filename.get(pattern, None):
+        if not filename == self.current_filename.get(pattern):
             logging.info(&#39;LogfileWriter opening new file: %s&#39;, filename)
             self.current_filename[pattern] = filename
             self.writer[pattern] = FileWriter(filename=filename,
@@ -465,6 +460,7 @@ quiet           If True, don't complain if a record doesn't match
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="logger.writers.writer.Writer" href="writer.html#logger.writers.writer.Writer">Writer</a></li>
+<li><a title="logger.utils.base_module.BaseModule" href="../utils/base_module.html#logger.utils.base_module.BaseModule">BaseModule</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -485,7 +481,7 @@ the map for the relevant pattern.</p></div>
     the map for the relevant pattern.&#34;&#34;&#34;
 
     # Are we currently writing to this file? If not, open/create it.
-    if not filename == self.current_filename.get(pattern, None):
+    if not filename == self.current_filename.get(pattern):
         logging.info(&#39;LogfileWriter opening new file: %s&#39;, filename)
         self.current_filename[pattern] = filename
         self.writer[pattern] = FileWriter(filename=filename,
@@ -509,7 +505,7 @@ the map for the relevant pattern.</p></div>
 <pre><code class="python">def write_if_match(self, record, pattern, time_str):
     &#34;&#34;&#34;If the record matches the pattern, write to the matching filebase.&#34;&#34;&#34;
     # Find the compiled regex matching the pattern
-    regex = self.compiled_filebase_map.get(pattern, None)
+    regex = self.compiled_filebase_map.get(pattern)
     if not regex:
         logging.error(f&#39;System error: found no regex pattern matching &#34;{pattern}&#34;!&#39;)
         return None
@@ -519,7 +515,7 @@ the map for the relevant pattern.</p></div>
         return None
 
     # Otherwise, we write.
-    filebase = self.filebase.get(pattern, None)
+    filebase = self.filebase.get(pattern)
     if filebase is None:
         logging.error(f&#39;System error: found no filebase matching pattern &#34;{pattern}&#34;!&#39;)
         return None
@@ -534,8 +530,8 @@ the map for the relevant pattern.</p></div>
 <ul class="hlist">
 <li><code><b><a title="logger.writers.writer.Writer" href="writer.html#logger.writers.writer.Writer">Writer</a></b></code>:
 <ul class="hlist">
-<li><code><a title="logger.writers.writer.Writer.can_accept" href="writer.html#logger.writers.writer.Writer.can_accept">can_accept</a></code></li>
-<li><code><a title="logger.writers.writer.Writer.input_format" href="writer.html#logger.writers.writer.Writer.input_format">input_format</a></code></li>
+<li><code><a title="logger.writers.writer.Writer.can_process_record" href="../utils/base_module.html#logger.utils.base_module.BaseModule.can_process_record">can_process_record</a></code></li>
+<li><code><a title="logger.writers.writer.Writer.digest_record" href="../utils/base_module.html#logger.utils.base_module.BaseModule.digest_record">digest_record</a></code></li>
 <li><code><a title="logger.writers.writer.Writer.write" href="writer.html#logger.writers.writer.Writer.write">write</a></code></li>
 </ul>
 </li>

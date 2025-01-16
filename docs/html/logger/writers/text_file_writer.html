@@ -34,7 +34,6 @@ import datetime
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
-from logger.utils.formats import Text  # noqa: E402
 from logger.writers.writer import Writer  # noqa: E402
 
 
@@ -43,7 +42,7 @@ class TextFileWriter(Writer):
 
     def __init__(self, filename=None, flush=True, truncate=False,
                  split_by_date=False, create_path=True, header=None,
-                 header_file=None):
+                 header_file=None, quiet=False):
         &#34;&#34;&#34;Write text records to a file. If no filename is specified, write to
         stdout.
         ```
@@ -63,13 +62,14 @@ class TextFileWriter(Writer):
         header_file  Add the content of the specified file to each file.
       ```
         &#34;&#34;&#34;
-        super().__init__(input_format=Text)
-
         self.filename = filename
         self.flush = flush
         self.truncate = truncate
         self.split_by_date = split_by_date
         self.header = None
+
+        # Initialize type checking
+        super().__init__(quiet=quiet)
 
         if split_by_date and not filename:
             raise ValueError(&#39;TextFileWriter: filename must be specified if &#39;
@@ -167,16 +167,11 @@ class TextFileWriter(Writer):
             self.file.write(self.header)
 
     ############################
-    def write(self, record):
+    def write(self, record: str):
         &#34;&#34;&#34; Write out record, appending a newline at end.&#34;&#34;&#34;
-        if record is None:
-            return
 
-        # If we&#39;ve got a list, hope it&#39;s a list of records. Recurse,
-        # calling write() on each of the list elements in order.
-        if isinstance(record, list):
-            for single_record in record:
-                self.write(single_record)
+        if not self.can_process_record(record):  # inherited from BaseModule()
+            self.digest_record(record)           # inherited from BaseModule()
             return
 
         # If we&#39;re splitting by date, make sure that we&#39;re still writing
@@ -201,7 +196,7 @@ class TextFileWriter(Writer):
 <dl>
 <dt id="logger.writers.text_file_writer.TextFileWriter"><code class="flex name class">
 <span>class <span class="ident">TextFileWriter</span></span>
-<span>(</span><span>filename=None, flush=True, truncate=False, split_by_date=False, create_path=True, header=None, header_file=None)</span>
+<span>(</span><span>filename=None, flush=True, truncate=False, split_by_date=False, create_path=True, header=None, header_file=None, quiet=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Write to the specified file. If filename is empty, write to stdout.</p>
@@ -232,7 +227,7 @@ Add the content of the specified file to each file.
 
     def __init__(self, filename=None, flush=True, truncate=False,
                  split_by_date=False, create_path=True, header=None,
-                 header_file=None):
+                 header_file=None, quiet=False):
         &#34;&#34;&#34;Write text records to a file. If no filename is specified, write to
         stdout.
         ```
@@ -252,13 +247,14 @@ Add the content of the specified file to each file.
         header_file  Add the content of the specified file to each file.
       ```
         &#34;&#34;&#34;
-        super().__init__(input_format=Text)
-
         self.filename = filename
         self.flush = flush
         self.truncate = truncate
         self.split_by_date = split_by_date
         self.header = None
+
+        # Initialize type checking
+        super().__init__(quiet=quiet)
 
         if split_by_date and not filename:
             raise ValueError(&#39;TextFileWriter: filename must be specified if &#39;
@@ -356,16 +352,11 @@ Add the content of the specified file to each file.
             self.file.write(self.header)
 
     ############################
-    def write(self, record):
+    def write(self, record: str):
         &#34;&#34;&#34; Write out record, appending a newline at end.&#34;&#34;&#34;
-        if record is None:
-            return
 
-        # If we&#39;ve got a list, hope it&#39;s a list of records. Recurse,
-        # calling write() on each of the list elements in order.
-        if isinstance(record, list):
-            for single_record in record:
-                self.write(single_record)
+        if not self.can_process_record(record):  # inherited from BaseModule()
+            self.digest_record(record)           # inherited from BaseModule()
             return
 
         # If we&#39;re splitting by date, make sure that we&#39;re still writing
@@ -381,11 +372,12 @@ Add the content of the specified file to each file.
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="logger.writers.writer.Writer" href="writer.html#logger.writers.writer.Writer">Writer</a></li>
+<li><a title="logger.utils.base_module.BaseModule" href="../utils/base_module.html#logger.utils.base_module.BaseModule">BaseModule</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
 <dt id="logger.writers.text_file_writer.TextFileWriter.write"><code class="name flex">
-<span>def <span class="ident">write</span></span>(<span>self, record)</span>
+<span>def <span class="ident">write</span></span>(<span>self, record: str)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Write out record, appending a newline at end.</p></div>
@@ -393,16 +385,11 @@ Add the content of the specified file to each file.
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def write(self, record):
+<pre><code class="python">def write(self, record: str):
     &#34;&#34;&#34; Write out record, appending a newline at end.&#34;&#34;&#34;
-    if record is None:
-        return
 
-    # If we&#39;ve got a list, hope it&#39;s a list of records. Recurse,
-    # calling write() on each of the list elements in order.
-    if isinstance(record, list):
-        for single_record in record:
-            self.write(single_record)
+    if not self.can_process_record(record):  # inherited from BaseModule()
+        self.digest_record(record)           # inherited from BaseModule()
         return
 
     # If we&#39;re splitting by date, make sure that we&#39;re still writing
@@ -421,8 +408,8 @@ Add the content of the specified file to each file.
 <ul class="hlist">
 <li><code><b><a title="logger.writers.writer.Writer" href="writer.html#logger.writers.writer.Writer">Writer</a></b></code>:
 <ul class="hlist">
-<li><code><a title="logger.writers.writer.Writer.can_accept" href="writer.html#logger.writers.writer.Writer.can_accept">can_accept</a></code></li>
-<li><code><a title="logger.writers.writer.Writer.input_format" href="writer.html#logger.writers.writer.Writer.input_format">input_format</a></code></li>
+<li><code><a title="logger.writers.writer.Writer.can_process_record" href="../utils/base_module.html#logger.utils.base_module.BaseModule.can_process_record">can_process_record</a></code></li>
+<li><code><a title="logger.writers.writer.Writer.digest_record" href="../utils/base_module.html#logger.utils.base_module.BaseModule.digest_record">digest_record</a></code></li>
 </ul>
 </li>
 </ul>

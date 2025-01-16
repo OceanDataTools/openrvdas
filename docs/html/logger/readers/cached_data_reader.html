@@ -57,7 +57,7 @@ class CachedDataReader(Reader):
     &#34;&#34;&#34;
 
     def __init__(self, subscription, data_server=DEFAULT_SERVER_WEBSOCKET,
-                 use_wss=False, check_cert=False):
+                 bundle_seconds=0, use_wss=False, check_cert=False):
         &#34;&#34;&#34;
         ```
         subscription - a dictionary corresponding to the full
@@ -70,6 +70,10 @@ class CachedDataReader(Reader):
 
         data_server - the host and port at which to try to connect to a
             CachedDataServer
+
+        bundle_seconds - If specified, aggregate this many seconds worth of records
+                      and return as a list of records. Note that as implemented, it
+                      bundles by system clock time, and not by DASRecord timestamp.
 
         use_wss -     If True, use secure websockets
 
@@ -96,9 +100,15 @@ class CachedDataReader(Reader):
             raise ModuleNotFoundError(&#39;CachedDataReader(): websockets module is not &#39;
                                       &#39;installed. Please try &#34;pip3 install &#39;
                                       &#39;websockets&#34; prior to use.&#39;)
+        if not (isinstance(bundle_seconds, int) or isinstance(bundle_seconds, float)) \
+                or bundle_seconds &lt; 0:
+            raise ValueError(&#39;CachedDataReader parameter &#34;bundle_seconds&#34; must be a number &#39;
+                             f&#39;greater than or equal to zero. Found &#34;{bundle_seconds}&#34;&#39;)
+
         self.subscription = subscription
         subscription[&#39;type&#39;] = &#39;subscribe&#39;
         self.data_server = data_server
+        self.bundle_seconds = bundle_seconds
         self.use_wss = use_wss
         self.check_cert = check_cert
 
@@ -113,15 +123,15 @@ class CachedDataReader(Reader):
     ############################
     def _parse_response(self, response):
         &#34;&#34;&#34;Parse a CachedDataServer response and enqueue the resulting data.&#34;&#34;&#34;
-        if not response.get(&#39;type&#39;, None) == &#39;data&#39;:
+        if not response.get(&#39;type&#39;) == &#39;data&#39;:
             logging.info(&#39;Non-&#34;data&#34; response received from data &#39;
                          &#39;server: %s&#39;, response)
             return
-        if not response.get(&#39;status&#39;, None) == 200:
+        if not response.get(&#39;status&#39;) == 200:
             logging.warning(&#39;Non-&#34;200&#34; status received from data &#39;
                             &#39;server: %s&#39;, response)
             return
-        data = response.get(&#39;data&#39;, None)
+        data = response.get(&#39;data&#39;)
         if not data:
             logging.debug(&#39;No data found in data server response?: %s&#39;, response)
             return
@@ -248,16 +258,30 @@ class CachedDataReader(Reader):
                 daemon=True)
             self.websocket_thread.start()
 
+        start_time = time.time()
+        result_list = []
+
         # Use a timeout in our queue get() so we can periodically check if
         # we&#39;ve gotten a &#39;quit&#39;
         while not self.quit_flag:
             try:
-                result = self.queue.get(timeout=2)
+                result = self.queue.get(timeout=1)
                 logging.debug(&#39;Got result from queue: %s&#39;, result)
-                return result
+
+                # If we&#39;re not bundling results, just return the result
+                if not self.bundle_seconds:
+                    return result
+                else:
+                    result_list.append(result)
             except queue.Empty:
                 logging.debug(&#39;get() timed out - trying again&#39;)
                 pass
+
+            # If we&#39;ve been bundling long enough, return the list of records,
+            # or None if the list is empty.
+            now = time.time()
+            if now &gt; start_time + self.bundle_seconds:
+                return result_list
 
         # If we&#39;ve fallen out because of a quit...
         return None</code></pre>
@@ -274,7 +298,7 @@ class CachedDataReader(Reader):
 <dl>
 <dt id="logger.readers.cached_data_reader.CachedDataReader"><code class="flex name class">
 <span>class <span class="ident">CachedDataReader</span></span>
-<span>(</span><span>subscription, data_server='localhost:8766', use_wss=False, check_cert=False)</span>
+<span>(</span><span>subscription, data_server='localhost:8766', bundle_seconds=0, use_wss=False, check_cert=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Subscribe to and read field values from a CachedDataServer via
@@ -289,6 +313,10 @@ websocket connection.</p>
 
 data_server - the host and port at which to try to connect to a
     CachedDataServer
+
+bundle_seconds - If specified, aggregate this many seconds worth of records
+              and return as a list of records. Note that as implemented, it
+              bundles by system clock time, and not by DASRecord timestamp.
 
 use_wss -     If True, use secure websockets
 
@@ -318,7 +346,7 @@ check_cert  - If True and use_wss is True, check the server's TLS certificate
     &#34;&#34;&#34;
 
     def __init__(self, subscription, data_server=DEFAULT_SERVER_WEBSOCKET,
-                 use_wss=False, check_cert=False):
+                 bundle_seconds=0, use_wss=False, check_cert=False):
         &#34;&#34;&#34;
         ```
         subscription - a dictionary corresponding to the full
@@ -331,6 +359,10 @@ check_cert  - If True and use_wss is True, check the server's TLS certificate
 
         data_server - the host and port at which to try to connect to a
             CachedDataServer
+
+        bundle_seconds - If specified, aggregate this many seconds worth of records
+                      and return as a list of records. Note that as implemented, it
+                      bundles by system clock time, and not by DASRecord timestamp.
 
         use_wss -     If True, use secure websockets
 
@@ -357,9 +389,15 @@ check_cert  - If True and use_wss is True, check the server's TLS certificate
             raise ModuleNotFoundError(&#39;CachedDataReader(): websockets module is not &#39;
                                       &#39;installed. Please try &#34;pip3 install &#39;
                                       &#39;websockets&#34; prior to use.&#39;)
+        if not (isinstance(bundle_seconds, int) or isinstance(bundle_seconds, float)) \
+                or bundle_seconds &lt; 0:
+            raise ValueError(&#39;CachedDataReader parameter &#34;bundle_seconds&#34; must be a number &#39;
+                             f&#39;greater than or equal to zero. Found &#34;{bundle_seconds}&#34;&#39;)
+
         self.subscription = subscription
         subscription[&#39;type&#39;] = &#39;subscribe&#39;
         self.data_server = data_server
+        self.bundle_seconds = bundle_seconds
         self.use_wss = use_wss
         self.check_cert = check_cert
 
@@ -374,15 +412,15 @@ check_cert  - If True and use_wss is True, check the server's TLS certificate
     ############################
     def _parse_response(self, response):
         &#34;&#34;&#34;Parse a CachedDataServer response and enqueue the resulting data.&#34;&#34;&#34;
-        if not response.get(&#39;type&#39;, None) == &#39;data&#39;:
+        if not response.get(&#39;type&#39;) == &#39;data&#39;:
             logging.info(&#39;Non-&#34;data&#34; response received from data &#39;
                          &#39;server: %s&#39;, response)
             return
-        if not response.get(&#39;status&#39;, None) == 200:
+        if not response.get(&#39;status&#39;) == 200:
             logging.warning(&#39;Non-&#34;200&#34; status received from data &#39;
                             &#39;server: %s&#39;, response)
             return
-        data = response.get(&#39;data&#39;, None)
+        data = response.get(&#39;data&#39;)
         if not data:
             logging.debug(&#39;No data found in data server response?: %s&#39;, response)
             return
@@ -509,16 +547,30 @@ check_cert  - If True and use_wss is True, check the server's TLS certificate
                 daemon=True)
             self.websocket_thread.start()
 
+        start_time = time.time()
+        result_list = []
+
         # Use a timeout in our queue get() so we can periodically check if
         # we&#39;ve gotten a &#39;quit&#39;
         while not self.quit_flag:
             try:
-                result = self.queue.get(timeout=2)
+                result = self.queue.get(timeout=1)
                 logging.debug(&#39;Got result from queue: %s&#39;, result)
-                return result
+
+                # If we&#39;re not bundling results, just return the result
+                if not self.bundle_seconds:
+                    return result
+                else:
+                    result_list.append(result)
             except queue.Empty:
                 logging.debug(&#39;get() timed out - trying again&#39;)
                 pass
+
+            # If we&#39;ve been bundling long enough, return the list of records,
+            # or None if the list is empty.
+            now = time.time()
+            if now &gt; start_time + self.bundle_seconds:
+                return result_list
 
         # If we&#39;ve fallen out because of a quit...
         return None</code></pre>
@@ -564,16 +616,30 @@ check_cert  - If True and use_wss is True, check the server's TLS certificate
             daemon=True)
         self.websocket_thread.start()
 
+    start_time = time.time()
+    result_list = []
+
     # Use a timeout in our queue get() so we can periodically check if
     # we&#39;ve gotten a &#39;quit&#39;
     while not self.quit_flag:
         try:
-            result = self.queue.get(timeout=2)
+            result = self.queue.get(timeout=1)
             logging.debug(&#39;Got result from queue: %s&#39;, result)
-            return result
+
+            # If we&#39;re not bundling results, just return the result
+            if not self.bundle_seconds:
+                return result
+            else:
+                result_list.append(result)
         except queue.Empty:
             logging.debug(&#39;get() timed out - trying again&#39;)
             pass
+
+        # If we&#39;ve been bundling long enough, return the list of records,
+        # or None if the list is empty.
+        now = time.time()
+        if now &gt; start_time + self.bundle_seconds:
+            return result_list
 
     # If we&#39;ve fallen out because of a quit...
     return None</code></pre>

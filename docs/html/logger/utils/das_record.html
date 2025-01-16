@@ -54,9 +54,9 @@ class DASRecord:
         &#34;&#34;&#34;
         if json_str:
             parsed = json.loads(json_str)
-            self.data_id = parsed.get(&#39;data_id&#39;, None)
-            self.message_type = parsed.get(&#39;message_type&#39;, None)
-            self.timestamp = parsed.get(&#39;timestamp&#39;, None)
+            self.data_id = parsed.get(&#39;data_id&#39;)
+            self.message_type = parsed.get(&#39;message_type&#39;)
+            self.timestamp = parsed.get(&#39;timestamp&#39;)
             self.fields = parsed.get(&#39;fields&#39;, {})
             self.metadata = parsed.get(&#39;metadata&#39;, {})
         else:
@@ -108,6 +108,29 @@ class DASRecord:
                 self.fields == other.fields and
                 self.metadata == other.metadata)
 
+    ############################
+    def __setitem__(self, field, value):
+        self.fields[field] = value
+
+    ############################
+    def __getitem__(self, field):
+        try:
+            return self.fields[field]
+        except KeyError:
+            logging.error(f&#39;No field &#34;{field}&#34; found in DASRecord {self}&#39;)
+            raise
+
+    ############################
+    def __delitem__(self, field):
+        try:
+            del self.fields[field]
+        except KeyError:
+            logging.error(f&#39;Attempt to delete non-existent field &#34;{field}&#34; in DASRecord: {self}&#39;)
+
+    ############################
+    def get(self, field, default=None):
+        return self.fields.get(field, default)
+
 
 def to_das_record_list(record):
     &#34;&#34;&#34;Utility function to normalize different types of records into a
@@ -145,7 +168,7 @@ def to_das_record_list(record):
     elif &#39;timestamp&#39; in record and &#39;fields&#39; in record:
         return [DASRecord(timestamp=record[&#39;timestamp&#39;],
                           fields=record[&#39;fields&#39;],
-                          metadata=record.get(&#39;metadata&#39;, None))]
+                          metadata=record.get(&#39;metadata&#39;))]
 
     # If here, we believe we&#39;ve received a field dict, in which each
     # field may have multiple [timestamp, value] pairs. First thing we
@@ -234,7 +257,7 @@ and convert it into a list of zero or more DASRecords.</p></div>
     elif &#39;timestamp&#39; in record and &#39;fields&#39; in record:
         return [DASRecord(timestamp=record[&#39;timestamp&#39;],
                           fields=record[&#39;fields&#39;],
-                          metadata=record.get(&#39;metadata&#39;, None))]
+                          metadata=record.get(&#39;metadata&#39;))]
 
     # If here, we believe we&#39;ve received a field dict, in which each
     # field may have multiple [timestamp, value] pairs. First thing we
@@ -303,9 +326,9 @@ and metadata.</p>
         &#34;&#34;&#34;
         if json_str:
             parsed = json.loads(json_str)
-            self.data_id = parsed.get(&#39;data_id&#39;, None)
-            self.message_type = parsed.get(&#39;message_type&#39;, None)
-            self.timestamp = parsed.get(&#39;timestamp&#39;, None)
+            self.data_id = parsed.get(&#39;data_id&#39;)
+            self.message_type = parsed.get(&#39;message_type&#39;)
+            self.timestamp = parsed.get(&#39;timestamp&#39;)
             self.fields = parsed.get(&#39;fields&#39;, {})
             self.metadata = parsed.get(&#39;metadata&#39;, {})
         else:
@@ -355,7 +378,30 @@ and metadata.</p>
                 self.message_type == other.message_type and
                 self.timestamp == other.timestamp and
                 self.fields == other.fields and
-                self.metadata == other.metadata)</code></pre>
+                self.metadata == other.metadata)
+
+    ############################
+    def __setitem__(self, field, value):
+        self.fields[field] = value
+
+    ############################
+    def __getitem__(self, field):
+        try:
+            return self.fields[field]
+        except KeyError:
+            logging.error(f&#39;No field &#34;{field}&#34; found in DASRecord {self}&#39;)
+            raise
+
+    ############################
+    def __delitem__(self, field):
+        try:
+            del self.fields[field]
+        except KeyError:
+            logging.error(f&#39;Attempt to delete non-existent field &#34;{field}&#34; in DASRecord: {self}&#39;)
+
+    ############################
+    def get(self, field, default=None):
+        return self.fields.get(field, default)</code></pre>
 </details>
 <h3>Methods</h3>
 <dl>
@@ -381,6 +427,19 @@ and metadata.</p>
         return json.dumps(json_dict, sort_keys=True, indent=4)
     else:
         return json.dumps(json_dict)</code></pre>
+</details>
+</dd>
+<dt id="logger.utils.das_record.DASRecord.get"><code class="name flex">
+<span>def <span class="ident">get</span></span>(<span>self, field, default=None)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get(self, field, default=None):
+    return self.fields.get(field, default)</code></pre>
 </details>
 </dd>
 </dl>
@@ -410,6 +469,7 @@ and metadata.</p>
 <h4><code><a title="logger.utils.das_record.DASRecord" href="#logger.utils.das_record.DASRecord">DASRecord</a></code></h4>
 <ul class="">
 <li><code><a title="logger.utils.das_record.DASRecord.as_json" href="#logger.utils.das_record.DASRecord.as_json">as_json</a></code></li>
+<li><code><a title="logger.utils.das_record.DASRecord.get" href="#logger.utils.das_record.DASRecord.get">get</a></code></li>
 </ul>
 </li>
 </ul>

@@ -348,7 +348,7 @@ class SQLiteServerAPI(ServerAPI):
         config = self.get_configuration()
         if not config:
             return None
-        return config.get(&#39;active_mode&#39;, None)
+        return config.get(&#39;active_mode&#39;)
 
     ############################
     def get_default_mode(self):
@@ -358,7 +358,7 @@ class SQLiteServerAPI(ServerAPI):
         config = self.get_configuration()
         if not config:
             return None
-        return config.get(&#39;default_mode&#39;, None)
+        return config.get(&#39;default_mode&#39;)
 
     ############################
     def get_logger(self, logger):
@@ -383,7 +383,7 @@ class SQLiteServerAPI(ServerAPI):
 
         if &#39;loggers&#39; not in config:
             raise ValueError(&#39;No loggers found&#39;)
-        logger_configs = config.get(&#39;loggers&#39;, None)
+        logger_configs = config.get(&#39;loggers&#39;)
         if logger_configs is None:
             raise ValueError(&#39;No logger configurations found&#39;)
 
@@ -402,10 +402,10 @@ class SQLiteServerAPI(ServerAPI):
         config = self.get_configuration()
         if config is None:
             return {}
-        logger_configs = config.get(&#39;configs&#39;, None)
+        logger_configs = config.get(&#39;configs&#39;)
         if logger_configs is None:
             raise ValueError(&#39;No &#34;configs&#34; section found&#39;)
-        logger_config = logger_configs.get(config_name, None)
+        logger_config = logger_configs.get(config_name)
         if logger_config is None:
             raise ValueError(f&#39;No logger config &#34;{config_name}&#34; in config&#39;)
         return logger_config
@@ -436,25 +436,25 @@ class SQLiteServerAPI(ServerAPI):
         config = self.get_configuration()
         if not config:
             return {}
-        loggers = config.get(&#39;loggers&#39;, None)
+        loggers = config.get(&#39;loggers&#39;)
         if loggers is None:
             raise ValueError(&#39;No loggers found in config&#39;)
 
         # No mode, so we want the active mode
         if mode is None:
-            logger = loggers.get(logger_id, None)
+            logger = loggers.get(logger_id)
             if logger is None:
                 raise ValueError(f&#39;Logger id {logger_id} has no mode!&#39;)
-            conf_name = logger.get(&#39;active&#39;, None)
+            conf_name = logger.get(&#39;active&#39;)
             if conf_name is not None:
                 return conf_name
 
         # Mode given or no active conf, so get the default for this mode
         modes = config.get(&#39;modes&#39;)
-        mode_configs = modes.get(mode, None)
+        mode_configs = modes.get(mode)
         if mode_configs is None:
             raise ValueError(f&#39;Requested mode {mode} is not defined&#39;)
-        logger_config_name = mode_configs.get(logger_id, None)
+        logger_config_name = mode_configs.get(logger_id)
         if logger_config_name is None:
             raise ValueError(f&#39;Logger {logger_id} has no config defined in mode {mode}&#39;)
         return logger_config_name
@@ -477,7 +477,7 @@ class SQLiteServerAPI(ServerAPI):
         &#34;&#34;&#34;Set the current mode of the specified cruise in the data store.&#34;&#34;&#34;
 
         config = self.get_configuration()
-        modes = config.get(&#39;modes&#39;, None)
+        modes = config.get(&#39;modes&#39;)
         if not modes:
             raise ValueError(&#39;Config has no modes&#39;)
         if mode not in modes:
@@ -673,19 +673,27 @@ class SQLiteServerAPI(ServerAPI):
         # self.config[&#39;loaded_time&#39;] = datetime.utcnow().isoformat()
         self.config[&#39;loaded_time&#39;] = datetime.utcnow()
 
+        # Some syntactic sugar to simplify config definitions
+        configs = self.config.get(&#39;configs&#39;)
+        for config_name, config in configs.items():
+            if config is None:
+                raise ValueError(f&#39;No logger for &#34;{config_name}&#34; in cruise definition&#39;)
+            if &#39;name&#39; not in config:
+                self.config[&#39;configs&#39;][config_name][&#39;name&#39;] = config_name
+
         # Set cruise into default mode, if one is defined
-        if &#39;default_mode&#39; in config:
-            active_mode = config[&#39;default_mode&#39;]
+        if &#39;default_mode&#39; in self.config:
+            active_mode = self.config[&#39;default_mode&#39;]
             self.set_active_mode(active_mode)
         else:
             logging.warn(&#39;Cruise has no default mode&#39;)
         # Why not send the entire config to the CDS?  Why
         # just *almost* all of it?  JSON issue?
-        cruise = config.get(&#39;cruise&#39;, None)
+        cruise = self.config.get(&#39;cruise&#39;)
         if cruise:
             for key in [&#39;id&#39;, &#39;start&#39;, &#39;end&#39;]:
                 if key not in self.config:
-                    self.config[key] = cruise.get(key, None)
+                    self.config[key] = cruise.get(key)
         self._save_config()
         self.signal_load()
 
@@ -1062,7 +1070,7 @@ rather than creating a new database.</p></div>
         config = self.get_configuration()
         if not config:
             return None
-        return config.get(&#39;active_mode&#39;, None)
+        return config.get(&#39;active_mode&#39;)
 
     ############################
     def get_default_mode(self):
@@ -1072,7 +1080,7 @@ rather than creating a new database.</p></div>
         config = self.get_configuration()
         if not config:
             return None
-        return config.get(&#39;default_mode&#39;, None)
+        return config.get(&#39;default_mode&#39;)
 
     ############################
     def get_logger(self, logger):
@@ -1097,7 +1105,7 @@ rather than creating a new database.</p></div>
 
         if &#39;loggers&#39; not in config:
             raise ValueError(&#39;No loggers found&#39;)
-        logger_configs = config.get(&#39;loggers&#39;, None)
+        logger_configs = config.get(&#39;loggers&#39;)
         if logger_configs is None:
             raise ValueError(&#39;No logger configurations found&#39;)
 
@@ -1116,10 +1124,10 @@ rather than creating a new database.</p></div>
         config = self.get_configuration()
         if config is None:
             return {}
-        logger_configs = config.get(&#39;configs&#39;, None)
+        logger_configs = config.get(&#39;configs&#39;)
         if logger_configs is None:
             raise ValueError(&#39;No &#34;configs&#34; section found&#39;)
-        logger_config = logger_configs.get(config_name, None)
+        logger_config = logger_configs.get(config_name)
         if logger_config is None:
             raise ValueError(f&#39;No logger config &#34;{config_name}&#34; in config&#39;)
         return logger_config
@@ -1150,25 +1158,25 @@ rather than creating a new database.</p></div>
         config = self.get_configuration()
         if not config:
             return {}
-        loggers = config.get(&#39;loggers&#39;, None)
+        loggers = config.get(&#39;loggers&#39;)
         if loggers is None:
             raise ValueError(&#39;No loggers found in config&#39;)
 
         # No mode, so we want the active mode
         if mode is None:
-            logger = loggers.get(logger_id, None)
+            logger = loggers.get(logger_id)
             if logger is None:
                 raise ValueError(f&#39;Logger id {logger_id} has no mode!&#39;)
-            conf_name = logger.get(&#39;active&#39;, None)
+            conf_name = logger.get(&#39;active&#39;)
             if conf_name is not None:
                 return conf_name
 
         # Mode given or no active conf, so get the default for this mode
         modes = config.get(&#39;modes&#39;)
-        mode_configs = modes.get(mode, None)
+        mode_configs = modes.get(mode)
         if mode_configs is None:
             raise ValueError(f&#39;Requested mode {mode} is not defined&#39;)
-        logger_config_name = mode_configs.get(logger_id, None)
+        logger_config_name = mode_configs.get(logger_id)
         if logger_config_name is None:
             raise ValueError(f&#39;Logger {logger_id} has no config defined in mode {mode}&#39;)
         return logger_config_name
@@ -1191,7 +1199,7 @@ rather than creating a new database.</p></div>
         &#34;&#34;&#34;Set the current mode of the specified cruise in the data store.&#34;&#34;&#34;
 
         config = self.get_configuration()
-        modes = config.get(&#39;modes&#39;, None)
+        modes = config.get(&#39;modes&#39;)
         if not modes:
             raise ValueError(&#39;Config has no modes&#39;)
         if mode not in modes:
@@ -1387,19 +1395,27 @@ rather than creating a new database.</p></div>
         # self.config[&#39;loaded_time&#39;] = datetime.utcnow().isoformat()
         self.config[&#39;loaded_time&#39;] = datetime.utcnow()
 
+        # Some syntactic sugar to simplify config definitions
+        configs = self.config.get(&#39;configs&#39;)
+        for config_name, config in configs.items():
+            if config is None:
+                raise ValueError(f&#39;No logger for &#34;{config_name}&#34; in cruise definition&#39;)
+            if &#39;name&#39; not in config:
+                self.config[&#39;configs&#39;][config_name][&#39;name&#39;] = config_name
+
         # Set cruise into default mode, if one is defined
-        if &#39;default_mode&#39; in config:
-            active_mode = config[&#39;default_mode&#39;]
+        if &#39;default_mode&#39; in self.config:
+            active_mode = self.config[&#39;default_mode&#39;]
             self.set_active_mode(active_mode)
         else:
             logging.warn(&#39;Cruise has no default mode&#39;)
         # Why not send the entire config to the CDS?  Why
         # just *almost* all of it?  JSON issue?
-        cruise = config.get(&#39;cruise&#39;, None)
+        cruise = self.config.get(&#39;cruise&#39;)
         if cruise:
             for key in [&#39;id&#39;, &#39;start&#39;, &#39;end&#39;]:
                 if key not in self.config:
-                    self.config[key] = cruise.get(key, None)
+                    self.config[key] = cruise.get(key)
         self._save_config()
         self.signal_load()
 
@@ -1529,7 +1545,7 @@ rather than creating a new database.</p></div>
     config = self.get_configuration()
     if not config:
         return None
-    return config.get(&#39;active_mode&#39;, None)</code></pre>
+    return config.get(&#39;active_mode&#39;)</code></pre>
 </details>
 </dd>
 <dt id="server.sqlite_server_api.SQLiteServerAPI.get_configuration"><code class="name flex">
@@ -1565,7 +1581,7 @@ from the. data store.</p></div>
     config = self.get_configuration()
     if not config:
         return None
-    return config.get(&#39;default_mode&#39;, None)</code></pre>
+    return config.get(&#39;default_mode&#39;)</code></pre>
 </details>
 </dd>
 <dt id="server.sqlite_server_api.SQLiteServerAPI.get_logger"><code class="name flex">
@@ -1601,10 +1617,10 @@ from the. data store.</p></div>
     config = self.get_configuration()
     if config is None:
         return {}
-    logger_configs = config.get(&#39;configs&#39;, None)
+    logger_configs = config.get(&#39;configs&#39;)
     if logger_configs is None:
         raise ValueError(&#39;No &#34;configs&#34; section found&#39;)
-    logger_config = logger_configs.get(config_name, None)
+    logger_config = logger_configs.get(config_name)
     if logger_config is None:
         raise ValueError(f&#39;No logger config &#34;{config_name}&#34; in config&#39;)
     return logger_config</code></pre>
@@ -1630,25 +1646,25 @@ current config.</p></div>
     config = self.get_configuration()
     if not config:
         return {}
-    loggers = config.get(&#39;loggers&#39;, None)
+    loggers = config.get(&#39;loggers&#39;)
     if loggers is None:
         raise ValueError(&#39;No loggers found in config&#39;)
 
     # No mode, so we want the active mode
     if mode is None:
-        logger = loggers.get(logger_id, None)
+        logger = loggers.get(logger_id)
         if logger is None:
             raise ValueError(f&#39;Logger id {logger_id} has no mode!&#39;)
-        conf_name = logger.get(&#39;active&#39;, None)
+        conf_name = logger.get(&#39;active&#39;)
         if conf_name is not None:
             return conf_name
 
     # Mode given or no active conf, so get the default for this mode
     modes = config.get(&#39;modes&#39;)
-    mode_configs = modes.get(mode, None)
+    mode_configs = modes.get(mode)
     if mode_configs is None:
         raise ValueError(f&#39;Requested mode {mode} is not defined&#39;)
-    logger_config_name = mode_configs.get(logger_id, None)
+    logger_config_name = mode_configs.get(logger_id)
     if logger_config_name is None:
         raise ValueError(f&#39;Logger {logger_id} has no config defined in mode {mode}&#39;)
     return logger_config_name</code></pre>
@@ -1731,7 +1747,7 @@ for all loggers.</p></div>
 
     if &#39;loggers&#39; not in config:
         raise ValueError(&#39;No loggers found&#39;)
-    logger_configs = config.get(&#39;loggers&#39;, None)
+    logger_configs = config.get(&#39;loggers&#39;)
     if logger_configs is None:
         raise ValueError(&#39;No logger configurations found&#39;)
 
@@ -1784,19 +1800,27 @@ default) to the data store.</p></div>
     # self.config[&#39;loaded_time&#39;] = datetime.utcnow().isoformat()
     self.config[&#39;loaded_time&#39;] = datetime.utcnow()
 
+    # Some syntactic sugar to simplify config definitions
+    configs = self.config.get(&#39;configs&#39;)
+    for config_name, config in configs.items():
+        if config is None:
+            raise ValueError(f&#39;No logger for &#34;{config_name}&#34; in cruise definition&#39;)
+        if &#39;name&#39; not in config:
+            self.config[&#39;configs&#39;][config_name][&#39;name&#39;] = config_name
+
     # Set cruise into default mode, if one is defined
-    if &#39;default_mode&#39; in config:
-        active_mode = config[&#39;default_mode&#39;]
+    if &#39;default_mode&#39; in self.config:
+        active_mode = self.config[&#39;default_mode&#39;]
         self.set_active_mode(active_mode)
     else:
         logging.warn(&#39;Cruise has no default mode&#39;)
     # Why not send the entire config to the CDS?  Why
     # just *almost* all of it?  JSON issue?
-    cruise = config.get(&#39;cruise&#39;, None)
+    cruise = self.config.get(&#39;cruise&#39;)
     if cruise:
         for key in [&#39;id&#39;, &#39;start&#39;, &#39;end&#39;]:
             if key not in self.config:
-                self.config[key] = cruise.get(key, None)
+                self.config[key] = cruise.get(key)
     self._save_config()
     self.signal_load()</code></pre>
 </details>
@@ -1838,7 +1862,7 @@ calling us to have made that determination.</p></div>
     &#34;&#34;&#34;Set the current mode of the specified cruise in the data store.&#34;&#34;&#34;
 
     config = self.get_configuration()
-    modes = config.get(&#39;modes&#39;, None)
+    modes = config.get(&#39;modes&#39;)
     if not modes:
         raise ValueError(&#39;Config has no modes&#39;)
     if mode not in modes:

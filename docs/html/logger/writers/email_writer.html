@@ -40,14 +40,13 @@ from email.message import EmailMessage
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
-from logger.utils.formats import Text  # noqa: E402
 from logger.writers.writer import Writer  # noqa: E402
 
 
 class EmailWriter(Writer):
     &#34;&#34;&#34;Send the record as an email message.&#34;&#34;&#34;
 
-    def __init__(self, to, sender=None, subject=None, max_freq=3 * 60):
+    def __init__(self, to, sender=None, subject=None, max_freq=3 * 60, quiet=False):
         &#34;&#34;&#34;
         ```
         to           Comma-separated list of email addresses
@@ -64,7 +63,7 @@ class EmailWriter(Writer):
         configured and running if you wish to send email anywhere other than
         localhost.
         &#34;&#34;&#34;
-        super().__init__(input_format=Text)
+        super().__init__(quiet=quiet)
 
         if not sender:
             username = getpass.getuser()
@@ -150,7 +149,7 @@ class EmailWriter(Writer):
 <dl>
 <dt id="logger.writers.email_writer.EmailWriter"><code class="flex name class">
 <span>class <span class="ident">EmailWriter</span></span>
-<span>(</span><span>to, sender=None, subject=None, max_freq=180)</span>
+<span>(</span><span>to, sender=None, subject=None, max_freq=180, quiet=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Send the record as an email message.</p>
@@ -174,7 +173,7 @@ localhost.</p></div>
 <pre><code class="python">class EmailWriter(Writer):
     &#34;&#34;&#34;Send the record as an email message.&#34;&#34;&#34;
 
-    def __init__(self, to, sender=None, subject=None, max_freq=3 * 60):
+    def __init__(self, to, sender=None, subject=None, max_freq=3 * 60, quiet=False):
         &#34;&#34;&#34;
         ```
         to           Comma-separated list of email addresses
@@ -191,7 +190,7 @@ localhost.</p></div>
         configured and running if you wish to send email anywhere other than
         localhost.
         &#34;&#34;&#34;
-        super().__init__(input_format=Text)
+        super().__init__(quiet=quiet)
 
         if not sender:
             username = getpass.getuser()
@@ -268,6 +267,7 @@ localhost.</p></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="logger.writers.writer.Writer" href="writer.html#logger.writers.writer.Writer">Writer</a></li>
+<li><a title="logger.utils.base_module.BaseModule" href="../utils/base_module.html#logger.utils.base_module.BaseModule">BaseModule</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -304,8 +304,8 @@ localhost.</p></div>
 <ul class="hlist">
 <li><code><b><a title="logger.writers.writer.Writer" href="writer.html#logger.writers.writer.Writer">Writer</a></b></code>:
 <ul class="hlist">
-<li><code><a title="logger.writers.writer.Writer.can_accept" href="writer.html#logger.writers.writer.Writer.can_accept">can_accept</a></code></li>
-<li><code><a title="logger.writers.writer.Writer.input_format" href="writer.html#logger.writers.writer.Writer.input_format">input_format</a></code></li>
+<li><code><a title="logger.writers.writer.Writer.can_process_record" href="../utils/base_module.html#logger.utils.base_module.BaseModule.can_process_record">can_process_record</a></code></li>
+<li><code><a title="logger.writers.writer.Writer.digest_record" href="../utils/base_module.html#logger.utils.base_module.BaseModule.digest_record">digest_record</a></code></li>
 </ul>
 </li>
 </ul>

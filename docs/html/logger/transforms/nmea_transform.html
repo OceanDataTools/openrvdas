@@ -199,11 +199,11 @@ class MWDTransform:
                  that&#39;s creating the message.
         ```
         &#34;&#34;&#34;
-        self.true_wind_dir_field = kwargs.get(&#39;true_wind_dir_field&#39;, None)
-        self.true_wind_speed_kt_field = kwargs.get(&#39;true_wind_speed_kt_field&#39;, None)
-        self.true_wind_speed_ms_field = kwargs.get(&#39;true_wind_speed_ms_field&#39;, None)
-        self.magnetic_variation_field = kwargs.get(&#39;magnetic_variation_field&#39;, None)
-        self.mwd_talker_id = kwargs.get(&#39;mwd_talker_id&#39;, None)
+        self.true_wind_dir_field = kwargs.get(&#39;true_wind_dir_field&#39;)
+        self.true_wind_speed_kt_field = kwargs.get(&#39;true_wind_speed_kt_field&#39;)
+        self.true_wind_speed_ms_field = kwargs.get(&#39;true_wind_speed_ms_field&#39;)
+        self.magnetic_variation_field = kwargs.get(&#39;magnetic_variation_field&#39;)
+        self.mwd_talker_id = kwargs.get(&#39;mwd_talker_id&#39;)
 
         self.true_wind_dir = None
         self.true_wind_speed_kt = None
@@ -220,7 +220,7 @@ class MWDTransform:
         if not record or type(record) is not dict:
             logging.warning(&#39;Improper type for record: %s&#39;, type(record))
             return None
-        fields = record.get(&#39;fields&#39;, None)
+        fields = record.get(&#39;fields&#39;)
         if not fields:
             logging.debug(&#39;MWDTransform got record with no fields: %s&#39;, record)
             return None
@@ -333,16 +333,16 @@ class XDRTransform:
                  that&#39;s creating the message.
         ```
         &#34;&#34;&#34;
-        self.barometer_field = kwargs.get(&#39;barometer_field&#39;, None)
+        self.barometer_field = kwargs.get(&#39;barometer_field&#39;)
         self.barometer_output_field = kwargs.get(&#39;barometer_output_field&#39;,
                                                  self.barometer_field)
-        self.air_temp_field = kwargs.get(&#39;air_temp_field&#39;, None)
+        self.air_temp_field = kwargs.get(&#39;air_temp_field&#39;)
         self.air_temp_output_field = kwargs.get(&#39;air_temp_output_field&#39;,
                                                 self.air_temp_field)
-        self.sea_temp_field = kwargs.get(&#39;sea_temp_field&#39;, None)
+        self.sea_temp_field = kwargs.get(&#39;sea_temp_field&#39;)
         self.sea_temp_output_field = kwargs.get(&#39;sea_temp_output_field&#39;,
                                                 self.sea_temp_field)
-        self.xdr_talker_id = kwargs.get(&#39;xdr_talker_id&#39;, None)
+        self.xdr_talker_id = kwargs.get(&#39;xdr_talker_id&#39;)
 
     ############################
     def transform(self, record):
@@ -354,7 +354,7 @@ class XDRTransform:
         if not record or type(record) is not dict:
             logging.warning(&#39;Improper type for value dict: %s&#39;, type(record))
             return None
-        fields = record.get(&#39;fields&#39;, None)
+        fields = record.get(&#39;fields&#39;)
         if not fields:
             logging.debug(&#39;XDRTransform got record with no fields: %s&#39;, record)
             return None
@@ -414,10 +414,10 @@ class DPTTransform:
         ```
         &#34;&#34;&#34;
 
-        self.depth_field = kwargs.get(&#39;depth_field&#39;, None)
-        self.offset_field = kwargs.get(&#39;offset_field&#39;, None)
+        self.depth_field = kwargs.get(&#39;depth_field&#39;)
+        self.offset_field = kwargs.get(&#39;offset_field&#39;)
 
-        self.dpt_talker_id = kwargs.get(&#39;dpt_talker_id&#39;, None)
+        self.dpt_talker_id = kwargs.get(&#39;dpt_talker_id&#39;)
 
     ############################
     def transform(self, record):
@@ -429,7 +429,7 @@ class DPTTransform:
         if not record or type(record) is not dict:
             logging.warning(&#39;Improper type for record: %s&#39;, type(record))
             return None
-        fields = record.get(&#39;fields&#39;, None)
+        fields = record.get(&#39;fields&#39;)
         if not fields:
             logging.debug(&#39;MWDTransform got record with no fields: %s&#39;, record)
             return None
@@ -473,9 +473,9 @@ class STNTransform:
                  that&#39;s creating the message.
         ```
         &#34;&#34;&#34;
-        self.id_field = kwargs.get(&#39;id_field&#39;, None)
+        self.id_field = kwargs.get(&#39;id_field&#39;)
 
-        self.stn_talker_id = kwargs.get(&#39;stn_talker_id&#39;, None)
+        self.stn_talker_id = kwargs.get(&#39;stn_talker_id&#39;)
 
     ############################
     def transform(self, record):
@@ -486,7 +486,7 @@ class STNTransform:
         if not record or type(record) is not dict:
             logging.warning(&#39;Improper type for record: %s&#39;, type(record))
             return None
-        fields = record.get(&#39;fields&#39;, None)
+        fields = record.get(&#39;fields&#39;)
         if not fields:
             logging.debug(&#39;MWDTransform got record with no fields: %s&#39;, record)
             return None
@@ -583,10 +583,10 @@ dpt_talker_id
         ```
         &#34;&#34;&#34;
 
-        self.depth_field = kwargs.get(&#39;depth_field&#39;, None)
-        self.offset_field = kwargs.get(&#39;offset_field&#39;, None)
+        self.depth_field = kwargs.get(&#39;depth_field&#39;)
+        self.offset_field = kwargs.get(&#39;offset_field&#39;)
 
-        self.dpt_talker_id = kwargs.get(&#39;dpt_talker_id&#39;, None)
+        self.dpt_talker_id = kwargs.get(&#39;dpt_talker_id&#39;)
 
     ############################
     def transform(self, record):
@@ -598,7 +598,7 @@ dpt_talker_id
         if not record or type(record) is not dict:
             logging.warning(&#39;Improper type for record: %s&#39;, type(record))
             return None
-        fields = record.get(&#39;fields&#39;, None)
+        fields = record.get(&#39;fields&#39;)
         if not fields:
             logging.debug(&#39;MWDTransform got record with no fields: %s&#39;, record)
             return None
@@ -634,7 +634,7 @@ new true wind value, return the results.</p></div>
     if not record or type(record) is not dict:
         logging.warning(&#39;Improper type for record: %s&#39;, type(record))
         return None
-    fields = record.get(&#39;fields&#39;, None)
+    fields = record.get(&#39;fields&#39;)
     if not fields:
         logging.debug(&#39;MWDTransform got record with no fields: %s&#39;, record)
         return None
@@ -704,11 +704,11 @@ mwd_talker_id
                  that&#39;s creating the message.
         ```
         &#34;&#34;&#34;
-        self.true_wind_dir_field = kwargs.get(&#39;true_wind_dir_field&#39;, None)
-        self.true_wind_speed_kt_field = kwargs.get(&#39;true_wind_speed_kt_field&#39;, None)
-        self.true_wind_speed_ms_field = kwargs.get(&#39;true_wind_speed_ms_field&#39;, None)
-        self.magnetic_variation_field = kwargs.get(&#39;magnetic_variation_field&#39;, None)
-        self.mwd_talker_id = kwargs.get(&#39;mwd_talker_id&#39;, None)
+        self.true_wind_dir_field = kwargs.get(&#39;true_wind_dir_field&#39;)
+        self.true_wind_speed_kt_field = kwargs.get(&#39;true_wind_speed_kt_field&#39;)
+        self.true_wind_speed_ms_field = kwargs.get(&#39;true_wind_speed_ms_field&#39;)
+        self.magnetic_variation_field = kwargs.get(&#39;magnetic_variation_field&#39;)
+        self.mwd_talker_id = kwargs.get(&#39;mwd_talker_id&#39;)
 
         self.true_wind_dir = None
         self.true_wind_speed_kt = None
@@ -725,7 +725,7 @@ mwd_talker_id
         if not record or type(record) is not dict:
             logging.warning(&#39;Improper type for record: %s&#39;, type(record))
             return None
-        fields = record.get(&#39;fields&#39;, None)
+        fields = record.get(&#39;fields&#39;)
         if not fields:
             logging.debug(&#39;MWDTransform got record with no fields: %s&#39;, record)
             return None
@@ -798,7 +798,7 @@ new MWD record, return it.</p></div>
     if not record or type(record) is not dict:
         logging.warning(&#39;Improper type for record: %s&#39;, type(record))
         return None
-    fields = record.get(&#39;fields&#39;, None)
+    fields = record.get(&#39;fields&#39;)
     if not fields:
         logging.debug(&#39;MWDTransform got record with no fields: %s&#39;, record)
         return None
@@ -1037,9 +1037,9 @@ stn_talker_id
                  that&#39;s creating the message.
         ```
         &#34;&#34;&#34;
-        self.id_field = kwargs.get(&#39;id_field&#39;, None)
+        self.id_field = kwargs.get(&#39;id_field&#39;)
 
-        self.stn_talker_id = kwargs.get(&#39;stn_talker_id&#39;, None)
+        self.stn_talker_id = kwargs.get(&#39;stn_talker_id&#39;)
 
     ############################
     def transform(self, record):
@@ -1050,7 +1050,7 @@ stn_talker_id
         if not record or type(record) is not dict:
             logging.warning(&#39;Improper type for record: %s&#39;, type(record))
             return None
-        fields = record.get(&#39;fields&#39;, None)
+        fields = record.get(&#39;fields&#39;)
         if not fields:
             logging.debug(&#39;MWDTransform got record with no fields: %s&#39;, record)
             return None
@@ -1083,7 +1083,7 @@ stn_talker_id
     if not record or type(record) is not dict:
         logging.warning(&#39;Improper type for record: %s&#39;, type(record))
         return None
-    fields = record.get(&#39;fields&#39;, None)
+    fields = record.get(&#39;fields&#39;)
     if not fields:
         logging.debug(&#39;MWDTransform got record with no fields: %s&#39;, record)
         return None
@@ -1158,16 +1158,16 @@ talker_id
                  that&#39;s creating the message.
         ```
         &#34;&#34;&#34;
-        self.barometer_field = kwargs.get(&#39;barometer_field&#39;, None)
+        self.barometer_field = kwargs.get(&#39;barometer_field&#39;)
         self.barometer_output_field = kwargs.get(&#39;barometer_output_field&#39;,
                                                  self.barometer_field)
-        self.air_temp_field = kwargs.get(&#39;air_temp_field&#39;, None)
+        self.air_temp_field = kwargs.get(&#39;air_temp_field&#39;)
         self.air_temp_output_field = kwargs.get(&#39;air_temp_output_field&#39;,
                                                 self.air_temp_field)
-        self.sea_temp_field = kwargs.get(&#39;sea_temp_field&#39;, None)
+        self.sea_temp_field = kwargs.get(&#39;sea_temp_field&#39;)
         self.sea_temp_output_field = kwargs.get(&#39;sea_temp_output_field&#39;,
                                                 self.sea_temp_field)
-        self.xdr_talker_id = kwargs.get(&#39;xdr_talker_id&#39;, None)
+        self.xdr_talker_id = kwargs.get(&#39;xdr_talker_id&#39;)
 
     ############################
     def transform(self, record):
@@ -1179,7 +1179,7 @@ talker_id
         if not record or type(record) is not dict:
             logging.warning(&#39;Improper type for value dict: %s&#39;, type(record))
             return None
-        fields = record.get(&#39;fields&#39;, None)
+        fields = record.get(&#39;fields&#39;)
         if not fields:
             logging.debug(&#39;XDRTransform got record with no fields: %s&#39;, record)
             return None
@@ -1230,7 +1230,7 @@ new true wind value, return the results.</p></div>
     if not record or type(record) is not dict:
         logging.warning(&#39;Improper type for value dict: %s&#39;, type(record))
         return None
-    fields = record.get(&#39;fields&#39;, None)
+    fields = record.get(&#39;fields&#39;)
     if not fields:
         logging.debug(&#39;XDRTransform got record with no fields: %s&#39;, record)
         return None

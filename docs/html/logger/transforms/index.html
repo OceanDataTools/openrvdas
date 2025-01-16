@@ -22,6 +22,43 @@
 <h1 class="title">Module <code>logger.transforms</code></h1>
 </header>
 <section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python"># flake8: noqa F401
+
+from .count_transform import CountTransform
+from .delta_transform import DeltaTransform
+from .derived_data_transform import DerivedDataTransform
+from .extract_field_transform import ExtractFieldTransform
+from .format_transform import FormatTransform
+from .from_json_transform import FromJSONTransform
+from .geofence_transform import GeofenceTransform
+from .interpolation_transform import InterpolationTransform
+from .max_min_transform import MaxMinTransform
+from .modify_value_transform import ModifyValueTransform
+from .nmea_checksum_transform import NMEAChecksumTransform
+from .nmea_transform import NMEATransform
+from .parse_nmea_transform import ParseNMEATransform
+from .parse_transform import ParseTransform
+from .prefix_transform import PrefixTransform
+from .qc_filter_transform import QCFilterTransform
+from .regex_filter_transform import RegexFilterTransform
+from .regex_replace_transform import RegexReplaceTransform
+from .select_fields_transform import SelectFieldsTransform
+from .slice_transform import SliceTransform
+from .split_transform import SplitTransform
+from .strip_transform import StripTransform
+from .subsample_transform import SubsampleTransform
+from .timestamp_transform import TimestampTransform
+from .to_das_record_transform import ToDASRecordTransform
+from .to_json_transform import ToJSONTransform
+from .true_winds_transform import TrueWindsTransform
+from .unique_transform import UniqueTransform
+from .value_filter_transform import ValueFilterTransform
+from .xml_aggregator_transform import XMLAggregatorTransform</code></pre>
+</details>
 </section>
 <section>
 <h2 class="section-title" id="header-submodules">Sub-modules</h2>
@@ -63,6 +100,10 @@ time. Emit pre-defined messages if lat/lon transition between …</p></div>
 <dt><code class="name"><a title="logger.transforms.max_min_transform" href="max_min_transform.html">logger.transforms.max_min_transform</a></code></dt>
 <dd>
 <div class="desc"></div>
+</dd>
+<dt><code class="name"><a title="logger.transforms.modify_value_transform" href="modify_value_transform.html">logger.transforms.modify_value_transform</a></code></dt>
+<dd>
+<div class="desc"><p>Modify values according to simple formula</p></div>
 </dd>
 <dt><code class="name"><a title="logger.transforms.nmea_checksum_transform" href="nmea_checksum_transform.html">logger.transforms.nmea_checksum_transform</a></code></dt>
 <dd>
@@ -132,7 +173,9 @@ NMEA …</p></div>
 </dd>
 <dt><code class="name"><a title="logger.transforms.transform" href="transform.html">logger.transforms.transform</a></code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>The biggest thing that the abstract parent class Transform now does is help
+with (optional) type checking of the child class' inputs. In the past, an
+…</p></div>
 </dd>
 <dt><code class="name"><a title="logger.transforms.true_winds_transform" href="true_winds_transform.html">logger.transforms.true_winds_transform</a></code></dt>
 <dd>
@@ -183,6 +226,7 @@ record have changed from the previous value.</p></div>
 <li><code><a title="logger.transforms.geofence_transform" href="geofence_transform.html">logger.transforms.geofence_transform</a></code></li>
 <li><code><a title="logger.transforms.interpolation_transform" href="interpolation_transform.html">logger.transforms.interpolation_transform</a></code></li>
 <li><code><a title="logger.transforms.max_min_transform" href="max_min_transform.html">logger.transforms.max_min_transform</a></code></li>
+<li><code><a title="logger.transforms.modify_value_transform" href="modify_value_transform.html">logger.transforms.modify_value_transform</a></code></li>
 <li><code><a title="logger.transforms.nmea_checksum_transform" href="nmea_checksum_transform.html">logger.transforms.nmea_checksum_transform</a></code></li>
 <li><code><a title="logger.transforms.nmea_transform" href="nmea_transform.html">logger.transforms.nmea_transform</a></code></li>
 <li><code><a title="logger.transforms.parse_nmea_transform" href="parse_nmea_transform.html">logger.transforms.parse_nmea_transform</a></code></li>

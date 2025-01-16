@@ -22,6 +22,27 @@
 <h1 class="title">Module <code>logger.readers</code></h1>
 </header>
 <section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python"># flake8: noqa F401
+
+from .cached_data_reader import CachedDataReader
+from .composed_reader import ComposedReader
+from .database_reader import DatabaseReader
+from .logfile_reader import LogfileReader
+from .modbus_reader import ModBusTCPReader
+from .mqtt_reader import MQTTReader
+from .network_reader import NetworkReader
+from .polled_serial_reader import PolledSerialReader
+from .redis_reader import RedisReader
+from .serial_reader import SerialReader
+from .tcp_reader import TCPReader
+from .text_file_reader import TextFileReader
+from .timeout_reader import TimeoutReader
+from .udp_reader import UDPReader</code></pre>
+</details>
 </section>
 <section>
 <h2 class="section-title" id="header-submodules">Sub-modules</h2>
@@ -38,6 +59,10 @@
 <dd>
 <div class="desc"></div>
 </dd>
+<dt><code class="name"><a title="logger.readers.fake_polled_serial_reader" href="fake_polled_serial_reader.html">logger.readers.fake_polled_serial_reader</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt><code class="name"><a title="logger.readers.logfile_reader" href="logfile_reader.html">logger.readers.logfile_reader</a></code></dt>
 <dd>
 <div class="desc"></div>
@@ -47,6 +72,10 @@
 <div class="desc"></div>
 </dd>
 <dt><code class="name"><a title="logger.readers.mqtt_reader" href="mqtt_reader.html">logger.readers.mqtt_reader</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt><code class="name"><a title="logger.readers.mqtt_reader_new" href="mqtt_reader_new.html">logger.readers.mqtt_reader_new</a></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -115,9 +144,11 @@
 <li><code><a title="logger.readers.cached_data_reader" href="cached_data_reader.html">logger.readers.cached_data_reader</a></code></li>
 <li><code><a title="logger.readers.composed_reader" href="composed_reader.html">logger.readers.composed_reader</a></code></li>
 <li><code><a title="logger.readers.database_reader" href="database_reader.html">logger.readers.database_reader</a></code></li>
+<li><code><a title="logger.readers.fake_polled_serial_reader" href="fake_polled_serial_reader.html">logger.readers.fake_polled_serial_reader</a></code></li>
 <li><code><a title="logger.readers.logfile_reader" href="logfile_reader.html">logger.readers.logfile_reader</a></code></li>
 <li><code><a title="logger.readers.modbus_reader" href="modbus_reader.html">logger.readers.modbus_reader</a></code></li>
 <li><code><a title="logger.readers.mqtt_reader" href="mqtt_reader.html">logger.readers.mqtt_reader</a></code></li>
+<li><code><a title="logger.readers.mqtt_reader_new" href="mqtt_reader_new.html">logger.readers.mqtt_reader_new</a></code></li>
 <li><code><a title="logger.readers.network_reader" href="network_reader.html">logger.readers.network_reader</a></code></li>
 <li><code><a title="logger.readers.polled_serial_reader" href="polled_serial_reader.html">logger.readers.polled_serial_reader</a></code></li>
 <li><code><a title="logger.readers.reader" href="reader.html">logger.readers.reader</a></code></li>

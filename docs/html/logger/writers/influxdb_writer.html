@@ -31,7 +31,7 @@
 import time
 import logging
 import sys
-
+from typing import Union
 try:
     import urllib3
     URLLIB3_INSTALLED = True
@@ -42,7 +42,6 @@ from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
 from logger.utils.das_record import DASRecord  # noqa: E402
-from logger.utils.formats import Text  # noqa: E402
 from logger.writers.writer import Writer  # noqa: E402
 
 INFLUXDB_AUTH_TOKEN = INFLUXDB_ORG = INFLUXDB_URL = INFLUXDB_BUCKET = None
@@ -69,7 +68,7 @@ class InfluxDBWriter(Writer):
     def __init__(self, bucket_name=INFLUXDB_BUCKET, measurement_name=None,
                  auth_token=INFLUXDB_AUTH_TOKEN,
                  org=INFLUXDB_ORG, url=INFLUXDB_URL,
-                 verify_ssl=INFLUXDB_VERIFY_SSL):
+                 verify_ssl=INFLUXDB_VERIFY_SSL, quiet=False):
         &#34;&#34;&#34;Write data records to the InfluxDB.
         ```
         bucket_name - the name of the bucket in InfluxDB.  If the bucket does
@@ -95,7 +94,7 @@ class InfluxDBWriter(Writer):
                   attempt to verify the validity of the relevant SSL certificate.
         ```
         &#34;&#34;&#34;
-        super().__init__(input_format=Text)  # type: ignore
+        super().__init__(quiet=quiet)
         if not URLLIB3_INSTALLED:
             raise ImportError(&#39;InfluxDBWriter requires Python &#34;urllib3&#34; module; &#39;
                               &#39;please run &#34;pip install urllib3&#34;&#39;)
@@ -192,7 +191,7 @@ class InfluxDBWriter(Writer):
             self.write_api = client.write_api(write_options=ASYNCHRONOUS)
 
     ############################
-    def write(self, record):
+    def write(self, record: Union[DASRecord, dict]):
         &#34;&#34;&#34;Note: Assume record is a dict or DASRecord or list of
         dict/DASRecord. In each record look for &#39;fields&#39;, &#39;data_id&#39; and
         &#39;timestamp&#39; (UTC epoch seconds). If data_id is missing, use the
@@ -206,9 +205,9 @@ class InfluxDBWriter(Writer):
                 fields = record.fields
                 timestamp = record.timestamp
             else:
-                data_id = record.get(&#39;data_id&#39;, None)
+                data_id = record.get(&#39;data_id&#39;)
                 fields = record.get(&#39;fields&#39;, {})
-                timestamp = record.get(&#39;timestamp&#39;, None) or time.time()
+                timestamp = record.get(&#39;timestamp&#39;) or time.time()
             influxDB_record = {
                 &#39;measurement&#39;: self.measurement_name or data_id,
                 &#39;tags&#39;: {&#39;sensor&#39;: data_id or self.measurement_name or self.bucket_name},
@@ -217,28 +216,23 @@ class InfluxDBWriter(Writer):
             }
             return influxDB_record
 
-        if not record:
+        # See if it&#39;s something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from BaseModule()
+            self.digest_record(record)  # inherited from BaseModule()
             return
 
-        logging.debug(&#39;InfluxDBWriter writing record: %s&#39;, record)
-
-        if not type(record) in [dict, list, DASRecord]:
-            logging.warning(&#39;InfluxDBWriter received record that was not dict, &#39;
-                            &#39;list or DASRecord format. Type %s: %s&#39;,
-                            type(record), str(record))
         try:
-            if isinstance(record, list):
-                influxDB_record = [record_to_influx(r) for r in record]
-            else:
-                influxDB_record = record_to_influx(record)
+            logging.debug(&#39;InfluxDBWriter writing record: %s&#39;, record)
+            influxDB_record = record_to_influx(record)
             # logging.info(&#39;influxdb\n bucket: %s\nrecord: %s&#39;,
             #             self.bucket_name, pprint.pformat(influxDB_record))
             self.write_api.write(self.bucket_id, self.org_id, influxDB_record)
 
         except Exception as e:
-            logging.warning(&#39;InfluxDBWriter exception: %s&#39;, str(e))
-            logging.warning(&#39;InfluxDBWriter could not ingest record &#39;
-                            &#39;type %s: %s&#39;, type(record), str(record))</code></pre>
+            if not self.quiet:
+                logging.warning(&#39;InfluxDBWriter exception: %s&#39;, str(e))
+                logging.warning(&#39;InfluxDBWriter could not ingest record &#39;
+                                &#39;type %s: %s&#39;, type(record), str(record))</code></pre>
 </details>
 </section>
 <section>
@@ -252,7 +246,7 @@ class InfluxDBWriter(Writer):
 <dl>
 <dt id="logger.writers.influxdb_writer.InfluxDBWriter"><code class="flex name class">
 <span>class <span class="ident">InfluxDBWriter</span></span>
-<span>(</span><span>bucket_name='openrvdas', measurement_name=None, auth_token='qctIRsZulATUECEOyrnbP0-5qdmYvt4H5S1ESAN7doEb2KV5IRUnnQNYnAslkL-n-JzrAp7FmymcU9KMIud-ug==', org='openrvdas', url='http://localhost:8086', verify_ssl=False)</span>
+<span>(</span><span>bucket_name='openrvdas', measurement_name=None, auth_token='qctIRsZulATUECEOyrnbP0-5qdmYvt4H5S1ESAN7doEb2KV5IRUnnQNYnAslkL-n-JzrAp7FmymcU9KMIud-ug==', org='openrvdas', url='http://localhost:8086', verify_ssl=False, quiet=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Write to the specified file. If filename is empty, write to stdout.</p>
@@ -289,7 +283,7 @@ verify_ssl - If the URL begins with 'https', SSL will be used for the
     def __init__(self, bucket_name=INFLUXDB_BUCKET, measurement_name=None,
                  auth_token=INFLUXDB_AUTH_TOKEN,
                  org=INFLUXDB_ORG, url=INFLUXDB_URL,
-                 verify_ssl=INFLUXDB_VERIFY_SSL):
+                 verify_ssl=INFLUXDB_VERIFY_SSL, quiet=False):
         &#34;&#34;&#34;Write data records to the InfluxDB.
         ```
         bucket_name - the name of the bucket in InfluxDB.  If the bucket does
@@ -315,7 +309,7 @@ verify_ssl - If the URL begins with 'https', SSL will be used for the
                   attempt to verify the validity of the relevant SSL certificate.
         ```
         &#34;&#34;&#34;
-        super().__init__(input_format=Text)  # type: ignore
+        super().__init__(quiet=quiet)
         if not URLLIB3_INSTALLED:
             raise ImportError(&#39;InfluxDBWriter requires Python &#34;urllib3&#34; module; &#39;
                               &#39;please run &#34;pip install urllib3&#34;&#39;)
@@ -412,7 +406,7 @@ verify_ssl - If the URL begins with 'https', SSL will be used for the
             self.write_api = client.write_api(write_options=ASYNCHRONOUS)
 
     ############################
-    def write(self, record):
+    def write(self, record: Union[DASRecord, dict]):
         &#34;&#34;&#34;Note: Assume record is a dict or DASRecord or list of
         dict/DASRecord. In each record look for &#39;fields&#39;, &#39;data_id&#39; and
         &#39;timestamp&#39; (UTC epoch seconds). If data_id is missing, use the
@@ -426,9 +420,9 @@ verify_ssl - If the URL begins with 'https', SSL will be used for the
                 fields = record.fields
                 timestamp = record.timestamp
             else:
-                data_id = record.get(&#39;data_id&#39;, None)
+                data_id = record.get(&#39;data_id&#39;)
                 fields = record.get(&#39;fields&#39;, {})
-                timestamp = record.get(&#39;timestamp&#39;, None) or time.time()
+                timestamp = record.get(&#39;timestamp&#39;) or time.time()
             influxDB_record = {
                 &#39;measurement&#39;: self.measurement_name or data_id,
                 &#39;tags&#39;: {&#39;sensor&#39;: data_id or self.measurement_name or self.bucket_name},
@@ -437,37 +431,33 @@ verify_ssl - If the URL begins with 'https', SSL will be used for the
             }
             return influxDB_record
 
-        if not record:
+        # See if it&#39;s something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from BaseModule()
+            self.digest_record(record)  # inherited from BaseModule()
             return
 
-        logging.debug(&#39;InfluxDBWriter writing record: %s&#39;, record)
-
-        if not type(record) in [dict, list, DASRecord]:
-            logging.warning(&#39;InfluxDBWriter received record that was not dict, &#39;
-                            &#39;list or DASRecord format. Type %s: %s&#39;,
-                            type(record), str(record))
         try:
-            if isinstance(record, list):
-                influxDB_record = [record_to_influx(r) for r in record]
-            else:
-                influxDB_record = record_to_influx(record)
+            logging.debug(&#39;InfluxDBWriter writing record: %s&#39;, record)
+            influxDB_record = record_to_influx(record)
             # logging.info(&#39;influxdb\n bucket: %s\nrecord: %s&#39;,
             #             self.bucket_name, pprint.pformat(influxDB_record))
             self.write_api.write(self.bucket_id, self.org_id, influxDB_record)
 
         except Exception as e:
-            logging.warning(&#39;InfluxDBWriter exception: %s&#39;, str(e))
-            logging.warning(&#39;InfluxDBWriter could not ingest record &#39;
-                            &#39;type %s: %s&#39;, type(record), str(record))</code></pre>
+            if not self.quiet:
+                logging.warning(&#39;InfluxDBWriter exception: %s&#39;, str(e))
+                logging.warning(&#39;InfluxDBWriter could not ingest record &#39;
+                                &#39;type %s: %s&#39;, type(record), str(record))</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="logger.writers.writer.Writer" href="writer.html#logger.writers.writer.Writer">Writer</a></li>
+<li><a title="logger.utils.base_module.BaseModule" href="../utils/base_module.html#logger.utils.base_module.BaseModule">BaseModule</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
 <dt id="logger.writers.influxdb_writer.InfluxDBWriter.write"><code class="name flex">
-<span>def <span class="ident">write</span></span>(<span>self, record)</span>
+<span>def <span class="ident">write</span></span>(<span>self, record: Union[<a title="logger.utils.das_record.DASRecord" href="../utils/das_record.html#logger.utils.das_record.DASRecord">DASRecord</a>, dict])</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Note: Assume record is a dict or DASRecord or list of
@@ -478,7 +468,7 @@ bucket_name we were initialized with.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def write(self, record):
+<pre><code class="python">def write(self, record: Union[DASRecord, dict]):
     &#34;&#34;&#34;Note: Assume record is a dict or DASRecord or list of
     dict/DASRecord. In each record look for &#39;fields&#39;, &#39;data_id&#39; and
     &#39;timestamp&#39; (UTC epoch seconds). If data_id is missing, use the
@@ -492,9 +482,9 @@ bucket_name we were initialized with.</p></div>
             fields = record.fields
             timestamp = record.timestamp
         else:
-            data_id = record.get(&#39;data_id&#39;, None)
+            data_id = record.get(&#39;data_id&#39;)
             fields = record.get(&#39;fields&#39;, {})
-            timestamp = record.get(&#39;timestamp&#39;, None) or time.time()
+            timestamp = record.get(&#39;timestamp&#39;) or time.time()
         influxDB_record = {
             &#39;measurement&#39;: self.measurement_name or data_id,
             &#39;tags&#39;: {&#39;sensor&#39;: data_id or self.measurement_name or self.bucket_name},
@@ -503,28 +493,23 @@ bucket_name we were initialized with.</p></div>
         }
         return influxDB_record
 
-    if not record:
+    # See if it&#39;s something we can process, and if not, try digesting
+    if not self.can_process_record(record):  # inherited from BaseModule()
+        self.digest_record(record)  # inherited from BaseModule()
         return
 
-    logging.debug(&#39;InfluxDBWriter writing record: %s&#39;, record)
-
-    if not type(record) in [dict, list, DASRecord]:
-        logging.warning(&#39;InfluxDBWriter received record that was not dict, &#39;
-                        &#39;list or DASRecord format. Type %s: %s&#39;,
-                        type(record), str(record))
     try:
-        if isinstance(record, list):
-            influxDB_record = [record_to_influx(r) for r in record]
-        else:
-            influxDB_record = record_to_influx(record)
+        logging.debug(&#39;InfluxDBWriter writing record: %s&#39;, record)
+        influxDB_record = record_to_influx(record)
         # logging.info(&#39;influxdb\n bucket: %s\nrecord: %s&#39;,
         #             self.bucket_name, pprint.pformat(influxDB_record))
         self.write_api.write(self.bucket_id, self.org_id, influxDB_record)
 
     except Exception as e:
-        logging.warning(&#39;InfluxDBWriter exception: %s&#39;, str(e))
-        logging.warning(&#39;InfluxDBWriter could not ingest record &#39;
-                        &#39;type %s: %s&#39;, type(record), str(record))</code></pre>
+        if not self.quiet:
+            logging.warning(&#39;InfluxDBWriter exception: %s&#39;, str(e))
+            logging.warning(&#39;InfluxDBWriter could not ingest record &#39;
+                            &#39;type %s: %s&#39;, type(record), str(record))</code></pre>
 </details>
 </dd>
 </dl>
@@ -532,8 +517,8 @@ bucket_name we were initialized with.</p></div>
 <ul class="hlist">
 <li><code><b><a title="logger.writers.writer.Writer" href="writer.html#logger.writers.writer.Writer">Writer</a></b></code>:
 <ul class="hlist">
-<li><code><a title="logger.writers.writer.Writer.can_accept" href="writer.html#logger.writers.writer.Writer.can_accept">can_accept</a></code></li>
-<li><code><a title="logger.writers.writer.Writer.input_format" href="writer.html#logger.writers.writer.Writer.input_format">input_format</a></code></li>
+<li><code><a title="logger.writers.writer.Writer.can_process_record" href="../utils/base_module.html#logger.utils.base_module.BaseModule.can_process_record">can_process_record</a></code></li>
+<li><code><a title="logger.writers.writer.Writer.digest_record" href="../utils/base_module.html#logger.utils.base_module.BaseModule.digest_record">digest_record</a></code></li>
 </ul>
 </li>
 </ul>

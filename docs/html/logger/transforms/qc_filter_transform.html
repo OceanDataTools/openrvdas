@@ -38,11 +38,12 @@ DASRecords or dictionary, or...?
 
 &#34;&#34;&#34;
 
+import logging
 import sys
 
 from os.path import dirname, realpath
+from typing import Union
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
-from logger.utils import formats  # noqa: E402
 from logger.utils.das_record import DASRecord  # noqa: E402
 from logger.transforms.transform import Transform  # noqa: E402
 
@@ -52,8 +53,15 @@ from logger.transforms.transform import Transform  # noqa: E402
 class QCFilterTransform(Transform):
     &#34;&#34;&#34;
     Transform that returns None unless values in passed DASRecord are out of
-    bounds, in which case return a warning message.&#34;&#34;&#34;
+    bounds, in which case return a warning message. Also return warning if
+    something other than a DASRecord or dict (or list of DASRecord or dict)
+    is passed.
 
+    Note that this module is due to be replaced by a more general value
+    matching transform, as per GitHub feature request:
+
+    https://github.com/OceanDataTools/openrvdas/issues/406
+    &#34;&#34;&#34;
     def __init__(self, bounds, message=None):
         &#34;&#34;&#34;
         ```
@@ -67,9 +75,6 @@ class QCFilterTransform(Transform):
                  are violated
         ```
         &#34;&#34;&#34;
-        super().__init__(input_format=formats.Python_Record,
-                         output_format=formats.Text)
-
         self.message = message
         self.bounds = {}
         for condition in bounds.split(&#39;,&#39;):
@@ -84,20 +89,14 @@ class QCFilterTransform(Transform):
                                  &#39;Found &#34;%s&#34; instead.&#39; % condition)
 
     ############################
-    def transform(self, record):
+    def transform(self, record: Union[DASRecord, dict]):
         &#34;&#34;&#34;Does record violate any bounds?&#34;&#34;&#34;
-        if not record:
-            return None
 
-        # If we&#39;ve got a list, hope it&#39;s a list of records. Recurse,
-        # calling transform() on each of the list elements in order and
-        # return the resulting list.
-        if type(record) is list:
-            results = []
-            for single_record in record:
-                results.append(self.transform(single_record))
-            return results
+        # See if it&#39;s something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from Transform()
+            return self.digest_record(record)  # inherited from Transform()
 
+        # If here, we must be either a DASRecord or dict
         if type(record) is DASRecord:
             fields = record.fields
         elif type(record) is dict:
@@ -106,23 +105,29 @@ class QCFilterTransform(Transform):
             else:
                 fields = record
         else:
-            return (&#39;Record passed to QCFilterTransform was neither a dict nor a &#39;
-                    &#39;DASRecord. Type was %s: %s&#39; % (type(record), str(record)[:80]))
+            logging.warning(f&#39;QCFilterTransform code error. Non-conforming record &#39;
+                            f&#39;of type {type(record)} got through checks: {record}&#39;)
 
         errors = []
         for bound in self.bounds:
             if bound not in fields:
                 continue
-            value = fields.get(bound)
-            (lower, upper) = self.bounds[bound]
-            if type(value) is not int and type(value) is not float:
-                errors.append(&#39;%s: non-numeric value: &#34;%s&#34;&#39; % (bound, value))
-                continue
 
-            if lower is not None and value &lt; lower:
-                errors.append(&#39;%s: %g &lt; lower bound %g&#39; % (bound, value, lower))
-            if upper is not None and value &gt; upper:
-                errors.append(&#39;%s: %g &gt; upper bound %g&#39; % (bound, value, upper))
+            value = fields[bound]  # Already checked for existence
+            lower, upper = self.bounds[bound]  # Unpack bounds
+
+            if not isinstance(value, (int, float)):
+                err = f&#39;{bound}: non-numeric value: &#34;{value}&#34;&#39;
+                logging.warning(err)
+                errors.append(err)
+            elif lower is not None and value &lt; lower:
+                err = f&#39;{bound}: {value} &lt; lower bound {lower}&#39;
+                logging.warning(err)
+                errors.append(err)
+            elif upper is not None and value &gt; upper:
+                err = f&#39;{bound}: {value} &gt; upper bound {upper}&#39;
+                logging.warning(err)
+                errors.append(err)
 
         # If no errors, return None. Otherwise either return the specified
         # message (if we&#39;ve been given one), or the joined string of
@@ -151,7 +156,12 @@ class QCFilterTransform(Transform):
 </code></dt>
 <dd>
 <div class="desc"><p>Transform that returns None unless values in passed DASRecord are out of
-bounds, in which case return a warning message.</p>
+bounds, in which case return a warning message. Also return warning if
+something other than a DASRecord or dict (or list of DASRecord or dict)
+is passed.</p>
+<p>Note that this module is due to be replaced by a more general value
+matching transform, as per GitHub feature request:</p>
+<p><a href="https://github.com/OceanDataTools/openrvdas/issues/406">https://github.com/OceanDataTools/openrvdas/issues/406</a></p>
 <pre><code>bounds   A comma-separated list of conditions of the format
 
             &lt;field_name&gt;:&lt;lower_bound&gt;:&lt;upper_bound&gt;
@@ -168,8 +178,15 @@ message  Optional string to be output instead of default when bounds
 <pre><code class="python">class QCFilterTransform(Transform):
     &#34;&#34;&#34;
     Transform that returns None unless values in passed DASRecord are out of
-    bounds, in which case return a warning message.&#34;&#34;&#34;
+    bounds, in which case return a warning message. Also return warning if
+    something other than a DASRecord or dict (or list of DASRecord or dict)
+    is passed.
 
+    Note that this module is due to be replaced by a more general value
+    matching transform, as per GitHub feature request:
+
+    https://github.com/OceanDataTools/openrvdas/issues/406
+    &#34;&#34;&#34;
     def __init__(self, bounds, message=None):
         &#34;&#34;&#34;
         ```
@@ -183,9 +200,6 @@ message  Optional string to be output instead of default when bounds
                  are violated
         ```
         &#34;&#34;&#34;
-        super().__init__(input_format=formats.Python_Record,
-                         output_format=formats.Text)
-
         self.message = message
         self.bounds = {}
         for condition in bounds.split(&#39;,&#39;):
@@ -200,20 +214,14 @@ message  Optional string to be output instead of default when bounds
                                  &#39;Found &#34;%s&#34; instead.&#39; % condition)
 
     ############################
-    def transform(self, record):
+    def transform(self, record: Union[DASRecord, dict]):
         &#34;&#34;&#34;Does record violate any bounds?&#34;&#34;&#34;
-        if not record:
-            return None
 
-        # If we&#39;ve got a list, hope it&#39;s a list of records. Recurse,
-        # calling transform() on each of the list elements in order and
-        # return the resulting list.
-        if type(record) is list:
-            results = []
-            for single_record in record:
-                results.append(self.transform(single_record))
-            return results
+        # See if it&#39;s something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from Transform()
+            return self.digest_record(record)  # inherited from Transform()
 
+        # If here, we must be either a DASRecord or dict
         if type(record) is DASRecord:
             fields = record.fields
         elif type(record) is dict:
@@ -222,23 +230,29 @@ message  Optional string to be output instead of default when bounds
             else:
                 fields = record
         else:
-            return (&#39;Record passed to QCFilterTransform was neither a dict nor a &#39;
-                    &#39;DASRecord. Type was %s: %s&#39; % (type(record), str(record)[:80]))
+            logging.warning(f&#39;QCFilterTransform code error. Non-conforming record &#39;
+                            f&#39;of type {type(record)} got through checks: {record}&#39;)
 
         errors = []
         for bound in self.bounds:
             if bound not in fields:
                 continue
-            value = fields.get(bound)
-            (lower, upper) = self.bounds[bound]
-            if type(value) is not int and type(value) is not float:
-                errors.append(&#39;%s: non-numeric value: &#34;%s&#34;&#39; % (bound, value))
-                continue
 
-            if lower is not None and value &lt; lower:
-                errors.append(&#39;%s: %g &lt; lower bound %g&#39; % (bound, value, lower))
-            if upper is not None and value &gt; upper:
-                errors.append(&#39;%s: %g &gt; upper bound %g&#39; % (bound, value, upper))
+            value = fields[bound]  # Already checked for existence
+            lower, upper = self.bounds[bound]  # Unpack bounds
+
+            if not isinstance(value, (int, float)):
+                err = f&#39;{bound}: non-numeric value: &#34;{value}&#34;&#39;
+                logging.warning(err)
+                errors.append(err)
+            elif lower is not None and value &lt; lower:
+                err = f&#39;{bound}: {value} &lt; lower bound {lower}&#39;
+                logging.warning(err)
+                errors.append(err)
+            elif upper is not None and value &gt; upper:
+                err = f&#39;{bound}: {value} &gt; upper bound {upper}&#39;
+                logging.warning(err)
+                errors.append(err)
 
         # If no errors, return None. Otherwise either return the specified
         # message (if we&#39;ve been given one), or the joined string of
@@ -254,11 +268,12 @@ message  Optional string to be output instead of default when bounds
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="logger.transforms.transform.Transform" href="transform.html#logger.transforms.transform.Transform">Transform</a></li>
+<li><a title="logger.utils.base_module.BaseModule" href="../utils/base_module.html#logger.utils.base_module.BaseModule">BaseModule</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
 <dt id="logger.transforms.qc_filter_transform.QCFilterTransform.transform"><code class="name flex">
-<span>def <span class="ident">transform</span></span>(<span>self, record)</span>
+<span>def <span class="ident">transform</span></span>(<span>self, record: Union[<a title="logger.utils.das_record.DASRecord" href="../utils/das_record.html#logger.utils.das_record.DASRecord">DASRecord</a>, dict])</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Does record violate any bounds?</p></div>
@@ -266,20 +281,14 @@ message  Optional string to be output instead of default when bounds
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def transform(self, record):
+<pre><code class="python">def transform(self, record: Union[DASRecord, dict]):
     &#34;&#34;&#34;Does record violate any bounds?&#34;&#34;&#34;
-    if not record:
-        return None
 
-    # If we&#39;ve got a list, hope it&#39;s a list of records. Recurse,
-    # calling transform() on each of the list elements in order and
-    # return the resulting list.
-    if type(record) is list:
-        results = []
-        for single_record in record:
-            results.append(self.transform(single_record))
-        return results
+    # See if it&#39;s something we can process, and if not, try digesting
+    if not self.can_process_record(record):  # inherited from Transform()
+        return self.digest_record(record)  # inherited from Transform()
 
+    # If here, we must be either a DASRecord or dict
     if type(record) is DASRecord:
         fields = record.fields
     elif type(record) is dict:
@@ -288,23 +297,29 @@ message  Optional string to be output instead of default when bounds
         else:
             fields = record
     else:
-        return (&#39;Record passed to QCFilterTransform was neither a dict nor a &#39;
-                &#39;DASRecord. Type was %s: %s&#39; % (type(record), str(record)[:80]))
+        logging.warning(f&#39;QCFilterTransform code error. Non-conforming record &#39;
+                        f&#39;of type {type(record)} got through checks: {record}&#39;)
 
     errors = []
     for bound in self.bounds:
         if bound not in fields:
             continue
-        value = fields.get(bound)
-        (lower, upper) = self.bounds[bound]
-        if type(value) is not int and type(value) is not float:
-            errors.append(&#39;%s: non-numeric value: &#34;%s&#34;&#39; % (bound, value))
-            continue
 
-        if lower is not None and value &lt; lower:
-            errors.append(&#39;%s: %g &lt; lower bound %g&#39; % (bound, value, lower))
-        if upper is not None and value &gt; upper:
-            errors.append(&#39;%s: %g &gt; upper bound %g&#39; % (bound, value, upper))
+        value = fields[bound]  # Already checked for existence
+        lower, upper = self.bounds[bound]  # Unpack bounds
+
+        if not isinstance(value, (int, float)):
+            err = f&#39;{bound}: non-numeric value: &#34;{value}&#34;&#39;
+            logging.warning(err)
+            errors.append(err)
+        elif lower is not None and value &lt; lower:
+            err = f&#39;{bound}: {value} &lt; lower bound {lower}&#39;
+            logging.warning(err)
+            errors.append(err)
+        elif upper is not None and value &gt; upper:
+            err = f&#39;{bound}: {value} &gt; upper bound {upper}&#39;
+            logging.warning(err)
+            errors.append(err)
 
     # If no errors, return None. Otherwise either return the specified
     # message (if we&#39;ve been given one), or the joined string of
@@ -323,8 +338,8 @@ message  Optional string to be output instead of default when bounds
 <ul class="hlist">
 <li><code><b><a title="logger.transforms.transform.Transform" href="transform.html#logger.transforms.transform.Transform">Transform</a></b></code>:
 <ul class="hlist">
-<li><code><a title="logger.transforms.transform.Transform.input_format" href="transform.html#logger.transforms.transform.Transform.input_format">input_format</a></code></li>
-<li><code><a title="logger.transforms.transform.Transform.output_format" href="transform.html#logger.transforms.transform.Transform.output_format">output_format</a></code></li>
+<li><code><a title="logger.transforms.transform.Transform.can_process_record" href="../utils/base_module.html#logger.utils.base_module.BaseModule.can_process_record">can_process_record</a></code></li>
+<li><code><a title="logger.transforms.transform.Transform.digest_record" href="../utils/base_module.html#logger.utils.base_module.BaseModule.digest_record">digest_record</a></code></li>
 </ul>
 </li>
 </ul>

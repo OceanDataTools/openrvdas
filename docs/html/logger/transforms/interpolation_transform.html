@@ -138,8 +138,8 @@ class InterpolationTransform(DerivedDataTransform):
             timestamp = record.timestamp
             fields = record.fields
         else:
-            timestamp = record.get(&#39;timestamp&#39;, None)
-            fields = record.get(&#39;fields&#39;, None)
+            timestamp = record.get(&#39;timestamp&#39;)
+            fields = record.get(&#39;fields&#39;)
 
         if not fields:
             logging.info(&#39;InterpolationTransform: record has no fields: %s&#39;, record)
@@ -225,7 +225,7 @@ class InterpolationTransform(DerivedDataTransform):
 
         non_empty = {}
         for dest, spec in self.field_spec.items():
-            source = spec.get(&#39;source&#39;, None)
+            source = spec.get(&#39;source&#39;)
             if source:
                 values = self.cached_values.get(source, [])
                 if len(values):
@@ -283,7 +283,7 @@ def interpolate(algorithm, values, timestamp, now):
 
     ##################
     # Select algorithm
-    alg_type = algorithm.get(&#39;type&#39;, None)
+    alg_type = algorithm.get(&#39;type&#39;)
 
     # boxcar_average: all values within symmetric interval window get
     # same weight.
@@ -401,7 +401,7 @@ we're far enough beyond our timestamp to compute a value.</p></div>
 
     ##################
     # Select algorithm
-    alg_type = algorithm.get(&#39;type&#39;, None)
+    alg_type = algorithm.get(&#39;type&#39;)
 
     # boxcar_average: all values within symmetric interval window get
     # same weight.
@@ -603,8 +603,8 @@ metadata_interval - how many seconds between when we attach field metadata
             timestamp = record.timestamp
             fields = record.fields
         else:
-            timestamp = record.get(&#39;timestamp&#39;, None)
-            fields = record.get(&#39;fields&#39;, None)
+            timestamp = record.get(&#39;timestamp&#39;)
+            fields = record.get(&#39;fields&#39;)
 
         if not fields:
             logging.info(&#39;InterpolationTransform: record has no fields: %s&#39;, record)
@@ -690,7 +690,7 @@ metadata_interval - how many seconds between when we attach field metadata
 
         non_empty = {}
         for dest, spec in self.field_spec.items():
-            source = spec.get(&#39;source&#39;, None)
+            source = spec.get(&#39;source&#39;)
             if source:
                 values = self.cached_values.get(source, [])
                 if len(values):
@@ -725,6 +725,7 @@ metadata_interval - how many seconds between when we attach field metadata
 <ul class="hlist">
 <li><a title="logger.transforms.derived_data_transform.DerivedDataTransform" href="derived_data_transform.html#logger.transforms.derived_data_transform.DerivedDataTransform">DerivedDataTransform</a></li>
 <li><a title="logger.transforms.transform.Transform" href="transform.html#logger.transforms.transform.Transform">Transform</a></li>
+<li><a title="logger.utils.base_module.BaseModule" href="../utils/base_module.html#logger.utils.base_module.BaseModule">BaseModule</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -812,7 +813,7 @@ subsampling, return an empty list.</p></div>
 
     non_empty = {}
     for dest, spec in self.field_spec.items():
-        source = spec.get(&#39;source&#39;, None)
+        source = spec.get(&#39;source&#39;)
         if source:
             values = self.cached_values.get(source, [])
             if len(values):
@@ -849,8 +850,8 @@ subsampling, return an empty list.</p></div>
 <ul class="hlist">
 <li><code><b><a title="logger.transforms.derived_data_transform.DerivedDataTransform" href="derived_data_transform.html#logger.transforms.derived_data_transform.DerivedDataTransform">DerivedDataTransform</a></b></code>:
 <ul class="hlist">
-<li><code><a title="logger.transforms.derived_data_transform.DerivedDataTransform.input_format" href="transform.html#logger.transforms.transform.Transform.input_format">input_format</a></code></li>
-<li><code><a title="logger.transforms.derived_data_transform.DerivedDataTransform.output_format" href="transform.html#logger.transforms.transform.Transform.output_format">output_format</a></code></li>
+<li><code><a title="logger.transforms.derived_data_transform.DerivedDataTransform.can_process_record" href="../utils/base_module.html#logger.utils.base_module.BaseModule.can_process_record">can_process_record</a></code></li>
+<li><code><a title="logger.transforms.derived_data_transform.DerivedDataTransform.digest_record" href="../utils/base_module.html#logger.utils.base_module.BaseModule.digest_record">digest_record</a></code></li>
 </ul>
 </li>
 </ul>

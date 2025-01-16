@@ -364,34 +364,34 @@ class TrueWindsTransform(DerivedDataTransform):
                           self.wind_speed_field, self.wind_speed_val)
             return True
 
-        course_max_age = self.max_field_age.get(self.course_field, None)
+        course_max_age = self.max_field_age.get(self.course_field)
         if (course_max_age and timestamp - self.course_val_time &gt; course_max_age):
             logging.debug(&#39;course_field too old - max age %g, age %g&#39;,
                           course_max_age, timestamp - self.course_val_time)
             return True
 
-        speed_max_age = self.max_field_age.get(self.speed_field, None)
+        speed_max_age = self.max_field_age.get(self.speed_field)
         if speed_max_age:
             if timestamp - self.speed_val_time &gt; speed_max_age:
                 logging.debug(&#39;speed_field too old - max age %g, age %g&#39;,
                               speed_max_age, timestamp - self.speed_val_time)
                 return True
 
-        heading_max_age = self.max_field_age.get(self.heading_field, None)
+        heading_max_age = self.max_field_age.get(self.heading_field)
         if heading_max_age:
             if timestamp - self.heading_val_time &gt; heading_max_age:
                 logging.debug(&#39;heading_field too old - max age %g, age %g&#39;,
                               heading_max_age, timestamp - self.heading_val_time)
                 return True
 
-        wind_dir_max_age = self.max_field_age.get(self.wind_dir_field, None)
+        wind_dir_max_age = self.max_field_age.get(self.wind_dir_field)
         if wind_dir_max_age:
             if timestamp - self.wind_dir_val_time &gt; wind_dir_max_age:
                 logging.debug(&#39;wind_dir_field too old - max age %g, age %g&#39;,
                               wind_dir_max_age, timestamp - self.wind_dir_val_time)
                 return True
 
-        wind_speed_max_age = self.max_field_age.get(self.wind_speed_field, None)
+        wind_speed_max_age = self.max_field_age.get(self.wind_speed_field)
         if wind_speed_max_age:
             if timestamp - self.wind_speed_val_time &gt; wind_speed_max_age:
                 logging.debug(&#39;wind_speed_field too old - max age %g, age %g&#39;,
@@ -744,34 +744,34 @@ data_id  Optional name that will be attached to the resulting DASRecord
                           self.wind_speed_field, self.wind_speed_val)
             return True
 
-        course_max_age = self.max_field_age.get(self.course_field, None)
+        course_max_age = self.max_field_age.get(self.course_field)
         if (course_max_age and timestamp - self.course_val_time &gt; course_max_age):
             logging.debug(&#39;course_field too old - max age %g, age %g&#39;,
                           course_max_age, timestamp - self.course_val_time)
             return True
 
-        speed_max_age = self.max_field_age.get(self.speed_field, None)
+        speed_max_age = self.max_field_age.get(self.speed_field)
         if speed_max_age:
             if timestamp - self.speed_val_time &gt; speed_max_age:
                 logging.debug(&#39;speed_field too old - max age %g, age %g&#39;,
                               speed_max_age, timestamp - self.speed_val_time)
                 return True
 
-        heading_max_age = self.max_field_age.get(self.heading_field, None)
+        heading_max_age = self.max_field_age.get(self.heading_field)
         if heading_max_age:
             if timestamp - self.heading_val_time &gt; heading_max_age:
                 logging.debug(&#39;heading_field too old - max age %g, age %g&#39;,
                               heading_max_age, timestamp - self.heading_val_time)
                 return True
 
-        wind_dir_max_age = self.max_field_age.get(self.wind_dir_field, None)
+        wind_dir_max_age = self.max_field_age.get(self.wind_dir_field)
         if wind_dir_max_age:
             if timestamp - self.wind_dir_val_time &gt; wind_dir_max_age:
                 logging.debug(&#39;wind_dir_field too old - max age %g, age %g&#39;,
                               wind_dir_max_age, timestamp - self.wind_dir_val_time)
                 return True
 
-        wind_speed_max_age = self.max_field_age.get(self.wind_speed_field, None)
+        wind_speed_max_age = self.max_field_age.get(self.wind_speed_field)
         if wind_speed_max_age:
             if timestamp - self.wind_speed_val_time &gt; wind_speed_max_age:
                 logging.debug(&#39;wind_speed_field too old - max age %g, age %g&#39;,
@@ -785,6 +785,7 @@ data_id  Optional name that will be attached to the resulting DASRecord
 <ul class="hlist">
 <li><a title="logger.transforms.derived_data_transform.DerivedDataTransform" href="derived_data_transform.html#logger.transforms.derived_data_transform.DerivedDataTransform">DerivedDataTransform</a></li>
 <li><a title="logger.transforms.transform.Transform" href="transform.html#logger.transforms.transform.Transform">Transform</a></li>
+<li><a title="logger.utils.base_module.BaseModule" href="../utils/base_module.html#logger.utils.base_module.BaseModule">BaseModule</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -936,8 +937,8 @@ us a new true wind value, return the results.</p></div>
 <ul class="hlist">
 <li><code><b><a title="logger.transforms.derived_data_transform.DerivedDataTransform" href="derived_data_transform.html#logger.transforms.derived_data_transform.DerivedDataTransform">DerivedDataTransform</a></b></code>:
 <ul class="hlist">
-<li><code><a title="logger.transforms.derived_data_transform.DerivedDataTransform.input_format" href="transform.html#logger.transforms.transform.Transform.input_format">input_format</a></code></li>
-<li><code><a title="logger.transforms.derived_data_transform.DerivedDataTransform.output_format" href="transform.html#logger.transforms.transform.Transform.output_format">output_format</a></code></li>
+<li><code><a title="logger.transforms.derived_data_transform.DerivedDataTransform.can_process_record" href="../utils/base_module.html#logger.utils.base_module.BaseModule.can_process_record">can_process_record</a></code></li>
+<li><code><a title="logger.transforms.derived_data_transform.DerivedDataTransform.digest_record" href="../utils/base_module.html#logger.utils.base_module.BaseModule.digest_record">digest_record</a></code></li>
 </ul>
 </li>
 </ul>

@@ -212,7 +212,7 @@ class LoggerManager:
             target=self._update_configs_loop, daemon=True)
         self.update_configs_thread.start()
 
-        # Check logger status in a separate thread. If we&#39;ve got the
+        # Check cruise definition in a separate thread. If we&#39;ve got the
         # address of a data server websocket, send our updates to it.
         self.send_cruise_definition_loop_thread = threading.Thread(
             name=&#39;send_cruise_definition_loop&#39;,
@@ -227,11 +227,11 @@ class LoggerManager:
     ############################
     def _load_new_definition_from_api(self):
         &#34;&#34;&#34;Fetch a new cruise definition from API and build local maps. Then
-        send anupdated cruise definition to the console.
+        send an updated cruise definition to the console.
         &#34;&#34;&#34;
         logging.info(&#39;Fetching new cruise definitions from API&#39;)
-        try:
-            with self.config_lock:
+        with self.config_lock:
+            try:
                 self.loggers = self.api.get_loggers()
                 self.config_to_logger = {}
                 for logger, logger_configs in self.loggers.items():
@@ -244,7 +244,7 @@ class LoggerManager:
                 # from a callback when the API alerts us that something has
                 # changed. So we need to re-grab self.cruise
                 self.cruise = self.api.get_configuration()  # a Cruise object
-                self.cruise_filename = self.cruise.get(&#39;config_filename&#39;, None)
+                self.cruise_filename = self.cruise.get(&#39;config_filename&#39;)
                 loaded_time = self.cruise.get(&#39;loaded_time&#39;)
                 self.cruise_loaded_time = datetime.datetime.timestamp(loaded_time)
                 self.active_mode = self.api.get_active_mode()
@@ -261,8 +261,8 @@ class LoggerManager:
                 logging.info(&#39;Sending updated cruise definitions to CDS.&#39;)
                 self._write_record_to_data_server(
                     &#39;status:cruise_definition&#39;, cruise_dict)
-        except (AttributeError, ValueError, TypeError) as e:
-            logging.info(&#39;Failed to update cruise definition: %s&#39;, e)
+            except (AttributeError, ValueError, TypeError) as e:
+                logging.info(&#39;Failed to update cruise definition: %s&#39;, e)
 
     ############################
     def _check_logger_status_loop(self):
@@ -308,9 +308,6 @@ class LoggerManager:
 
         in this file to see where.
         &#34;&#34;&#34;
-        # First, grab a status update.
-        # self.logger_status = self.supervisor.check_status()
-        # self.status_time = time.time()
         with self.config_lock:
             # Get new configs in dict {logger:{&#39;configs&#39;:[config_name,...]}}
             logger_configs = self.api.get_logger_configs()
@@ -353,7 +350,7 @@ class LoggerManager:
                     logging.info(&#39;No cruise definition found in API&#39;)
                     time.sleep(self.interval * 2)
                     continue
-                self.cruise_filename = self.cruise.get(&#39;config_filename&#39;, None)
+                self.cruise_filename = self.cruise.get(&#39;config_filename&#39;)
                 loaded_time = self.cruise.get(&#39;loaded_time&#39;)
                 self.cruise_loaded_time = datetime.datetime.timestamp(loaded_time)
 
@@ -576,10 +573,6 @@ if __name__ == &#39;__main__&#39;:  # noqa: C901
     api.on_load(callback=logger_manager._load_new_definition_from_api)
 
     ############################
-    # Start all the various LoggerManager threads running
-    logger_manager.start()
-
-    ############################
     # If they&#39;ve given us an initial configuration, get and load it.
     if args.config:
         config = read_config(args.config)
@@ -595,6 +588,10 @@ if __name__ == &#39;__main__&#39;:  # noqa: C901
                         log_level=api.INFO,
                         message=&#39;started with: %s, mode %s&#39; %
                         (args.config, active_mode))
+
+    ############################
+    # Start all the various LoggerManager threads running
+    logger_manager.start()
 
     try:
         # If no console, just wait for the configuration update thread to
@@ -855,7 +852,7 @@ logger_log_level - At what logging level our component loggers
             target=self._update_configs_loop, daemon=True)
         self.update_configs_thread.start()
 
-        # Check logger status in a separate thread. If we&#39;ve got the
+        # Check cruise definition in a separate thread. If we&#39;ve got the
         # address of a data server websocket, send our updates to it.
         self.send_cruise_definition_loop_thread = threading.Thread(
             name=&#39;send_cruise_definition_loop&#39;,
@@ -870,11 +867,11 @@ logger_log_level - At what logging level our component loggers
     ############################
     def _load_new_definition_from_api(self):
         &#34;&#34;&#34;Fetch a new cruise definition from API and build local maps. Then
-        send anupdated cruise definition to the console.
+        send an updated cruise definition to the console.
         &#34;&#34;&#34;
         logging.info(&#39;Fetching new cruise definitions from API&#39;)
-        try:
-            with self.config_lock:
+        with self.config_lock:
+            try:
                 self.loggers = self.api.get_loggers()
                 self.config_to_logger = {}
                 for logger, logger_configs in self.loggers.items():
@@ -887,7 +884,7 @@ logger_log_level - At what logging level our component loggers
                 # from a callback when the API alerts us that something has
                 # changed. So we need to re-grab self.cruise
                 self.cruise = self.api.get_configuration()  # a Cruise object
-                self.cruise_filename = self.cruise.get(&#39;config_filename&#39;, None)
+                self.cruise_filename = self.cruise.get(&#39;config_filename&#39;)
                 loaded_time = self.cruise.get(&#39;loaded_time&#39;)
                 self.cruise_loaded_time = datetime.datetime.timestamp(loaded_time)
                 self.active_mode = self.api.get_active_mode()
@@ -904,8 +901,8 @@ logger_log_level - At what logging level our component loggers
                 logging.info(&#39;Sending updated cruise definitions to CDS.&#39;)
                 self._write_record_to_data_server(
                     &#39;status:cruise_definition&#39;, cruise_dict)
-        except (AttributeError, ValueError, TypeError) as e:
-            logging.info(&#39;Failed to update cruise definition: %s&#39;, e)
+            except (AttributeError, ValueError, TypeError) as e:
+                logging.info(&#39;Failed to update cruise definition: %s&#39;, e)
 
     ############################
     def _check_logger_status_loop(self):
@@ -951,9 +948,6 @@ logger_log_level - At what logging level our component loggers
 
         in this file to see where.
         &#34;&#34;&#34;
-        # First, grab a status update.
-        # self.logger_status = self.supervisor.check_status()
-        # self.status_time = time.time()
         with self.config_lock:
             # Get new configs in dict {logger:{&#39;configs&#39;:[config_name,...]}}
             logger_configs = self.api.get_logger_configs()
@@ -996,7 +990,7 @@ logger_log_level - At what logging level our component loggers
                     logging.info(&#39;No cruise definition found in API&#39;)
                     time.sleep(self.interval * 2)
                     continue
-                self.cruise_filename = self.cruise.get(&#39;config_filename&#39;, None)
+                self.cruise_filename = self.cruise.get(&#39;config_filename&#39;)
                 loaded_time = self.cruise.get(&#39;loaded_time&#39;)
                 self.cruise_loaded_time = datetime.datetime.timestamp(loaded_time)
 
@@ -1095,7 +1089,7 @@ if the main thread does.</p></div>
         target=self._update_configs_loop, daemon=True)
     self.update_configs_thread.start()
 
-    # Check logger status in a separate thread. If we&#39;ve got the
+    # Check cruise definition in a separate thread. If we&#39;ve got the
     # address of a data server websocket, send our updates to it.
     self.send_cruise_definition_loop_thread = threading.Thread(
         name=&#39;send_cruise_definition_loop&#39;,

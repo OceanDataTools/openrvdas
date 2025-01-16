@@ -161,7 +161,7 @@ class RecordParser:
             # Some limited error checking: make sure that all devices have a
             # defined device_type.
             for device, device_def in self.devices.items():
-                device_type = device_def.get(&#39;device_type&#39;, None)
+                device_type = device_def.get(&#39;device_type&#39;)
                 if not device_type:
                     raise ValueError(&#39;Device definition for &#34;%s&#34; has no declaration of &#39;
                                      &#39;its device_type.&#39; % device)
@@ -173,7 +173,7 @@ class RecordParser:
             # quickly. If format is a single string, normalize it into a list
             # to simplify later code.
             for device_type, device_type_def in self.device_types.items():
-                format = device_type_def.get(&#39;format&#39;, None)
+                format = device_type_def.get(&#39;format&#39;)
                 if format is None:
                     raise ValueError(&#39;Device type %s has no format definition&#39;
                                      % device_type)
@@ -190,27 +190,27 @@ class RecordParser:
             # and voluminous.
             if not metadata and metadata_interval is not None:
                 for device, device_def in self.devices.items():  # e.g. s330
-                    device_type_name = device_def.get(&#39;device_type&#39;, None)  # Seapath330
+                    device_type_name = device_def.get(&#39;device_type&#39;)  # Seapath330
                     if not device_type_name:
                         raise ValueError(&#39;Device definition for &#34;%s&#34; has no declaration of &#39;
                                          &#39;its device_type.&#39; % device)
-                    device_type_def = self.device_types.get(device_type_name, None)
+                    device_type_def = self.device_types.get(device_type_name)
                     if not device_type_def:
                         raise ValueError(&#39;Device type &#34;%s&#34; (declared in definition of &#34;%s&#34;)&#39;
                                          &#39; is undefined.&#39; % (device_type_name, device))
-                    device_type_fields = device_type_def.get(&#39;fields&#39;, None)
+                    device_type_fields = device_type_def.get(&#39;fields&#39;)
                     if not device_type_fields:
                         raise ValueError(&#39;Device type &#34;%s&#34; has no fields?&#39;
                                          % device_type_name)
 
-                    fields = device_def.get(&#39;fields&#39;, None)
+                    fields = device_def.get(&#39;fields&#39;)
                     if not fields:
                         raise ValueError(&#39;Device &#34;%s&#34; has no fields?!?&#39; % device)
 
                     # e.g. device_type_field = GPSTime, device_field = S330GPSTime
                     for device_type_field, device_field in fields.items():
                         # e.g. GPSTime: {&#39;units&#39;:..., &#39;description&#39;:...}
-                        field_desc = device_type_fields.get(device_type_field, None)
+                        field_desc = device_type_fields.get(device_type_field)
                         if not field_desc:
                             logging.warning(&#39;Device type &#34;%s&#34; has no field corresponding to &#39;
                                             &#39;device field &#34;%s&#34;&#39; % (device_type_name,
@@ -244,14 +244,14 @@ class RecordParser:
             return None
 
         # Convert timestamp to numeric, if it&#39;s there
-        timestamp = parsed_record.get(&#39;timestamp&#39;, None)
+        timestamp = parsed_record.get(&#39;timestamp&#39;)
         if timestamp is not None and isinstance(timestamp, datetime.datetime):
             timestamp = timestamp.timestamp()
             parsed_record[&#39;timestamp&#39;] = timestamp
 
         # Extract the field string we&#39;re going to parse; remove trailing
         # whitespace.
-        field_string = parsed_record.get(&#39;field_string&#39;, None)
+        field_string = parsed_record.get(&#39;field_string&#39;)
 
         # If we don&#39;t have fields, there&#39;s nothing to parse
         if field_string is None:
@@ -279,7 +279,7 @@ class RecordParser:
         # count on the record having a data_id that lets us figure out
         # which device, and therefore which field_patterns to try.
         else:
-            data_id = parsed_record.get(&#39;data_id&#39;, None)
+            data_id = parsed_record.get(&#39;data_id&#39;)
             if data_id is None:
                 if not self.quiet:
                     logging.warning(&#39;No data id found in record: %s&#39;, record)
@@ -322,7 +322,7 @@ class RecordParser:
                 last_metadata_sent = self.metadata_last_sent.get(field_name, 0)
                 time_since_send = timestamp - last_metadata_sent
                 if time_since_send &gt; self.metadata_interval:
-                    field_metadata = self.metadata.get(field_name, None)
+                    field_metadata = self.metadata.get(field_name)
                     if field_metadata:
                         metadata_fields[field_name] = field_metadata
                         self.metadata_last_sent[field_name] = timestamp
@@ -398,7 +398,7 @@ class RecordParser:
             return failure_values
 
         # Get device and device_type definitions for data_id
-        device = self.devices.get(data_id, None)
+        device = self.devices.get(data_id)
         if not device:
             if not self.quiet:
                 logging.warning(&#39;Unrecognized data id &#34;%s&#34;, field string: %s&#39;,
@@ -407,19 +407,19 @@ class RecordParser:
                                 &#39;, &#39;.join(self.devices.keys()))
             return failure_values
 
-        device_type = device.get(&#39;device_type&#39;, None)
+        device_type = device.get(&#39;device_type&#39;)
         if not device_type:
             if not self.quiet:
                 logging.error(&#39;Internal error: No &#34;device_type&#34; for device %s!&#39;, device)
             return failure_values
 
-        device_definition = self.device_types.get(device_type, None)
+        device_definition = self.device_types.get(device_type)
         if not device_definition:
             if not self.quiet:
                 logging.error(&#39;No definition found for device_type &#34;%s&#34;&#39;, device_type)
             return failure_values
 
-        compiled_format_patterns = device_definition.get(&#39;compiled_format&#39;, None)
+        compiled_format_patterns = device_definition.get(&#39;compiled_format&#39;)
         parsed_fields, message_type = \
             self._parse_field_string(field_string, compiled_format_patterns)
 
@@ -432,7 +432,7 @@ class RecordParser:
         logging.debug(&#39;Got fields: %s&#39;, pprint.pformat(parsed_fields))
 
         # Finally, convert field values to variable names specific to device
-        device_fields = device.get(&#39;fields&#39;, None)
+        device_fields = device.get(&#39;fields&#39;)
         if not device_fields:
             if not self.quiet:
                 logging.error(&#39;No &#34;fields&#34; definition found for device %s&#39;, data_id)
@@ -441,7 +441,7 @@ class RecordParser:
         # Assign field values to the appropriate named variable.
         fields = {}
         for field_name, value in parsed_fields.items():
-            variable_name = device_fields.get(field_name, None)
+            variable_name = device_fields.get(field_name)
             # None means we&#39;re not supposed to report it.
             if variable_name is None:
                 continue
@@ -570,7 +570,7 @@ class RecordParser:
                     # it&#39;s a (deprecated) top-level device or device_type
                     # definition. Try adding it to the right place.
                     else:
-                        category = val.get(&#39;category&#39;, None)
+                        category = val.get(&#39;category&#39;)
                         if category not in [&#39;device&#39;, &#39;device_type&#39;]:
                             logging.warning(&#39;Top-level definition &#34;%s&#34; in file %s is not &#39;
                                             &#39;category &#34;device&#34; or &#34;device_type&#34;. &#39;
@@ -746,7 +746,7 @@ delimiter
             # Some limited error checking: make sure that all devices have a
             # defined device_type.
             for device, device_def in self.devices.items():
-                device_type = device_def.get(&#39;device_type&#39;, None)
+                device_type = device_def.get(&#39;device_type&#39;)
                 if not device_type:
                     raise ValueError(&#39;Device definition for &#34;%s&#34; has no declaration of &#39;
                                      &#39;its device_type.&#39; % device)
@@ -758,7 +758,7 @@ delimiter
             # quickly. If format is a single string, normalize it into a list
             # to simplify later code.
             for device_type, device_type_def in self.device_types.items():
-                format = device_type_def.get(&#39;format&#39;, None)
+                format = device_type_def.get(&#39;format&#39;)
                 if format is None:
                     raise ValueError(&#39;Device type %s has no format definition&#39;
                                      % device_type)
@@ -775,27 +775,27 @@ delimiter
             # and voluminous.
             if not metadata and metadata_interval is not None:
                 for device, device_def in self.devices.items():  # e.g. s330
-                    device_type_name = device_def.get(&#39;device_type&#39;, None)  # Seapath330
+                    device_type_name = device_def.get(&#39;device_type&#39;)  # Seapath330
                     if not device_type_name:
                         raise ValueError(&#39;Device definition for &#34;%s&#34; has no declaration of &#39;
                                          &#39;its device_type.&#39; % device)
-                    device_type_def = self.device_types.get(device_type_name, None)
+                    device_type_def = self.device_types.get(device_type_name)
                     if not device_type_def:
                         raise ValueError(&#39;Device type &#34;%s&#34; (declared in definition of &#34;%s&#34;)&#39;
                                          &#39; is undefined.&#39; % (device_type_name, device))
-                    device_type_fields = device_type_def.get(&#39;fields&#39;, None)
+                    device_type_fields = device_type_def.get(&#39;fields&#39;)
                     if not device_type_fields:
                         raise ValueError(&#39;Device type &#34;%s&#34; has no fields?&#39;
                                          % device_type_name)
 
-                    fields = device_def.get(&#39;fields&#39;, None)
+                    fields = device_def.get(&#39;fields&#39;)
                     if not fields:
                         raise ValueError(&#39;Device &#34;%s&#34; has no fields?!?&#39; % device)
 
                     # e.g. device_type_field = GPSTime, device_field = S330GPSTime
                     for device_type_field, device_field in fields.items():
                         # e.g. GPSTime: {&#39;units&#39;:..., &#39;description&#39;:...}
-                        field_desc = device_type_fields.get(device_type_field, None)
+                        field_desc = device_type_fields.get(device_type_field)
                         if not field_desc:
                             logging.warning(&#39;Device type &#34;%s&#34; has no field corresponding to &#39;
                                             &#39;device field &#34;%s&#34;&#39; % (device_type_name,
@@ -829,14 +829,14 @@ delimiter
             return None
 
         # Convert timestamp to numeric, if it&#39;s there
-        timestamp = parsed_record.get(&#39;timestamp&#39;, None)
+        timestamp = parsed_record.get(&#39;timestamp&#39;)
         if timestamp is not None and isinstance(timestamp, datetime.datetime):
             timestamp = timestamp.timestamp()
             parsed_record[&#39;timestamp&#39;] = timestamp
 
         # Extract the field string we&#39;re going to parse; remove trailing
         # whitespace.
-        field_string = parsed_record.get(&#39;field_string&#39;, None)
+        field_string = parsed_record.get(&#39;field_string&#39;)
 
         # If we don&#39;t have fields, there&#39;s nothing to parse
         if field_string is None:
@@ -864,7 +864,7 @@ delimiter
         # count on the record having a data_id that lets us figure out
         # which device, and therefore which field_patterns to try.
         else:
-            data_id = parsed_record.get(&#39;data_id&#39;, None)
+            data_id = parsed_record.get(&#39;data_id&#39;)
             if data_id is None:
                 if not self.quiet:
                     logging.warning(&#39;No data id found in record: %s&#39;, record)
@@ -907,7 +907,7 @@ delimiter
                 last_metadata_sent = self.metadata_last_sent.get(field_name, 0)
                 time_since_send = timestamp - last_metadata_sent
                 if time_since_send &gt; self.metadata_interval:
-                    field_metadata = self.metadata.get(field_name, None)
+                    field_metadata = self.metadata.get(field_name)
                     if field_metadata:
                         metadata_fields[field_name] = field_metadata
                         self.metadata_last_sent[field_name] = timestamp
@@ -983,7 +983,7 @@ delimiter
             return failure_values
 
         # Get device and device_type definitions for data_id
-        device = self.devices.get(data_id, None)
+        device = self.devices.get(data_id)
         if not device:
             if not self.quiet:
                 logging.warning(&#39;Unrecognized data id &#34;%s&#34;, field string: %s&#39;,
@@ -992,19 +992,19 @@ delimiter
                                 &#39;, &#39;.join(self.devices.keys()))
             return failure_values
 
-        device_type = device.get(&#39;device_type&#39;, None)
+        device_type = device.get(&#39;device_type&#39;)
         if not device_type:
             if not self.quiet:
                 logging.error(&#39;Internal error: No &#34;device_type&#34; for device %s!&#39;, device)
             return failure_values
 
-        device_definition = self.device_types.get(device_type, None)
+        device_definition = self.device_types.get(device_type)
         if not device_definition:
             if not self.quiet:
                 logging.error(&#39;No definition found for device_type &#34;%s&#34;&#39;, device_type)
             return failure_values
 
-        compiled_format_patterns = device_definition.get(&#39;compiled_format&#39;, None)
+        compiled_format_patterns = device_definition.get(&#39;compiled_format&#39;)
         parsed_fields, message_type = \
             self._parse_field_string(field_string, compiled_format_patterns)
 
@@ -1017,7 +1017,7 @@ delimiter
         logging.debug(&#39;Got fields: %s&#39;, pprint.pformat(parsed_fields))
 
         # Finally, convert field values to variable names specific to device
-        device_fields = device.get(&#39;fields&#39;, None)
+        device_fields = device.get(&#39;fields&#39;)
         if not device_fields:
             if not self.quiet:
                 logging.error(&#39;No &#34;fields&#34; definition found for device %s&#39;, data_id)
@@ -1026,7 +1026,7 @@ delimiter
         # Assign field values to the appropriate named variable.
         fields = {}
         for field_name, value in parsed_fields.items():
-            variable_name = device_fields.get(field_name, None)
+            variable_name = device_fields.get(field_name)
             # None means we&#39;re not supposed to report it.
             if variable_name is None:
                 continue
@@ -1155,7 +1155,7 @@ delimiter
                     # it&#39;s a (deprecated) top-level device or device_type
                     # definition. Try adding it to the right place.
                     else:
-                        category = val.get(&#39;category&#39;, None)
+                        category = val.get(&#39;category&#39;)
                         if category not in [&#39;device&#39;, &#39;device_type&#39;]:
                             logging.warning(&#39;Top-level definition &#34;%s&#34; in file %s is not &#39;
                                             &#39;category &#34;device&#34; or &#34;device_type&#34;. &#39;
@@ -1201,7 +1201,7 @@ according to those formats. If successful, return a tuple of
         return failure_values
 
     # Get device and device_type definitions for data_id
-    device = self.devices.get(data_id, None)
+    device = self.devices.get(data_id)
     if not device:
         if not self.quiet:
             logging.warning(&#39;Unrecognized data id &#34;%s&#34;, field string: %s&#39;,
@@ -1210,19 +1210,19 @@ according to those formats. If successful, return a tuple of
                             &#39;, &#39;.join(self.devices.keys()))
         return failure_values
 
-    device_type = device.get(&#39;device_type&#39;, None)
+    device_type = device.get(&#39;device_type&#39;)
     if not device_type:
         if not self.quiet:
             logging.error(&#39;Internal error: No &#34;device_type&#34; for device %s!&#39;, device)
         return failure_values
 
-    device_definition = self.device_types.get(device_type, None)
+    device_definition = self.device_types.get(device_type)
     if not device_definition:
         if not self.quiet:
             logging.error(&#39;No definition found for device_type &#34;%s&#34;&#39;, device_type)
         return failure_values
 
-    compiled_format_patterns = device_definition.get(&#39;compiled_format&#39;, None)
+    compiled_format_patterns = device_definition.get(&#39;compiled_format&#39;)
     parsed_fields, message_type = \
         self._parse_field_string(field_string, compiled_format_patterns)
 
@@ -1235,7 +1235,7 @@ according to those formats. If successful, return a tuple of
     logging.debug(&#39;Got fields: %s&#39;, pprint.pformat(parsed_fields))
 
     # Finally, convert field values to variable names specific to device
-    device_fields = device.get(&#39;fields&#39;, None)
+    device_fields = device.get(&#39;fields&#39;)
     if not device_fields:
         if not self.quiet:
             logging.error(&#39;No &#34;fields&#34; definition found for device %s&#39;, data_id)
@@ -1244,7 +1244,7 @@ according to those formats. If successful, return a tuple of
     # Assign field values to the appropriate named variable.
     fields = {}
     for field_name, value in parsed_fields.items():
-        variable_name = device_fields.get(field_name, None)
+        variable_name = device_fields.get(field_name)
         # None means we&#39;re not supposed to report it.
         if variable_name is None:
             continue
@@ -1290,14 +1290,14 @@ timestamp and fields.</p></div>
         return None
 
     # Convert timestamp to numeric, if it&#39;s there
-    timestamp = parsed_record.get(&#39;timestamp&#39;, None)
+    timestamp = parsed_record.get(&#39;timestamp&#39;)
     if timestamp is not None and isinstance(timestamp, datetime.datetime):
         timestamp = timestamp.timestamp()
         parsed_record[&#39;timestamp&#39;] = timestamp
 
     # Extract the field string we&#39;re going to parse; remove trailing
     # whitespace.
-    field_string = parsed_record.get(&#39;field_string&#39;, None)
+    field_string = parsed_record.get(&#39;field_string&#39;)
 
     # If we don&#39;t have fields, there&#39;s nothing to parse
     if field_string is None:
@@ -1325,7 +1325,7 @@ timestamp and fields.</p></div>
     # count on the record having a data_id that lets us figure out
     # which device, and therefore which field_patterns to try.
     else:
-        data_id = parsed_record.get(&#39;data_id&#39;, None)
+        data_id = parsed_record.get(&#39;data_id&#39;)
         if data_id is None:
             if not self.quiet:
                 logging.warning(&#39;No data id found in record: %s&#39;, record)
@@ -1368,7 +1368,7 @@ timestamp and fields.</p></div>
             last_metadata_sent = self.metadata_last_sent.get(field_name, 0)
             time_since_send = timestamp - last_metadata_sent
             if time_since_send &gt; self.metadata_interval:
-                field_metadata = self.metadata.get(field_name, None)
+                field_metadata = self.metadata.get(field_name)
                 if field_metadata:
                     metadata_fields[field_name] = field_metadata
                     self.metadata_last_sent[field_name] = timestamp

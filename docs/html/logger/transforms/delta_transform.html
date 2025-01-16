@@ -88,8 +88,8 @@ class DeltaTransform:
             timestamp = record.timestamp
 
         elif type(record) is dict:
-            fields = record.get(&#39;fields&#39;, None)
-            timestamp = record.get(&#39;timestamp&#39;, None)
+            fields = record.get(&#39;fields&#39;)
+            timestamp = record.get(&#39;timestamp&#39;)
 
         elif type(record) is list:
             results = []
@@ -123,7 +123,7 @@ class DeltaTransform:
 
             # Does this field have a special type?
             if type(self.field_type) is dict:
-                this_field_type = self.field_type.get(key, None)
+                this_field_type = self.field_type.get(key)
             else:
                 this_field_type = self.field_type
 
@@ -257,8 +257,8 @@ implemented.</p></div>
             timestamp = record.timestamp
 
         elif type(record) is dict:
-            fields = record.get(&#39;fields&#39;, None)
-            timestamp = record.get(&#39;timestamp&#39;, None)
+            fields = record.get(&#39;fields&#39;)
+            timestamp = record.get(&#39;timestamp&#39;)
 
         elif type(record) is list:
             results = []
@@ -292,7 +292,7 @@ implemented.</p></div>
 
             # Does this field have a special type?
             if type(self.field_type) is dict:
-                this_field_type = self.field_type.get(key, None)
+                this_field_type = self.field_type.get(key)
             else:
                 this_field_type = self.field_type
 
@@ -351,8 +351,8 @@ implemented.</p></div>
         timestamp = record.timestamp
 
     elif type(record) is dict:
-        fields = record.get(&#39;fields&#39;, None)
-        timestamp = record.get(&#39;timestamp&#39;, None)
+        fields = record.get(&#39;fields&#39;)
+        timestamp = record.get(&#39;timestamp&#39;)
 
     elif type(record) is list:
         results = []
@@ -386,7 +386,7 @@ implemented.</p></div>
 
         # Does this field have a special type?
         if type(self.field_type) is dict:
-            this_field_type = self.field_type.get(key, None)
+            this_field_type = self.field_type.get(key)
         else:
             this_field_type = self.field_type
 

@@ -32,6 +32,8 @@ import logging
 import socket
 import sys
 
+from typing import Union
+
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.writers.writer import Writer  # noqa: E402
@@ -41,7 +43,7 @@ class TCPWriter(Writer):
     &#34;&#34;&#34;Write TCP packtes to network.&#34;&#34;&#34;
     def __init__(self, destination, port,
                  num_retry=2, warning_limit=5, eol=&#39;&#39;,
-                 reuseaddr=False, reuseport=False,
+                 reuseaddr=False, reuseport=False, quiet=False,
                  encoding=&#39;utf-8&#39;, encoding_errors=&#39;ignore&#39;):
         &#34;&#34;&#34;
         Write records to a TCP network socket.
@@ -78,8 +80,7 @@ class TCPWriter(Writer):
 
         ```
         &#34;&#34;&#34;
-
-        super().__init__(encoding=encoding,
+        super().__init__(quiet=quiet, encoding=encoding,
                          encoding_errors=encoding_errors)
 
         self.num_retry = num_retry
@@ -169,17 +170,12 @@ class TCPWriter(Writer):
             logging.debug(&#39;Unable to close socket&#39;)
 
     ############################
-    def write(self, record):
+    def write(self, record: Union[str, bytes]):
         &#34;&#34;&#34;Write the record to the network.&#34;&#34;&#34;
-        # If we don&#39;t have a record, there&#39;s nothing to do
-        if not record:
-            return
 
-        # If we&#39;ve got a list, hope it&#39;s a list of records. Recurse,
-        # calling write() on each of the list elements in order.
-        if isinstance(record, list):
-            for single_record in record:
-                self.write(single_record)
+        # See if it&#39;s something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from BaseModule()
+            self.digest_record(record)  # inherited from BaseModule()
             return
 
         # Append eol if configured
@@ -274,7 +270,7 @@ class TCPWriter(Writer):
                 continue
 
             # check to see if we really wrote it all
-            if bytes_sent &lt; rec_len:
+            if bytes_sent &lt; rec_len and not self.quiet:
                 logging.warning(&#39;TCPWriter: send() did not send the whole record: &#39;
                                 &#39;bytes_sent=%d, rec_len=%d&#39;, bytes_sent, rec_len)
 
@@ -293,7 +289,7 @@ class TCPWriter(Writer):
 <dl>
 <dt id="logger.writers.tcp_writer.TCPWriter"><code class="flex name class">
 <span>class <span class="ident">TCPWriter</span></span>
-<span>(</span><span>destination, port, num_retry=2, warning_limit=5, eol='', reuseaddr=False, reuseport=False, encoding='utf-8', encoding_errors='ignore')</span>
+<span>(</span><span>destination, port, num_retry=2, warning_limit=5, eol='', reuseaddr=False, reuseport=False, quiet=False, encoding='utf-8', encoding_errors='ignore')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Write TCP packtes to network.</p>
@@ -336,7 +332,7 @@ encoding_errors - 'ignore' by default. Other error strategies are
     &#34;&#34;&#34;Write TCP packtes to network.&#34;&#34;&#34;
     def __init__(self, destination, port,
                  num_retry=2, warning_limit=5, eol=&#39;&#39;,
-                 reuseaddr=False, reuseport=False,
+                 reuseaddr=False, reuseport=False, quiet=False,
                  encoding=&#39;utf-8&#39;, encoding_errors=&#39;ignore&#39;):
         &#34;&#34;&#34;
         Write records to a TCP network socket.
@@ -373,8 +369,7 @@ encoding_errors - 'ignore' by default. Other error strategies are
 
         ```
         &#34;&#34;&#34;
-
-        super().__init__(encoding=encoding,
+        super().__init__(quiet=quiet, encoding=encoding,
                          encoding_errors=encoding_errors)
 
         self.num_retry = num_retry
@@ -464,17 +459,12 @@ encoding_errors - 'ignore' by default. Other error strategies are
             logging.debug(&#39;Unable to close socket&#39;)
 
     ############################
-    def write(self, record):
+    def write(self, record: Union[str, bytes]):
         &#34;&#34;&#34;Write the record to the network.&#34;&#34;&#34;
-        # If we don&#39;t have a record, there&#39;s nothing to do
-        if not record:
-            return
 
-        # If we&#39;ve got a list, hope it&#39;s a list of records. Recurse,
-        # calling write() on each of the list elements in order.
-        if isinstance(record, list):
-            for single_record in record:
-                self.write(single_record)
+        # See if it&#39;s something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from BaseModule()
+            self.digest_record(record)  # inherited from BaseModule()
             return
 
         # Append eol if configured
@@ -569,7 +559,7 @@ encoding_errors - 'ignore' by default. Other error strategies are
                 continue
 
             # check to see if we really wrote it all
-            if bytes_sent &lt; rec_len:
+            if bytes_sent &lt; rec_len and not self.quiet:
                 logging.warning(&#39;TCPWriter: send() did not send the whole record: &#39;
                                 &#39;bytes_sent=%d, rec_len=%d&#39;, bytes_sent, rec_len)
 
@@ -579,11 +569,12 @@ encoding_errors - 'ignore' by default. Other error strategies are
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="logger.writers.writer.Writer" href="writer.html#logger.writers.writer.Writer">Writer</a></li>
+<li><a title="logger.utils.base_module.BaseModule" href="../utils/base_module.html#logger.utils.base_module.BaseModule">BaseModule</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
 <dt id="logger.writers.tcp_writer.TCPWriter.write"><code class="name flex">
-<span>def <span class="ident">write</span></span>(<span>self, record)</span>
+<span>def <span class="ident">write</span></span>(<span>self, record: Union[str, bytes])</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Write the record to the network.</p></div>
@@ -591,17 +582,12 @@ encoding_errors - 'ignore' by default. Other error strategies are
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def write(self, record):
+<pre><code class="python">def write(self, record: Union[str, bytes]):
     &#34;&#34;&#34;Write the record to the network.&#34;&#34;&#34;
-    # If we don&#39;t have a record, there&#39;s nothing to do
-    if not record:
-        return
 
-    # If we&#39;ve got a list, hope it&#39;s a list of records. Recurse,
-    # calling write() on each of the list elements in order.
-    if isinstance(record, list):
-        for single_record in record:
-            self.write(single_record)
+    # See if it&#39;s something we can process, and if not, try digesting
+    if not self.can_process_record(record):  # inherited from BaseModule()
+        self.digest_record(record)  # inherited from BaseModule()
         return
 
     # Append eol if configured
@@ -696,7 +682,7 @@ encoding_errors - 'ignore' by default. Other error strategies are
             continue
 
         # check to see if we really wrote it all
-        if bytes_sent &lt; rec_len:
+        if bytes_sent &lt; rec_len and not self.quiet:
             logging.warning(&#39;TCPWriter: send() did not send the whole record: &#39;
                             &#39;bytes_sent=%d, rec_len=%d&#39;, bytes_sent, rec_len)
 
@@ -709,8 +695,8 @@ encoding_errors - 'ignore' by default. Other error strategies are
 <ul class="hlist">
 <li><code><b><a title="logger.writers.writer.Writer" href="writer.html#logger.writers.writer.Writer">Writer</a></b></code>:
 <ul class="hlist">
-<li><code><a title="logger.writers.writer.Writer.can_accept" href="writer.html#logger.writers.writer.Writer.can_accept">can_accept</a></code></li>
-<li><code><a title="logger.writers.writer.Writer.input_format" href="writer.html#logger.writers.writer.Writer.input_format">input_format</a></code></li>
+<li><code><a title="logger.writers.writer.Writer.can_process_record" href="../utils/base_module.html#logger.utils.base_module.BaseModule.can_process_record">can_process_record</a></code></li>
+<li><code><a title="logger.writers.writer.Writer.digest_record" href="../utils/base_module.html#logger.utils.base_module.BaseModule.digest_record">digest_record</a></code></li>
 </ul>
 </li>
 </ul>

@@ -31,6 +31,8 @@
 import logging
 import sys
 
+from typing import Union
+
 # Don&#39;t freak out if pyserial isn&#39;t installed - unless they actually
 # try to instantiate a SerialWriter
 try:
@@ -52,8 +54,8 @@ class SerialWriter(Writer):
     def __init__(self,  port, baudrate=9600, bytesize=8, parity=&#39;N&#39;,
                  stopbits=1, timeout=None, xonxoff=False, rtscts=False,
                  write_timeout=None, dsrdtr=False, inter_byte_timeout=None,
-                 exclusive=None, eol=&#39;\n&#39;,
-                 encoding=&#39;utf-8&#39;, encoding_errors=&#39;ignore&#39;, quiet=False):
+                 exclusive=None, eol=&#39;\n&#39;, quiet=False,
+                 encoding=&#39;utf-8&#39;, encoding_errors=&#39;ignore&#39;):
         &#34;&#34;&#34;
         By default, the SerialWriter write records to the specified serial port encoded by UTF-8
         and will ignore non unicode characters it encounters. These defaults may be changed by
@@ -72,7 +74,7 @@ class SerialWriter(Writer):
         quiet - allows for the logger to silence warnings if not all the bits were succesfully
                 written to the serial port.
         &#34;&#34;&#34;
-        super().__init__(encoding=encoding,
+        super().__init__(quiet=quiet, encoding=encoding,
                          encoding_errors=encoding_errors)
 
         if not SERIAL_MODULE_FOUND:
@@ -108,9 +110,13 @@ class SerialWriter(Writer):
         self.eol = eol
 
     ############################
-    def write(self, record):
-        if not record:
+    def write(self, record: Union[str, bytes]):
+
+        # See if it&#39;s something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from BaseModule()
+            self.digest_record(record)  # inherited from BaseModule()
             return
+
         try:
             if self.eol:
                 record += self.eol
@@ -136,7 +142,7 @@ class SerialWriter(Writer):
 <dl>
 <dt id="logger.writers.serial_writer.SerialWriter"><code class="flex name class">
 <span>class <span class="ident">SerialWriter</span></span>
-<span>(</span><span>port, baudrate=9600, bytesize=8, parity='N', stopbits=1, timeout=None, xonxoff=False, rtscts=False, write_timeout=None, dsrdtr=False, inter_byte_timeout=None, exclusive=None, eol='\n', encoding='utf-8', encoding_errors='ignore', quiet=False)</span>
+<span>(</span><span>port, baudrate=9600, bytesize=8, parity='N', stopbits=1, timeout=None, xonxoff=False, rtscts=False, write_timeout=None, dsrdtr=False, inter_byte_timeout=None, exclusive=None, eol='\n', quiet=False, encoding='utf-8', encoding_errors='ignore')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Writes records to a serial port.</p>
@@ -164,8 +170,8 @@ written to the serial port.</p></div>
     def __init__(self,  port, baudrate=9600, bytesize=8, parity=&#39;N&#39;,
                  stopbits=1, timeout=None, xonxoff=False, rtscts=False,
                  write_timeout=None, dsrdtr=False, inter_byte_timeout=None,
-                 exclusive=None, eol=&#39;\n&#39;,
-                 encoding=&#39;utf-8&#39;, encoding_errors=&#39;ignore&#39;, quiet=False):
+                 exclusive=None, eol=&#39;\n&#39;, quiet=False,
+                 encoding=&#39;utf-8&#39;, encoding_errors=&#39;ignore&#39;):
         &#34;&#34;&#34;
         By default, the SerialWriter write records to the specified serial port encoded by UTF-8
         and will ignore non unicode characters it encounters. These defaults may be changed by
@@ -184,7 +190,7 @@ written to the serial port.</p></div>
         quiet - allows for the logger to silence warnings if not all the bits were succesfully
                 written to the serial port.
         &#34;&#34;&#34;
-        super().__init__(encoding=encoding,
+        super().__init__(quiet=quiet, encoding=encoding,
                          encoding_errors=encoding_errors)
 
         if not SERIAL_MODULE_FOUND:
@@ -220,9 +226,13 @@ written to the serial port.</p></div>
         self.eol = eol
 
     ############################
-    def write(self, record):
-        if not record:
+    def write(self, record: Union[str, bytes]):
+
+        # See if it&#39;s something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from BaseModule()
+            self.digest_record(record)  # inherited from BaseModule()
             return
+
         try:
             if self.eol:
                 record += self.eol
@@ -239,13 +249,14 @@ written to the serial port.</p></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="logger.writers.writer.Writer" href="writer.html#logger.writers.writer.Writer">Writer</a></li>
+<li><a title="logger.utils.base_module.BaseModule" href="../utils/base_module.html#logger.utils.base_module.BaseModule">BaseModule</a></li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="logger.writers.writer.Writer" href="writer.html#logger.writers.writer.Writer">Writer</a></b></code>:
 <ul class="hlist">
-<li><code><a title="logger.writers.writer.Writer.can_accept" href="writer.html#logger.writers.writer.Writer.can_accept">can_accept</a></code></li>
-<li><code><a title="logger.writers.writer.Writer.input_format" href="writer.html#logger.writers.writer.Writer.input_format">input_format</a></code></li>
+<li><code><a title="logger.writers.writer.Writer.can_process_record" href="../utils/base_module.html#logger.utils.base_module.BaseModule.can_process_record">can_process_record</a></code></li>
+<li><code><a title="logger.writers.writer.Writer.digest_record" href="../utils/base_module.html#logger.utils.base_module.BaseModule.digest_record">digest_record</a></code></li>
 <li><code><a title="logger.writers.writer.Writer.write" href="writer.html#logger.writers.writer.Writer.write">write</a></code></li>
 </ul>
 </li>

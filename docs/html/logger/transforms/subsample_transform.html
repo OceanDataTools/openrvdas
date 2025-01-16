@@ -123,8 +123,8 @@ class SubsampleTransform(DerivedDataTransform):
             timestamp = record.timestamp
             fields = record.fields
         else:
-            timestamp = record.get(&#39;timestamp&#39;, None)
-            fields = record.get(&#39;fields&#39;, None)
+            timestamp = record.get(&#39;timestamp&#39;)
+            fields = record.get(&#39;fields&#39;)
 
         if not fields:
             logging.error(&#39;SubsampleTransform: no fields found in record: %s&#39;, record)
@@ -132,7 +132,7 @@ class SubsampleTransform(DerivedDataTransform):
 
         # First, copy the new data into our cache
         for field in self.field_list:
-            new_vals = fields.get(field, None)
+            new_vals = fields.get(field)
             if not new_vals:
                 continue
             # If list, we assume it&#39;s [(ts, value), (ts, value),...]
@@ -187,11 +187,11 @@ class SubsampleTransform(DerivedDataTransform):
             if not self.cached_values[field]:
                 continue
 
-            output_field = self.field_spec[field].get(&#39;output&#39;, None)
+            output_field = self.field_spec[field].get(&#39;output&#39;)
             if not output_field:
                 logging.warning(&#39;No &#34;output&#34; spec found for field %s&#39;, field)
                 continue
-            algorithm = self.field_spec[field].get(&#39;subsample&#39;, None)
+            algorithm = self.field_spec[field].get(&#39;subsample&#39;)
             if not algorithm:
                 logging.warning(&#39;No &#34;subsample&#34; spec found for field %s&#39;, field)
                 continue
@@ -338,8 +338,8 @@ metadata_interval - how many seconds between when we attach field metadata
             timestamp = record.timestamp
             fields = record.fields
         else:
-            timestamp = record.get(&#39;timestamp&#39;, None)
-            fields = record.get(&#39;fields&#39;, None)
+            timestamp = record.get(&#39;timestamp&#39;)
+            fields = record.get(&#39;fields&#39;)
 
         if not fields:
             logging.error(&#39;SubsampleTransform: no fields found in record: %s&#39;, record)
@@ -347,7 +347,7 @@ metadata_interval - how many seconds between when we attach field metadata
 
         # First, copy the new data into our cache
         for field in self.field_list:
-            new_vals = fields.get(field, None)
+            new_vals = fields.get(field)
             if not new_vals:
                 continue
             # If list, we assume it&#39;s [(ts, value), (ts, value),...]
@@ -402,11 +402,11 @@ metadata_interval - how many seconds between when we attach field metadata
             if not self.cached_values[field]:
                 continue
 
-            output_field = self.field_spec[field].get(&#39;output&#39;, None)
+            output_field = self.field_spec[field].get(&#39;output&#39;)
             if not output_field:
                 logging.warning(&#39;No &#34;output&#34; spec found for field %s&#39;, field)
                 continue
-            algorithm = self.field_spec[field].get(&#39;subsample&#39;, None)
+            algorithm = self.field_spec[field].get(&#39;subsample&#39;)
             if not algorithm:
                 logging.warning(&#39;No &#34;subsample&#34; spec found for field %s&#39;, field)
                 continue
@@ -433,6 +433,7 @@ metadata_interval - how many seconds between when we attach field metadata
 <ul class="hlist">
 <li><a title="logger.transforms.derived_data_transform.DerivedDataTransform" href="derived_data_transform.html#logger.transforms.derived_data_transform.DerivedDataTransform">DerivedDataTransform</a></li>
 <li><a title="logger.transforms.transform.Transform" href="transform.html#logger.transforms.transform.Transform">Transform</a></li>
+<li><a title="logger.utils.base_module.BaseModule" href="../utils/base_module.html#logger.utils.base_module.BaseModule">BaseModule</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -487,11 +488,11 @@ us any new subsampled values, aggregate and return them.</p></div>
         if not self.cached_values[field]:
             continue
 
-        output_field = self.field_spec[field].get(&#39;output&#39;, None)
+        output_field = self.field_spec[field].get(&#39;output&#39;)
         if not output_field:
             logging.warning(&#39;No &#34;output&#34; spec found for field %s&#39;, field)
             continue
-        algorithm = self.field_spec[field].get(&#39;subsample&#39;, None)
+        algorithm = self.field_spec[field].get(&#39;subsample&#39;)
         if not algorithm:
             logging.warning(&#39;No &#34;subsample&#34; spec found for field %s&#39;, field)
             continue
@@ -520,8 +521,8 @@ us any new subsampled values, aggregate and return them.</p></div>
 <ul class="hlist">
 <li><code><b><a title="logger.transforms.derived_data_transform.DerivedDataTransform" href="derived_data_transform.html#logger.transforms.derived_data_transform.DerivedDataTransform">DerivedDataTransform</a></b></code>:
 <ul class="hlist">
-<li><code><a title="logger.transforms.derived_data_transform.DerivedDataTransform.input_format" href="transform.html#logger.transforms.transform.Transform.input_format">input_format</a></code></li>
-<li><code><a title="logger.transforms.derived_data_transform.DerivedDataTransform.output_format" href="transform.html#logger.transforms.transform.Transform.output_format">output_format</a></code></li>
+<li><code><a title="logger.transforms.derived_data_transform.DerivedDataTransform.can_process_record" href="../utils/base_module.html#logger.utils.base_module.BaseModule.can_process_record">can_process_record</a></code></li>
+<li><code><a title="logger.transforms.derived_data_transform.DerivedDataTransform.digest_record" href="../utils/base_module.html#logger.utils.base_module.BaseModule.digest_record">digest_record</a></code></li>
 </ul>
 </li>
 </ul>

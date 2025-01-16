@@ -120,9 +120,11 @@ import os
 import sys
 import time
 
+from typing import Union
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.utils.das_record import DASRecord  # noqa: E402
+from logger.transforms.transform import Transform  # noqa: E402
 
 # Load the transform-specific packages we need
 import_errors = False
@@ -143,7 +145,7 @@ except ImportError:
 
 
 ################################################################################
-class GeofenceTransform():
+class GeofenceTransform(Transform):
     &#34;&#34;&#34;Class that reads lat/lon from passed records and compare to a geofence loaded at
     initialization time. Emit pre-defined messages if lat/lon transition between inside
     and outside of fence.
@@ -281,7 +283,7 @@ class GeofenceTransform():
         return self.buffered_eez.contains(point).any()
 
     ############################
-    def transform(self, record):
+    def transform(self, record: Union[DASRecord, dict]):
         &#34;&#34;&#34;Look for the named lat/lon fields in the passed dict. If the previous
         lat/lon pair was on one side of the geofence and this lat/lon pair is on
         the other, return the appropriate string defined in either
@@ -306,14 +308,9 @@ class GeofenceTransform():
                           f&#39;less than the {self.seconds_between_checks} required.&#39;)
             return None
 
-        # If we&#39;ve got a list, hope it&#39;s a list of records. Recurse,
-        # calling transform() on each of the list elements in order and
-        # return the resulting list.
-        if type(record) is list:
-            results = []
-            for single_record in record:
-                results.append(self.transform(single_record))
-            return results
+        # See if it&#39;s something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from Transform()
+            return self.digest_record(record)  # inherited from Transform()
 
         # Does this record have a lat/lon?
         (lat, lon) = self._get_lat_lon(record)
@@ -329,8 +326,12 @@ class GeofenceTransform():
 
         self.last_position_inside = is_inside
         if is_inside:
+            logging.info(&#39;GeofenceTransform entered boundary&#39;)
+            logging.info(f&#39;Issuing message: {self.entering_boundary_message}&#39;)
             return self.entering_boundary_message
         else:
+            logging.info(&#39;GeofenceTransform exited boundary&#39;)
+            logging.info(f&#39;Issuing message: {self.leaving_boundary_message}&#39;)
             return self.leaving_boundary_message</code></pre>
 </details>
 </section>
@@ -380,7 +381,7 @@ seconds_between_checks
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class GeofenceTransform():
+<pre><code class="python">class GeofenceTransform(Transform):
     &#34;&#34;&#34;Class that reads lat/lon from passed records and compare to a geofence loaded at
     initialization time. Emit pre-defined messages if lat/lon transition between inside
     and outside of fence.
@@ -518,7 +519,7 @@ seconds_between_checks
         return self.buffered_eez.contains(point).any()
 
     ############################
-    def transform(self, record):
+    def transform(self, record: Union[DASRecord, dict]):
         &#34;&#34;&#34;Look for the named lat/lon fields in the passed dict. If the previous
         lat/lon pair was on one side of the geofence and this lat/lon pair is on
         the other, return the appropriate string defined in either
@@ -543,14 +544,9 @@ seconds_between_checks
                           f&#39;less than the {self.seconds_between_checks} required.&#39;)
             return None
 
-        # If we&#39;ve got a list, hope it&#39;s a list of records. Recurse,
-        # calling transform() on each of the list elements in order and
-        # return the resulting list.
-        if type(record) is list:
-            results = []
-            for single_record in record:
-                results.append(self.transform(single_record))
-            return results
+        # See if it&#39;s something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from Transform()
+            return self.digest_record(record)  # inherited from Transform()
 
         # Does this record have a lat/lon?
         (lat, lon) = self._get_lat_lon(record)
@@ -566,14 +562,23 @@ seconds_between_checks
 
         self.last_position_inside = is_inside
         if is_inside:
+            logging.info(&#39;GeofenceTransform entered boundary&#39;)
+            logging.info(f&#39;Issuing message: {self.entering_boundary_message}&#39;)
             return self.entering_boundary_message
         else:
+            logging.info(&#39;GeofenceTransform exited boundary&#39;)
+            logging.info(f&#39;Issuing message: {self.leaving_boundary_message}&#39;)
             return self.leaving_boundary_message</code></pre>
 </details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="logger.transforms.transform.Transform" href="transform.html#logger.transforms.transform.Transform">Transform</a></li>
+<li><a title="logger.utils.base_module.BaseModule" href="../utils/base_module.html#logger.utils.base_module.BaseModule">BaseModule</a></li>
+</ul>
 <h3>Methods</h3>
 <dl>
 <dt id="logger.transforms.geofence_transform.GeofenceTransform.transform"><code class="name flex">
-<span>def <span class="ident">transform</span></span>(<span>self, record)</span>
+<span>def <span class="ident">transform</span></span>(<span>self, record: Union[<a title="logger.utils.das_record.DASRecord" href="../utils/das_record.html#logger.utils.das_record.DASRecord">DASRecord</a>, dict])</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Look for the named lat/lon fields in the passed dict. If the previous
@@ -589,7 +594,7 @@ and longitude_field_name.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def transform(self, record):
+<pre><code class="python">def transform(self, record: Union[DASRecord, dict]):
     &#34;&#34;&#34;Look for the named lat/lon fields in the passed dict. If the previous
     lat/lon pair was on one side of the geofence and this lat/lon pair is on
     the other, return the appropriate string defined in either
@@ -614,14 +619,9 @@ and longitude_field_name.</p></div>
                       f&#39;less than the {self.seconds_between_checks} required.&#39;)
         return None
 
-    # If we&#39;ve got a list, hope it&#39;s a list of records. Recurse,
-    # calling transform() on each of the list elements in order and
-    # return the resulting list.
-    if type(record) is list:
-        results = []
-        for single_record in record:
-            results.append(self.transform(single_record))
-        return results
+    # See if it&#39;s something we can process, and if not, try digesting
+    if not self.can_process_record(record):  # inherited from Transform()
+        return self.digest_record(record)  # inherited from Transform()
 
     # Does this record have a lat/lon?
     (lat, lon) = self._get_lat_lon(record)
@@ -637,12 +637,25 @@ and longitude_field_name.</p></div>
 
     self.last_position_inside = is_inside
     if is_inside:
+        logging.info(&#39;GeofenceTransform entered boundary&#39;)
+        logging.info(f&#39;Issuing message: {self.entering_boundary_message}&#39;)
         return self.entering_boundary_message
     else:
+        logging.info(&#39;GeofenceTransform exited boundary&#39;)
+        logging.info(f&#39;Issuing message: {self.leaving_boundary_message}&#39;)
         return self.leaving_boundary_message</code></pre>
 </details>
 </dd>
 </dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="logger.transforms.transform.Transform" href="transform.html#logger.transforms.transform.Transform">Transform</a></b></code>:
+<ul class="hlist">
+<li><code><a title="logger.transforms.transform.Transform.can_process_record" href="../utils/base_module.html#logger.utils.base_module.BaseModule.can_process_record">can_process_record</a></code></li>
+<li><code><a title="logger.transforms.transform.Transform.digest_record" href="../utils/base_module.html#logger.utils.base_module.BaseModule.digest_record">digest_record</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 </dl>
 </section>

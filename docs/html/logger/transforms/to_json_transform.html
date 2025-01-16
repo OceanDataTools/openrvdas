@@ -32,9 +32,9 @@ import json
 import logging
 import sys
 
+from typing import Union
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
-from logger.utils import formats  # noqa: E402
 from logger.utils.das_record import DASRecord  # noqa: E402
 from logger.transforms.transform import Transform  # noqa: E402
 
@@ -46,26 +46,17 @@ class ToJSONTransform(Transform):
     format the JSON output for easy reading.
     &#34;&#34;&#34;
 
+    ############################
     def __init__(self, pretty=False):
-        super().__init__(input_format=formats.Python_Record,
-                         output_format=formats.Text)
-
         self.pretty = pretty
 
     ############################
-    def transform(self, record):
+    def transform(self, record: Union[DASRecord, float, int, bool, str, dict, list, set]):
         &#34;&#34;&#34;Convert record to JSON.&#34;&#34;&#34;
-        if not record:
-            return None
 
-        # If we&#39;ve got a list, hope it&#39;s a list of records. Recurse,
-        # calling transform() on each of the list elements in order and
-        # return the resulting list.
-        if type(record) is list:
-            results = []
-            for single_record in record:
-                results.append(self.transform(single_record))
-            return results
+        # See if it&#39;s something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from Transform()
+            return self.digest_record(record)  # inherited from Transform()
 
         if type(record) is DASRecord:
             return record.as_json(self.pretty)
@@ -96,8 +87,7 @@ class ToJSONTransform(Transform):
 </code></dt>
 <dd>
 <div class="desc"><p>Convert passed DASRecords, lists or dicts to JSON. If pretty == True,
-format the JSON output for easy reading.</p>
-<p>Abstract base class for data Transforms.</p></div>
+format the JSON output for easy reading.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -107,26 +97,17 @@ format the JSON output for easy reading.</p>
     format the JSON output for easy reading.
     &#34;&#34;&#34;
 
+    ############################
     def __init__(self, pretty=False):
-        super().__init__(input_format=formats.Python_Record,
-                         output_format=formats.Text)
-
         self.pretty = pretty
 
     ############################
-    def transform(self, record):
+    def transform(self, record: Union[DASRecord, float, int, bool, str, dict, list, set]):
         &#34;&#34;&#34;Convert record to JSON.&#34;&#34;&#34;
-        if not record:
-            return None
 
-        # If we&#39;ve got a list, hope it&#39;s a list of records. Recurse,
-        # calling transform() on each of the list elements in order and
-        # return the resulting list.
-        if type(record) is list:
-            results = []
-            for single_record in record:
-                results.append(self.transform(single_record))
-            return results
+        # See if it&#39;s something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from Transform()
+            return self.digest_record(record)  # inherited from Transform()
 
         if type(record) is DASRecord:
             return record.as_json(self.pretty)
@@ -144,11 +125,12 @@ format the JSON output for easy reading.</p>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="logger.transforms.transform.Transform" href="transform.html#logger.transforms.transform.Transform">Transform</a></li>
+<li><a title="logger.utils.base_module.BaseModule" href="../utils/base_module.html#logger.utils.base_module.BaseModule">BaseModule</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
 <dt id="logger.transforms.to_json_transform.ToJSONTransform.transform"><code class="name flex">
-<span>def <span class="ident">transform</span></span>(<span>self, record)</span>
+<span>def <span class="ident">transform</span></span>(<span>self, record: Union[<a title="logger.utils.das_record.DASRecord" href="../utils/das_record.html#logger.utils.das_record.DASRecord">DASRecord</a>, float, int, bool, str, dict, list, set])</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Convert record to JSON.</p></div>
@@ -156,19 +138,12 @@ format the JSON output for easy reading.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def transform(self, record):
+<pre><code class="python">def transform(self, record: Union[DASRecord, float, int, bool, str, dict, list, set]):
     &#34;&#34;&#34;Convert record to JSON.&#34;&#34;&#34;
-    if not record:
-        return None
 
-    # If we&#39;ve got a list, hope it&#39;s a list of records. Recurse,
-    # calling transform() on each of the list elements in order and
-    # return the resulting list.
-    if type(record) is list:
-        results = []
-        for single_record in record:
-            results.append(self.transform(single_record))
-        return results
+    # See if it&#39;s something we can process, and if not, try digesting
+    if not self.can_process_record(record):  # inherited from Transform()
+        return self.digest_record(record)  # inherited from Transform()
 
     if type(record) is DASRecord:
         return record.as_json(self.pretty)
@@ -189,8 +164,8 @@ format the JSON output for easy reading.</p>
 <ul class="hlist">
 <li><code><b><a title="logger.transforms.transform.Transform" href="transform.html#logger.transforms.transform.Transform">Transform</a></b></code>:
 <ul class="hlist">
-<li><code><a title="logger.transforms.transform.Transform.input_format" href="transform.html#logger.transforms.transform.Transform.input_format">input_format</a></code></li>
-<li><code><a title="logger.transforms.transform.Transform.output_format" href="transform.html#logger.transforms.transform.Transform.output_format">output_format</a></code></li>
+<li><code><a title="logger.transforms.transform.Transform.can_process_record" href="../utils/base_module.html#logger.utils.base_module.BaseModule.can_process_record">can_process_record</a></code></li>
+<li><code><a title="logger.transforms.transform.Transform.digest_record" href="../utils/base_module.html#logger.utils.base_module.BaseModule.digest_record">digest_record</a></code></li>
 </ul>
 </li>
 </ul>

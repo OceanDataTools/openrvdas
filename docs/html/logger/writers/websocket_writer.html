@@ -32,17 +32,28 @@
 import asyncio
 import logging
 import ssl
+import sys
 import threading
-import websockets
 
+from typing import Union
 from urllib.parse import urlparse
+
+from os.path import dirname, realpath
+sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
+from logger.writers.writer import Writer  # noqa E402
+
+try:
+    import websockets
+    WEBSOCKETS_INSTALLED = True
+except ImportError:
+    WEBSOCKETS_INSTALLED = False
 
 
 ################################################################################
-class WebsocketWriter():
+class WebsocketWriter(Writer):
     ############################
 
-    def __init__(self, uri, cert_file=None, key_file=None):
+    def __init__(self, uri, cert_file=None, key_file=None, quiet=False):
         &#34;&#34;&#34;
         ```
         uri         Protocol, hostname and port to serve as. E.g. &#39;wss://openrvdas:8081&#39;
@@ -52,11 +63,17 @@ class WebsocketWriter():
         key_file
         ```
         &#34;&#34;&#34;
+        if not WEBSOCKETS_INSTALLED:
+            raise ImportError(&#39;WebsocketWriter requires Python &#34;websockets&#34; module; &#39;
+                              &#39;please run &#34;pip install websockets&#34;&#39;)
         self.uri = uri
         parsed_uri = urlparse(uri)
         self.host = parsed_uri.hostname
         self.port = parsed_uri.port
         self.protocol = parsed_uri.scheme
+
+        # Initialize record type checking.
+        super().__init__(quiet=quiet)
 
         if self.protocol == &#39;wss&#39;:
             self.ssl = True
@@ -147,9 +164,12 @@ class WebsocketWriter():
         self.loop.run_forever()
 
     ############################
-    def write(self, record):
+    def write(self, record: Union[str, bytes]):
         &#34;&#34;&#34;Write a record to all connected clients&#34;&#34;&#34;
-        if not record:
+
+        # See if it&#39;s something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from BaseModule()
+            self.digest_record(record)  # inherited from BaseModule()
             return
 
         logging.debug(f&#39;WebsocketWriter received record: {record}&#39;)
@@ -171,10 +191,12 @@ class WebsocketWriter():
 <dl>
 <dt id="logger.writers.websocket_writer.WebsocketWriter"><code class="flex name class">
 <span>class <span class="ident">WebsocketWriter</span></span>
-<span>(</span><span>uri, cert_file=None, key_file=None)</span>
+<span>(</span><span>uri, cert_file=None, key_file=None, quiet=False)</span>
 </code></dt>
 <dd>
-<div class="desc"><pre><code>uri         Protocol, hostname and port to serve as. E.g. 'wss://openrvdas:8081'
+<div class="desc"><p>Base class Writer about which we know nothing else. By default the
+input format is Unknown unless overridden.</p>
+<pre><code>uri         Protocol, hostname and port to serve as. E.g. 'wss://openrvdas:8081'
             If protocol is 'wss', use SSL, and cert_file and key_file must be specified.
 
 cert_file   If using ssl, the file path to relevant certificate file and key files.
@@ -184,10 +206,10 @@ key_file
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class WebsocketWriter():
+<pre><code class="python">class WebsocketWriter(Writer):
     ############################
 
-    def __init__(self, uri, cert_file=None, key_file=None):
+    def __init__(self, uri, cert_file=None, key_file=None, quiet=False):
         &#34;&#34;&#34;
         ```
         uri         Protocol, hostname and port to serve as. E.g. &#39;wss://openrvdas:8081&#39;
@@ -197,11 +219,17 @@ key_file
         key_file
         ```
         &#34;&#34;&#34;
+        if not WEBSOCKETS_INSTALLED:
+            raise ImportError(&#39;WebsocketWriter requires Python &#34;websockets&#34; module; &#39;
+                              &#39;please run &#34;pip install websockets&#34;&#39;)
         self.uri = uri
         parsed_uri = urlparse(uri)
         self.host = parsed_uri.hostname
         self.port = parsed_uri.port
         self.protocol = parsed_uri.scheme
+
+        # Initialize record type checking.
+        super().__init__(quiet=quiet)
 
         if self.protocol == &#39;wss&#39;:
             self.ssl = True
@@ -292,9 +320,12 @@ key_file
         self.loop.run_forever()
 
     ############################
-    def write(self, record):
+    def write(self, record: Union[str, bytes]):
         &#34;&#34;&#34;Write a record to all connected clients&#34;&#34;&#34;
-        if not record:
+
+        # See if it&#39;s something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from BaseModule()
+            self.digest_record(record)  # inherited from BaseModule()
             return
 
         logging.debug(f&#39;WebsocketWriter received record: {record}&#39;)
@@ -304,6 +335,11 @@ key_file
                 self.loop.call_soon_threadsafe(                        # type: ignore
                     self.send_queue[client_id].put_nowait, record)</code></pre>
 </details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="logger.writers.writer.Writer" href="writer.html#logger.writers.writer.Writer">Writer</a></li>
+<li><a title="logger.utils.base_module.BaseModule" href="../utils/base_module.html#logger.utils.base_module.BaseModule">BaseModule</a></li>
+</ul>
 <h3>Methods</h3>
 <dl>
 <dt id="logger.writers.websocket_writer.WebsocketWriter.run"><code class="name flex">
@@ -336,7 +372,7 @@ key_file
 </details>
 </dd>
 <dt id="logger.writers.websocket_writer.WebsocketWriter.write"><code class="name flex">
-<span>def <span class="ident">write</span></span>(<span>self, record)</span>
+<span>def <span class="ident">write</span></span>(<span>self, record: Union[str, bytes])</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Write a record to all connected clients</p></div>
@@ -344,9 +380,12 @@ key_file
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def write(self, record):
+<pre><code class="python">def write(self, record: Union[str, bytes]):
     &#34;&#34;&#34;Write a record to all connected clients&#34;&#34;&#34;
-    if not record:
+
+    # See if it&#39;s something we can process, and if not, try digesting
+    if not self.can_process_record(record):  # inherited from BaseModule()
+        self.digest_record(record)  # inherited from BaseModule()
         return
 
     logging.debug(f&#39;WebsocketWriter received record: {record}&#39;)
@@ -358,6 +397,15 @@ key_file
 </details>
 </dd>
 </dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="logger.writers.writer.Writer" href="writer.html#logger.writers.writer.Writer">Writer</a></b></code>:
+<ul class="hlist">
+<li><code><a title="logger.writers.writer.Writer.can_process_record" href="../utils/base_module.html#logger.utils.base_module.BaseModule.can_process_record">can_process_record</a></code></li>
+<li><code><a title="logger.writers.writer.Writer.digest_record" href="../utils/base_module.html#logger.utils.base_module.BaseModule.digest_record">digest_record</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 </dl>
 </section>

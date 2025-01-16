@@ -32,43 +32,41 @@ import sys
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
-from logger.utils import formats  # noqa: E402
 from logger.utils import timestamp  # noqa: E402
 from logger.transforms.transform import Transform  # noqa: E402
 
 
 ################################################################################
-&#34;&#34;&#34;Prepend a timestamp to a text record.&#34;&#34;&#34;
-
-
 class TimestampTransform(Transform):
+    &#34;&#34;&#34;Prepend a timestamp to a text record.&#34;&#34;&#34;
     def __init__(self, time_format=timestamp.TIME_FORMAT,
                  time_zone=timestamp.timezone.utc, sep=&#39; &#39;):
         &#34;&#34;&#34;If timestamp_format is not specified, use default format&#34;&#34;&#34;
-        super().__init__(input_format=formats.Text, output_format=formats.Text)
         self.time_format = time_format
         self.time_zone = time_zone
         self.sep = sep
 
     ############################
-    def transform(self, record, ts=None):
+    def transform(self, record: str, ts=None):
         &#34;&#34;&#34;Prepend a timestamp&#34;&#34;&#34;
-        if record is None:
-            return None
 
         # First off, grab a current timestamp
         ts = ts or timestamp.time_str(time_format=self.time_format,
                                       time_zone=self.time_zone)
 
-        # If we&#39;ve got a list, hope it&#39;s a list of records. Recurse,
-        # calling transform() on each of the list elements in order and
-        # return the resulting list. Give each element the same timestamp.
-        if type(record) is list:
-            results = []
-            for single_record in record:
-                results.append(self.transform(single_record, ts=ts))
-            return results
+        # See if it&#39;s something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from Transform()
+            # Special case: if we can&#39;t process it, but it&#39;s a list, pass
+            # along the same initial timestamp so all elements in the list
+            # share the same timestamp.
+            if isinstance(record, list):
+                return [self.transform(r, ts) for r in record]
+            # If not str and not list, pass it along to digest_record()
+            # to let it try and/or complain.
+            else:
+                return self.digest_record(record)  # inherited from Transform()
 
+        # If it is something we can process, put a timestamp on it.
         return ts + self.sep + record</code></pre>
 </details>
 </section>
@@ -86,54 +84,53 @@ class TimestampTransform(Transform):
 <span>(</span><span>time_format='%Y-%m-%dT%H:%M:%S.%fZ', time_zone=datetime.timezone.utc, sep=' ')</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Base class Transform about which we know nothing else. By default the
-input and output formats are Unknown unless overridden.</p>
-<p>Note that when a Transform is first instantiated, it may not yet know
-what its inputs are going to be, so we provide methods to override the
-input/output formats after the fact.</p>
+<div class="desc"><p>Prepend a timestamp to a text record.</p>
 <p>If timestamp_format is not specified, use default format</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class TimestampTransform(Transform):
+    &#34;&#34;&#34;Prepend a timestamp to a text record.&#34;&#34;&#34;
     def __init__(self, time_format=timestamp.TIME_FORMAT,
                  time_zone=timestamp.timezone.utc, sep=&#39; &#39;):
         &#34;&#34;&#34;If timestamp_format is not specified, use default format&#34;&#34;&#34;
-        super().__init__(input_format=formats.Text, output_format=formats.Text)
         self.time_format = time_format
         self.time_zone = time_zone
         self.sep = sep
 
     ############################
-    def transform(self, record, ts=None):
+    def transform(self, record: str, ts=None):
         &#34;&#34;&#34;Prepend a timestamp&#34;&#34;&#34;
-        if record is None:
-            return None
 
         # First off, grab a current timestamp
         ts = ts or timestamp.time_str(time_format=self.time_format,
                                       time_zone=self.time_zone)
 
-        # If we&#39;ve got a list, hope it&#39;s a list of records. Recurse,
-        # calling transform() on each of the list elements in order and
-        # return the resulting list. Give each element the same timestamp.
-        if type(record) is list:
-            results = []
-            for single_record in record:
-                results.append(self.transform(single_record, ts=ts))
-            return results
+        # See if it&#39;s something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from Transform()
+            # Special case: if we can&#39;t process it, but it&#39;s a list, pass
+            # along the same initial timestamp so all elements in the list
+            # share the same timestamp.
+            if isinstance(record, list):
+                return [self.transform(r, ts) for r in record]
+            # If not str and not list, pass it along to digest_record()
+            # to let it try and/or complain.
+            else:
+                return self.digest_record(record)  # inherited from Transform()
 
+        # If it is something we can process, put a timestamp on it.
         return ts + self.sep + record</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="logger.transforms.transform.Transform" href="transform.html#logger.transforms.transform.Transform">Transform</a></li>
+<li><a title="logger.utils.base_module.BaseModule" href="../utils/base_module.html#logger.utils.base_module.BaseModule">BaseModule</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
 <dt id="logger.transforms.timestamp_transform.TimestampTransform.transform"><code class="name flex">
-<span>def <span class="ident">transform</span></span>(<span>self, record, ts=None)</span>
+<span>def <span class="ident">transform</span></span>(<span>self, record: str, ts=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Prepend a timestamp</p></div>
@@ -141,24 +138,26 @@ input/output formats after the fact.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def transform(self, record, ts=None):
+<pre><code class="python">def transform(self, record: str, ts=None):
     &#34;&#34;&#34;Prepend a timestamp&#34;&#34;&#34;
-    if record is None:
-        return None
 
     # First off, grab a current timestamp
     ts = ts or timestamp.time_str(time_format=self.time_format,
                                   time_zone=self.time_zone)
 
-    # If we&#39;ve got a list, hope it&#39;s a list of records. Recurse,
-    # calling transform() on each of the list elements in order and
-    # return the resulting list. Give each element the same timestamp.
-    if type(record) is list:
-        results = []
-        for single_record in record:
-            results.append(self.transform(single_record, ts=ts))
-        return results
+    # See if it&#39;s something we can process, and if not, try digesting
+    if not self.can_process_record(record):  # inherited from Transform()
+        # Special case: if we can&#39;t process it, but it&#39;s a list, pass
+        # along the same initial timestamp so all elements in the list
+        # share the same timestamp.
+        if isinstance(record, list):
+            return [self.transform(r, ts) for r in record]
+        # If not str and not list, pass it along to digest_record()
+        # to let it try and/or complain.
+        else:
+            return self.digest_record(record)  # inherited from Transform()
 
+    # If it is something we can process, put a timestamp on it.
     return ts + self.sep + record</code></pre>
 </details>
 </dd>
@@ -167,8 +166,8 @@ input/output formats after the fact.</p>
 <ul class="hlist">
 <li><code><b><a title="logger.transforms.transform.Transform" href="transform.html#logger.transforms.transform.Transform">Transform</a></b></code>:
 <ul class="hlist">
-<li><code><a title="logger.transforms.transform.Transform.input_format" href="transform.html#logger.transforms.transform.Transform.input_format">input_format</a></code></li>
-<li><code><a title="logger.transforms.transform.Transform.output_format" href="transform.html#logger.transforms.transform.Transform.output_format">output_format</a></code></li>
+<li><code><a title="logger.transforms.transform.Transform.can_process_record" href="../utils/base_module.html#logger.utils.base_module.BaseModule.can_process_record">can_process_record</a></code></li>
+<li><code><a title="logger.transforms.transform.Transform.digest_record" href="../utils/base_module.html#logger.utils.base_module.BaseModule.digest_record">digest_record</a></code></li>
 </ul>
 </li>
 </ul>

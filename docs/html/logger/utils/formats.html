@@ -5,8 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
 <title>logger.utils.formats API documentation</title>
-<meta name="description" content="Set of hierarchical utility classes used to check for input/output
-compatibility between Readers, Writers and Transforms …" />
+<meta name="description" content="DEPRECATED!
+Please see logger/utils/type_checking.py and
+logger/transforms/transform.py for the now-preferred way to validate
+component inputs.
+…" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -23,6 +26,12 @@ compatibility between Readers, Writers and Transforms …" />
 <h1 class="title">Module <code>logger.utils.formats</code></h1>
 </header>
 <section id="section-intro">
+<h6 id="_1"></h6>
+<p>DEPRECATED!
+Please see logger/utils/type_checking.py and
+logger/transforms/transform.py for the now-preferred way to validate
+component inputs.</p>
+<h6 id="_2"></h6>
 <p>Set of hierarchical utility classes used to check for input/output
 compatibility between Readers, Writers and Transforms.</p>
 <p>The idea is that each class defined here (or elsewhere) represents a
@@ -65,7 +74,14 @@ anything, and has no common elements with any other format.</p>
 </summary>
 <pre><code class="python">#!/usr/bin/env python3
 
-&#34;&#34;&#34;Set of hierarchical utility classes used to check for input/output
+&#34;&#34;&#34;
+###############################################################################
+DEPRECATED!  Please see logger/utils/type_checking.py and
+logger/transforms/transform.py for the now-preferred way to validate
+component inputs.
+###############################################################################
+
+Set of hierarchical utility classes used to check for input/output
 compatibility between Readers, Writers and Transforms.
 
 The idea is that each class defined here (or elsewhere) represents a
@@ -528,7 +544,10 @@ def common(self, other_format):
 <nav id="sidebar">
 <h1>Index</h1>
 <div class="toc">
-<ul></ul>
+<ul>
+<li><a href="#_1"></a></li>
+<li><a href="#_2"></a></li>
+</ul>
 </div>
 <ul id="index">
 <li><h3>Super-module</h3>

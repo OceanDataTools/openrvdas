@@ -87,13 +87,13 @@ class InMemoryServerAPI(ServerAPI):
     ############################
     def get_active_mode(self):
         &#34;&#34;&#34;Return cruise config for specified cruise id.&#34;&#34;&#34;
-        return self.config.get(&#39;active_mode&#39;, None)
+        return self.config.get(&#39;active_mode&#39;)
 
     ############################
     def get_default_mode(self):
         &#34;&#34;&#34;Get the name of the default mode for the specified cruise
         from the data store.&#34;&#34;&#34;
-        return self.config.get(&#39;default_mode&#39;, None)
+        return self.config.get(&#39;default_mode&#39;)
 
     ############################
     def get_logger(self, logger):
@@ -116,7 +116,7 @@ class InMemoryServerAPI(ServerAPI):
 
         if &#39;loggers&#39; not in config:
             raise ValueError(&#39;No loggers found&#39;)
-        logger_configs = config.get(&#39;loggers&#39;, None)
+        logger_configs = config.get(&#39;loggers&#39;)
         if not logger_configs:
             raise ValueError(&#39;No logger configurations found&#39;)
 
@@ -131,10 +131,10 @@ class InMemoryServerAPI(ServerAPI):
         cruise_config = self.get_configuration()
         if cruise_config is None:
             return {}
-        logger_configs = cruise_config.get(&#39;configs&#39;, None)
+        logger_configs = cruise_config.get(&#39;configs&#39;)
         if logger_configs is None:
             raise ValueError(&#39;No &#34;config&#34; found&#39;)
-        logger_config = logger_configs.get(config_name, None)
+        logger_config = logger_configs.get(config_name)
         if logger_config is None:
             raise ValueError(&#39;No logger config &#34;%s&#34; in config&#39; % config_name)
         return logger_config
@@ -166,18 +166,18 @@ class InMemoryServerAPI(ServerAPI):
 
         # If mode is not specified, get logger&#39;s current config name
         if mode is None:
-            config_name = self.logger_config.get(logger_id, None)
+            config_name = self.logger_config.get(logger_id)
             if config_name is None:
                 raise ValueError(f&#39;Logger id &#34;{logger_id}&#34; has no mode!&#39;)
             return config_name
 
         # Otherwise, we return the config_name for the specifed mode
         modes = self.config.get(&#39;modes&#39;)
-        mode_configs = modes.get(mode, None)
+        mode_configs = modes.get(mode)
         if mode_configs is None:
             raise ValueError(&#39;Requested mode %s is not defined (modes are: %s)&#39; %
                              (mode, [m for m in modes]))
-        logger_config_name = mode_configs.get(logger_id, None)
+        logger_config_name = mode_configs.get(logger_id)
         if logger_config_name is None:
             raise ValueError(&#39;Logger %s has no config defined in mode %s&#39; %
                              (logger_id, mode))
@@ -198,7 +198,7 @@ class InMemoryServerAPI(ServerAPI):
     ############################
     def set_active_mode(self, mode):
         &#34;&#34;&#34;Set the current mode of the specified cruise in the data store.&#34;&#34;&#34;
-        modes = self.config.get(&#39;modes&#39;, None)
+        modes = self.config.get(&#39;modes&#39;)
         if not modes:
             raise ValueError(&#39;Config has no modes??&#39;)
         if mode not in modes:
@@ -350,9 +350,17 @@ class InMemoryServerAPI(ServerAPI):
         self.config = config
         self.config[&#39;loaded_time&#39;] = datetime.datetime.utcnow()
 
+        # Some syntactic sugar to simplify config definitions
+        configs = self.config.get(&#39;configs&#39;)
+        for config_name, config in configs.items():
+            if config is None:
+                raise ValueError(f&#39;No logger for &#34;{config_name}&#34; in cruise definition&#39;)
+            if &#39;name&#39; not in config:
+                self.config[&#39;configs&#39;][config_name][&#39;name&#39;] = config_name
+
         # Set cruise into default mode, if one is defined
-        if &#39;default_mode&#39; in config:
-            active_mode = config[&#39;default_mode&#39;]
+        if &#39;default_mode&#39; in self.config:
+            active_mode = self.config[&#39;default_mode&#39;]
             self.set_active_mode(active_mode)
 
         # Let anyone who&#39;s interested know that we&#39;ve got new configurations.
@@ -473,13 +481,13 @@ cruise_config as follows:</p>
     ############################
     def get_active_mode(self):
         &#34;&#34;&#34;Return cruise config for specified cruise id.&#34;&#34;&#34;
-        return self.config.get(&#39;active_mode&#39;, None)
+        return self.config.get(&#39;active_mode&#39;)
 
     ############################
     def get_default_mode(self):
         &#34;&#34;&#34;Get the name of the default mode for the specified cruise
         from the data store.&#34;&#34;&#34;
-        return self.config.get(&#39;default_mode&#39;, None)
+        return self.config.get(&#39;default_mode&#39;)
 
     ############################
     def get_logger(self, logger):
@@ -502,7 +510,7 @@ cruise_config as follows:</p>
 
         if &#39;loggers&#39; not in config:
             raise ValueError(&#39;No loggers found&#39;)
-        logger_configs = config.get(&#39;loggers&#39;, None)
+        logger_configs = config.get(&#39;loggers&#39;)
         if not logger_configs:
             raise ValueError(&#39;No logger configurations found&#39;)
 
@@ -517,10 +525,10 @@ cruise_config as follows:</p>
         cruise_config = self.get_configuration()
         if cruise_config is None:
             return {}
-        logger_configs = cruise_config.get(&#39;configs&#39;, None)
+        logger_configs = cruise_config.get(&#39;configs&#39;)
         if logger_configs is None:
             raise ValueError(&#39;No &#34;config&#34; found&#39;)
-        logger_config = logger_configs.get(config_name, None)
+        logger_config = logger_configs.get(config_name)
         if logger_config is None:
             raise ValueError(&#39;No logger config &#34;%s&#34; in config&#39; % config_name)
         return logger_config
@@ -552,18 +560,18 @@ cruise_config as follows:</p>
 
         # If mode is not specified, get logger&#39;s current config name
         if mode is None:
-            config_name = self.logger_config.get(logger_id, None)
+            config_name = self.logger_config.get(logger_id)
             if config_name is None:
                 raise ValueError(f&#39;Logger id &#34;{logger_id}&#34; has no mode!&#39;)
             return config_name
 
         # Otherwise, we return the config_name for the specifed mode
         modes = self.config.get(&#39;modes&#39;)
-        mode_configs = modes.get(mode, None)
+        mode_configs = modes.get(mode)
         if mode_configs is None:
             raise ValueError(&#39;Requested mode %s is not defined (modes are: %s)&#39; %
                              (mode, [m for m in modes]))
-        logger_config_name = mode_configs.get(logger_id, None)
+        logger_config_name = mode_configs.get(logger_id)
         if logger_config_name is None:
             raise ValueError(&#39;Logger %s has no config defined in mode %s&#39; %
                              (logger_id, mode))
@@ -584,7 +592,7 @@ cruise_config as follows:</p>
     ############################
     def set_active_mode(self, mode):
         &#34;&#34;&#34;Set the current mode of the specified cruise in the data store.&#34;&#34;&#34;
-        modes = self.config.get(&#39;modes&#39;, None)
+        modes = self.config.get(&#39;modes&#39;)
         if not modes:
             raise ValueError(&#39;Config has no modes??&#39;)
         if mode not in modes:
@@ -736,9 +744,17 @@ cruise_config as follows:</p>
         self.config = config
         self.config[&#39;loaded_time&#39;] = datetime.datetime.utcnow()
 
+        # Some syntactic sugar to simplify config definitions
+        configs = self.config.get(&#39;configs&#39;)
+        for config_name, config in configs.items():
+            if config is None:
+                raise ValueError(f&#39;No logger for &#34;{config_name}&#34; in cruise definition&#39;)
+            if &#39;name&#39; not in config:
+                self.config[&#39;configs&#39;][config_name][&#39;name&#39;] = config_name
+
         # Set cruise into default mode, if one is defined
-        if &#39;default_mode&#39; in config:
-            active_mode = config[&#39;default_mode&#39;]
+        if &#39;default_mode&#39; in self.config:
+            active_mode = self.config[&#39;default_mode&#39;]
             self.set_active_mode(active_mode)
 
         # Let anyone who&#39;s interested know that we&#39;ve got new configurations.
@@ -800,7 +816,7 @@ cruise_config as follows:</p>
 </summary>
 <pre><code class="python">def get_active_mode(self):
     &#34;&#34;&#34;Return cruise config for specified cruise id.&#34;&#34;&#34;
-    return self.config.get(&#39;active_mode&#39;, None)</code></pre>
+    return self.config.get(&#39;active_mode&#39;)</code></pre>
 </details>
 </dd>
 <dt id="server.in_memory_server_api.InMemoryServerAPI.get_configuration"><code class="name flex">
@@ -830,7 +846,7 @@ from the data store.</p></div>
 <pre><code class="python">def get_default_mode(self):
     &#34;&#34;&#34;Get the name of the default mode for the specified cruise
     from the data store.&#34;&#34;&#34;
-    return self.config.get(&#39;default_mode&#39;, None)</code></pre>
+    return self.config.get(&#39;default_mode&#39;)</code></pre>
 </details>
 </dd>
 <dt id="server.in_memory_server_api.InMemoryServerAPI.get_logger"><code class="name flex">
@@ -865,10 +881,10 @@ from the data store.</p></div>
     cruise_config = self.get_configuration()
     if cruise_config is None:
         return {}
-    logger_configs = cruise_config.get(&#39;configs&#39;, None)
+    logger_configs = cruise_config.get(&#39;configs&#39;)
     if logger_configs is None:
         raise ValueError(&#39;No &#34;config&#34; found&#39;)
-    logger_config = logger_configs.get(config_name, None)
+    logger_config = logger_configs.get(config_name)
     if logger_config is None:
         raise ValueError(&#39;No logger config &#34;%s&#34; in config&#39; % config_name)
     return logger_config</code></pre>
@@ -895,18 +911,18 @@ current config.</p></div>
 
     # If mode is not specified, get logger&#39;s current config name
     if mode is None:
-        config_name = self.logger_config.get(logger_id, None)
+        config_name = self.logger_config.get(logger_id)
         if config_name is None:
             raise ValueError(f&#39;Logger id &#34;{logger_id}&#34; has no mode!&#39;)
         return config_name
 
     # Otherwise, we return the config_name for the specifed mode
     modes = self.config.get(&#39;modes&#39;)
-    mode_configs = modes.get(mode, None)
+    mode_configs = modes.get(mode)
     if mode_configs is None:
         raise ValueError(&#39;Requested mode %s is not defined (modes are: %s)&#39; %
                          (mode, [m for m in modes]))
-    logger_config_name = mode_configs.get(logger_id, None)
+    logger_config_name = mode_configs.get(logger_id)
     if logger_config_name is None:
         raise ValueError(&#39;Logger %s has no config defined in mode %s&#39; %
                          (logger_id, mode))
@@ -984,7 +1000,7 @@ for all loggers.</p></div>
 
     if &#39;loggers&#39; not in config:
         raise ValueError(&#39;No loggers found&#39;)
-    logger_configs = config.get(&#39;loggers&#39;, None)
+    logger_configs = config.get(&#39;loggers&#39;)
     if not logger_configs:
         raise ValueError(&#39;No logger configurations found&#39;)
 
@@ -1024,9 +1040,17 @@ default) to the data store.</p></div>
     self.config = config
     self.config[&#39;loaded_time&#39;] = datetime.datetime.utcnow()
 
+    # Some syntactic sugar to simplify config definitions
+    configs = self.config.get(&#39;configs&#39;)
+    for config_name, config in configs.items():
+        if config is None:
+            raise ValueError(f&#39;No logger for &#34;{config_name}&#34; in cruise definition&#39;)
+        if &#39;name&#39; not in config:
+            self.config[&#39;configs&#39;][config_name][&#39;name&#39;] = config_name
+
     # Set cruise into default mode, if one is defined
-    if &#39;default_mode&#39; in config:
-        active_mode = config[&#39;default_mode&#39;]
+    if &#39;default_mode&#39; in self.config:
+        active_mode = self.config[&#39;default_mode&#39;]
         self.set_active_mode(active_mode)
 
     # Let anyone who&#39;s interested know that we&#39;ve got new configurations.
@@ -1067,7 +1091,7 @@ calling us to have made that determination.</p></div>
 </summary>
 <pre><code class="python">def set_active_mode(self, mode):
     &#34;&#34;&#34;Set the current mode of the specified cruise in the data store.&#34;&#34;&#34;
-    modes = self.config.get(&#39;modes&#39;, None)
+    modes = self.config.get(&#39;modes&#39;)
     if not modes:
         raise ValueError(&#39;Config has no modes??&#39;)
     if mode not in modes:

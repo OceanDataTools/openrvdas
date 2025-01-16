@@ -22,6 +22,32 @@
 <h1 class="title">Module <code>logger.writers</code></h1>
 </header>
 <section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python"># flake8: noqa F401
+
+from .cached_data_writer import CachedDataWriter
+from .composed_writer import ComposedWriter
+from .database_writer import DatabaseWriter
+from .email_writer import EmailWriter
+from .file_writer import FileWriter
+from .influxdb_writer import InfluxDBWriter
+from .logfile_writer import LogfileWriter
+from .logger_manager_writer import LoggerManagerWriter
+from .mqtt_writer import MQTTWriter
+from .network_writer import NetworkWriter
+from .record_screen_writer import RecordScreenWriter
+from .redis_writer import RedisWriter
+from .regex_logfile_writer import RegexLogfileWriter
+from .serial_writer import SerialWriter
+from .tcp_writer import TCPWriter
+from .text_file_writer import TextFileWriter
+from .timeout_writer import TimeoutWriter
+from .udp_writer import UDPWriter
+from .websocket_writer import WebsocketWriter</code></pre>
+</details>
 </section>
 <section>
 <h2 class="section-title" id="header-submodules">Sub-modules</h2>
@@ -106,7 +132,9 @@ be used in conjunction with GeofenceTransform for automatically switching
 </dd>
 <dt><code class="name"><a title="logger.writers.writer" href="writer.html">logger.writers.writer</a></code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>The biggest thing that the abstract parent class Writer now does is help
+with (optional) type checking of the child class' inputs. In the past, an
+…</p></div>
 </dd>
 </dl>
 </section>

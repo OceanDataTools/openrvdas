@@ -101,54 +101,14 @@ import sys
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
-from logger.readers.cached_data_reader import CachedDataReader  # noqa: E402
-from logger.readers.logfile_reader import LogfileReader  # noqa: E402
-from logger.readers.network_reader import NetworkReader  # noqa: E402
-from logger.readers.tcp_reader import TCPReader  # noqa: E402
-from logger.readers.udp_reader import UDPReader  # noqa: E402
-from logger.readers.redis_reader import RedisReader  # noqa: E402
-from logger.readers.serial_reader import SerialReader  # noqa: E402
-from logger.readers.text_file_reader import TextFileReader  # noqa: E402
-from logger.readers.database_reader import DatabaseReader  # noqa: E402
-from logger.readers.composed_reader import ComposedReader  # noqa:E402,F401
 
-from logger.transforms.extract_field_transform import ExtractFieldTransform  # noqa: E402
-from logger.transforms.nmea_transform import NMEATransform  # noqa: E402
-from logger.transforms.prefix_transform import PrefixTransform  # noqa: E402
-from logger.transforms.regex_filter_transform import RegexFilterTransform  # noqa: E402
-from logger.transforms.qc_filter_transform import QCFilterTransform  # noqa: E402
-from logger.transforms.slice_transform import SliceTransform  # noqa: E402
-from logger.transforms.timestamp_transform import TimestampTransform  # noqa: E402
-from logger.transforms.parse_nmea_transform import ParseNMEATransform  # noqa: E402
-from logger.transforms.parse_transform import ParseTransform  # noqa: E402
-from logger.transforms.xml_aggregator_transform import XMLAggregatorTransform  # noqa: E402
-
-from logger.transforms.max_min_transform import MaxMinTransform  # noqa: E402
-from logger.transforms.from_json_transform import FromJSONTransform  # noqa: E402
-from logger.transforms.to_json_transform import ToJSONTransform  # noqa: E402
-from logger.transforms.to_das_record_transform import ToDASRecordTransform  # noqa: E402
-from logger.transforms.count_transform import CountTransform  # noqa: E402
-from logger.transforms.true_winds_transform import TrueWindsTransform  # noqa: E402,F401
-
-# Compute and emit various NMEA strings
-from logger.writers.network_writer import NetworkWriter  # noqa: E402
-from logger.writers.tcp_writer import TCPWriter  # noqa: E402
-from logger.writers.udp_writer import UDPWriter  # noqa: E402
-from logger.writers.serial_writer import SerialWriter  # noqa: E402
-from logger.writers.redis_writer import RedisWriter  # noqa: E402
-from logger.writers.file_writer import FileWriter  # noqa: E402
-from logger.writers.text_file_writer import TextFileWriter  # noqa: E402, F401
-from logger.writers.logfile_writer import LogfileWriter  # noqa: E402
-from logger.writers.database_writer import DatabaseWriter  # noqa: E402
-from logger.writers.record_screen_writer import RecordScreenWriter  # noqa: E402
-from logger.writers.cached_data_writer import CachedDataWriter  # noqa: E402
-from logger.writers.influxdb_writer import InfluxDBWriter  # noqa: E402,F401
-from logger.writers.composed_writer import ComposedWriter  # noqa: E402,F401
-
-from logger.utils import read_config, timestamp, nmea_parser, record_parser  # noqa: E402
-from logger.utils.stderr_logging import StdErrLoggingHandler, STDERR_FORMATTER  # noqa: E402
-
-from logger.listener.listener import Listener  # noqa: E402
+# flake8: noqa E402, F406
+from logger.readers import *
+from logger.transforms import *
+from logger.writers import *
+from logger.utils import read_config, timestamp, nmea_parser, record_parser
+from logger.utils.stderr_logging import StdErrLoggingHandler, STDERR_FORMATTER
+from logger.listener.listener import Listener
 
 
 ################################################################################
@@ -190,7 +150,7 @@ class ListenerFromLoggerConfig(Listener):
         # that we can catch and properly route stderr output from
         # parsing/creation of the other keyword args.
         kwargs = {}
-        stderr_writers_spec = config_dict.get(&#39;stderr_writers&#39;, None)
+        stderr_writers_spec = config_dict.get(&#39;stderr_writers&#39;)
         if stderr_writers_spec:
             stderr_writers = self._class_kwargs_from_config(stderr_writers_spec)
             logging.getLogger().addHandler(StdErrLoggingHandler(stderr_writers))
@@ -230,12 +190,12 @@ class ListenerFromLoggerConfig(Listener):
             return [self._class_kwargs_from_config(c) for c in class_json]
 
         # Get name and constructor for component we&#39;re going to instantiate
-        class_name = class_json.get(&#39;class&#39;, None)
+        class_name = class_json.get(&#39;class&#39;)
         if class_name is None:
             raise ValueError(&#39;missing &#34;class&#34; definition in &#34;{}&#34;&#39;.format(class_json))
 
         # Are they telling us where the class definition is? If so import it
-        class_module_name = class_json.get(&#39;module&#39;, None)
+        class_module_name = class_json.get(&#39;module&#39;)
         if class_module_name is not None:
             module = importlib.import_module(class_module_name)
             class_const = getattr(module, class_name, None)
@@ -245,7 +205,7 @@ class ListenerFromLoggerConfig(Listener):
         else:
             # If they haven&#39;t given us a &#39;module&#39; declaration, assume class
             # is something that&#39;s already defined.
-            class_const = globals().get(class_name, None)
+            class_const = globals().get(class_name)
             if not class_const:
                 raise ValueError(&#39;No component class &#34;{}&#34; found: &#34;{}&#34;&#39;.format(
                     class_name, class_json))
@@ -300,12 +260,12 @@ class ListenerFromLoggerConfigFile(ListenerFromLoggerConfig):
         config = read_config.read_config(config_file)
 
         if config_name:
-            config_dict = config.get(&#39;configs&#39;, None)
+            config_dict = config.get(&#39;configs&#39;)
             if not config_dict:
                 raise ValueError(&#39;Configuration name &#34;%s&#34; specified, but no &#39;
                                  &#39;&#34;configs&#34; section found in file &#34;%s&#34;&#39;
                                  % (config_name, config_file))
-            config = config_dict.get(config_name, None)
+            config = config_dict.get(config_name)
             if not config:
                 raise ValueError(&#39;Configuration name &#34;%s&#34; not found in file &#34;%s&#34;&#39;
                                  % (config_name, config_file))
@@ -601,8 +561,7 @@ if __name__ == &#39;__main__&#39;:
     ############################
     # Miscellaneous args
     parser.add_argument(&#39;--check_format&#39;, dest=&#39;check_format&#39;,
-                        action=&#39;store_true&#39;, default=False, help=&#39;Check &#39;
-                        &#39;reader/transform/writer format compatibility&#39;)
+                        action=&#39;store_true&#39;, default=False, help=&#39;Deprecated &#39;)
 
     parser.add_argument(&#39;-v&#39;, &#39;--verbosity&#39;, dest=&#39;verbosity&#39;,
                         default=0, action=&#39;count&#39;,
@@ -710,7 +669,7 @@ if __name__ == &#39;__main__&#39;:
             while arg_end &lt; len(sys.argv):
                 next_arg = sys.argv[arg_end]
                 if next_arg.find(&#39;-&#39;) == 0:
-                    if next_arg != &#39;-&#39; and not re.match(&#39;-\d&#39;, next_arg):  # noqa: W605
+                    if next_arg != &#39;-&#39; and not re.match(r&#39;^-\d&#39;, next_arg):  # noqa: W605
                         break
                 arg_end += 1
 
@@ -953,6 +912,9 @@ if __name__ == &#39;__main__&#39;:
                 data_server = new_args.write_cached_data_server
                 writers.append(CachedDataWriter(data_server=data_server))
 
+        if all_args.check_format:
+            logging.warning(&#39;Argument --check_format is deprecated and no longer &#39;
+                            &#39;serves any function.&#39;)
         ##########################
         # If we don&#39;t have any readers, read from stdin, if we don&#39;t have
         # any writers, write to stdout.
@@ -966,8 +928,7 @@ if __name__ == &#39;__main__&#39;:
         # create the Listener.
         listener = Listener(readers=readers, transforms=transforms, writers=writers,
                             stderr_writers=stderr_writers,
-                            interval=all_args.interval,
-                            check_format=all_args.check_format)
+                            interval=all_args.interval)
 
     ############################
     # Whichever way we created the listener, run it.
@@ -1032,7 +993,7 @@ if __name__ == &#39;__main__&#39;:
         # that we can catch and properly route stderr output from
         # parsing/creation of the other keyword args.
         kwargs = {}
-        stderr_writers_spec = config_dict.get(&#39;stderr_writers&#39;, None)
+        stderr_writers_spec = config_dict.get(&#39;stderr_writers&#39;)
         if stderr_writers_spec:
             stderr_writers = self._class_kwargs_from_config(stderr_writers_spec)
             logging.getLogger().addHandler(StdErrLoggingHandler(stderr_writers))
@@ -1072,12 +1033,12 @@ if __name__ == &#39;__main__&#39;:
             return [self._class_kwargs_from_config(c) for c in class_json]
 
         # Get name and constructor for component we&#39;re going to instantiate
-        class_name = class_json.get(&#39;class&#39;, None)
+        class_name = class_json.get(&#39;class&#39;)
         if class_name is None:
             raise ValueError(&#39;missing &#34;class&#34; definition in &#34;{}&#34;&#39;.format(class_json))
 
         # Are they telling us where the class definition is? If so import it
-        class_module_name = class_json.get(&#39;module&#39;, None)
+        class_module_name = class_json.get(&#39;module&#39;)
         if class_module_name is not None:
             module = importlib.import_module(class_module_name)
             class_const = getattr(module, class_name, None)
@@ -1087,7 +1048,7 @@ if __name__ == &#39;__main__&#39;:
         else:
             # If they haven&#39;t given us a &#39;module&#39; declaration, assume class
             # is something that&#39;s already defined.
-            class_const = globals().get(class_name, None)
+            class_const = globals().get(class_name)
             if not class_const:
                 raise ValueError(&#39;No component class &#34;{}&#34; found: &#34;{}&#34;&#39;.format(
                     class_name, class_json))
@@ -1161,12 +1122,12 @@ cruise definition, and look for the config itself under the
         config = read_config.read_config(config_file)
 
         if config_name:
-            config_dict = config.get(&#39;configs&#39;, None)
+            config_dict = config.get(&#39;configs&#39;)
             if not config_dict:
                 raise ValueError(&#39;Configuration name &#34;%s&#34; specified, but no &#39;
                                  &#39;&#34;configs&#34; section found in file &#34;%s&#34;&#39;
                                  % (config_name, config_file))
-            config = config_dict.get(config_name, None)
+            config = config_dict.get(config_name)
             if not config:
                 raise ValueError(&#39;Configuration name &#34;%s&#34; not found in file &#34;%s&#34;&#39;
                                  % (config_name, config_file))

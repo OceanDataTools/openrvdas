@@ -35,7 +35,6 @@ import sys
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
-from logger.utils import formats  # noqa: E402
 from logger.transforms.transform import Transform  # noqa: E402
 
 
@@ -67,7 +66,6 @@ class SliceTransform(Transform):
         transform = SliceTransform(&#39;9,0,4,0,0:2&#39;)
         ```
         &#34;&#34;&#34;
-        super().__init__(input_format=formats.Text, output_format=formats.Text)
         if not fields:
             fields = &#39;:&#39;
 
@@ -93,23 +91,12 @@ class SliceTransform(Transform):
             raise e
 
     ############################
-    def transform(self, record):
+    def transform(self, record: str):
         &#34;&#34;&#34;Strip and return only the requested fields.&#34;&#34;&#34;
-        if record is None:
-            return None
 
-        # If we&#39;ve got a list, hope it&#39;s a list of records. Recurse,
-        # calling transform() on each of the list elements in order and
-        # return the resulting list.
-        if type(record) is list:
-            results = []
-            for single_record in record:
-                results.append(self.transform(single_record))
-            return results
-
-        if not type(record) is str:
-            logging.warning(&#39;SliceTransform received non-string input: %s&#39;, record)
-            return None
+        # See if it&#39;s something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from Transform()
+            return self.digest_record(record)  # inherited from Transform()
 
         in_record = record.split(self.sep)
         out_record = []
@@ -139,11 +126,10 @@ class SliceTransform(Transform):
 <span>(</span><span>fields=None, sep=None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Base class Transform about which we know nothing else. By default the
-input and output formats are Unknown unless overridden.</p>
-<p>Note that when a Transform is first instantiated, it may not yet know
-what its inputs are going to be, so we provide methods to override the
-input/output formats after the fact.</p>
+<div class="desc"><p>Base class Transform about which we know nothing else.</p>
+<p>Inherits methods for checking whether a received record is in a format
+that the derived class can process, and for splitting a list of input
+records into its elements and calling subclass method() on them.</p>
 <pre><code>fields    A comma-separated list of integers and/or ranges. A range
           is an int:int pair, where either or both of the ints may
           be omitted to mean the extreme values (0 or sys.maxsize).
@@ -194,7 +180,6 @@ fine.</p>
         transform = SliceTransform(&#39;9,0,4,0,0:2&#39;)
         ```
         &#34;&#34;&#34;
-        super().__init__(input_format=formats.Text, output_format=formats.Text)
         if not fields:
             fields = &#39;:&#39;
 
@@ -220,23 +205,12 @@ fine.</p>
             raise e
 
     ############################
-    def transform(self, record):
+    def transform(self, record: str):
         &#34;&#34;&#34;Strip and return only the requested fields.&#34;&#34;&#34;
-        if record is None:
-            return None
 
-        # If we&#39;ve got a list, hope it&#39;s a list of records. Recurse,
-        # calling transform() on each of the list elements in order and
-        # return the resulting list.
-        if type(record) is list:
-            results = []
-            for single_record in record:
-                results.append(self.transform(single_record))
-            return results
-
-        if not type(record) is str:
-            logging.warning(&#39;SliceTransform received non-string input: %s&#39;, record)
-            return None
+        # See if it&#39;s something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from Transform()
+            return self.digest_record(record)  # inherited from Transform()
 
         in_record = record.split(self.sep)
         out_record = []
@@ -254,11 +228,12 @@ fine.</p>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="logger.transforms.transform.Transform" href="transform.html#logger.transforms.transform.Transform">Transform</a></li>
+<li><a title="logger.utils.base_module.BaseModule" href="../utils/base_module.html#logger.utils.base_module.BaseModule">BaseModule</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
 <dt id="logger.transforms.slice_transform.SliceTransform.transform"><code class="name flex">
-<span>def <span class="ident">transform</span></span>(<span>self, record)</span>
+<span>def <span class="ident">transform</span></span>(<span>self, record: str)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Strip and return only the requested fields.</p></div>
@@ -266,23 +241,12 @@ fine.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def transform(self, record):
+<pre><code class="python">def transform(self, record: str):
     &#34;&#34;&#34;Strip and return only the requested fields.&#34;&#34;&#34;
-    if record is None:
-        return None
 
-    # If we&#39;ve got a list, hope it&#39;s a list of records. Recurse,
-    # calling transform() on each of the list elements in order and
-    # return the resulting list.
-    if type(record) is list:
-        results = []
-        for single_record in record:
-            results.append(self.transform(single_record))
-        return results
-
-    if not type(record) is str:
-        logging.warning(&#39;SliceTransform received non-string input: %s&#39;, record)
-        return None
+    # See if it&#39;s something we can process, and if not, try digesting
+    if not self.can_process_record(record):  # inherited from Transform()
+        return self.digest_record(record)  # inherited from Transform()
 
     in_record = record.split(self.sep)
     out_record = []
@@ -303,8 +267,8 @@ fine.</p>
 <ul class="hlist">
 <li><code><b><a title="logger.transforms.transform.Transform" href="transform.html#logger.transforms.transform.Transform">Transform</a></b></code>:
 <ul class="hlist">
-<li><code><a title="logger.transforms.transform.Transform.input_format" href="transform.html#logger.transforms.transform.Transform.input_format">input_format</a></code></li>
-<li><code><a title="logger.transforms.transform.Transform.output_format" href="transform.html#logger.transforms.transform.Transform.output_format">output_format</a></code></li>
+<li><code><a title="logger.transforms.transform.Transform.can_process_record" href="../utils/base_module.html#logger.utils.base_module.BaseModule.can_process_record">can_process_record</a></code></li>
+<li><code><a title="logger.transforms.transform.Transform.digest_record" href="../utils/base_module.html#logger.utils.base_module.BaseModule.digest_record">digest_record</a></code></li>
 </ul>
 </li>
 </ul>
