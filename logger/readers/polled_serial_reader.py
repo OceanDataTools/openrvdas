@@ -63,7 +63,7 @@ class PolledSerialReader(SerialReader):
         just prior to the reader being destroyed.
 
         Notable arguments:
-
+        ```
         start_cmd
             If not None, may be string or list of strings. If a single string,
             it is sent to the serial port as soon as it is opened. If a list of
@@ -95,7 +95,7 @@ class PolledSerialReader(SerialReader):
             seconds. It will then reissue the pre_read_cmds, if there is one, and try
             reading again. If there is a dict of pre_read_cmds, it will progress to the
             next one in the dict.
-
+        ```
         For all of these arguments, a special string, ``__PAUSE__``, is recognized. If
         followed by a number (e.g. ``__PAUSE__ 5``), it will be interpreted as a command
         to pause for that many seconds prior to sending the next command. If no number
