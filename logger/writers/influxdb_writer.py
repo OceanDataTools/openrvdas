@@ -38,7 +38,7 @@ class InfluxDBWriter(Writer):
     """Write to the specified file. If filename is empty, write to stdout."""
 
     def __init__(self, bucket_name=INFLUXDB_BUCKET, measurement_name=None,
-                 auth_token=INFLUXDB_AUTH_TOKEN,
+                 tags=None, auth_token=INFLUXDB_AUTH_TOKEN,
                  org=INFLUXDB_ORG, url=INFLUXDB_URL,
                  verify_ssl=INFLUXDB_VERIFY_SSL, quiet=False):
         """Write data records to the InfluxDB.
@@ -48,6 +48,12 @@ class InfluxDBWriter(Writer):
 
         measurement_name - optional measurement name to use. If not provided,
                   writer will use the record's data_id.
+
+        tags - optional tags to be applied to records submitted to InfluxDB
+               API.
+
+               tags:
+                 tag1: value1
 
         auth_token - The auth token required by the InfluxDB instance. If omitted,
                   will look for value in imported INFLUXDB_AUTH_TOKEN and throw
@@ -100,12 +106,17 @@ class InfluxDBWriter(Writer):
                                'install using "pip install influxdb_client" prior '
                                'to using InfluxDBWriter.')
 
+        if tags and not isinstance(tags, dict)
+            raise RuntimeError('The specified tags kwarg must be None or a dict')
+
+
         self.auth_token = auth_token
         self.org = org
         self.url = url
         self.use_ssl = url.find('https:') == 0
         self.verify_ssl = verify_ssl
         self.bucket_name = bucket_name
+        self tags = tags or {}
         self.measurement_name = measurement_name
         self.write_api = None
 
@@ -180,9 +191,12 @@ class InfluxDBWriter(Writer):
                 data_id = record.get('data_id')
                 fields = record.get('fields', {})
                 timestamp = record.get('timestamp') or time.time()
+
+            tags = {'sensor': self.measurement_name or data_id or self.bucket_name}
+
             influxDB_record = {
                 'measurement': self.measurement_name or data_id,
-                'tags': {'sensor': data_id or self.measurement_name or self.bucket_name},
+                'tags': {**tags, **self.tags},
                 'fields': fields,
                 'time': int(timestamp * 1000000000)
             }
