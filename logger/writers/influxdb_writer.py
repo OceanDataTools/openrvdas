@@ -60,7 +60,7 @@ class InfluxDBWriter(Writer):
                        filter:
                            - measurement1
                            - measurement2
-                       default: no 
+                       default: defaultValue1
                    tag2: 
                        value: value2
                        filter: measurement2
