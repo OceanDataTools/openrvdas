@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import time
-import json
 import logging
 import sys
 from typing import Union
@@ -53,16 +52,18 @@ class InfluxDBWriter(Writer):
         tags - optional tags to be applied to records submitted to InfluxDB
                API.
 
+               Example:
                tags:
                    tag0: value0
-                   tag1: 
-                     value: value1
-                     filter:
-                       - measurement1
-                       - measurement2
+                   tag1:
+                       value: value1
+                       filter:
+                           - measurement1
+                           - measurement2
+                       default: no 
                    tag2: 
-                     value: value2
-                     filter: measurement2
+                       value: value2
+                       filter: measurement2
 
         auth_token - The auth token required by the InfluxDB instance. If omitted,
                   will look for value in imported INFLUXDB_AUTH_TOKEN and throw
@@ -120,7 +121,6 @@ class InfluxDBWriter(Writer):
 
         self.tags = {"*": {}}
         if tags:
-            # Process filters for other tags
             for tag, details in tags.items():
                 if isinstance(details, str):
                     self.tags["*"][tag] = details
@@ -135,7 +135,7 @@ class InfluxDBWriter(Writer):
                     for filter_item in details["filter"]:
                         if filter_item not in self.tags:
                             self.tags[filter_item] = {}
-                        # Add tag with its value in the format requested
+
                         self.tags[filter_item][tag] = details["value"]
                         
         self.auth_token = auth_token
