@@ -53,7 +53,15 @@ class InfluxDBWriter(Writer):
                API.
 
                tags:
-                 tag1: value1
+                   tag0: value0
+                   tag1: 
+                     value: value1
+                     filter:
+                       - measurement1
+                       - measurement2
+                   tag2: 
+                     value: value2
+                     filter: measurement2
 
         auth_token - The auth token required by the InfluxDB instance. If omitted,
                   will look for value in imported INFLUXDB_AUTH_TOKEN and throw
@@ -106,9 +114,25 @@ class InfluxDBWriter(Writer):
                                'install using "pip install influxdb_client" prior '
                                'to using InfluxDBWriter.')
 
-        if tags and not isinstance(tags, dict)
+        if tags and not isinstance(tags, dict):
             raise RuntimeError('The specified tags kwarg must be None or a dict')
 
+
+        self.tags = tags or {}
+        if tags:
+            self.tags["*"] = {}
+
+            # Process filters for other tags
+            for tag, details in data["tags"].items():
+                if isinstance(details, str):
+                    self.tags["*"].append({tag: details})
+
+                if isinstance(details, dict) and "filter" in details:
+                    for filter_item in details["filter"]:
+                        if filter_item not in self.tags:
+                            self.tags[filter_item] = []
+                        # Add tag with its value in the format requested
+                        self.tags[filter_item].append({tag: details["value"]})
 
         self.auth_token = auth_token
         self.org = org
@@ -116,7 +140,6 @@ class InfluxDBWriter(Writer):
         self.use_ssl = url.find('https:') == 0
         self.verify_ssl = verify_ssl
         self.bucket_name = bucket_name
-        self tags = tags or {}
         self.measurement_name = measurement_name
         self.write_api = None
 
@@ -192,11 +215,14 @@ class InfluxDBWriter(Writer):
                 fields = record.get('fields', {})
                 timestamp = record.get('timestamp') or time.time()
 
-            tags = {'sensor': self.measurement_name or data_id or self.bucket_name}
+            tags = {**{'sensor': self.measurement_name or data_id or self.bucket_name}, **self.tags['*']}
+
+            if self.measurement_name in self.tags:
+                tags = {**tags, **self.tags[self.measurement_name]}
 
             influxDB_record = {
                 'measurement': self.measurement_name or data_id,
-                'tags': {**tags, **self.tags},
+                'tags': tags,
                 'fields': fields,
                 'time': int(timestamp * 1000000000)
             }
