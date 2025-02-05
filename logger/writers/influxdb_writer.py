@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import time
+import json
 import logging
 import sys
 from typing import Union
@@ -117,23 +118,26 @@ class InfluxDBWriter(Writer):
         if tags and not isinstance(tags, dict):
             raise RuntimeError('The specified tags kwarg must be None or a dict')
 
-
-        self.tags = tags or {}
+        self.tags = {"*": {}}
         if tags:
-            self.tags["*"] = {}
-
             # Process filters for other tags
-            for tag, details in data["tags"].items():
+            for tag, details in tags.items():
                 if isinstance(details, str):
-                    self.tags["*"].append({tag: details})
+                    self.tags["*"][tag] = details
 
                 if isinstance(details, dict) and "filter" in details:
+                    if isinstance(details['filter'], str):
+                        details['filter'] = [details['filter']]
+
+                    if 'default' in details:
+                        self.tags["*"][tag] = details['default']
+
                     for filter_item in details["filter"]:
                         if filter_item not in self.tags:
-                            self.tags[filter_item] = []
+                            self.tags[filter_item] = {}
                         # Add tag with its value in the format requested
-                        self.tags[filter_item].append({tag: details["value"]})
-
+                        self.tags[filter_item][tag] = details["value"]
+                        
         self.auth_token = auth_token
         self.org = org
         self.url = url
@@ -161,8 +165,7 @@ class InfluxDBWriter(Writer):
                 organizations_api = client.organizations_api()
                 orgs = organizations_api.find_organizations()
             except BaseException:
-                self.client = None
-                logging.warning('Error connecting to the InfluxDB API. '
+                self.client = Nonelogging.warning('Error connecting to the InfluxDB API. '
                                 'Please confirm that InfluxDB is running and '
                                 'that the authentication token is correct.'
                                 'Sleeping before trying again.')
@@ -215,10 +218,11 @@ class InfluxDBWriter(Writer):
                 fields = record.get('fields', {})
                 timestamp = record.get('timestamp') or time.time()
 
-            tags = {**{'sensor': self.measurement_name or data_id or self.bucket_name}, **self.tags['*']}
+            measurement = self.measurement_name or data_id
+            tags = {**{'sensor': measurement}, **self.tags['*']}
 
-            if self.measurement_name in self.tags:
-                tags = {**tags, **self.tags[self.measurement_name]}
+            if measurement in self.tags:
+                tags = {**tags, **self.tags[measurement]}
 
             influxDB_record = {
                 'measurement': self.measurement_name or data_id,
