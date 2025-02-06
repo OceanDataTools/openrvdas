@@ -119,24 +119,24 @@ class InfluxDBWriter(Writer):
         if tags and not isinstance(tags, dict):
             raise RuntimeError('The specified tags kwarg must be None or a dict')
 
-        self.tags = {"*": {}}
+        self.tags = {'*': {}}
         if tags:
             for tag, details in tags.items():
                 if isinstance(details, str):
-                    self.tags["*"][tag] = details
+                    self.tags['*'][tag] = details
 
-                if isinstance(details, dict) and "filter" in details:
+                if isinstance(details, dict) and 'filter' in details:
                     if isinstance(details['filter'], str):
                         details['filter'] = [details['filter']]
 
                     if 'default' in details:
-                        self.tags["*"][tag] = details['default']
+                        self.tags['*'][tag] = details['default']
 
-                    for filter_item in details["filter"]:
+                    for filter_item in details['filter']:
                         if filter_item not in self.tags:
                             self.tags[filter_item] = {}
 
-                        self.tags[filter_item][tag] = details["value"]
+                        self.tags[filter_item][tag] = details['value']
                         
         self.auth_token = auth_token
         self.org = org
@@ -165,7 +165,8 @@ class InfluxDBWriter(Writer):
                 organizations_api = client.organizations_api()
                 orgs = organizations_api.find_organizations()
             except BaseException:
-                self.client = Nonelogging.warning('Error connecting to the InfluxDB API. '
+                self.client = None
+                logging.warning('Error connecting to the InfluxDB API. '
                                 'Please confirm that InfluxDB is running and '
                                 'that the authentication token is correct.'
                                 'Sleeping before trying again.')
