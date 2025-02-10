@@ -38,7 +38,7 @@ class InfluxDBWriter(Writer):
     """Write to the specified file. If filename is empty, write to stdout."""
 
     def __init__(self, bucket_name=INFLUXDB_BUCKET, measurement_name=None,
-                 auth_token=INFLUXDB_AUTH_TOKEN,
+                 tags=None, auth_token=INFLUXDB_AUTH_TOKEN,
                  org=INFLUXDB_ORG, url=INFLUXDB_URL,
                  verify_ssl=INFLUXDB_VERIFY_SSL, quiet=False):
         """Write data records to the InfluxDB.
@@ -48,6 +48,22 @@ class InfluxDBWriter(Writer):
 
         measurement_name - optional measurement name to use. If not provided,
                   writer will use the record's data_id.
+
+        tags - optional tags to be applied to records submitted to InfluxDB
+               API.
+
+               Example:
+               tags:
+                   tag0: value0
+                   tag1:
+                       value: value1
+                       filter:
+                           - measurement1
+                           - measurement2
+                       default: defaultValue1
+                   tag2: 
+                       value: value2
+                       filter: measurement2
 
         auth_token - The auth token required by the InfluxDB instance. If omitted,
                   will look for value in imported INFLUXDB_AUTH_TOKEN and throw
@@ -100,6 +116,28 @@ class InfluxDBWriter(Writer):
                                'install using "pip install influxdb_client" prior '
                                'to using InfluxDBWriter.')
 
+        if tags and not isinstance(tags, dict):
+            raise RuntimeError('The specified tags kwarg must be None or a dict')
+
+        self.tags = {'*': {}}
+        if tags:
+            for tag, details in tags.items():
+                if isinstance(details, str):
+                    self.tags['*'][tag] = details
+
+                if isinstance(details, dict) and 'filter' in details:
+                    if isinstance(details['filter'], str):
+                        details['filter'] = [details['filter']]
+
+                    if 'default' in details:
+                        self.tags['*'][tag] = details['default']
+
+                    for filter_item in details['filter']:
+                        if filter_item not in self.tags:
+                            self.tags[filter_item] = {}
+
+                        self.tags[filter_item][tag] = details['value']
+                        
         self.auth_token = auth_token
         self.org = org
         self.url = url
@@ -180,9 +218,16 @@ class InfluxDBWriter(Writer):
                 data_id = record.get('data_id')
                 fields = record.get('fields', {})
                 timestamp = record.get('timestamp') or time.time()
+
+            measurement = self.measurement_name or data_id
+            tags = {**{'sensor': measurement}, **self.tags['*']}
+
+            if measurement in self.tags:
+                tags = {**tags, **self.tags[measurement]}
+
             influxDB_record = {
                 'measurement': self.measurement_name or data_id,
-                'tags': {'sensor': data_id or self.measurement_name or self.bucket_name},
+                'tags': tags,
                 'fields': fields,
                 'time': int(timestamp * 1000000000)
             }
