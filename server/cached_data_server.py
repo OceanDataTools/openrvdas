@@ -86,9 +86,10 @@ except ModuleNotFoundError:
                               'Please run "pip3 install websockets".')
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
-from logger.utils.stderr_logging import StdErrLoggingHandler  # noqa: E402
+from logger.utils.stderr_logging import StdErrLoggingHandler, DEFAULT_LOGGING_FORMAT  # noqa: E402
 from logger.utils.das_record import DASRecord                 # noqa: E402
-from logger.writers.text_file_writer import TextFileWriter    # noqa: E402
+
+logging.basicConfig(format=DEFAULT_LOGGING_FORMAT)
 
 
 ############################
@@ -1088,13 +1089,12 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # Set logging verbosity
-    LOGGING_FORMAT = '%(asctime)-15s %(filename)s:%(lineno)d %(message)s'
     LOG_LEVELS = {0: logging.WARNING, 1: logging.INFO, 2: logging.DEBUG}
-
     log_level = LOG_LEVELS[min(args.verbosity, max(LOG_LEVELS))]
-    logging.basicConfig(format=LOGGING_FORMAT)
     logging.getLogger().setLevel(log_level)
+
     if args.stderr_file:
+        from logger.writers.text_file_writer import TextFileWriter  # noqa: E402
         stderr_writer = [TextFileWriter(filename=args.stderr_file,
                                         split_by_date=True)]
         logging.getLogger().addHandler(StdErrLoggingHandler(stderr_writer))
