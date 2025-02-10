@@ -46,6 +46,18 @@ from logger.utils.read_config import parse, read_config  # noqa: E402
 # Interacting with the Django DB via its API class
 # As per the standard view.
 
+### example process to add custom API endpoints ###
+# from contrib.ship.views.api_views import ship_specific_paths, ship_specific_schema
+
+# import and add your own API routes here, should be a list matching urlpatterns below
+custom_paths = []
+# custom_paths += ship_specific_paths()
+
+def get_custom_schema(request, format=None):
+    # your method should return a dict like the get method of ApiRoot below
+    # return ship_specific_schema(request, format)
+    return {}
+    
 api = None
 
 class GetSerializer(serializers.Serializer):
@@ -88,6 +100,7 @@ class ApiRoot(APIView):
             "delete-configuration": reverse("delete-configuration", request=request, format=format),
             "edit-logger-config": reverse("edit-logger-config", request=request, format=format),
             "load-configuration-file": reverse("load-configuration-file", request=request, format=format),
+            **get_custom_schema(request, format),
         })
 
 
@@ -603,5 +616,5 @@ urlpatterns = [
     path('load-configuration-file/', LoadConfigurationFileAPIView.as_view(), name='load-configuration-file'),
     path('reload-current-configuration/', CruiseReloadCurrentConfigurationAPIView.as_view(), name='reload-current-configuration'),
     path('select-cruise-mode/', CruiseSelectModeAPIView.as_view(), name='select-cruise-mode'),
-]
+] + custom_paths
     
