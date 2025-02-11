@@ -287,6 +287,7 @@ function update_cruise_definition(timestamp, cruise_definition) {
     var stderr_div = document.createElement('div');
 
     stderr_div.setAttribute('id', logger_name + '_stderr');
+    stderr_div.setAttribute('class', 'log-window')
     stderr_div.setAttribute('style', 'height:30px;width:450px;background-color:white;padding:0px;overflow-y:auto;');
     stderr_div.style.fontSize = 'x-small';
     stderr_td.appendChild(stderr_div);
@@ -352,18 +353,19 @@ function update_logger_status(timestamp, logger_status) {
       continue;
     }
     button.innerHTML = status.config;
+    button.className = "";
     if (status.status == 'RUNNING') {
-      button.style.backgroundColor = "lightgreen";
+      button.classList.add("success");
     } else if (status.status == 'EXITED') {
-      button.style.backgroundColor = "lightgray";
+      button.classList.add("inactive");
     } else if (status.status == "STARTING") {
-      button.style.backgroundColor = "khaki";
+      button.classList.add("warning");
     } else if (status.status == "BACKOFF") {
-      button.style.backgroundColor = "gold";
+      button.classList.add("error");
     } else if (status.status == 'FATAL') {
-      button.style.backgroundColor = "red";
+      button.classList.add("critical");
     } else {
-      button.style.backgroundColor = "white";
+      button.classList.add("unknown");
     }
   }
 }
