@@ -1,37 +1,6 @@
 {% extends 'django_gui/base.html' %}
 {% load static %}
 {% block content %}
-<style>
-    .time_label {
-        background-color:gray;
-        border-style:solid;
-        border-width:1px;
-        border-color:gray;
-        text-align:right;
-        font-size:small;
-    }
-    .time_str {
-        background-color:white;
-        border-style:solid;
-        border-width:1px;
-        border-color:gray;
-        text-align:left;
-        font-size:small;
-    }
-    .button_td {
-        height:30px;
-        width:75px;
-        font-weight:bold;
-    }
-    .stderr_window {
-        height:30px;
-        width:450px;
-        background-color:white;
-        padding:0px;
-        overflow-y:auto;
-        font-size:x-small;
-    }
-</style>
 
 <script type="text/javascript">
   // Need to define for following JS scripts. For now, count on the
@@ -47,21 +16,35 @@
 
 {# ######################################################################## #}
 {# Show server status up top.                                               #}
-<table>
-  <tr>
-   <td class="time_label">now</td>
-    <td class="time_str"><span id='time_td'></span></td>
-  </tr>
-  <tr>
-    <td class="time_label">server</td>
-    <td class="time_str"><span id='server_time_td'>--no updates--</span>
-    </td>
-  </tr>
-  <tr>
-    <td  class="time_label">status</td>
-    <td class="time_str"><span id='status_time_td'>--no updates--</span></td>
-  </tr>
-</table>
+<div class="flex">
+  <table>
+    <tr>
+    <td class="time_label">now</td>
+      <td class="time_str"><span id='time_td'></span></td>
+    </tr>
+    <tr>
+      <td class="time_label">server</td>
+      <td class="time_str"><span id='server_time_td'>--no updates--</span>
+      </td>
+    </tr>
+    <tr>
+      <td  class="time_label">status</td>
+      <td class="time_str"><span id='status_time_td'>--no updates--</span></td>
+    </tr>
+  </table>
+  <div class="definition-file">
+        Current definition file:
+        <span id='filename'>{{ filename|default:"[none]" }}</span>
+  </div>
+  <div class="user-info">
+    {% if user.is_authenticated %}
+    Logged in as <b>{{ user }}.</b>
+    <a href='/accounts/logout'>Log out</a>
+    {% else %}
+    <a href='/accounts/login'><b>Log in</b></a> to manage cruise mode or loggers
+    {% endif %}
+  </div>
+</div>
 
 {# Show this div if no cruise definition loaded #}
 <div id='empty_loggers'
@@ -94,7 +77,7 @@
       <tr>
         <td class="button_td" id="logger_manager_mode_td">
           <button id="logger_manager_mode_button" type="submit"
-                  onclick="open_change_mode(event);"
+                  onclick="open_change_mode(event);">
                   {{ active_mode|default:"unknown" }}
           </button>
         </td>
@@ -107,6 +90,7 @@
       <tr id="{{ logger_name }}_row">
         <td class="button_td" id="{{ logger_name }}_config_td">
           <button id="{{ logger_name }}_config_button" type="submit"
+                  class="config-button"
                   onclick="open_edit_config(event, '{{logger_name }}');"
                   >
             {{ logger_config.active }}
@@ -119,14 +103,6 @@
   </table>
 
   <hr>
-  <table>
-    <tr>
-      <td>
-        Current definition file:
-        <span id='filename'>{{ filename|default:"[none]" }}</span>
-      </td>
-    </tr>
-  </table>
 </div>
 {# End of 'we have a cruise definition' div #}
 
@@ -154,15 +130,6 @@
   </tr>
 </table>
 {% endif %}
-
-<p>
-  {% if user.is_authenticated %}
-  Logged in as <b>{{ user }}.</b>
-  <a href='/accounts/logout'>Log out</a>
-  {% else %}
-  <a href='/accounts/login'><b>Log in</b></a> to manage cruise mode or loggers
-  {% endif %}
-</p>
 
 <table>
   <tr>
