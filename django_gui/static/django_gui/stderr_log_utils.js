@@ -52,16 +52,16 @@ function process_stderr_message(target_div_id, log_line_list) {
 
 // Add HTML coloring to message depending on log level
 function color_log_line(message) {
-  var color = '';
+  var className = '';
   if (message.indexOf(' 30 WARNING ') > 0) {
-    color = 'gold';
+    className = 'warning';
   } else if (message.indexOf(' 40 ERROR ') > 0) {
-    color = 'orange';
+    className = 'error';
   } else if (message.indexOf(' 50 CRITICAL ') > 0) {
-    color = 'red';
+    className = 'critical';
   }
-  if (color !== '') {
-    message = '<span style="color:' + color + '">' + message + '</span>';
+  if (className !== '') {
+    message = '<span class="' + className + '">' + message + '</span>';
   }
   return message;
 }
