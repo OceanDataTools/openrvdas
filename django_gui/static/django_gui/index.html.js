@@ -482,7 +482,7 @@ function open_edit_config(click_event, logger_name) {
   var window_args = [
     'titlebar=no',
     'location=no',
-    'height=320',
+    'height=340',
     'width=720',
     'top=' + click_event.clientY,
     'left=' + (click_event.clientX + 520),

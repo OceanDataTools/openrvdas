@@ -16,7 +16,7 @@
 
 {# ######################################################################## #}
 {# Show server status up top.                                               #}
-<div class="flex">
+<div id="stats_row" class="flex">
   <table>
     <tr>
     <td class="time_label">now</td>
@@ -35,6 +35,32 @@
   <div class="definition-file">
         Current definition file:
         <span id='filename'>{{ filename|default:"[none]" }}</span>
+
+        {# ######################################################################## #}
+        {# Load new definition                                                      #}
+        {% if user.is_authenticated %}
+        <table>
+          <tr>
+            <td>
+              <span id='reload_span' style='display:none;'>
+                <form method='post' style='display:inline;'
+                      enctype='multipart/form-data'>
+                  {% csrf_token %}
+                  <button name='reload_button' id='reload_button' type='submit'
+                          style='background-color:yellow'>
+                  Definition is stale. Reload definition
+                  </button>
+                </form>
+              </span>
+              <button id='load_definition_button' type='submit'
+                      onclick='open_load_definition(event);'>
+                Load new definition
+              </button>
+            </td>
+          </tr>
+        </table>
+        {% endif %}
+
   </div>
   <div class="user-info">
     {% if user.is_authenticated %}
@@ -105,31 +131,6 @@
   <hr>
 </div>
 {# End of 'we have a cruise definition' div #}
-
-{# ######################################################################## #}
-{# Load new definition                                                      #}
-{% if user.is_authenticated %}
-<table>
-  <tr>
-    <td>
-      <span id='reload_span' style='display:none;'>
-        <form method='post' style='display:inline;'
-              enctype='multipart/form-data'>
-          {% csrf_token %}
-          <button name='reload_button' id='reload_button' type='submit'
-                   style='background-color:yellow'>
-          Definition is stale. Reload definition
-          </button>
-        </form>
-      </span>
-      <button id='load_definition_button' type='submit'
-              onclick='open_load_definition(event);'>
-        Load new definition
-      </button>
-    </td>
-  </tr>
-</table>
-{% endif %}
 
 <table>
   <tr>
