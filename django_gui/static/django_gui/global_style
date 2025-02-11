@@ -1,0 +1,286 @@
+:root {
+    --horizontal-spacing: 0.3rem;
+    --double-h-spacing: calc(2 * var(--horizontal-spacing));
+    --large-h-spacing: calc(12 * var(--horizontal-spacing));
+    --vertical-spacing: 0.1rem;
+    --double-v-spacing: calc(2 * var(--vertical-spacing));
+    --large-v-spacing: calc(12 * var(--vertical-spacing));
+    
+    --table-spacing: 0.3rem;
+    --row-height: 2.4rem;
+
+    --border-radius: 0.15rem;
+    --border-width: 0.15rem;
+
+    --lightest-grey: #f1f1f1;
+    --lighter-grey: #ddd;
+    --light-grey: #ccc;
+    --grey: #aaa;
+
+    /* --rvdas-white: #fff;
+    --rvdas-grey: #d3d3d3;
+    --rvdas-green: lightgreen;
+    --rvdas-yellow: khaki;
+    --rvdas-orange: orange;
+    --rvdas-red: red;
+/* 
+    --rvdas-white: #ffffff;
+    --rvdas-grey: #b0b0b0;
+    --rvdas-green: #33d9b2;
+    --rvdas-yellow: #ffb142;
+    --rvdas-orange: #ff793f;
+    --rvdas-red: #b33939;  */
+
+    --white: #fff;
+    --black: #000;
+    --green: #0bc866;
+    --yellow: #e4a700;
+    --orange: #ff6b00;
+    --red: #d4002a;
+
+    --blue: #0ca0eb;
+    --light-blue: #7cd0fd;
+    --lighter-blue: #b9e4fe;
+    --dark-blue: #072d4a;
+    --very-dark-blue: #0e0e11;
+    
+
+    --page-background: var(--white);
+    --page-background-shadow: var(--lightest-grey);
+    --text-color: var(--black);
+
+    --primary-color: var(--blue);
+    --highlight-color: var(--light-blue);
+    --lowlight-color: var(--dark-blue);
+
+    --separator-color: var(--lighter-blue);
+
+    --unknown-color: var(--lighter-grey);
+    --inactive-color: var(--light-grey);
+    --success-color: var(--green);
+    --warning-color: var(--yellow);
+    --error-color: var(--orange);
+    --critical-color: var(--red);
+}
+
+body {
+    font-family: arial, sans-serif;
+    background-color: var(--page-background);
+    color: var(--text-color);
+    margin: 0;
+    padding: var(--double-h-spacing) var(--double-h-spacing) 0 var(--double-h-spacing);
+}
+
+h1 {
+    margin: 0 0 var(--large-v-spacing) 0;
+    padding: var(--vertical-spacing) var(--horizontal-spacing);
+    font-size: 1.5rem;
+    background-color: var(--highlight-color);
+    border-bottom: calc(2 * var(--border-width)) solid var(--primary-color);
+    border-radius: var(--border-radius);
+    color: var(--lowlight-color);
+}
+
+h1:first-child {
+    margin-top: 0;
+}
+
+h2 {
+    font-size: 1.1rem;
+}
+
+
+button,
+input {
+    text-align: center;
+    display: inline-block;
+}
+
+button,
+select,
+option,
+input,
+form {
+    font: inherit;
+}
+
+/*  buttons  */
+
+button {
+    background-color: var(--unknown-color);
+    border: 1px solid transparent;
+    border-radius: var(--border-radius);
+    box-sizing: border-box;
+    color: var(--black);
+    cursor: pointer;
+    display: inline-block;
+    outline: none;
+    padding: var(--double-v-spacing) var(--double-h-spacing);
+    position: relative;
+    text-align: center;
+    text-decoration: none;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+    vertical-align: baseline;
+    white-space: nowrap;
+}
+
+button:focus {
+    box-shadow: 0 0 0 4px var(--page-background-shadow);
+}
+
+button:hover {
+    box-shadow: inset 10px 10px 300px 200px rgba(255, 255, 255, 0.2);
+}
+
+button:active {
+    box-shadow: inset 10px 10px 300px 200px rgba(0, 0, 0, 0.2);
+}
+
+/*    */
+
+hr {
+    border-color: var(--separator-color);
+}
+
+
+table, td, th {
+    border-collapse: collapse;
+}
+
+td,
+th {
+    border: 0;
+    text-align: left;
+    padding: var(--table-spacing);
+}
+
+th:first-child, 
+td:first-child {
+    border-top-left-radius: var(--border-radius);
+    border-bottom-left-radius: var(--border-radius);
+}
+
+th:last-child,
+td:last-child {
+    border-top-right-radius: var(--border-radius);
+    border-bottom-right-radius: var(--border-radius);
+}
+
+td {
+    white-space: nowrap;
+    border-bottom: var(--border-width) solid var(--separator-color);
+    min-width: 50px;
+}
+
+th {
+    background-color: var(--highlight-color);
+    color: var(--lowlight-color);
+}
+
+.flex {
+    display: inline-flex;
+}
+
+.unknown {
+    background-color: var(--unknown-color);
+}
+
+.inactive {
+    background-color: var(--inactive-color);
+}
+
+.success {
+    background-color: var(--success-color);
+}
+
+.warning {
+    background-color: var(--warning-color);
+}
+
+.error {
+    background-color: var(--error-color);
+}
+
+.critical {
+    background-color: var(--critical-color);
+}
+
+/*  log lines */
+
+.log-window, .stderr_window {
+    background-color: var(--page-background-shadow);
+    border-radius: var(--border-radius);
+    height: var(--row-height);
+    padding: var(--vertical-spacing) var(--horizontal-spacing) 0 var(--horizontal-spacing);
+    overflow-y: auto;
+    white-space: wrap;
+    font-size: 0.7rem;
+}
+
+div.log-window > span {
+    background-color: transparent !important;
+}
+
+div.log-window > span.warning {
+    color: var(--warning-color);
+}
+
+div.log-window > span.error {
+    color: var(--error-color);
+}
+
+div.log-window > span.critical {
+    color: var(--critical-color);
+}
+
+/* specific elements */
+
+.definition-file, .user-info {
+    margin-left: var(--large-h-spacing);
+}
+
+.config-button {
+    color: var(--text-color);
+}
+
+.time_label {
+    border: 0;
+    background-color: var(--highlight-color);
+    text-align: right;
+    text-transform: capitalize;
+    font-weight: bold;
+}
+
+.time_str {
+    background-color: var(--page-background-shadow);
+    border: 0;
+    text-align: left;
+    font-size: 0.75rem;
+}
+
+tr:nth-child(n+2)>.time_label {
+    border-top: var(--border-width) solid var(--separator-color);
+}
+
+tr:nth-child(n+2)>.time_str {
+    border-top: var(--border-width) solid var(--page-background);
+}
+
+#logger_table {
+    width: 100%;
+}
+
+#logger_table_body tr:not([id]) td {
+    border-bottom: 0;
+}
+
+#logger_table_body th:first-child, #logger_table_body td:first-child {
+    min-width: 4rem;
+}
+
+.button_td {
+    height: var(--row-height);
+    font-weight: bold;
+}
