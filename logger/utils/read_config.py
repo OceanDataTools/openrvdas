@@ -8,6 +8,7 @@ except ModuleNotFoundError:
     pass
 
 
+###################
 def parse(source):
     """Read the passed text/stream assuming it's YAML or JSON (a subset of
     YAML) and try to parse it into a Python dict.
@@ -23,7 +24,7 @@ def parse(source):
                           'PyYAML or equivalent is installed (e.g. via '
                           '"pip3 install PyYAML"')
 
-
+###################
 def read_config(filename):
     with open(filename, 'r') as file:
         return parse(file)

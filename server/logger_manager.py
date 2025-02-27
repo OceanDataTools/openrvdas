@@ -550,8 +550,10 @@ if __name__ == '__main__':  # noqa: C901
         config = read_config(args.config)
 
         # Hacky bit: need to stash the config filename for posterity
-        if 'cruise' in config:
-            config['cruise']['config_filename'] = args.config
+        if 'cruise' not in config or config['cruise'] is None:
+            config['cruise'] = {}
+
+        config['cruise']['config_filename'] = args.config
         api.load_configuration(config)
 
         active_mode = args.mode or api.get_default_mode()
