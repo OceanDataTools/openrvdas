@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <link rel="stylesheet" href="/static/django_gui/global_style.css">
+    {% load static %}
+    <link rel="stylesheet" href="{% static '/django_gui/global_style.css' %}">
     <title>{% block title %}OpenRVDAS Cruise Management{% endblock %}</title>
   </head>
   <body>
