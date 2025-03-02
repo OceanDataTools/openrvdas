@@ -5,15 +5,15 @@
     --vertical-spacing: 0.1rem;
     --double-v-spacing: calc(2 * var(--vertical-spacing));
     --large-v-spacing: calc(12 * var(--vertical-spacing));
-
+    
     --table-spacing: 0.3rem;
     --row-height: 3rem;
 
     --border-radius: 0.15rem;
     --border-width: 0.15rem;
 
-    --drop-shadow: rgba(50, 50, 93, 0.25) 0px 2px 5px -1px, rgba(0, 0, 0, 0.3) 0px 1px 3px -1px;
-
+    --drop-shadow:rgba(50, 50, 93, 0.25) 0px 2px 5px -1px, rgba(0, 0, 0, 0.3) 0px 1px 3px -1px;
+    
     --lightest-grey: #f1f1f1;
     --lighter-grey: #ddd;
     --light-grey: #ccc;
@@ -27,23 +27,16 @@
     --white: #fff;
     --black: #000;
 
-    --blue: #0ca0eb;
-    --light-blue: #7cd0fd;
-    --lighter-blue: #b9e4fe;
-    --lightest-blue: #e0f1fe;
-    --dark-blue: #072d4a;
-    --very-dark-blue: #0e0e11;
-
-    --page-background: var(--lightest-blue);
+    --page-background: var(--lightest-grey);
     --page-background-shadow: var(--lightest-grey);
     --text-color: var(--black);
     --card-color: var(--white);
 
-    --primary-color: var(--blue);
-    --highlight-color: var(--light-blue);
-    --lowlight-color: var(--dark-blue);
+    --primary-color: var(--grey);
+    --highlight-color: var(--light-grey);
+    --lowlight-color: var(--black);
 
-    --separator-color: var(--lighter-blue);
+    --separator-color: var(--lighter-grey);
 
     --unknown-color: var(--lighter-grey);
     --inactive-color: var(--light-grey);
@@ -75,8 +68,7 @@ h1 {
     color: var(--lowlight-color);
 }
 
-h1:first-child,
-title+h1 {
+h1:first-child, title + h1 {
     margin-top: 0;
 }
 
@@ -139,9 +131,7 @@ hr {
 }
 
 
-table,
-td,
-th {
+table, td, th {
     border-collapse: collapse;
 }
 
@@ -152,7 +142,7 @@ th {
     padding: var(--table-spacing);
 }
 
-th:first-child,
+th:first-child, 
 td:first-child {
     border-top-left-radius: var(--border-radius);
     border-bottom-left-radius: var(--border-radius);
@@ -211,8 +201,7 @@ th {
 
 /*  log lines */
 
-.log-window,
-.stderr_window {
+.log-window, .stderr_window {
     background-color: var(--page-background-shadow);
     border-radius: var(--border-radius);
     height: var(--row-height);
@@ -232,8 +221,7 @@ th {
     background-color: var(--card-color);
 }
 
-.definition-file,
-.user-info {
+.definition-file, .user-info {
     margin-left: var(--large-h-spacing);
     padding: var(--double-v-spacing) var(--double-h-spacing);
     border-radius: var(--border-radius);
@@ -280,20 +268,20 @@ th {
     font-size: 1rem;
 }
 
-.time_str>span {
+.time_str > span {
     display: inline-block;
     padding: var(--vertical-spacing) var(--horizontal-spacing);
 }
 
-.time_str>span.warning {
+.time_str > span.warning {
     font-weight: bold;
 }
 
-tr:nth-child(n+2)>.time_label {
+tr:nth-child(n+2) > .time_label {
     border-top: var(--border-width) solid var(--separator-color);
 }
 
-tr:nth-child(n+2)>.time_str {
+tr:nth-child(n+2) > .time_str {
     border-top: var(--border-width) solid var(--page-background);
 }
 
@@ -304,8 +292,7 @@ tr:nth-child(n+2)>.time_str {
     border-radius: var(--border-radius);
 }
 
-#logger_table_body th,
-#logger_table_body td {
+#logger_table_body th, #logger_table_body td {
     border-radius: 0;
 }
 
@@ -319,8 +306,7 @@ tr:nth-child(n+2)>.time_str {
 }
 
 
-#logger_table_body th:first-child,
-#logger_table_body td:first-child {
+#logger_table_body th:first-child, #logger_table_body td:first-child {
     min-width: 4rem;
 }
 
@@ -331,7 +317,7 @@ tr:nth-child(n+2)>.time_str {
 
 /*  edit_config page  */
 
-h1+.log-window {
+h1 + .log-window {
     margin-bottom: var(--large-v-spacing);
 }
 
@@ -346,7 +332,7 @@ h1+.log-window {
 
 @media (min-width: 1200px) {
     body {
-        padding-left: 10vw;
-        padding-right: 10vw;
-    }
+            padding-left: 10vw;
+            padding-right: 10vw;
+        }
 }
