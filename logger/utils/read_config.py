@@ -13,21 +13,24 @@ except ModuleNotFoundError:
 
 
 ###################
-def read_config(file_path: str, no_parse: bool = False) -> Dict[str, Any]:
+def read_config(file_path: str, no_parse: bool = False, base_dir: str = None) -> Dict[str, Any]:
     """
     Read a YAML configuration file and handle any includes.
 
     Args:
         file_path: Path to the YAML configuration file
         no_parse: If True, just load the YAML without processing includes
+        base_dir: Optional base directory for resolving includes.
+                  If None, uses the top-level project directory.
 
     Returns:
         Dictionary containing the YAML content or empty dict on error
     """
     try:
-        # Get the OpenRVDAS base directory
-        #base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-        base_dir = os.path.dirname(file_path)
+        # Determine base directory
+        if base_dir is None:
+            # If not specified, default to top-level project directory
+            base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 
         # Load the YAML file
         with open(file_path, 'r') as file:
@@ -65,11 +68,11 @@ def expand_wildcards(include_pattern: str, base_dir: str) -> List[str]:
     Returns:
         List of matching file paths
     """
-    # Join the base directory with the include pattern
-    full_pattern = os.path.join(base_dir, include_pattern)
-
-    logging.warning(f'BASE: {base_dir}, include: {include_pattern}')
-    logging.warning(f'FULL: {full_pattern}')
+    # Resolve relative paths
+    if not os.path.isabs(include_pattern):
+        full_pattern = os.path.normpath(os.path.join(base_dir, include_pattern))
+    else:
+        full_pattern = include_pattern
 
     # Use glob to expand the pattern
     matching_files = glob.glob(full_pattern)
@@ -112,8 +115,11 @@ def parse(content: str, file_path: str = None, base_dir: str = '') -> Dict[str, 
 
                 # Process each matching file
                 for include_path in matching_files:
+                    # Use the directory of the include_path as the base_dir for nested includes
+                    include_base_dir = os.path.dirname(include_path) or base_dir
+
                     # Load the included file
-                    included_content = read_config(include_path)
+                    included_content = read_config(include_path, base_dir=include_base_dir)
 
                     # Merge with current data
                     included_data = deep_merge(included_data, included_content)

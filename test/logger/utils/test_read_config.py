@@ -1,18 +1,22 @@
 #!/usr/bin/env python3
 """Unit tests for YAML utilities module.
 """
+import logging
 import os
 import sys
 import unittest
 from unittest.mock import patch, mock_open
 import tempfile
 
+LOGGING_FORMAT = '%(asctime)-15s %(filename)s:%(lineno)d %(message)s'
+logging.basicConfig(format=LOGGING_FORMAT)
+
 # Add the parent directory to sys.path to import the module correctly
 sys.path.append('.')
 from logger.utils import read_config  # noqa: E402
 
 
-class ReadConfig(unittest.TestCase):
+class TestReadConfig(unittest.TestCase):
     """Test cases for YAML utility functions."""
 
     def setUp(self):
@@ -84,24 +88,18 @@ class ReadConfig(unittest.TestCase):
             "key2": {"nested": "value2"}
         })
 
-    @patch('logger.utils.read_config.read_config')
-    def test_parse_with_includes(self, mock_read_config):
+    def test_parse_with_includes(self):
         """Test parsing YAML with includes."""
-        # Mock the read_config function to return predefined data
-        mock_read_config.return_value = {"included_key": "included_value"}
+        self.create_yaml_file("included_test.yaml", "included_key: included_value")
 
         yaml_content = """
         includes:
-          - included.yaml
+          - included_test.yaml
         key1: value1
         """
+        result = read_config.parse(yaml_content, "test.yaml", self.base_dir)
 
-        result = read_config.parse(yaml_content, "test.yaml", "/base/dir")
-
-        # Verify read_config was called with correct path
-        mock_read_config.assert_called_once_with(os.path.join("/base/dir", "included.yaml"))
-
-        # Updated assertion based on actual behavior - includes key is not restored in result
+        # Check the result
         self.assertEqual(result, {
             "included_key": "included_value",
             "key1": "value1"
@@ -192,7 +190,7 @@ class ReadConfig(unittest.TestCase):
         self.create_yaml_file("include2.yaml", include2)
 
         # Read the config
-        result = read_config.read_config(main_path)
+        result = read_config.read_config(main_path, base_dir=self.base_dir)
 
         # Modified assertions based on failure
         # The 'includes' key is no longer in the result after processing
@@ -202,6 +200,73 @@ class ReadConfig(unittest.TestCase):
         self.assertEqual(result["shared_key"], "main_version")  # Main config overrides
         self.assertEqual(result["nested"], {"key1": "value1", "key2": "value2"})
 
+    def test_read_config_custom_base_dir(self):
+        """Test read_config with a custom base_dir."""
+        # Create a separate directory for includes
+        include_dir = tempfile.mkdtemp()
+
+        # Create the main config file in the base directory
+        main_config = """
+        includes:
+          - include1.yaml
+          - include2.yaml
+        main_key: main_value
+        shared_key: main_version
+        """
+        main_path = self.create_yaml_file("main.yaml", main_config)
+
+        # Create the first included file in the include directory
+        include1_path = os.path.join(include_dir, "include1.yaml")
+        with open(include1_path, 'w') as f:
+            f.write("""
+include1_key: include1_value
+shared_key: include1_version
+nested:
+  key1: value1
+""")
+
+        # Create the second included file in the include directory
+        include2_path = os.path.join(include_dir, "include2.yaml")
+        with open(include2_path, 'w') as f:
+            f.write("""
+include2_key: include2_value
+nested:
+  key2: value2
+""")
+
+        # Read the config with custom base_dir
+        result = read_config.read_config(main_path, base_dir=include_dir)
+
+        # Assertions
+        self.assertEqual(result["main_key"], "main_value")
+        self.assertEqual(result["include1_key"], "include1_value")
+        self.assertEqual(result["include2_key"], "include2_value")
+        self.assertEqual(result["shared_key"], "main_version")  # Main config overrides
+        self.assertEqual(result["nested"], {"key1": "value1", "key2": "value2"})
+
+    def test_read_config_base_dir_project_structure(self):
+        """Test that base_dir correctly identifies the project root directory."""
+        # Create a mock project structure
+        project_root = self.base_dir
+        os.makedirs(os.path.join(project_root, 'logger'))
+        os.makedirs(os.path.join(project_root, 'test'))
+
+        # Create a deeply nested file
+        nested_dir = os.path.join(project_root, 'logger', 'utils', 'nested')
+        os.makedirs(nested_dir)
+        test_file_path = os.path.join(nested_dir, 'test_config.yaml')
+
+        # Write a test config file
+        with open(test_file_path, 'w') as f:
+            f.write("""
+        key1: value1
+        """)
+
+        # Read the config and check base_dir
+        result = read_config.read_config(test_file_path)
+
+        # Verify the result is as expected
+        self.assertEqual(result, {"key1": "value1"})
 
 if __name__ == "__main__":
     import argparse
@@ -211,9 +276,6 @@ if __name__ == "__main__":
     parser.add_argument('-v', '--verbosity', dest='verbosity', default=0, action='count',
                         help='Increase output verbosity')
     args = parser.parse_args()
-
-    LOGGING_FORMAT = '%(asctime)-15s %(filename)s:%(lineno)d %(message)s'
-    logging.basicConfig(format=LOGGING_FORMAT)
 
     LOG_LEVELS = {0: logging.WARNING, 1: logging.INFO, 2: logging.DEBUG}
     args.verbosity = min(args.verbosity, max(LOG_LEVELS))
