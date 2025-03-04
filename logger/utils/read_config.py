@@ -104,6 +104,15 @@ def parse(content: str, file_path: str = None, base_dir: str = '') -> Dict[str, 
         if data is None:
             return {}
 
+        # If they've got an 'includes_base_dir' key in the file, use that
+        includes_base_dir = data.get('includes_base_dir')
+        if includes_base_dir is not None:
+            if not isinstance(includes_base_dir, str):
+                logging.error(f'Key "includes_base_dir" in {file_path} must be a dir path str; '
+                              f'found: {includes_base_dir}. Ignoring.')
+            else:
+                base_dir = includes_base_dir
+
         # Handle includes if present
         if 'includes' in data and isinstance(data['includes'], list):
             included_data = {}

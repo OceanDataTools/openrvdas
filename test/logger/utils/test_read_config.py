@@ -5,6 +5,7 @@ import logging
 import os
 import sys
 import unittest
+import yaml
 from unittest.mock import patch, mock_open
 import tempfile
 
@@ -267,6 +268,33 @@ nested:
 
         # Verify the result is as expected
         self.assertEqual(result, {"key1": "value1"})
+
+    def test_includes_base_dir_override(self):
+        # Create a subdirectory within the test directory
+        include_dir = os.path.join(self.base_dir, 'includes')
+        os.makedirs(include_dir)
+
+        # Create an included file in the subdirectory
+        include_file_path = os.path.join(include_dir, 'included.yaml')
+        with open(include_file_path, 'w') as f:
+            yaml.safe_dump({'from_included': 'value'}, f)
+
+        # Create the main configuration file with includes_base_dir
+        main_config_path = os.path.join(self.base_dir, 'config.yaml')
+        with open(main_config_path, 'w') as f:
+            yaml.safe_dump({
+                'includes_base_dir': include_dir,  # Specifies a relative path
+                'includes': ['included.yaml'],
+                'main_config': 'value'
+            }, f)
+
+        # Read the configuration
+        config = read_config.read_config(main_config_path, base_dir=self.base_dir)
+
+        # Assert that the included file was found and merged correctly
+        self.assertEqual(config.get('from_included'), 'value')
+        self.assertEqual(config.get('main_config'), 'value')
+
 
 if __name__ == "__main__":
     import argparse
