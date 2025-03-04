@@ -26,7 +26,8 @@ def read_config(file_path: str, no_parse: bool = False) -> Dict[str, Any]:
     """
     try:
         # Get the OpenRVDAS base directory
-        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+        #base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+        base_dir = os.path.dirname(file_path)
 
         # Load the YAML file
         with open(file_path, 'r') as file:
@@ -66,6 +67,9 @@ def expand_wildcards(include_pattern: str, base_dir: str) -> List[str]:
     """
     # Join the base directory with the include pattern
     full_pattern = os.path.join(base_dir, include_pattern)
+
+    logging.warning(f'BASE: {base_dir}, include: {include_pattern}')
+    logging.warning(f'FULL: {full_pattern}')
 
     # Use glob to expand the pattern
     matching_files = glob.glob(full_pattern)
