@@ -9,6 +9,11 @@ import yaml
 from unittest.mock import patch, mock_open
 import tempfile
 
+
+from contextlib import redirect_stdout
+import io
+import copy
+
 LOGGING_FORMAT = '%(asctime)-15s %(filename)s:%(lineno)d %(message)s'
 logging.basicConfig(format=LOGGING_FORMAT)
 
@@ -294,6 +299,219 @@ nested:
         # Assert that the included file was found and merged correctly
         self.assertEqual(config.get('from_included'), 'value')
         self.assertEqual(config.get('main_config'), 'value')
+
+
+class TestExpandLoggerConfigs(unittest.TestCase):
+    def setUp(self):
+        # Basic input dictionary with loggers but no configs
+        self.basic_input = {
+            "loggers": {
+                "test_logger": {
+                    "level": "INFO"
+                }
+            }
+        }
+
+        # Input with loggers containing configs dictionaries
+        self.configs_dict_input = {
+            "loggers": {
+                "PCOD": {
+                    "configs": {
+                        "off": {},
+                        "net": {
+                            "readers": {"key1": "value1"},
+                            "writers": {"key2": "value2"}
+                        }
+                    }
+                },
+                "cwnc": {
+                    "configs": {
+                        "off": {},
+                        "net": {
+                            "readers": {"key1": "value1"},
+                            "writers": {"key2": "value2"}
+                        }
+                    }
+                }
+            }
+        }
+
+        # Input with loggers containing configs lists
+        self.configs_list_input = {
+            "loggers": {
+                "gyr1": {
+                    "configs": [
+                        "gyr1-off",
+                        "gyr1-net"
+                    ]
+                }
+            },
+            "configs": {
+                "gyr1-off": {},
+                "gyr1-net": {
+                    "readers": {"key1": "value1"},
+                    "writers": {"key2": "value2"}
+                }
+            }
+        }
+
+        # Mixed input with both types of configs
+        self.mixed_input = {
+            "loggers": {
+                "PCOD": {
+                    "configs": {
+                        "off": {},
+                        "net": {
+                            "readers": {"key1": "value1"},
+                            "writers": {"key2": "value2"}
+                        }
+                    }
+                },
+                "gyr1": {
+                    "configs": [
+                        "gyr1-off",
+                        "gyr1-net"
+                    ]
+                }
+            },
+            "configs": {
+                "gyr1-off": {},
+                "gyr1-net": {
+                    "readers": {"key1": "value1"},
+                    "writers": {"key2": "value2"}
+                }
+            }
+        }
+
+        # Input for testing config overwrite warning
+        self.overwrite_input = {
+            "loggers": {
+                "PCOD": {
+                    "configs": {
+                        "off": {},
+                        "net": {
+                            "readers": {"key1": "value1"},
+                            "writers": {"key2": "value2"}
+                        }
+                    }
+                }
+            },
+            "configs": {
+                "PCOD-off": {
+                    "existing": "value"
+                }
+            }
+        }
+
+    def test_missing_loggers_key(self):
+        """Test that an error is raised when the loggers key is missing"""
+        with self.assertRaises(ValueError):
+            read_config.expand_cruise_definition({})
+
+    def test_basic_functionality(self):
+        """Test basic functionality with no configs to expand"""
+        result = read_config.expand_cruise_definition(self.basic_input)
+        # Should add an empty configs dict but otherwise leave input unchanged
+        expected = copy.deepcopy(self.basic_input)
+        expected["configs"] = {}
+        self.assertEqual(result, expected)
+
+    def test_expand_configs_dict(self):
+        """Test expanding configs dictionaries to lists with top-level configs"""
+        result = read_config.expand_cruise_definition(self.configs_dict_input)
+
+        # Check that configs in loggers are converted to lists
+        self.assertIsInstance(result["loggers"]["PCOD"]["configs"], list)
+        self.assertIsInstance(result["loggers"]["cwnc"]["configs"], list)
+
+        # Check that config lists contain the expected items
+        self.assertIn("PCOD-off", result["loggers"]["PCOD"]["configs"])
+        self.assertIn("PCOD-net", result["loggers"]["PCOD"]["configs"])
+        self.assertIn("cwnc-off", result["loggers"]["cwnc"]["configs"])
+        self.assertIn("cwnc-net", result["loggers"]["cwnc"]["configs"])
+
+        # Check that top-level configs contain the expected items
+        self.assertIn("PCOD-off", result["configs"])
+        self.assertIn("PCOD-net", result["configs"])
+        self.assertIn("cwnc-off", result["configs"])
+        self.assertIn("cwnc-net", result["configs"])
+
+        # Check that config values are correctly transferred
+        self.assertEqual(result["configs"]["PCOD-net"]["readers"]["key1"], "value1")
+        self.assertEqual(result["configs"]["cwnc-net"]["writers"]["key2"], "value2")
+
+    def test_configs_list_validation(self):
+        """Test validation of configs lists against top-level configs"""
+        # This should pass without errors
+        read_config.expand_cruise_definition(self.configs_list_input)
+
+        # Create an invalid input with a reference to a non-existent config
+        invalid_input = copy.deepcopy(self.configs_list_input)
+        invalid_input["loggers"]["gyr1"]["configs"].append("non-existent-config")
+
+        # This should raise an error
+        with self.assertRaises(ValueError):
+            read_config.expand_cruise_definition(invalid_input)
+
+    def test_mixed_configs(self):
+        """Test processing mixed configs (both lists and dicts)"""
+        result = read_config.expand_cruise_definition(self.mixed_input)
+
+        # Check that dict configs are converted to lists
+        self.assertIsInstance(result["loggers"]["PCOD"]["configs"], list)
+
+        # Check that list configs remain as lists
+        self.assertIsInstance(result["loggers"]["gyr1"]["configs"], list)
+
+        # Check that all configs are in the top-level configs
+        self.assertIn("PCOD-off", result["configs"])
+        self.assertIn("PCOD-net", result["configs"])
+        self.assertIn("gyr1-off", result["configs"])
+        self.assertIn("gyr1-net", result["configs"])
+
+    def test_overwrite_warning(self):
+        """Test that a warning is issued when overwriting configs"""
+        # Redirect stdout to capture the warning message
+        stdout = io.StringIO()
+        with redirect_stdout(stdout):
+            result = read_config.expand_cruise_definition(self.overwrite_input)
+
+        # Check that the warning message was printed
+        output = stdout.getvalue()
+        self.assertIn("Warning: Overwriting existing config 'PCOD-off'", output)
+
+        # Check that the config was actually overwritten
+        self.assertEqual(result["configs"]["PCOD-off"], {})
+
+    def test_immutability(self):
+        """Test that the input dictionary is not modified"""
+        input_copy = copy.deepcopy(self.configs_dict_input)
+        read_config.expand_cruise_definition(self.configs_dict_input)
+
+        # The original input should be unchanged
+        self.assertEqual(self.configs_dict_input, input_copy)
+
+    def test_from_yaml_string(self):
+        """Test with input from a YAML string"""
+        yaml_str = """
+        loggers:
+          test_logger:
+            configs:
+              basic:
+                key: value
+              advanced:
+                nested:
+                  key: value
+        """
+        input_dict = yaml.safe_load(yaml_str)
+        result = read_config.expand_cruise_definition(input_dict)
+
+        # Check that configs were expanded correctly
+        self.assertIsInstance(result["loggers"]["test_logger"]["configs"], list)
+        self.assertIn("test_logger-basic", result["loggers"]["test_logger"]["configs"])
+        self.assertIn("test_logger-advanced", result["loggers"]["test_logger"]["configs"])
+        self.assertEqual(result["configs"]["test_logger-basic"]["key"], "value")
+        self.assertEqual(result["configs"]["test_logger-advanced"]["nested"]["key"], "value")
 
 
 if __name__ == "__main__":

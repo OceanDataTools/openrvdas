@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Utilities for reading/processing JSON data.
 """
+import copy
 import os
 import glob
 import logging
@@ -186,5 +187,134 @@ def deep_merge(base: Dict[str, Any], overlay: Dict[str, Any]) -> Dict[str, Any]:
         else:
             # Key doesn't exist in result, just add it
             result[key] = value
+
+    return result
+
+
+def expand_cruise_definition(input_dict):
+    """
+    Expand a configuration dictionary with loggers and configs structure.
+
+    This function processes a dictionary with a 'loggers' key (required) and an optional
+    'configs' key. It extracts config dictionaries from each logger and moves them to the
+    top level 'configs' section, replacing them with a list of references.
+
+    Args:
+        input_dict (dict): The input dictionary containing 'loggers' and optionally
+        'configs' keys.
+
+    Returns:
+        dict: A new dictionary with expanded configuration structure.
+
+    Raises:
+        ValueError: If the 'loggers' key is missing or if referenced configs are missing.
+
+    ###This code is to support flexibility in defining cruise configurations.###
+
+    In the past, the "loggers" section of a cruise definition only allowed declaring the
+    names of each configuration associated with a logger. The actual definition of each
+    configuration had to be placed in a following top-level "configs" section.
+
+    For example:
+
+    loggers:
+     PCOD:
+       configs:
+       - PCOD-off
+       - PCOD-net
+       - PCOD-net+file
+     cwnc:
+       ...
+
+    configs:
+      PCOD-off: {}
+      PCOD-net:
+        readers:
+          key1: value1
+        writers:
+          key2: value2
+      PCOD-net+file:
+        readers:
+          key1: value1
+        writers:
+          key2: value2
+
+    The old declaration-followed-by-definition method still works, but now, if desired,
+    the relevant configs may instead be defined within the logger definition itself.
+
+    For example:
+
+    loggers:
+     PCOD:
+       configs:
+         'off': {}
+         net:
+           readers:
+             key1: value1
+           writers:
+             key2: value2
+         net+file:
+           readers:
+             key1: value1
+           writers:
+             key2: value2
+
+    In this case, the config names will have the logger name prepended (e.g. 'off' becomes
+    PCOD-off, net becomes PCOD-net, etc.)
+
+    Note that both methods may be used in a single cruise definition, though for clarity,
+    this is not advised.
+    """
+    # Validate input
+    if 'loggers' not in input_dict:
+        raise ValueError("Input dictionary must have a 'loggers' key")
+
+    # Create a new dictionary to avoid modifying the input
+    result = copy.deepcopy(input_dict)
+
+    # Ensure configs key exists in the result
+    if 'configs' not in result:
+        result['configs'] = {}
+
+    # Process each logger
+    for logger_name, logger_data in input_dict['loggers'].items():
+        # Skip if no configs key in this logger
+        if 'configs' not in logger_data:
+            continue
+
+        # Get the configs for this logger
+        logger_configs = logger_data['configs']
+
+        # Handle the case where configs is a list of strings
+        if isinstance(logger_configs, list):
+            # Verify each referenced config exists in top-level configs
+            for config_name in logger_configs:
+                if config_name not in result['configs']:
+                    raise ValueError(f"Referenced config '{config_name}' "
+                                     "not found in top-level configs")
+
+        # Handle the case where configs is a dictionary of dictionaries
+        elif isinstance(logger_configs, dict):
+            # Create a new config list for this logger
+            new_config_list = []
+
+            # Process each config in this logger
+            for config_key, config_value in logger_configs.items():
+                # Generate the new config name
+                config_name = f"{logger_name}-{config_key}"
+
+                # Add to the config list
+                new_config_list.append(config_name)
+
+                # Check for potential overwrites in the top-level configs
+                if config_name in result['configs']:
+                    print(f"Warning: Overwriting existing config '{config_name}'"
+                          "in top-level configs")
+
+                # Add the config to the top-level configs
+                result['configs'][config_name] = config_value
+
+            # Replace the logger's configs dict with the list of config names
+            result['loggers'][logger_name]['configs'] = new_config_list
 
     return result
