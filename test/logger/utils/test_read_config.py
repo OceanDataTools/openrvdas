@@ -406,11 +406,11 @@ class TestExpandLoggerConfigs(unittest.TestCase):
     def test_missing_loggers_key(self):
         """Test that an error is raised when the loggers key is missing"""
         with self.assertRaises(ValueError):
-            read_config.expand_cruise_definition({})
+            read_config.expand_logger_definitions({})
 
     def test_basic_functionality(self):
         """Test basic functionality with no configs to expand"""
-        result = read_config.expand_cruise_definition(self.basic_input)
+        result = read_config.expand_logger_definitions(self.basic_input)
         # Should add an empty configs dict but otherwise leave input unchanged
         expected = copy.deepcopy(self.basic_input)
         expected["configs"] = {}
@@ -418,7 +418,7 @@ class TestExpandLoggerConfigs(unittest.TestCase):
 
     def test_expand_configs_dict(self):
         """Test expanding configs dictionaries to lists with top-level configs"""
-        result = read_config.expand_cruise_definition(self.configs_dict_input)
+        result = read_config.expand_logger_definitions(self.configs_dict_input)
 
         # Check that configs in loggers are converted to lists
         self.assertIsInstance(result["loggers"]["PCOD"]["configs"], list)
@@ -443,7 +443,7 @@ class TestExpandLoggerConfigs(unittest.TestCase):
     def test_configs_list_validation(self):
         """Test validation of configs lists against top-level configs"""
         # This should pass without errors
-        read_config.expand_cruise_definition(self.configs_list_input)
+        read_config.expand_logger_definitions(self.configs_list_input)
 
         # Create an invalid input with a reference to a non-existent config
         invalid_input = copy.deepcopy(self.configs_list_input)
@@ -451,11 +451,11 @@ class TestExpandLoggerConfigs(unittest.TestCase):
 
         # This should raise an error
         with self.assertRaises(ValueError):
-            read_config.expand_cruise_definition(invalid_input)
+            read_config.expand_logger_definitions(invalid_input)
 
     def test_mixed_configs(self):
         """Test processing mixed configs (both lists and dicts)"""
-        result = read_config.expand_cruise_definition(self.mixed_input)
+        result = read_config.expand_logger_definitions(self.mixed_input)
 
         # Check that dict configs are converted to lists
         self.assertIsInstance(result["loggers"]["PCOD"]["configs"], list)
@@ -474,7 +474,7 @@ class TestExpandLoggerConfigs(unittest.TestCase):
         # Redirect stdout to capture the warning message
         stdout = io.StringIO()
         with redirect_stdout(stdout):
-            result = read_config.expand_cruise_definition(self.overwrite_input)
+            result = read_config.expand_logger_definitions(self.overwrite_input)
 
         # Check that the warning message was printed
         output = stdout.getvalue()
@@ -486,7 +486,7 @@ class TestExpandLoggerConfigs(unittest.TestCase):
     def test_immutability(self):
         """Test that the input dictionary is not modified"""
         input_copy = copy.deepcopy(self.configs_dict_input)
-        read_config.expand_cruise_definition(self.configs_dict_input)
+        read_config.expand_logger_definitions(self.configs_dict_input)
 
         # The original input should be unchanged
         self.assertEqual(self.configs_dict_input, input_copy)
@@ -504,7 +504,7 @@ class TestExpandLoggerConfigs(unittest.TestCase):
                   key: value
         """
         input_dict = yaml.safe_load(yaml_str)
-        result = read_config.expand_cruise_definition(input_dict)
+        result = read_config.expand_logger_definitions(input_dict)
 
         # Check that configs were expanded correctly
         self.assertIsInstance(result["loggers"]["test_logger"]["configs"], list)
