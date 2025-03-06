@@ -17,7 +17,7 @@ from django.http import HttpResponse
 sys.path.append(dirname(dirname(realpath(__file__))))
 
 # Read in JSON with comments
-from logger.utils.read_config import parse, read_config  # noqa: E402
+from logger.utils.read_config import parse, read_config, expand_cruise_definition  # noqa: E402
 
 
 ############################
@@ -98,6 +98,8 @@ def index(request):
                 # Load the file to memory and parse to a dict. Add the name
                 # of the file we've just loaded to the dict.
                 config = read_config(filename)
+                config = expand_cruise_definition(config)
+
                 if 'cruise' in config:
                     config['cruise']['config_filename'] = filename
 

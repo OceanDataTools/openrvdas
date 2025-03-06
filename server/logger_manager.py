@@ -26,7 +26,7 @@ from server.server_api import ServerAPI  # noqa: E402
 from logger.transforms.to_das_record_transform import ToDASRecordTransform  # noqa: E402
 from logger.utils.stderr_logging import DEFAULT_LOGGING_FORMAT  # noqa: E402
 from logger.utils.stderr_logging import StdErrLoggingHandler  # noqa: E402
-from logger.utils.read_config import read_config  # noqa: E402
+from logger.utils.read_config import read_config, expand_cruise_definition  # noqa: E402
 
 # For sending stderr to CachedDataServer
 from logger.utils.das_record import DASRecord  # noqa: E402
@@ -548,6 +548,7 @@ if __name__ == '__main__':  # noqa: C901
     # If they've given us an initial configuration, get and load it.
     if args.config:
         config = read_config(args.config)
+        config = expand_cruise_definition(config)
 
         # Hacky bit: need to stash the config filename for posterity
         if 'cruise' not in config or config['cruise'] is None:
