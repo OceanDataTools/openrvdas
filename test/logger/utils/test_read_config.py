@@ -1,18 +1,17 @@
 #!/usr/bin/env python3
 """Unit tests for YAML utilities module.
 """
+import copy
+import io
 import logging
 import os
 import sys
+import tempfile
 import unittest
 import yaml
-from unittest.mock import patch, mock_open
-import tempfile
-
 
 from contextlib import redirect_stdout
-import io
-import copy
+from unittest.mock import patch, mock_open
 
 LOGGING_FORMAT = '%(asctime)-15s %(filename)s:%(lineno)d %(message)s'
 logging.basicConfig(format=LOGGING_FORMAT)
@@ -98,40 +97,21 @@ class TestReadConfig(unittest.TestCase):
         """Test parsing YAML with includes."""
         self.create_yaml_file("included_test.yaml", "included_key: included_value")
 
-        yaml_content = """
+        yaml_content = f"""
+        includes_base_dir: {self.base_dir}
         includes:
           - included_test.yaml
         key1: value1
         """
-        result = read_config.parse(yaml_content, "test.yaml", self.base_dir)
+        result = read_config.parse(yaml_content, "test.yaml")
+        result = read_config.expand_includes(result)
 
         # Check the result
         self.assertEqual(result, {
+            "includes_base_dir": self.base_dir,
             "included_key": "included_value",
             "key1": "value1"
         })
-
-    @patch('logger.utils.read_config.parse')
-    def test_read_config_no_parse(self, mock_parse):
-        """Test read_config with no_parse=True."""
-        yaml_content = """
-        key1: value1
-        includes:
-          - other.yaml
-        """
-
-        # Set up the mock_open to return our test YAML
-        with patch('builtins.open', mock_open(read_data=yaml_content)):
-            result = read_config.read_config("test.yaml", no_parse=True)
-
-            # Verify parse was not called
-            mock_parse.assert_not_called()
-
-            # Check the result
-            self.assertEqual(result, {
-                "key1": "value1",
-                "includes": ["other.yaml"]
-            })
 
     def test_read_config_file_not_found(self):
         """Test read_config with non-existent file."""
@@ -159,7 +139,7 @@ class TestReadConfig(unittest.TestCase):
 
         with patch('builtins.open', mock_open(read_data=invalid_yaml)):
             with patch('logging.error') as mock_log:
-                result = read_config.read_config("invalid.yaml", no_parse=True)
+                result = read_config.read_config("invalid.yaml")
 
                 # Match the actual behavior
                 self.assertEqual(result, {})
@@ -169,7 +149,8 @@ class TestReadConfig(unittest.TestCase):
     def test_integration_read_config(self):
         """Integration test for read_config with real files."""
         # Create the main config file
-        main_config = """
+        main_config = f"""
+        includes_base_dir: {self.base_dir}
         includes:
           - include1.yaml
           - include2.yaml
@@ -196,7 +177,8 @@ class TestReadConfig(unittest.TestCase):
         self.create_yaml_file("include2.yaml", include2)
 
         # Read the config
-        result = read_config.read_config(main_path, base_dir=self.base_dir)
+        result = read_config.read_config(main_path)
+        result = read_config.expand_includes((result))
 
         # Modified assertions based on failure
         # The 'includes' key is no longer in the result after processing
@@ -212,7 +194,8 @@ class TestReadConfig(unittest.TestCase):
         include_dir = tempfile.mkdtemp()
 
         # Create the main config file in the base directory
-        main_config = """
+        main_config = f"""
+        includes_base_dir: {include_dir}
         includes:
           - include1.yaml
           - include2.yaml
@@ -241,7 +224,8 @@ nested:
 """)
 
         # Read the config with custom base_dir
-        result = read_config.read_config(main_path, base_dir=include_dir)
+        result = read_config.read_config(main_path)
+        result = read_config.expand_includes(result)
 
         # Assertions
         self.assertEqual(result["main_key"], "main_value")
@@ -294,7 +278,8 @@ nested:
             }, f)
 
         # Read the configuration
-        config = read_config.read_config(main_config_path, base_dir=self.base_dir)
+        config = read_config.read_config(main_config_path)
+        config = read_config.expand_includes(config)
 
         # Assert that the included file was found and merged correctly
         self.assertEqual(config.get('from_included'), 'value')
@@ -512,6 +497,204 @@ class TestExpandLoggerConfigs(unittest.TestCase):
         self.assertIn("test_logger-advanced", result["loggers"]["test_logger"]["configs"])
         self.assertEqual(result["configs"]["test_logger-basic"]["key"], "value")
         self.assertEqual(result["configs"]["test_logger-advanced"]["nested"]["key"], "value")
+
+
+class TestLoggerTemplateExpansion(unittest.TestCase):
+    """Tests for the logger template expansion functionality."""
+
+    def setUp(self) -> None:
+        """Set up test data."""
+        # Sample configuration as YAML
+        self.config_yaml = """
+logger_templates:
+  serial_logger:
+    configs:
+      'off': {}
+      net:
+        readers:
+        - class: SerialReader
+          kwargs:
+            baudrate: <<baud_rate>>
+            port: <<port>>
+        transforms:
+        - class: TimestampTransform
+        - class: PrefixTransform
+          kwargs:
+            prefix: <<logger>>
+        writers:
+        - class: UDPWriter
+          kwargs:
+            port: <<udp_port>>
+      net+file:
+        readers:
+        - class: SerialReader
+          kwargs:
+            baudrate: <<baud_rate>>
+            port: <<port>>
+        transforms:
+        - class: TimestampTransform
+        writers:
+        - class: LogfileWriter
+          kwargs:
+            filebase: /var/tmp/log/<<logger>>/raw/NBP1406_<<logger>>
+        - class: ComposedWriter
+          kwargs:
+            transforms:
+            - class: PrefixTransform
+              kwargs:
+                prefix: <<logger>>
+            writers:
+              - class: UDPWriter
+                kwargs:
+                  port: <<udp_port>>
+                  destination: 255.255.255.255
+
+variables:
+  baud_rate: 9600
+  udp_port: 6000
+
+loggers:
+  cwnc:
+    logger_template: serial_logger
+    variables:
+      port: /tmp/tty_cwnc
+      baud_rate: 19200
+      udp_port: 6224
+  gps:
+    logger_template: serial_logger
+    variables:
+      port: /dev/ttyS0
+  gyro:
+    logger_template: serial_logger
+    variables:
+      port: /dev/ttyS1
+      udp_port: 6226
+"""
+        # Parse YAML string to dictionary
+        self.config_dict = yaml.safe_load(self.config_yaml)
+
+        # Process the templates
+        self.processed_configs = read_config.expand_logger_templates(self.config_dict)
+
+    def test_logger_names_substitution(self) -> None:
+        """Test that logger names are correctly substituted."""
+        # cwnc - check prefix and filebase for logger name substitution
+        cwnc_config = self.processed_configs['cwnc']
+        cwnc_prefix = cwnc_config['configs']['net']['transforms'][1]['kwargs']['prefix']
+        cwnc_filebase = cwnc_config['configs']['net+file']['writers'][0]['kwargs']['filebase']
+
+        self.assertEqual(cwnc_prefix, 'cwnc')
+        self.assertIn('/cwnc/', cwnc_filebase)
+        self.assertTrue(cwnc_filebase.endswith('_cwnc'))
+
+        # gps - check prefix and filebase for logger name substitution
+        gps_config = self.processed_configs['gps']
+        gps_prefix = gps_config['configs']['net']['transforms'][1]['kwargs']['prefix']
+        gps_filebase = gps_config['configs']['net+file']['writers'][0]['kwargs']['filebase']
+
+        self.assertEqual(gps_prefix, 'gps')
+        self.assertIn('/gps/', gps_filebase)
+        self.assertTrue(gps_filebase.endswith('_gps'))
+
+    def test_variable_overrides(self) -> None:
+        """Test that logger-specific variable overrides work correctly."""
+        # cwnc - should use its own overridden values
+        self.assertEqual(
+            self.processed_configs['cwnc']['configs']['net']['readers'][0]['kwargs']['baudrate'],
+            19200
+        )
+        self.assertEqual(
+            self.processed_configs['cwnc']['configs']['net']['writers'][0]['kwargs']['port'],
+            6224
+        )
+
+        # gps - should use global baud_rate and udp_port values
+        self.assertEqual(
+            self.processed_configs['gps']['configs']['net']['readers'][0]['kwargs']['baudrate'],
+            9600
+        )
+        self.assertEqual(
+            self.processed_configs['gps']['configs']['net']['writers'][0]['kwargs']['port'],
+            6000
+        )
+
+        # gyro - should use global baud_rate but override udp_port
+        self.assertEqual(
+            self.processed_configs['gyro']['configs']['net']['readers'][0]['kwargs']['baudrate'],
+            9600
+        )
+        self.assertEqual(
+            self.processed_configs['gyro']['configs']['net']['writers'][0]['kwargs']['port'],
+            6226
+        )
+
+    def test_numeric_types_preserved(self) -> None:
+        """Test that numeric types are preserved and not converted to strings."""
+        # Check baudrate values are integers
+        self.assertIsInstance(
+            self.processed_configs['cwnc']['configs']['net']['readers'][0]['kwargs']['baudrate'],
+            int
+        )
+        self.assertIsInstance(
+            self.processed_configs['gps']['configs']['net']['readers'][0]['kwargs']['baudrate'],
+            int
+        )
+
+        # Check UDP port values are integers
+        self.assertIsInstance(
+            self.processed_configs['cwnc']['configs']['net']['writers'][0]['kwargs']['port'],
+            int
+        )
+        self.assertIsInstance(
+            self.processed_configs['gps']['configs']['net']['writers'][0]['kwargs']['port'],
+            int
+        )
+
+    def test_variable_not_found(self) -> None:
+        """Test that a ValueError is raised when a variable is not found."""
+        # Create a test config with a missing variable
+        test_config = {
+            "test": "<<missing_variable>>"
+        }
+
+        # Test that substitute_variables raises ValueError
+        with self.assertRaises(ValueError):
+            read_config.substitute_variables(test_config, {})
+
+    def test_template_not_found(self) -> None:
+        """Test that a ValueError is raised when a template is not found."""
+        # Create a test config with a missing template
+        test_config = {
+            "logger_templates": {},
+            "loggers": {
+                "test_logger": {
+                    "logger_template": "missing_template",
+                    "variables": {}
+                }
+            }
+        }
+
+        # Test that expand_logger_templates raises ValueError
+        with self.assertRaises(ValueError):
+            read_config.expand_logger_templates(test_config)
+
+    def test_no_template_specified(self) -> None:
+        """Test that a ValueError is raised when no template is specified."""
+        # Create a test config with no template specified
+        test_config = {
+            "logger_templates": {
+                "valid_template": {}
+            },
+            "loggers": {
+                "test_logger": {
+                    "variables": {}
+                }
+            }
+        }
+
+        # Test that expand_logger_templates raises ValueError
+        with self.assertRaises(ValueError):
+            read_config.expand_logger_templates(test_config)
 
 
 if __name__ == "__main__":

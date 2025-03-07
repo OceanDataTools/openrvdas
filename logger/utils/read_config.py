@@ -5,7 +5,8 @@ import copy
 import os
 import glob
 import logging
-from typing import Dict, Any, List
+import re
+from typing import Dict, List, Any, Union
 
 try:
     import yaml
@@ -14,40 +15,21 @@ except ModuleNotFoundError:
 
 
 ###################
-def read_config(file_path: str, no_parse: bool = False, base_dir: str = None) -> Dict[str, Any]:
+def read_config(file_path: str) -> Dict[str, Any]:
     """
-    Read a YAML configuration file and handle any includes.
+    Read a YAML configuration file.
 
     Args:
         file_path: Path to the YAML configuration file
-        no_parse: If True, just load the YAML without processing includes
-        base_dir: Optional base directory for resolving includes.
-                  If None, uses the top-level project directory.
 
     Returns:
         Dictionary containing the YAML content or empty dict on error
     """
     try:
-        # Determine base directory
-        if base_dir is None:
-            # If not specified, default to top-level project directory
-            base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-
         # Load the YAML file
         with open(file_path, 'r') as file:
             file_content = file.read()
-
-        # If no_parse is True, just load the YAML without processing includes
-        if no_parse:
-            try:
-                data = yaml.safe_load(file_content)
-                return {} if data is None else data
-            except yaml.YAMLError as e:
-                logging.error(f'Invalid YAML syntax in "{file_path}": {str(e)}')
-                return {}
-
-        # Otherwise, parse the content including any includes
-        return parse(file_content, file_path, base_dir)
+        return parse(file_content, file_path)
 
     except FileNotFoundError:
         logging.error(f'YAML file not found: "{file_path}"')
@@ -55,6 +37,69 @@ def read_config(file_path: str, no_parse: bool = False, base_dir: str = None) ->
     except Exception as e:
         logging.error(f'Error reading file "{file_path}": {str(e)}')
         return {}
+
+
+###################
+def parse(content: str, file_path: str = None) -> Dict[str, Any]:
+    """
+    Parse YAML content and process includes.
+
+    Args:
+        content: The YAML content as a string
+        file_path: The original file path (for error reporting)
+
+    Returns:
+        Dictionary containing the merged YAML content or empty dict on error
+    """
+    try:
+        # Parse the YAML content
+        data = yaml.safe_load(content)
+
+        # Handle empty file
+        if data is None:
+            return {}
+        return data
+
+    except yaml.YAMLError as e:
+        logging.error(f'Invalid YAML syntax in "{file_path}": {str(e)}')
+        return {}
+    except Exception as e:
+        logging.error(f'Error parsing YAML in "{file_path}": {str(e)}')
+        return {}
+
+
+###################
+def expand_cruise_definition(input_dict):
+    """
+    Expand a configuration dictionary with loggers and configs structure.
+
+    Process a dictionary with a 'loggers' key (required) and an optional
+    'configs' key. It extracts config dictionaries from each logger and moves them to the
+    top level 'configs' section, replacing them with a list of references.
+
+    Also, if no 'modes' section is found, a 'default' mode will be created using the first
+    config defined for each logger.
+
+    Args:
+        input_dict (dict): The input dictionary containing 'loggers' and optionally
+        'configs' keys.
+
+    Returns:
+        dict: A new dictionary with expanded configuration structure.
+
+    Raises:
+        ValueError: If the 'loggers' key is missing or if referenced configs are missing.
+    """
+    result = expand_includes(input_dict)
+    result = expand_logger_templates(result)
+    result = expand_logger_definitions(result)
+
+    # No modes defined? Create a default one
+    if 'modes' not in result:
+        result = generate_default_mode(result)
+        logging.warning('GENERATING MODES!')
+
+    return result
 
 
 ###################
@@ -85,74 +130,65 @@ def expand_wildcards(include_pattern: str, base_dir: str) -> List[str]:
 
 
 ###################
-def parse(content: str, file_path: str = None, base_dir: str = '') -> Dict[str, Any]:
+def expand_includes(input_dict: dict) -> Dict[str, Any]:
     """
-    Parse YAML content and process includes.
+    Recursively process any included YAML files and merge them into the top level.
 
     Args:
-        content: The YAML content as a string
-        file_path: The original file path (for error reporting)
-        base_dir: The base directory to resolve relative includes
+        input_dict (dict): The input dictionary optionally containing 'includes'
+        and 'includes_base_dir' keys.
 
     Returns:
         Dictionary containing the merged YAML content or empty dict on error
+
+    Raises:
+        ValueError: If any included files are not found.
     """
-    try:
-        # Parse the YAML content
-        data = yaml.safe_load(content)
 
-        # Handle empty file
-        if data is None:
-            return {}
+    # Default base_dir is top level project directory
+    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 
-        # If they've got an 'includes_base_dir' key in the file, use that
-        includes_base_dir = data.get('includes_base_dir')
-        if includes_base_dir is not None:
-            if not isinstance(includes_base_dir, str):
-                logging.error(f'Key "includes_base_dir" in {file_path} must be a dir path str; '
-                              f'found: {includes_base_dir}. Ignoring.')
-            else:
-                base_dir = includes_base_dir
+    # If they've got an 'includes_base_dir' key in the file, use that.
+    includes_base_dir = input_dict.get('includes_base_dir')
+    if includes_base_dir is not None:
+        if not isinstance(includes_base_dir, str):
+            logging.error(f'Key "includes_base_dir" must be a dir path str; '
+                          f'found: {includes_base_dir}. Ignoring.')
+        else:
+            base_dir = includes_base_dir
 
-        # Handle includes if present
-        if 'includes' in data and isinstance(data['includes'], list):
-            included_data = {}
+    # Handle includes if present
+    if 'includes' in input_dict and isinstance(input_dict['includes'], list):
+        included_data = {}
 
-            # Process each included file or pattern
-            for include_pattern in data['includes']:
-                # Expand wildcards to get list of matching files
-                matching_files = expand_wildcards(include_pattern, base_dir)
+        # Process each included file or pattern
+        for include_pattern in input_dict['includes']:
+            # Expand wildcards to get list of matching files
+            matching_files = expand_wildcards(include_pattern, base_dir)
 
-                # Process each matching file
-                for include_path in matching_files:
-                    # Use the directory of the include_path as the base_dir for nested includes
-                    include_base_dir = os.path.dirname(include_path) or base_dir
+            # Process each matching file
+            for include_path in matching_files:
+                # Use the directory of the include_path as the base_dir for nested includes
+                file_path = os.path.join(base_dir, include_path)
 
-                    # Load the included file
-                    included_content = read_config(include_path, base_dir=include_base_dir)
+                # Load the included file
+                included_content = read_config(file_path)
 
-                    # Merge with current data
-                    included_data = deep_merge(included_data, included_content)
+                # Merge with current data
+                included_data = deep_merge(included_data, included_content)
 
-            # Remove the includes key before merging
-            includes_value = data.pop('includes')
+        # Remove the includes key before merging
+        includes_value = input_dict.pop('includes')
 
-            # Merge the original data on top of the included data
-            result = deep_merge(included_data, data)
+        # Merge the original data on top of the included data
+        result = deep_merge(included_data, input_dict)
 
-            # Restore the includes key if needed
-            data['includes'] = includes_value
+        # Restore the includes key if needed
+        input_dict['includes'] = includes_value
 
-            return result
+        return result
 
-        return data
-
-    except yaml.YAMLError as e:
-        logging.error(f'Invalid YAML syntax in "{file_path}": {str(e)}')
-        return {}
-    except Exception as e:
-        logging.error(f'Error parsing YAML in "{file_path}": {str(e)}')
-        return {}
+    return input_dict
 
 
 def deep_merge(base: Dict[str, Any], overlay: Dict[str, Any]) -> Dict[str, Any]:
@@ -191,37 +227,109 @@ def deep_merge(base: Dict[str, Any], overlay: Dict[str, Any]) -> Dict[str, Any]:
     return result
 
 
-def expand_cruise_definition(input_dict):
+###################
+def expand_logger_templates(config_dict: Dict[str, Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
     """
-    Expand a configuration dictionary with loggers and configs structure.
-
-    Process a dictionary with a 'loggers' key (required) and an optional
-    'configs' key. It extracts config dictionaries from each logger and moves them to the
-    top level 'configs' section, replacing them with a list of references.
-
-    Also, if no 'modes' section is found, a 'default' mode will be created using the first
-    config defined for each logger.
+    Process a complete configuration dictionary with templates and loggers.
 
     Args:
-        input_dict (dict): The input dictionary containing 'loggers' and optionally
-        'configs' keys.
+        config_dict: Dictionary containing 'logger_templates', 'loggers',
+                    and optionally 'variables' as top-level keys
 
     Returns:
-        dict: A new dictionary with expanded configuration structure.
-
-    Raises:
-        ValueError: If the 'loggers' key is missing or if referenced configs are missing.
+        Dictionary with fully processed logger configurations
     """
-    result = expand_logger_definitions(input_dict)
+    # Extract components from the configuration dictionary
+    templates = config_dict.get('logger_templates', {})
+    loggers_config = config_dict.get('loggers', {})
+    global_variables = config_dict.get('variables', {})
 
-    # No modes defined? Create a default one
-    if 'modes' not in result:
-      result = generate_default_mode(result)
-      logging.warning('GENERATING MODES!')
+    result = {}
+
+    for logger_name, logger_config in loggers_config.items():
+        # Get the template name from the logger configuration
+        template_name = logger_config.get('logger_template')
+        if not template_name:
+            raise ValueError(f"Logger '{logger_name}' does not specify a 'logger_template'")
+
+        # Get the template
+        template = templates.get(template_name)
+        if not template:
+            raise ValueError(f"Template '{template_name}' not found in templates")
+
+        # Start with global variables
+        effective_variables = copy.deepcopy(global_variables)
+
+        # Add logger name as a variable
+        effective_variables['logger'] = logger_name
+
+        # Override with logger-specific variables
+        logger_variables = logger_config.get('variables', {})
+        effective_variables.update(logger_variables)
+
+        # Create a deep copy of the template
+        processed_config = copy.deepcopy(template)
+
+        # Substitute variables
+        try:
+            processed_config = substitute_variables(processed_config, effective_variables)
+        except ValueError as e:
+            print(f"Error processing logger '{logger_name}': {e}")
+            raise
+
+        # Store the processed configuration
+        result[logger_name] = processed_config
 
     return result
 
 
+# Define recursive ConfigValue type
+ConfigValue = Union[Dict[str, Any], List[Any], str, int, float, bool, None]
+
+
+def substitute_variables(config: ConfigValue, variables: Dict[str, Any]) -> ConfigValue:
+    """
+    Recursively substitute template variables in a configuration dictionary.
+
+    Args:
+        config: Dictionary or list containing template variables
+        variables: Dictionary of variable names and their values
+
+    Returns:
+        Configuration with all variables substituted
+    """
+    if isinstance(config, dict):
+        return {k: substitute_variables(v, variables) for k, v in config.items()}
+    elif isinstance(config, list):
+        return [substitute_variables(item, variables) for item in config]
+    elif isinstance(config, str):
+        # Use regex to find and replace all <<variable>> patterns
+        pattern = r'<<([^>]+)>>'
+
+        # Check if the string is ONLY a variable pattern
+        match = re.fullmatch(pattern, config)
+        if match:
+            # It's a standalone variable, preserve its type
+            var_name = match.group(1)
+            if var_name in variables:
+                return variables[var_name]  # Return the original value with its type
+            else:
+                raise ValueError(f"Variable '{var_name}' not found in provided variables")
+        else:
+            # It's a string with embedded variables, do string substitution
+            def replace_match(match):
+                var_name = match.group(1)
+                if var_name in variables:
+                    return str(variables[var_name])
+                else:
+                    raise ValueError(f"Variable '{var_name}' not found in provided variables")
+
+            return re.sub(pattern, replace_match, config)
+    else:
+        return config
+
+
+###################
 def expand_logger_definitions(input_dict):
     """
     Expand a configuration dictionary with loggers and configs structure.
@@ -350,7 +458,7 @@ def expand_logger_definitions(input_dict):
 
     return result
 
-
+###################
 def generate_default_mode(input_dict):
     """
     If no 'modes' section is present in input_dict, create one that has a single
