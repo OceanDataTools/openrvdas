@@ -251,8 +251,6 @@ def expand_logger_templates(config_dict: Dict[str, Dict[str, Any]]) -> Dict[str,
     loggers_config = config_dict.get('loggers', {})
     global_variables = config_dict.get('variables', {})
 
-    result = {}
-
     for logger_name, logger_config in loggers_config.items():
         # Get the template name from the logger configuration
         template_name = logger_config.get('logger_template')
@@ -313,7 +311,18 @@ def substitute_variables(config: ConfigValue, variables: Dict[str, Any]) -> Conf
         Configuration with all variables substituted
     """
     if isinstance(config, dict):
-        return {k: substitute_variables(v, variables) for k, v in config.items()}
+        # Create a new dict to hold the result with substituted keys and values
+        result = {}
+        for k, v in config.items():
+            # Substitute variables in keys if they are strings
+            if isinstance(k, str):
+                new_key = substitute_variables(k, variables)
+            else:
+                new_key = k
+            # Substitute variables in values
+            new_value = substitute_variables(v, variables)
+            result[new_key] = new_value
+        return result
     elif isinstance(config, list):
         return [substitute_variables(item, variables) for item in config]
     elif isinstance(config, str):
@@ -419,9 +428,7 @@ def expand_logger_definitions(input_dict):
     this is not advised.
     """
     # Validate input
-    #print(f'###############CALLED EXPAND_LOGGER_DEFINITION WITH {pprint.pformat(input_dict)}\n\n\n')
     if 'loggers' not in input_dict:
-        #print(f'\n\n\n##############NO LOGGERS?!? {pprint.pformat(input_dict)}\n\n\n')
         raise ValueError("Input dictionary must have a 'loggers' key")
 
     # Create a new dictionary to avoid modifying the input
@@ -473,6 +480,7 @@ def expand_logger_definitions(input_dict):
             result['loggers'][logger_name]['configs'] = new_config_list
 
     return result
+
 
 ###################
 def generate_default_mode(input_dict):
