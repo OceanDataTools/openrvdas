@@ -39,7 +39,7 @@ variables:
   influx_bucket_name: openrvdas
   
   command_line: local/usap/create_template_cruise.py test/NBP1406/NBP1406_port_defs.yaml
-  date_time: Sat Mar  8 20:11:40 2025
+  date_time: Sat Mar  8 21:04:46 2025
   user: pablo
 
 ###########################################################
@@ -154,7 +154,28 @@ loggers:
   # true winds and write back to CDS and optionally InfluxDB
   true_winds:
     logger_template: true_winds_logger_template
+    variables:
+      # Where to find the inputs
+      course_true: S330CourseTrue
+      heading_true: S330HeadingTrue
+      speed_over_ground: S330SpeedKt
+      port_rel_wind_dir: MwxPortRelWindDir
+      port_rel_wind_speed: MwxPortRelWindSpeed
+      stbd_rel_wind_dir: MwxStbdRelWindDir
+      stbd_rel_wind_speed: MwxStbdRelWindSpeed      
 
+      # Knots -> meters/sec
+      convert_speed_factor: 0.5144
+      max_field_age: 15
+
+      # What to call the outputs
+      port_apparent_dir_name: PortApparentWindDir
+      port_true_dir_name: PortTrueWindDir
+      port_true_speed_name: PortTrueWindSpeed
+      stbd_apparent_dir_name: StbdApparentWindDir
+      stbd_true_dir_name: StbdTrueWindDir
+      stbd_true_speed_name: StbdTrueWindSpeed
+            
   # Read a bunch of variables from CDS, compute 30-second snapshot and write back
   # to CDS and optionally InfluxDB. This *totally* needs a way to be generalized!!!
   snapshot:

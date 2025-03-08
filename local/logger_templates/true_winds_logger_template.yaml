@@ -12,19 +12,19 @@ logger_templates:
             data_server: <<data_server>>
             subscription:
               fields:
-                S330CourseTrue:
+                <<course_true>>:
                   seconds: 0
-                S330HeadingTrue:
+                <<heading_true>>:
                   seconds: 0
-                S330SpeedKt:
+                <<speed_over_ground>>:
                   seconds: 0
-                MwxPortRelWindDir:
+                <<port_rel_wind_dir>>:
                   seconds: 0
-                MwxPortRelWindSpeed:
+                <<port_rel_wind_speed>>:
                   seconds: 0
-                MwxStbdRelWindDir:
+                <<stbd_rel_wind_dir>>:
                   seconds: 0
-                MwxStbdRelWindSpeed:
+                <<stbd_rel_wind_speed>>:
                   seconds: 0
         writers:
         - class: ComposedWriter
@@ -32,55 +32,59 @@ logger_templates:
             transforms:
             - class: TrueWindsTransform
               kwargs:
-                apparent_dir_name: PortApparentWindDir
-                convert_speed_factor: 0.5144
-                course_field: S330CourseTrue
-                heading_field: S330HeadingTrue
-                speed_field: S330SpeedKt
-                wind_dir_field: MwxPortRelWindDir
-                wind_speed_field: MwxPortRelWindSpeed
-                true_dir_name: PortTrueWindDir
-                true_speed_name: PortTrueWindSpeed
+                convert_speed_factor: <<convert_speed_factor>>
+                course_field: <<course_true>>
+                heading_field: <<heading_true>>
+                speed_field: <<speed_over_ground>>
+                wind_dir_field: <<port_rel_wind_dir>>
+                wind_speed_field: <<port_rel_wind_speed>>
+
+                # Output fields
+                apparent_dir_name: <<port_apparent_dir_name>>
+                true_dir_name: <<port_true_dir_name>>
+                true_speed_name: <<port_true_speed_name>>
                 update_on_fields:
-                - MwxPortRelWindDir
+                - <<port_rel_wind_dir>>
                 max_field_age:
-                  S330CourseTrue: 15
-                  S330HeadingTrue: 15
-                  S330SpeedKt: 15
-                  MwxPortRelWindDir: 15
-                  MwxPortRelWindSpeed: 15
+                  <<course_true>>: <<max_field_age>>
+                  <<heading_true>>: <<max_field_age>>
+                  <<speed_over_ground>>: <<max_field_age>>
+                  <<port_rel_wind_dir>>: <<max_field_age>>
+                  <<port_rel_wind_speed>>: <<max_field_age>>
                 metadata_interval: 10
             writers:
             - class: CachedDataWriter
               kwargs:
-            data_server: <<data_server>>
+                data_server: <<data_server>>
         - class: ComposedWriter
           kwargs:
             transforms:
             - class: TrueWindsTransform
               kwargs:
-                apparent_dir_name: StbdApparentWindDir
-                convert_speed_factor: 0.5144
-                course_field: S330CourseTrue
-                heading_field: S330HeadingTrue
-                speed_field: S330SpeedKt
-                wind_dir_field: MwxStbdRelWindDir
-                wind_speed_field: MwxStbdRelWindSpeed
-                true_dir_name: StbdTrueWindDir
-                true_speed_name: StbdTrueWindSpeed
+                convert_speed_factor: <<convert_speed_factor>>
+                course_field: <<course_true>>
+                heading_field: <<heading_true>>
+                speed_field: <<speed_over_ground>>
+                wind_dir_field: <<stbd_rel_wind_dir>>
+                wind_speed_field: <<stbd_rel_wind_speed>>
+
+                # Output fields
+                apparent_dir_name: <<stbd_apparent_dir_name>>
+                true_dir_name: <<stbd_true_dir_name>>
+                true_speed_name: <<stbd_true_speed_name>>
                 update_on_fields:
-                - MwxStbdRelWindDir
+                - <<stbd_rel_wind_dir>>
                 max_field_age:
-                  S330CourseTrue: 15
-                  S330HeadingTrue: 15
-                  S330SpeedKt: 15
-                  MwxStbdRelWindDir: 15
-                  MwxStbdRelWindSpeed: 15
+                  <<course_true>>: <<max_field_age>>
+                  <<heading_true>>: <<max_field_age>>
+                  <<speed_over_ground>>: <<max_field_age>>
+                  <<stbd_rel_wind_dir>>: <<max_field_age>>
+                  <<stbd_rel_wind_speed>>: <<max_field_age>>
                 metadata_interval: 10
             writers:
             - class: CachedDataWriter
               kwargs:
-            data_server: <<data_server>>
+                data_server: <<data_server>>
       on+influx:
         readers:
         - class: CachedDataReader
@@ -108,23 +112,25 @@ logger_templates:
             transforms:
             - class: TrueWindsTransform
               kwargs:
-                apparent_dir_name: PortApparentWindDir
-                convert_speed_factor: 0.5144
-                course_field: S330CourseTrue
-                heading_field: S330HeadingTrue
-                speed_field: S330SpeedKt
-                wind_dir_field: MwxPortRelWindDir
-                wind_speed_field: MwxPortRelWindSpeed
-                true_dir_name: PortTrueWindDir
-                true_speed_name: PortTrueWindSpeed
+                convert_speed_factor: <<convert_speed_factor>>
+                course_field: <<course_true>>
+                heading_field: <<heading_true>>
+                speed_field: <<speed_over_ground>>
+                wind_dir_field: <<port_rel_wind_dir>>
+                wind_speed_field: <<port_rel_wind_speed>>
+
+                # Output fields
+                apparent_dir_name: <<port_apparent_dir_name>>
+                true_dir_name: <<port_true_dir_name>>
+                true_speed_name: <<port_true_speed_name>>
                 update_on_fields:
-                - MwxPortRelWindDir
+                - <<port_rel_wind_dir>>
                 max_field_age:
-                  S330CourseTrue: 15
-                  S330HeadingTrue: 15
-                  S330SpeedKt: 15
-                  MwxPortRelWindDir: 15
-                  MwxPortRelWindSpeed: 15
+                  <<course_true>>: <<max_field_age>>
+                  <<heading_true>>: <<max_field_age>>
+                  <<speed_over_ground>>: <<max_field_age>>
+                  <<port_rel_wind_dir>>: <<max_field_age>>
+                  <<port_rel_wind_speed>>: <<max_field_age>>
                 metadata_interval: 10
             writers:
             - class: CachedDataWriter
@@ -139,23 +145,25 @@ logger_templates:
             transforms:
             - class: TrueWindsTransform
               kwargs:
-                apparent_dir_name: StbdApparentWindDir
-                convert_speed_factor: 0.5144
-                course_field: S330CourseTrue
-                heading_field: S330HeadingTrue
-                speed_field: S330SpeedKt
-                wind_dir_field: MwxStbdRelWindDir
-                wind_speed_field: MwxStbdRelWindSpeed
-                true_dir_name: StbdTrueWindDir
-                true_speed_name: StbdTrueWindSpeed
+                convert_speed_factor: <<convert_speed_factor>>
+                course_field: <<course_true>>
+                heading_field: <<heading_true>>
+                speed_field: <<speed_over_ground>>
+                wind_dir_field: <<stbd_rel_wind_dir>>
+                wind_speed_field: <<stbd_rel_wind_speed>>
+
+                # Output fields
+                apparent_dir_name: <<stbd_apparent_dir_name>>
+                true_dir_name: <<stbd_true_dir_name>>
+                true_speed_name: <<stbd_true_speed_name>>
                 update_on_fields:
-                - MwxStbdRelWindDir
+                - <<stbd_rel_wind_dir>>
                 max_field_age:
-                  S330CourseTrue: 15
-                  S330HeadingTrue: 15
-                  S330SpeedKt: 15
-                  MwxStbdRelWindDir: 15
-                  MwxStbdRelWindSpeed: 15
+                  <<course_true>>: <<max_field_age>>
+                  <<heading_true>>: <<max_field_age>>
+                  <<speed_over_ground>>: <<max_field_age>>
+                  <<stbd_rel_wind_dir>>: <<max_field_age>>
+                  <<stbd_rel_wind_speed>>: <<max_field_age>>
                 metadata_interval: 10
             writers:
             - class: CachedDataWriter
