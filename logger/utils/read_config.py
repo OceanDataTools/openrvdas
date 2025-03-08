@@ -100,7 +100,11 @@ def expand_cruise_definition(input_dict):
     # No modes defined? Create a default one
     if 'modes' not in result:
         result = generate_default_mode(result)
-        logging.warning('GENERATING MODES!')
+        logging.warning('No "modes" section found. Generating default mode.')
+
+    unmatched_vars = find_unmatched_variables(result)
+    if unmatched_vars:
+        logging.error(f'Unexpanded variables found: {", ".join(unmatched_vars)}')
 
     return result
 
@@ -512,6 +516,59 @@ def generate_default_mode(input_dict):
     result['default_mode'] = 'default'
 
     return result
+
+
+##############################################################################
+def find_unmatched_variables(data: Union[Dict, List, str, Any]) -> List[str]:
+    """
+    Recursively searches through a nested data structure (dicts, lists, strings)
+    and finds all variables that begin with "<<" and end with ">>",
+    returning them with the brackets intact. These typically represent template variables.
+
+    Args:
+        data: A dict, list, string, or other value to search through
+
+    Returns:
+        List of extracted strings with "<<" and ">>" included
+    """
+    results = []
+
+    if isinstance(data, dict):
+        # Search through dictionary keys and values
+        for key, value in data.items():
+            # Check if key is a string that might contain bracketed strings
+            if isinstance(key, str):
+                results.extend(_extract_from_string(key))
+
+            # Recursively check the value
+            results.extend(find_unmatched_variables(value))
+
+    elif isinstance(data, list):
+        # Search through list elements
+        for item in data:
+            results.extend(find_unmatched_variables(item))
+
+    elif isinstance(data, str):
+        # Search within the string
+        results.extend(_extract_from_string(data))
+
+    # Return unique results (no duplicates)
+    return list(set(results))
+
+
+def _extract_from_string(text: str) -> List[str]:
+    """
+    Helper function to extract all "<<...>>" patterns from a string
+
+    Args:
+        text: String to search within
+
+    Returns:
+        List of extracted strings with the brackets included
+    """
+    pattern = r"(<<[^<]*>>)"
+    matches = re.findall(pattern, text)
+    return matches
 
 
 ##############################################################################

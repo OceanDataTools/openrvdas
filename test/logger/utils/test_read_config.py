@@ -20,6 +20,8 @@ logging.basicConfig(format=LOGGING_FORMAT)
 sys.path.append('.')
 from logger.utils import read_config  # noqa: E402
 
+from typing import Dict, List, Any, Union
+
 
 class TestReadConfig(unittest.TestCase):
     """Test cases for YAML utility functions."""
@@ -696,6 +698,100 @@ loggers:
         # Test that expand_logger_templates raises ValueError
         with self.assertRaises(ValueError):
             read_config.expand_logger_templates(test_config)
+
+
+class TestFindUnmatchedVariables(unittest.TestCase):
+
+    def test_empty_inputs(self):
+        """Test with empty inputs."""
+        self.assertEqual(read_config.find_unmatched_variables({}), [])
+        self.assertEqual(read_config.find_unmatched_variables([]), [])
+        self.assertEqual(read_config.find_unmatched_variables(""), [])
+        self.assertEqual(read_config.find_unmatched_variables(None), [])
+
+    def test_simple_string(self):
+        """Test with simple string inputs."""
+        self.assertEqual(read_config.find_unmatched_variables("No variables here"), [])
+        self.assertEqual(read_config.find_unmatched_variables("<<VARIABLE>>"), ["<<VARIABLE>>"])
+        self.assertEqual(
+            sorted(read_config.find_unmatched_variables("<<VAR1>> and <<VAR2>>")),
+            sorted(["<<VAR1>>", "<<VAR2>>"])
+        )
+
+    def test_dict_keys_and_values(self):
+        """Test with dictionary keys and values."""
+        test_dict = {
+            "normal_key": "normal_value",
+            "key_with_<<VARIABLE>>": "value",
+            "key": "value_with_<<VARIABLE>>",
+            "<<KEY_VAR>>": "<<VALUE_VAR>>"
+        }
+        expected = ["<<VARIABLE>>", "<<KEY_VAR>>", "<<VALUE_VAR>>"]
+        self.assertEqual(sorted(read_config.find_unmatched_variables(test_dict)), sorted(expected))
+
+    def test_list_items(self):
+        """Test with list items."""
+        test_list = [
+            "normal string",
+            "string with <<VARIABLE>>",
+            ["nested", "list", "with <<NESTED_VAR>>"],
+            {"key": "<<DICT_VAR>>"}
+        ]
+        expected = ["<<VARIABLE>>", "<<NESTED_VAR>>", "<<DICT_VAR>>"]
+        self.assertEqual(sorted(read_config.find_unmatched_variables(test_list)), sorted(expected))
+
+    def test_nested_structures(self):
+        """Test with deeply nested structures."""
+        nested_data = {
+            "level1": {
+                "level2": [
+                    {"level3": "<<DEEP_VAR>>"},
+                    "<<LIST_VAR>>"
+                ],
+                "<<LEVEL2_KEY>>": {
+                    "level3": "value"
+                }
+            },
+            "<<TOP_LEVEL>>": "value"
+        }
+        expected = ["<<DEEP_VAR>>", "<<LIST_VAR>>", "<<LEVEL2_KEY>>", "<<TOP_LEVEL>>"]
+        self.assertEqual(sorted(read_config.find_unmatched_variables(nested_data)), sorted(expected))
+
+    def test_mixed_data_types(self):
+        """Test with mixed data types."""
+        mixed_data = {
+            "string": "<<STRING_VAR>>",
+            "number": 123,
+            "boolean": True,
+            "none": None,
+            "list": [1, "<<LIST_VAR>>", False],
+            "<<KEY_VAR>>": 456
+        }
+        expected = ["<<STRING_VAR>>", "<<LIST_VAR>>", "<<KEY_VAR>>"]
+        self.assertEqual(sorted(read_config.find_unmatched_variables(mixed_data)), sorted(expected))
+
+    def test_edge_cases(self):
+        """Test edge cases."""
+        # Incomplete brackets
+        self.assertEqual(read_config.find_unmatched_variables("<<INCOMPLETE"), [])
+        self.assertEqual(read_config.find_unmatched_variables("INCOMPLETE>>"), [])
+
+        # Empty brackets
+        self.assertEqual(read_config.find_unmatched_variables("<<>>"), ["<<>>"])
+
+        # We don't need to handle nested brackets
+
+        # Brackets with special characters
+        self.assertEqual(read_config.find_unmatched_variables("<<SPECIAL!@#$%^&*()>>"), ["<<SPECIAL!@#$%^&*()>>"])
+
+    def test_duplicate_variables(self):
+        """Test that duplicate variables are removed."""
+        duplicates = {
+            "key1": "<<DUPLICATE>>",
+            "key2": "<<DUPLICATE>>",
+            "<<DUPLICATE>>": "value"
+        }
+        self.assertEqual(read_config.find_unmatched_variables(duplicates), ["<<DUPLICATE>>"])
 
 
 if __name__ == "__main__":
