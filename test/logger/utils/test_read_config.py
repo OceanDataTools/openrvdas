@@ -574,7 +574,8 @@ loggers:
         self.config_dict = yaml.safe_load(self.config_yaml)
 
         # Process the templates
-        self.processed_configs = read_config.expand_logger_templates(self.config_dict)
+        self.processed_loggers = read_config.expand_logger_templates(self.config_dict)
+        self.processed_configs = self.processed_loggers['loggers']
 
     def test_logger_names_substitution(self) -> None:
         """Test that logger names are correctly substituted."""
