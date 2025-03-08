@@ -14,7 +14,7 @@ except ModuleNotFoundError:
     pass
 
 
-###################
+###############################################################################
 def read_config(file_path: str) -> Dict[str, Any]:
     """
     Read a YAML configuration file.
@@ -53,8 +53,11 @@ def parse(content: str, file_path: str = None) -> Dict[str, Any]:
     """
     try:
         # Parse the YAML content
-        data = yaml.safe_load(content)
-
+        try:
+            data = yaml.load(content, Loader=yaml.FullLoader)
+        except AttributeError:
+            # If they've got an older yaml, it may not have FullLoader)
+            data = yaml.load(content)
         # Handle empty file
         if data is None:
             return {}
@@ -278,9 +281,16 @@ def expand_logger_templates(config_dict: Dict[str, Dict[str, Any]]) -> Dict[str,
             raise
 
         # Store the processed configuration
-        result[logger_name] = processed_config
+        config_dict['loggers'][logger_name] = processed_config
 
-    return result
+    # Get rid of logger_templates to keep config small
+    del config_dict['logger_templates']
+
+    # Finally, apply global variables substitution to any variables remaining
+    # at the top level (e.g in cruise section).
+    config_dict = substitute_variables(config_dict, global_variables)
+
+    return config_dict
 
 
 # Define recursive ConfigValue type
@@ -405,7 +415,9 @@ def expand_logger_definitions(input_dict):
     this is not advised.
     """
     # Validate input
+    #print(f'###############CALLED EXPAND_LOGGER_DEFINITION WITH {pprint.pformat(input_dict)}\n\n\n')
     if 'loggers' not in input_dict:
+        #print(f'\n\n\n##############NO LOGGERS?!? {pprint.pformat(input_dict)}\n\n\n')
         raise ValueError("Input dictionary must have a 'loggers' key")
 
     # Create a new dictionary to avoid modifying the input
@@ -500,3 +512,24 @@ def generate_default_mode(input_dict):
     result['default_mode'] = 'default'
 
     return result
+
+
+##############################################################################
+##############################################################################
+if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-v', '--verbosity', dest='verbosity', default=0, action='count',
+                        help='Increase output verbosity')
+    parser.add_argument('filename', type=str, help='Input file to process')
+    args = parser.parse_args()
+
+    LOG_LEVELS = {0: logging.WARNING, 1: logging.INFO, 2: logging.DEBUG}
+    args.verbosity = min(args.verbosity, max(LOG_LEVELS))
+    logging.getLogger().setLevel(LOG_LEVELS[args.verbosity])
+
+    config = read_config(args.filename)
+    config = expand_cruise_definition(config)
+
+    print(yaml.dump(config, sort_keys=False))

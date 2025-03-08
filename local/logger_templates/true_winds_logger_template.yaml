@@ -1,0 +1,167 @@
+###################
+logger_templates:
+  #################
+  # Derived true winds logger
+  true_winds_logger_template:
+    configs:
+      'off': {}
+      'on':
+        readers:
+        - class: CachedDataReader
+          kwargs:
+            data_server: <<data_server>>
+            subscription:
+              fields:
+                S330CourseTrue:
+                  seconds: 0
+                S330HeadingTrue:
+                  seconds: 0
+                S330SpeedKt:
+                  seconds: 0
+                MwxPortRelWindDir:
+                  seconds: 0
+                MwxPortRelWindSpeed:
+                  seconds: 0
+                MwxStbdRelWindDir:
+                  seconds: 0
+                MwxStbdRelWindSpeed:
+                  seconds: 0
+        writers:
+        - class: ComposedWriter
+          kwargs:
+            transforms:
+            - class: TrueWindsTransform
+              kwargs:
+                apparent_dir_name: PortApparentWindDir
+                convert_speed_factor: 0.5144
+                course_field: S330CourseTrue
+                heading_field: S330HeadingTrue
+                speed_field: S330SpeedKt
+                wind_dir_field: MwxPortRelWindDir
+                wind_speed_field: MwxPortRelWindSpeed
+                true_dir_name: PortTrueWindDir
+                true_speed_name: PortTrueWindSpeed
+                update_on_fields:
+                - MwxPortRelWindDir
+                max_field_age:
+                  S330CourseTrue: 15
+                  S330HeadingTrue: 15
+                  S330SpeedKt: 15
+                  MwxPortRelWindDir: 15
+                  MwxPortRelWindSpeed: 15
+                metadata_interval: 10
+            writers:
+            - class: CachedDataWriter
+              kwargs:
+            data_server: <<data_server>>
+        - class: ComposedWriter
+          kwargs:
+            transforms:
+            - class: TrueWindsTransform
+              kwargs:
+                apparent_dir_name: StbdApparentWindDir
+                convert_speed_factor: 0.5144
+                course_field: S330CourseTrue
+                heading_field: S330HeadingTrue
+                speed_field: S330SpeedKt
+                wind_dir_field: MwxStbdRelWindDir
+                wind_speed_field: MwxStbdRelWindSpeed
+                true_dir_name: StbdTrueWindDir
+                true_speed_name: StbdTrueWindSpeed
+                update_on_fields:
+                - MwxStbdRelWindDir
+                max_field_age:
+                  S330CourseTrue: 15
+                  S330HeadingTrue: 15
+                  S330SpeedKt: 15
+                  MwxStbdRelWindDir: 15
+                  MwxStbdRelWindSpeed: 15
+                metadata_interval: 10
+            writers:
+            - class: CachedDataWriter
+              kwargs:
+            data_server: <<data_server>>
+      on+influx:
+        readers:
+        - class: CachedDataReader
+          kwargs:
+            data_server: <<data_server>>
+            subscription:
+              fields:
+                S330CourseTrue:
+                  seconds: 0
+                S330HeadingTrue:
+                  seconds: 0
+                S330SpeedKt:
+                  seconds: 0
+                MwxPortRelWindDir:
+                  seconds: 0
+                MwxPortRelWindSpeed:
+                  seconds: 0
+                MwxStbdRelWindDir:
+                  seconds: 0
+                MwxStbdRelWindSpeed:
+                  seconds: 0
+        writers:
+        - class: ComposedWriter
+          kwargs:
+            transforms:
+            - class: TrueWindsTransform
+              kwargs:
+                apparent_dir_name: PortApparentWindDir
+                convert_speed_factor: 0.5144
+                course_field: S330CourseTrue
+                heading_field: S330HeadingTrue
+                speed_field: S330SpeedKt
+                wind_dir_field: MwxPortRelWindDir
+                wind_speed_field: MwxPortRelWindSpeed
+                true_dir_name: PortTrueWindDir
+                true_speed_name: PortTrueWindSpeed
+                update_on_fields:
+                - MwxPortRelWindDir
+                max_field_age:
+                  S330CourseTrue: 15
+                  S330HeadingTrue: 15
+                  S330SpeedKt: 15
+                  MwxPortRelWindDir: 15
+                  MwxPortRelWindSpeed: 15
+                metadata_interval: 10
+            writers:
+            - class: CachedDataWriter
+              kwargs:
+                data_server: <<data_server>>
+            - class: InfluxDBWriter
+              kwargs:
+                bucket_name: <<influx_bucket_name>>
+                measurement_name: true_wind
+        - class: ComposedWriter
+          kwargs:
+            transforms:
+            - class: TrueWindsTransform
+              kwargs:
+                apparent_dir_name: StbdApparentWindDir
+                convert_speed_factor: 0.5144
+                course_field: S330CourseTrue
+                heading_field: S330HeadingTrue
+                speed_field: S330SpeedKt
+                wind_dir_field: MwxStbdRelWindDir
+                wind_speed_field: MwxStbdRelWindSpeed
+                true_dir_name: StbdTrueWindDir
+                true_speed_name: StbdTrueWindSpeed
+                update_on_fields:
+                - MwxStbdRelWindDir
+                max_field_age:
+                  S330CourseTrue: 15
+                  S330HeadingTrue: 15
+                  S330SpeedKt: 15
+                  MwxStbdRelWindDir: 15
+                  MwxStbdRelWindSpeed: 15
+                metadata_interval: 10
+            writers:
+            - class: CachedDataWriter
+              kwargs:
+                data_server: <<data_server>>
+            - class: InfluxDBWriter
+              kwargs:
+                bucket_name: <<influx_bucket_name>>
+                measurement_name: true_wind
