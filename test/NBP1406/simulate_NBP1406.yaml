@@ -7,99 +7,99 @@
 PCOD:
   class: Serial
   port: /tmp/tty_PCOD
-  filebase: test/NBP1406/PCOD/raw/NBP1406_PCOD 
+  filebase: test/NBP1406/data/PCOD/raw/NBP1406_PCOD
 
 cwnc:
   class: Serial
   port: /tmp/tty_cwnc
-  filebase: test/NBP1406/cwnc/raw/NBP1406_cwnc 
+  filebase: test/NBP1406/data/cwnc/raw/NBP1406_cwnc
 
 gp02:
   class: Serial
   port: /tmp/tty_gp02
-  filebase: test/NBP1406/gp02/raw/NBP1406_gp02 
+  filebase: test/NBP1406/data/gp02/raw/NBP1406_gp02
 
 gyr1:
   class: Serial
   port: /tmp/tty_gyr1
-  filebase: test/NBP1406/gyr1/raw/NBP1406_gyr1 
+  filebase: test/NBP1406/data/gyr1/raw/NBP1406_gyr1
 
 knud:
   class: Serial
   port: /tmp/tty_knud
-  filebase: test/NBP1406/knud/raw/NBP1406_knud 
+  filebase: test/NBP1406/data/knud/raw/NBP1406_knud
 
 mwx1:
   class: Serial
   port: /tmp/tty_mwx1
-  filebase: test/NBP1406/mwx1/raw/NBP1406_mwx1 
+  filebase: test/NBP1406/data/mwx1/raw/NBP1406_mwx1
 
 pguv:
   class: Serial
   port: /tmp/tty_pguv
-  filebase: test/NBP1406/pguv/raw/NBP1406_pguv 
+  filebase: test/NBP1406/data/pguv/raw/NBP1406_pguv
 
 s330:
   class: Serial
   port: /tmp/tty_s330
-  filebase: test/NBP1406/s330/raw/NBP1406_s330 
+  filebase: test/NBP1406/data/s330/raw/NBP1406_s330
 
 svp1:
   class: Serial
   port: /tmp/tty_svp1
-  filebase: test/NBP1406/svp1/raw/NBP1406_svp1 
+  filebase: test/NBP1406/data/svp1/raw/NBP1406_svp1
 
 tsg2:
   class: Serial
   port: /tmp/tty_tsg2
-  filebase: test/NBP1406/tsg2/raw/NBP1406_tsg2 
+  filebase: test/NBP1406/data/tsg2/raw/NBP1406_tsg2
 
 adcp:
   class: Serial
   port: /tmp/tty_adcp
-  filebase: test/NBP1406/adcp/raw/NBP1406_adcp 
+  filebase: test/NBP1406/data/adcp/raw/NBP1406_adcp
 
 eng1:
   class: Serial
   port: /tmp/tty_eng1
-  filebase: test/NBP1406/eng1/raw/NBP1406_eng1 
+  filebase: test/NBP1406/data/eng1/raw/NBP1406_eng1
 
 grv1:
   class: Serial
   port: /tmp/tty_grv1
-  filebase: test/NBP1406/grv1/raw/NBP1406_grv1 
+  filebase: test/NBP1406/data/grv1/raw/NBP1406_grv1
 
 hdas:
   class: Serial
   port: /tmp/tty_hdas
-  filebase: test/NBP1406/hdas/raw/NBP1406_hdas 
+  filebase: test/NBP1406/data/hdas/raw/NBP1406_hdas
 
 mbdp:
   class: Serial
   port: /tmp/tty_mbdp
-  filebase: test/NBP1406/mbdp/raw/NBP1406_mbdp 
+  filebase: test/NBP1406/data/mbdp/raw/NBP1406_mbdp
 
 pco2:
   class: Serial
   port: /tmp/tty_pco2
-  filebase: test/NBP1406/pco2/raw/NBP1406_pco2 
+  filebase: test/NBP1406/data/pco2/raw/NBP1406_pco2
 
 rtmp:
   class: Serial
   port: /tmp/tty_rtmp
-  filebase: test/NBP1406/rtmp/raw/NBP1406_rtmp 
+  filebase: test/NBP1406/data/rtmp/raw/NBP1406_rtmp
 
 seap:
   class: Serial
   port: /tmp/tty_seap
-  filebase: test/NBP1406/seap/raw/NBP1406_seap 
+  filebase: test/NBP1406/data/seap/raw/NBP1406_seap
 
 tsg1:
   class: Serial
   port: /tmp/tty_tsg1
-  filebase: test/NBP1406/tsg1/raw/NBP1406_tsg1 
+  filebase: test/NBP1406/data/tsg1/raw/NBP1406_tsg1
 
 twnc:
   class: Serial
   port: /tmp/tty_twnc
-  filebase: test/NBP1406/twnc/raw/NBP1406_twnc 
+  filebase: test/NBP1406/data/twnc/raw/NBP1406_twnc
