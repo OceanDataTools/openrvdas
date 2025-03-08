@@ -23,7 +23,7 @@ import yaml
 import os
 from rest_framework.settings import api_settings
 # Read in JSON with comments
-from logger.utils.read_config import parse, read_config, expand_cruise_definition  # noqa: E402
+from logger.utils.read_config import read_config, expand_cruise_definition  # noqa: E402
 
 # RVDAS API Views + Serializers
 
@@ -581,16 +581,17 @@ class LoadConfigurationFileAPIView(APIView):
             if target_file is None:
                 return Response({"status": f"File not found. {target_file}"}, 404)
             try:
-                with open(target_file, "r") as config_file:
-                    configuration = parse(config_file.read())
-                    if "cruise" in configuration:
-                        configuration["cruise"]["config_filename"] = target_file
-                    # Load the config and set to the default mode
-                    api.load_configuration(configuration)
-                    default_mode = api.get_default_mode()
-                    if default_mode:
-                        api.set_active_mode(default_mode)
-                    return Response({"status": f"target_file loaded {target_file}"}, 200)
+                config = read_config(target_file)
+                config = expand_cruise_definition(config)
+
+                if "cruise" in configuration:
+                    config["cruise"]["config_filename"] = target_file
+                # Load the config and set to the default mode
+                api.load_configuration(config)
+                default_mode = api.get_default_mode()
+                if default_mode:
+                    api.set_active_mode(default_mode)
+                return Response({"status": f"target_file loaded {target_file}"}, 200)
 
             except (json.JSONDecodeError, yaml.scanner.ScannerError) as e:
                 load_errors.append('Error loading "%s": %s' % (target_file, str(e)))

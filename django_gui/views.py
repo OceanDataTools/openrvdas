@@ -273,16 +273,17 @@ def choose_file(request, selection=None):
             try:
                 # Load the file to memory and parse to a dict. Add the name of
                 # the file we've just loaded to the dict.
-                with open(target_file, 'r') as config_file:
-                    configuration = parse(config_file.read())
-                    if 'cruise' in configuration:
-                        configuration['cruise']['config_filename'] = target_file
+                config = read_config(target_file)
+                config = expand_cruise_definition(config)
 
-                    # Load the config and set to the default mode
-                    api.load_configuration(configuration)
-                    default_mode = api.get_default_mode()
-                    if default_mode:
-                        api.set_active_mode(default_mode)
+                if 'cruise' in config:
+                    config['cruise']['config_filename'] = target_file
+
+                # Load the config and set to the default mode
+                api.load_configuration(config)
+                default_mode = api.get_default_mode()
+                if default_mode:
+                    api.set_active_mode(default_mode)
             except (JSONDecodeError, ScannerError) as e:
                 load_errors.append('Error loading "%s": %s' % (target_file, str(e)))
             except ValueError as e:

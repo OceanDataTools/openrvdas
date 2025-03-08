@@ -9,7 +9,7 @@ import threading
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(realpath(__file__))))
 from logger.utils.stderr_logging import DEFAULT_LOGGING_FORMAT  # noqa: E402
-from logger.utils.read_config import read_config  # noqa: E402
+from logger.utils.read_config import read_config, expand_cruise_definition  # noqa: E402
 
 from server.logger_runner import LoggerRunner  # noqa: E402
 
@@ -301,6 +301,7 @@ if __name__ == '__main__':
     logger_log_level = LOG_LEVELS[min(args.logger_verbosity, max(LOG_LEVELS))]
 
     config = read_config(args.config)
+    config = expand_cruise_definition(config)
 
     mode_config_names = config.get('modes').get(args.mode)
     all_configs = config.get('configs')

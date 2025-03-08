@@ -20,8 +20,6 @@ logging.basicConfig(format=LOGGING_FORMAT)
 sys.path.append('.')
 from logger.utils import read_config  # noqa: E402
 
-from typing import Dict, List, Any, Union
-
 
 class TestReadConfig(unittest.TestCase):
     """Test cases for YAML utility functions."""
@@ -755,7 +753,8 @@ class TestFindUnmatchedVariables(unittest.TestCase):
             "<<TOP_LEVEL>>": "value"
         }
         expected = ["<<DEEP_VAR>>", "<<LIST_VAR>>", "<<LEVEL2_KEY>>", "<<TOP_LEVEL>>"]
-        self.assertEqual(sorted(read_config.find_unmatched_variables(nested_data)), sorted(expected))
+        self.assertEqual(sorted(read_config.find_unmatched_variables(nested_data)),
+                         sorted(expected))
 
     def test_mixed_data_types(self):
         """Test with mixed data types."""
@@ -782,7 +781,8 @@ class TestFindUnmatchedVariables(unittest.TestCase):
         # We don't need to handle nested brackets
 
         # Brackets with special characters
-        self.assertEqual(read_config.find_unmatched_variables("<<SPECIAL!@#$%^&*()>>"), ["<<SPECIAL!@#$%^&*()>>"])
+        self.assertEqual(read_config.find_unmatched_variables("<<SPECIAL!@#$%^&*()>>"),
+                         ["<<SPECIAL!@#$%^&*()>>"])
 
     def test_duplicate_variables(self):
         """Test that duplicate variables are removed."""
