@@ -39,7 +39,7 @@ variables:
   influx_bucket_name: openrvdas
   
   command_line: local/usap/create_template_cruise.py test/NBP1406/NBP1406_port_defs.yaml
-  date_time: Sat Mar  8 21:04:46 2025
+  date_time: Sun Mar  9 00:55:21 2025
   user: pablo
 
 ###########################################################
@@ -211,7 +211,7 @@ modes:
     true_winds: true_winds-off
     snapshot: snapshot-off
 
-  no_write:
+  no_write: &no_write
     PCOD: PCOD-net
     cwnc: cwnc-net
     gp02: gp02-net
@@ -232,81 +232,43 @@ modes:
     hdas: hdas-net
     tsg2: tsg2-net
     seap: seap-net
+    parse_data: parse_data-on
+    true_winds: true_winds-on
+    snapshot: snapshot-on
+
+  write: &write
+    PCOD: PCOD-net+file
+    cwnc: cwnc-net+file
+    gp02: gp02-net+file
+    gyr1: gyr1-net+file
+    adcp: adcp-net+file
+    eng1: eng1-net+file
+    svp1: svp1-net+file
+    twnc: twnc-net+file
+    mbdp: mbdp-net+file
+    knud: knud-net+file
+    grv1: grv1-net+file
+    mwx1: mwx1-net+file
+    pco2: pco2-net+file
+    pguv: pguv-net+file
+    s330: s330-net+file
+    tsg1: tsg1-net+file
+    rtmp: rtmp-net+file
+    hdas: hdas-net+file
+    tsg2: tsg2-net+file
+    seap: seap-net+file
     parse_data: parse_data-on
     true_winds: true_winds-on
     snapshot: snapshot-on
 
   no_write+influx:
-    PCOD: PCOD-net
-    cwnc: cwnc-net
-    gp02: gp02-net
-    gyr1: gyr1-net
-    adcp: adcp-net
-    eng1: eng1-net
-    svp1: svp1-net
-    twnc: twnc-net
-    mbdp: mbdp-net
-    knud: knud-net
-    grv1: grv1-net
-    mwx1: mwx1-net
-    pco2: pco2-net
-    pguv: pguv-net
-    s330: s330-net
-    tsg1: tsg1-net
-    rtmp: rtmp-net
-    hdas: hdas-net
-    tsg2: tsg2-net
-    seap: seap-net
+    <<: *no_write
     parse_data: parse_data-on+influx
     true_winds: true_winds-on+influx
     snapshot: snapshot-on+influx
 
-  write:
-    PCOD: PCOD-net+file
-    cwnc: cwnc-net+file
-    gp02: gp02-net+file
-    gyr1: gyr1-net+file
-    adcp: adcp-net+file
-    eng1: eng1-net+file
-    svp1: svp1-net+file
-    twnc: twnc-net+file
-    mbdp: mbdp-net+file
-    knud: knud-net+file
-    grv1: grv1-net+file
-    mwx1: mwx1-net+file
-    pco2: pco2-net+file
-    pguv: pguv-net+file
-    s330: s330-net+file
-    tsg1: tsg1-net+file
-    rtmp: rtmp-net+file
-    hdas: hdas-net+file
-    tsg2: tsg2-net+file
-    seap: seap-net+file
-    parse_data: parse_data-on
-    true_winds: true_winds-on
-    snapshot: snapshot-on
-
   write+influx:
-    PCOD: PCOD-net+file
-    cwnc: cwnc-net+file
-    gp02: gp02-net+file
-    gyr1: gyr1-net+file
-    adcp: adcp-net+file
-    eng1: eng1-net+file
-    svp1: svp1-net+file
-    twnc: twnc-net+file
-    mbdp: mbdp-net+file
-    knud: knud-net+file
-    grv1: grv1-net+file
-    mwx1: mwx1-net+file
-    pco2: pco2-net+file
-    pguv: pguv-net+file
-    s330: s330-net+file
-    tsg1: tsg1-net+file
-    rtmp: rtmp-net+file
-    hdas: hdas-net+file
-    tsg2: tsg2-net+file
-    seap: seap-net+file
+    <<: *write
     parse_data: parse_data-on+influx
     true_winds: true_winds-on+influx
     snapshot: snapshot-on+influx
