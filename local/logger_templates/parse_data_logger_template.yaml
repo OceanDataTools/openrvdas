@@ -15,6 +15,10 @@ logger_templates:
             metadata_interval: 10
             definition_path: <<parse_definition_path>>
         writers:
+        - class: UDPWriter
+          kwargs:
+            port: <<parsed_udp_port>>
+            destination: <<udp_destination>>
         - class: CachedDataWriter
           kwargs:
             data_server: <<data_server>>
@@ -29,6 +33,10 @@ logger_templates:
             metadata_interval: 10
             definition_path: <<parse_definition_path>>
         writers:
+        - class: UDPWriter
+          kwargs:
+            port: <<parsed_udp_port>>
+            destination: <<udp_destination>>
         - class: CachedDataWriter
           kwargs:
             data_server: <<data_server>>

@@ -27,10 +27,14 @@ to initialize the type checking and set its debugging level. If it is not explic
 initialized, it will be done implicitly the first time can_process_record() or
 digest_record() are called, but with the default of quiet=False.
 """
-import logging
 import inspect
+import logging
+import sys
 from typing import get_args
 
+from os.path import dirname, realpath
+sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
+from logger.utils.das_record import DASRecord
 
 ########################################
 def get_method_type_hints(method):
@@ -171,6 +175,10 @@ class BaseModule:
         # Is record a number we can convert to a string?
         if str in self.input_types and isinstance(record, (int, float)):
             return str(record)
+
+        # If it's a DASRecord, serialize it as JSON
+        if str in self.input_types and isinstance(record, DASRecord):
+            return record.as_json()
 
         # If we don't know how to deal with it
         if not self.quiet:
