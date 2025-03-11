@@ -43,6 +43,22 @@ class InterpolationTransform(DerivedDataTransform):
                  ...
                }
 
+               To simplify templating, can also accept a spec of the form
+               of a list:
+
+               [
+                 { sources: [MwxAirTemp, RTMPTemp, ...],
+                   algorithm: boxcar_average,
+                   window: 10,
+                   result_prefix: Avg
+                 },
+                 { sources: [PortTrueWindDir, StbdTrueWindDir],
+                   algorithm: polar_average,
+                   window: 10,
+                   result_prefix: Avg
+                 }
+               ]
+
         interval - At what intervals (in seconds) should the subsampling
                be computed?
 
@@ -56,14 +72,47 @@ class InterpolationTransform(DerivedDataTransform):
         """
         self.field_spec = {}
         self.source_fields = set()
-        for result_field, entry in field_spec.items():
-            if 'source' in entry and 'algorithm' in entry:
-                self.field_spec[result_field] = entry
-                self.source_fields.add(entry.get('source'))
-            else:
-                logging.warning('InterpolationTransform field definition for %s '
-                                'must specify both "source" and "algorithm": %s',
-                                result_field, entry)
+        if isinstance(field_spec, dict):
+            for result_field, entry in field_spec.items():
+                if 'source' in entry and 'algorithm' in entry:
+                    self.field_spec[result_field] = entry
+                    self.source_fields.add(entry.get('source'))
+                else:
+                    logging.warning('InterpolationTransform field definition for %s '
+                                    'must specify both "source" and "algorithm": %s',
+                                    result_field, entry)
+
+        # Alternate way of setting up a field spec that makes it easier to templatize.
+        # We'll expand the list of specs into a traditional field_spec
+        elif isinstance(field_spec, list):
+            for spec_instance in field_spec:
+                # Each spec_instance should be a dict of fields:, algorithm:,
+                # output_field_prefix: and window:
+                if not isinstance(spec_instance, dict):
+                    raise ValueError('InterpolationTransform: if field_spec is list, must be '
+                                     f'a list of dicts; found list of {type(spec_instance)}')
+                sources = spec_instance.get('sources')
+
+                if not isinstance(sources, list):
+                    raise ValueError('InterpolationTransform: sources for field spec must be '
+                                     f'a list ; found {type(spec_instance)}')
+
+                # Expand source list into a traditional field_spec
+                algorithm = spec_instance.get('algorithm')
+                window = spec_instance.get('window')
+                result_prefix = spec_instance.get('result_prefix')
+                for source in sources:
+                    entry = {'source': source, 'algorithm': {'type': algorithm, 'window': window}}
+                    result_field = result_prefix + source
+                    self.field_spec[result_field] = entry
+
+                # Finally, stash sources so we know what to look for
+                self.source_fields.update(sources)
+
+        else:
+            raise ValueError('InterpolationTransform: if field_spec must be either list '
+                             f'or dict. Found {type(spec_instance)}')
+
         self.interval = interval
         self.window = window
         self.metadata_interval = metadata_interval
@@ -174,15 +223,17 @@ class InterpolationTransform(DerivedDataTransform):
         """
         # If we've got a list, hope it's a list of records. Try to add
         # them all.
-        if type(record) is list:
+        if isinstance(record, list):
             for single_record in record:
                 self._add_record(single_record)
         # If it's a dict, hope it's a single record.
-        elif type(record) is dict:
+        elif isinstance(record, dict):
             self._add_record(record)
+        elif isinstance(record, DASRecord):
+            self._add_record(record.fields)
         else:
             logging.warning('InterpolationTransform Got non-list, non-dict '
-                            'record to interpolate: %s', record)
+                            'non DASRecord to interpolate: %s', record)
             return None
 
         # Figure out what timestamp we'd like to compute next. First time
@@ -201,21 +252,21 @@ class InterpolationTransform(DerivedDataTransform):
                 values = self.cached_values.get(source, [])
                 if len(values):
                     non_empty[dest] = [source, len(values)]
-        # logging.warning('Non-empty: %s', ','.join(non_empty.keys()))
 
         # Iterate through all timestamps up to the edge of what we can fit
         # in our window without running into the edge of 'now'.
         results = []
         now = time.time()
+
         while self.next_timestamp < now - self.window/2:
             # Clean out old data
             self._clean_cache()
 
             result = {}
             for result_field, entry in self.field_spec.items():
-                source = entry['source']
-                source_values = self.cached_values[source]
-                algorithm = entry['algorithm']
+                source = entry.get('source')
+                source_values = self.cached_values.get(source)
+                algorithm = entry.get('algorithm')
                 # logging.warning('%s->%s: %d values',
                 #                source, result_field, len(source_values))
                 value = interpolate(algorithm, source_values, self.next_timestamp, now)
