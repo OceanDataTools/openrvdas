@@ -13,6 +13,8 @@ logger_templates:
               fields: <<snapshot_fields>>
         transforms:
         - class: ToDASRecordTransform
+          kwargs:
+            data_id: <<logger>>
         - class: InterpolationTransform
           module: logger.transforms.interpolation_transform
           kwargs:
