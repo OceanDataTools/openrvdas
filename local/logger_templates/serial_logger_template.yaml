@@ -39,7 +39,7 @@ logger_templates:
               kwargs:
                 prefix: <<logger>>
             writers:
-              - class: UDPWriter
-                kwargs:
-                  port: <<raw_udp_port>>
-                  destination: <<udp_destination>>
+            - class: UDPWriter
+              kwargs:
+                port: <<raw_udp_port>>
+                destination: <<udp_destination>>
