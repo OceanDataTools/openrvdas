@@ -34,7 +34,8 @@ from typing import get_args
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
-from logger.utils.das_record import DASRecord
+from logger.utils.das_record import DASRecord  # noqa E402
+
 
 ########################################
 def get_method_type_hints(method):

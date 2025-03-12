@@ -235,7 +235,8 @@ def deep_merge(base: Dict[str, Any], overlay: Dict[str, Any]) -> Dict[str, Any]:
 
 
 ###################
-def expand_logger_templates(cruise_definition: Dict[str, Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
+def expand_logger_templates(cruise_definition:
+                            Dict[str, Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
     """
     Process a complete configuration dictionary with templates and loggers.
 

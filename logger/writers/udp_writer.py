@@ -10,7 +10,7 @@ from typing import Union
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
-from logger.utils.das_record import DASRecord
+from logger.utils.das_record import DASRecord  # noqa E402
 from logger.writers.writer import Writer  # noqa E402
 
 # So that we can write the user's record no matter how silly big it is, we

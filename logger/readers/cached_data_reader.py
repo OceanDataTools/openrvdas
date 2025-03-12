@@ -90,7 +90,7 @@ class CachedDataReader(Reader):
             raise ValueError('CachedDataReader subscription - no "fields" found!')
         elif isinstance(subscription_fields, list):
             new_fields = {field: {'seconds': 0} for field in subscription_fields}
-            subscription['fields'] =  new_fields
+            subscription['fields'] = new_fields
 
         self.subscription = subscription
         subscription['type'] = 'subscribe'
