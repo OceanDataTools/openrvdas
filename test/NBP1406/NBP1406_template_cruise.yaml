@@ -16,7 +16,6 @@ cruise:
 ###########################################################
 includes:
   - local/logger_templates/serial_logger_template.yaml
-  - local/logger_templates/udp_logger_template.yaml
   - local/logger_templates/parse_data_logger_template.yaml
   - local/logger_templates/true_winds_logger_template.yaml
   - local/logger_templates/snapshot_logger_template.yaml
@@ -39,7 +38,7 @@ variables:
   influx_bucket_name: openrvdas
   
   command_line: local/usap/create_template_cruise.py test/NBP1406/NBP1406_port_defs.yaml
-  date_time: Sun Mar  9 00:55:21 2025
+  date_time: Wed Mar 12 22:15:45 2025
   user: pablo
 
 ###########################################################
@@ -152,35 +151,51 @@ loggers:
     
   # Read course, heading, SOG and relative winds from CDS, compute
   # true winds and write back to CDS and optionally InfluxDB
-  true_winds:
+  true_winds_port:
     logger_template: true_winds_logger_template
     variables:
       # Where to find the inputs
       course_true: S330CourseTrue
       heading_true: S330HeadingTrue
       speed_over_ground: S330SpeedKt
-      port_rel_wind_dir: MwxPortRelWindDir
-      port_rel_wind_speed: MwxPortRelWindSpeed
-      stbd_rel_wind_dir: MwxStbdRelWindDir
-      stbd_rel_wind_speed: MwxStbdRelWindSpeed      
+      rel_wind_dir: MwxPortRelWindDir
+      rel_wind_speed: MwxPortRelWindSpeed
 
       # Knots -> meters/sec
       convert_speed_factor: 0.5144
       max_field_age: 15
 
       # What to call the outputs
-      port_apparent_dir_name: PortApparentWindDir
-      port_true_dir_name: PortTrueWindDir
-      port_true_speed_name: PortTrueWindSpeed
-      stbd_apparent_dir_name: StbdApparentWindDir
-      stbd_true_dir_name: StbdTrueWindDir
-      stbd_true_speed_name: StbdTrueWindSpeed
+      apparent_dir_name: PortApparentWindDir
+      true_dir_name: PortTrueWindDir
+      true_speed_name: PortTrueWindSpeed
+
+  true_winds_stbd:
+    logger_template: true_winds_logger_template
+    variables:
+      # Where to find the inputs
+      course_true: S330CourseTrue
+      heading_true: S330HeadingTrue
+      speed_over_ground: S330SpeedKt
+      rel_wind_dir: MwxStbdRelWindDir
+      rel_wind_speed: MwxStbdRelWindSpeed     
+
+      # Knots -> meters/sec
+      convert_speed_factor: 0.5144
+      max_field_age: 15
+
+      # What to call the outputs
+      apparent_dir_name: StbdApparentWindDir
+      true_dir_name: StbdTrueWindDir
+      true_speed_name: StbdTrueWindSpeed
             
   # Read a bunch of variables from CDS, compute 30-second snapshot and write back
   # to CDS and optionally InfluxDB. This *totally* needs a way to be generalized!!!
   snapshot:
     logger_template: snapshot_logger_template
     variables:
+      snapshot_fields: [MwxAirTemp, RTMPTemp, PortTrueWindDir, PortTrueWindSpeed, StbdTrueWindDir,
+                        StbdTrueWindSpeed, MwxBarometer, KnudDepthHF, KnudDepthLF, Grv1Value]
       interval: 30
       window: 30
 
@@ -208,7 +223,8 @@ modes:
     tsg2: tsg2-off
     seap: seap-off
     parse_data: parse_data-off
-    true_winds: true_winds-off
+    true_winds_port: true_winds_port-off
+    true_winds_stbd: true_winds_stbd-off
     snapshot: snapshot-off
 
   no_write: &no_write
@@ -233,7 +249,8 @@ modes:
     tsg2: tsg2-net
     seap: seap-net
     parse_data: parse_data-on
-    true_winds: true_winds-on
+    true_winds_port: true_winds_port-on
+    true_winds_stbd: true_winds_stbd-on
     snapshot: snapshot-on
 
   write: &write
@@ -258,19 +275,22 @@ modes:
     tsg2: tsg2-net+file
     seap: seap-net+file
     parse_data: parse_data-on
-    true_winds: true_winds-on
+    true_winds_port: true_winds_port-on
+    true_winds_stbd: true_winds_stbd-on
     snapshot: snapshot-on
 
   no_write+influx:
     <<: *no_write
     parse_data: parse_data-on+influx
-    true_winds: true_winds-on+influx
+    true_winds_port: true_winds_port-on+influx
+    true_winds_stbd: true_winds_stbd-on+influx
     snapshot: snapshot-on+influx
 
   write+influx:
     <<: *write
     parse_data: parse_data-on+influx
-    true_winds: true_winds-on+influx
+    true_winds_port: true_winds_port-on+influx
+    true_winds_stbd: true_winds_stbd-on+influx
     snapshot: snapshot-on+influx
 
 ###########################################################
