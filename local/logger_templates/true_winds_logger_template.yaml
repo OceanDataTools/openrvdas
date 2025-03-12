@@ -26,6 +26,7 @@ logger_templates:
         transforms:
         - class: TrueWindsTransform
           kwargs:
+            data_id: <<logger>>
             convert_speed_factor: <<convert_speed_factor>>
             course_field: <<course_true>>
             heading_field: <<heading_true>>

@@ -12,14 +12,12 @@ logger_templates:
             subscription:
               fields: <<snapshot_fields>>
         transforms:
-        - class: ToDASRecordTransform
-          kwargs:
-            data_id: <<logger>>
         - class: InterpolationTransform
           module: logger.transforms.interpolation_transform
           kwargs:
             interval: <<interval>>
             window: <<window>>
+            data_id: <<logger>>
             metadata_interval: 60  # send metadata every 60 seconds
             field_spec: [
               # These fields we do a simple boxcar average on

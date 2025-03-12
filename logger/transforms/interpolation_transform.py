@@ -20,7 +20,7 @@ class InterpolationTransform(DerivedDataTransform):
     """Transform that computes interpolations of the specified variables.
     """
 
-    def __init__(self, field_spec, interval, window, metadata_interval=None):
+    def __init__(self, field_spec, interval, window, data_id=None, metadata_interval=None):
         """
         ```
         field_spec - a dict of interpolated variables that are to be created,
@@ -64,6 +64,8 @@ class InterpolationTransform(DerivedDataTransform):
 
         window - Time window (in seconds) of data we should maintain
                around the computation we're going to make.
+
+        data_id - What data id to assign to the output
 
         metadata_interval - how many seconds between when we attach field metadata
                to a record we send out.
@@ -115,6 +117,7 @@ class InterpolationTransform(DerivedDataTransform):
 
         self.interval = interval
         self.window = window
+        self.data_id = data_id
         self.metadata_interval = metadata_interval
 
         # A dict of the cached values we're hanging onto
@@ -273,7 +276,10 @@ class InterpolationTransform(DerivedDataTransform):
                 if value is not None:
                     result[result_field] = value
             if result:
-                results.append({'timestamp': self.next_timestamp, 'fields': result})
+                result_record = {'timestamp': self.next_timestamp, 'fields': result}
+                if self.data_id:
+                    result_record['data_id'] = self.data_id
+                results.append(result_record)
             self.next_timestamp += self.interval
 
         return results
