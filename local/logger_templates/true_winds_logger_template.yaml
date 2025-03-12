@@ -5,7 +5,8 @@ logger_templates:
   true_winds_logger_template:
     configs:
       'off': {}
-      'on':
+
+      'on': &true_winds_on
         readers:
         - class: CachedDataReader
           kwargs:
@@ -18,158 +19,44 @@ logger_templates:
                   seconds: 0
                 <<speed_over_ground>>:
                   seconds: 0
-                <<port_rel_wind_dir>>:
+                <<rel_wind_dir>>:
                   seconds: 0
-                <<port_rel_wind_speed>>:
+                <<rel_wind_speed>>:
                   seconds: 0
-                <<stbd_rel_wind_dir>>:
-                  seconds: 0
-                <<stbd_rel_wind_speed>>:
-                  seconds: 0
+        transforms:
+        - class: TrueWindsTransform
+          kwargs:
+            convert_speed_factor: <<convert_speed_factor>>
+            course_field: <<course_true>>
+            heading_field: <<heading_true>>
+            speed_field: <<speed_over_ground>>
+            wind_dir_field: <<rel_wind_dir>>
+            wind_speed_field: <<rel_wind_speed>>
+
+            # Output fields
+            apparent_dir_name: <<apparent_dir_name>>
+            true_dir_name: <<true_dir_name>>
+            true_speed_name: <<true_speed_name>>
+            update_on_fields:
+            - <<rel_wind_dir>>
+            max_field_age:
+              <<course_true>>: <<max_field_age>>
+              <<heading_true>>: <<max_field_age>>
+              <<speed_over_ground>>: <<max_field_age>>
+              <<rel_wind_dir>>: <<max_field_age>>
+              <<rel_wind_speed>>: <<max_field_age>>
+            metadata_interval: 10
         writers:
-        - class: ComposedWriter
-          kwargs:
-            transforms:
-            - class: TrueWindsTransform
-              kwargs:
-                convert_speed_factor: <<convert_speed_factor>>
-                course_field: <<course_true>>
-                heading_field: <<heading_true>>
-                speed_field: <<speed_over_ground>>
-                wind_dir_field: <<port_rel_wind_dir>>
-                wind_speed_field: <<port_rel_wind_speed>>
-
-                # Output fields
-                apparent_dir_name: <<port_apparent_dir_name>>
-                true_dir_name: <<port_true_dir_name>>
-                true_speed_name: <<port_true_speed_name>>
-                update_on_fields:
-                - <<port_rel_wind_dir>>
-                max_field_age:
-                  <<course_true>>: <<max_field_age>>
-                  <<heading_true>>: <<max_field_age>>
-                  <<speed_over_ground>>: <<max_field_age>>
-                  <<port_rel_wind_dir>>: <<max_field_age>>
-                  <<port_rel_wind_speed>>: <<max_field_age>>
-                metadata_interval: 10
-            writers:
-            - class: CachedDataWriter
-              kwargs:
-                data_server: <<data_server>>
-        - class: ComposedWriter
-          kwargs:
-            transforms:
-            - class: TrueWindsTransform
-              kwargs:
-                convert_speed_factor: <<convert_speed_factor>>
-                course_field: <<course_true>>
-                heading_field: <<heading_true>>
-                speed_field: <<speed_over_ground>>
-                wind_dir_field: <<stbd_rel_wind_dir>>
-                wind_speed_field: <<stbd_rel_wind_speed>>
-
-                # Output fields
-                apparent_dir_name: <<stbd_apparent_dir_name>>
-                true_dir_name: <<stbd_true_dir_name>>
-                true_speed_name: <<stbd_true_speed_name>>
-                update_on_fields:
-                - <<stbd_rel_wind_dir>>
-                max_field_age:
-                  <<course_true>>: <<max_field_age>>
-                  <<heading_true>>: <<max_field_age>>
-                  <<speed_over_ground>>: <<max_field_age>>
-                  <<stbd_rel_wind_dir>>: <<max_field_age>>
-                  <<stbd_rel_wind_speed>>: <<max_field_age>>
-                metadata_interval: 10
-            writers:
-            - class: CachedDataWriter
-              kwargs:
-                data_server: <<data_server>>
-      on+influx:
-        readers:
-        - class: CachedDataReader
+        - class: CachedDataWriter
           kwargs:
             data_server: <<data_server>>
-            subscription:
-              fields:
-                S330CourseTrue:
-                  seconds: 0
-                S330HeadingTrue:
-                  seconds: 0
-                S330SpeedKt:
-                  seconds: 0
-                MwxPortRelWindDir:
-                  seconds: 0
-                MwxPortRelWindSpeed:
-                  seconds: 0
-                MwxStbdRelWindDir:
-                  seconds: 0
-                MwxStbdRelWindSpeed:
-                  seconds: 0
+
+      on+influx:
+        <<: *true_winds_on
         writers:
-        - class: ComposedWriter
+        - class: CachedDataWriter
           kwargs:
-            transforms:
-            - class: TrueWindsTransform
-              kwargs:
-                convert_speed_factor: <<convert_speed_factor>>
-                course_field: <<course_true>>
-                heading_field: <<heading_true>>
-                speed_field: <<speed_over_ground>>
-                wind_dir_field: <<port_rel_wind_dir>>
-                wind_speed_field: <<port_rel_wind_speed>>
-
-                # Output fields
-                apparent_dir_name: <<port_apparent_dir_name>>
-                true_dir_name: <<port_true_dir_name>>
-                true_speed_name: <<port_true_speed_name>>
-                update_on_fields:
-                - <<port_rel_wind_dir>>
-                max_field_age:
-                  <<course_true>>: <<max_field_age>>
-                  <<heading_true>>: <<max_field_age>>
-                  <<speed_over_ground>>: <<max_field_age>>
-                  <<port_rel_wind_dir>>: <<max_field_age>>
-                  <<port_rel_wind_speed>>: <<max_field_age>>
-                metadata_interval: 10
-            writers:
-            - class: CachedDataWriter
-              kwargs:
-                data_server: <<data_server>>
-            - class: InfluxDBWriter
-              kwargs:
-                bucket_name: <<influx_bucket_name>>
-                measurement_name: true_wind
-        - class: ComposedWriter
+            data_server: <<data_server>>
+        - class: InfluxDBWriter
           kwargs:
-            transforms:
-            - class: TrueWindsTransform
-              kwargs:
-                convert_speed_factor: <<convert_speed_factor>>
-                course_field: <<course_true>>
-                heading_field: <<heading_true>>
-                speed_field: <<speed_over_ground>>
-                wind_dir_field: <<stbd_rel_wind_dir>>
-                wind_speed_field: <<stbd_rel_wind_speed>>
-
-                # Output fields
-                apparent_dir_name: <<stbd_apparent_dir_name>>
-                true_dir_name: <<stbd_true_dir_name>>
-                true_speed_name: <<stbd_true_speed_name>>
-                update_on_fields:
-                - <<stbd_rel_wind_dir>>
-                max_field_age:
-                  <<course_true>>: <<max_field_age>>
-                  <<heading_true>>: <<max_field_age>>
-                  <<speed_over_ground>>: <<max_field_age>>
-                  <<stbd_rel_wind_dir>>: <<max_field_age>>
-                  <<stbd_rel_wind_speed>>: <<max_field_age>>
-                metadata_interval: 10
-            writers:
-            - class: CachedDataWriter
-              kwargs:
-                data_server: <<data_server>>
-            - class: InfluxDBWriter
-              kwargs:
-                bucket_name: <<influx_bucket_name>>
-                measurement_name: true_wind
+            bucket_name: <<influx_bucket_name>>

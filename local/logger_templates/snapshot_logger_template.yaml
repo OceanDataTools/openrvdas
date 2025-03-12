@@ -3,180 +3,44 @@ logger_templates:
   snapshot_logger_template:
     configs:
       'off': {}
-      'on':
+
+      'on': &snapshot_on
         readers:
         - class: CachedDataReader
           kwargs:
             data_server: <<data_server>>
             subscription:
-              fields:
-                MwxAirTemp:
-                  seconds: 0
-                RTMPTemp:
-                  seconds: 0
-                PortTrueWindDir:
-                  seconds: 0
-                PortTrueWindSpeed:
-                  seconds: 0
-                StbdTrueWindDir:
-                  seconds: 0
-                StbdTrueWindSpeed:
-                  seconds: 0
-                MwxBarometer:
-                  seconds: 0
-                KnudDepthHF:
-                  seconds: 0
-                KnudDepthLF:
-                  seconds: 0
-                Grv1Value:
-                  seconds: 0
+              fields: <<snapshot_fields>>
         transforms:
+        - class: ToDASRecordTransform
         - class: InterpolationTransform
           module: logger.transforms.interpolation_transform
           kwargs:
             interval: <<interval>>
             window: <<window>>
             metadata_interval: 60  # send metadata every 60 seconds
-            field_spec:
-              AvgMwxAirTemp:
-                source: MwxAirTemp
-                algorithm:
-                  type: boxcar_average
-                  window: <<window>>
-              AvgRTMPTemp:
-                source: RTMPTemp
-                algorithm:
-                  type: boxcar_average
-                  window: <<window>>
-              AvgPortTrueWindDir:
-                source: PortTrueWindDir
-                algorithm:
-                  type: polar_average
-                  window: <<window>>
-              AvgPortTrueWindSpeed:
-                source: PortTrueWindSpeed
-                algorithm:
-                  type: boxcar_average
-                  window: <<window>>
-              AvgStbdTrueWindDir:
-                source: StbdTrueWindDir
-                algorithm:
-                  type: polar_average
-                  window: <<window>>
-              AvgStbdTrueWindSpeed:
-                source: StbdTrueWindSpeed
-                algorithm:
-                  type: boxcar_average
-                  window: <<window>>
-              AvgMwxBarometer:
-                source: MwxBarometer
-                algorithm:
-                  type: boxcar_average
-                  window: <<window>>
-              AvgKnudDepthHF:
-                source: KnudDepthHF
-                algorithm:
-                  type: boxcar_average
-                  window: <<window>>
-              AvgKnudDepthLF:
-                source: KnudDepthLF
-                algorithm:
-                  type: boxcar_average
-                  window: <<window>>
-              AvgGrv1Value:
-                source: Grv1Value
-                algorithm:
-                  type: boxcar_average
-                  window: <<window>>
+            field_spec: [
+              # These fields we do a simple boxcar average on
+              { sources: [MwxAirTemp, RTMPTemp,PortTrueWindSpeed, StbdTrueWindSpeed,
+                          MwxBarometer, KnudDepthHF, KnudDepthLF, Grv1Value],
+                algorithm: boxcar_average,
+                window: <<window>>,
+                result_prefix: Avg  # Prefix each field name with this for output
+            },
+              # These fields we do a polar average on
+              { sources: [PortTrueWindDir, StbdTrueWindDir],
+                algorithm: polar_average,
+                window: <<window>>,
+                result_prefix: Avg  # Prefix each field name with this for output
+              }
+            ]
         writers:
         - class: CachedDataWriter
           kwargs:
             data_server: <<data_server>>
+
       on+influx:
-        readers:
-        - class: CachedDataReader
-          kwargs:
-            data_server: <<data_server>>
-            subscription:
-              fields:
-                MwxAirTemp:
-                  seconds: 0
-                RTMPTemp:
-                  seconds: 0
-                PortTrueWindDir:
-                  seconds: 0
-                PortTrueWindSpeed:
-                  seconds: 0
-                StbdTrueWindDir:
-                  seconds: 0
-                StbdTrueWindSpeed:
-                  seconds: 0
-                MwxBarometer:
-                  seconds: 0
-                KnudDepthHF:
-                  seconds: 0
-                KnudDepthLF:
-                  seconds: 0
-                Grv1Value:
-                  seconds: 0
-        transforms:
-        - class: InterpolationTransform
-          module: logger.transforms.interpolation_transform
-          kwargs:
-            interval: <<interval>>
-            window: <<window>>
-            metadata_interval: 60  # send metadata every 60 seconds
-            field_spec:
-              AvgMwxAirTemp:
-                source: MwxAirTemp
-                algorithm:
-                  type: boxcar_average
-                  window: <<window>>
-              AvgRTMPTemp:
-                source: RTMPTemp
-                algorithm:
-                  type: boxcar_average
-                  window: <<window>>
-              AvgPortTrueWindDir:
-                source: PortTrueWindDir
-                algorithm:
-                  type: polar_average
-                  window: <<window>>
-              AvgPortTrueWindSpeed:
-                source: PortTrueWindSpeed
-                algorithm:
-                  type: boxcar_average
-                  window: <<window>>
-              AvgStbdTrueWindDir:
-                source: StbdTrueWindDir
-                algorithm:
-                  type: polar_average
-                  window: <<window>>
-              AvgStbdTrueWindSpeed:
-                source: StbdTrueWindSpeed
-                algorithm:
-                  type: boxcar_average
-                  window: <<window>>
-              AvgMwxBarometer:
-                source: MwxBarometer
-                algorithm:
-                  type: boxcar_average
-                  window: <<window>>
-              AvgKnudDepthHF:
-                source: KnudDepthHF
-                algorithm:
-                  type: boxcar_average
-                  window: <<window>>
-              AvgKnudDepthLF:
-                source: KnudDepthLF
-                algorithm:
-                  type: boxcar_average
-                  window: <<window>>
-              AvgGrv1Value:
-                source: Grv1Value
-                algorithm:
-                  type: boxcar_average
-                  window: <<window>>
+        <<: *snapshot_on
         writers:
         - class: CachedDataWriter
           kwargs:
@@ -184,4 +48,3 @@ logger_templates:
         - class: InfluxDBWriter
           kwargs:
             bucket_name: <<influx_bucket_name>>
-            measurement_name: snapshot

@@ -4,7 +4,8 @@ logger_templates:
   parse_data_logger_template:
     configs:
       'off': {}
-      'on':
+
+      'on': &parse_data_on
         readers:
         - class: UDPReader
           kwargs:
@@ -15,28 +16,13 @@ logger_templates:
             metadata_interval: 10
             definition_path: <<parse_definition_path>>
         writers:
-        - class: UDPWriter
-          kwargs:
-            port: <<parsed_udp_port>>
-            destination: <<udp_destination>>
         - class: CachedDataWriter
           kwargs:
             data_server: <<data_server>>
+
       on+influx:
-        readers:
-        - class: UDPReader
-          kwargs:
-            port: <<raw_udp_port>>
-        transforms:                 # Add timestamp and logger label
-        - class: ParseTransform
-          kwargs:
-            metadata_interval: 10
-            definition_path: <<parse_definition_path>>
+        <<: *parse_data_on
         writers:
-        - class: UDPWriter
-          kwargs:
-            port: <<parsed_udp_port>>
-            destination: <<udp_destination>>
         - class: CachedDataWriter
           kwargs:
             data_server: <<data_server>>
