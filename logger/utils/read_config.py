@@ -235,64 +235,81 @@ def deep_merge(base: Dict[str, Any], overlay: Dict[str, Any]) -> Dict[str, Any]:
 
 
 ###################
-def expand_logger_templates(config_dict: Dict[str, Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
+def expand_logger_templates(cruise_definition: Dict[str, Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
     """
     Process a complete configuration dictionary with templates and loggers.
 
     Args:
-        config_dict: Dictionary containing 'logger_templates', 'loggers',
+        cruise_definition: Dictionary containing 'logger_templates', 'loggers',
                     and optionally 'variables' as top-level keys
 
     Returns:
         Dictionary with fully processed logger configurations
     """
     # Extract components from the configuration dictionary
-    templates = config_dict.get('logger_templates', {})
-    loggers_config = config_dict.get('loggers', {})
-    global_variables = config_dict.get('variables', {})
+    templates = cruise_definition.get('logger_templates', {})
+    logger_definitions = cruise_definition.get('loggers', {})
+    global_variables = cruise_definition.get('variables', {})
 
-    for logger_name, logger_config in loggers_config.items():
-        # Get the template name from the logger configuration
-        template_name = logger_config.get('logger_template')
-        if not template_name:
-            raise ValueError(f"Logger '{logger_name}' does not specify a 'logger_template'")
+    for logger_name, logger_def in logger_definitions.items():
+        if not isinstance(logger_def, dict):
+            raise ValueError(f'Malformed logger definition for {logger_name}; should be dict.')
 
-        # Get the template
-        template = templates.get(template_name)
-        if not template:
-            raise ValueError(f"Template '{template_name}' not found in templates")
-
-        # Start with global variables
+        # Copy global variables so we can modify them
         effective_variables = copy.deepcopy(global_variables)
 
         # Add logger name as a variable
         effective_variables['logger'] = logger_name
 
         # Override with logger-specific variables
-        logger_variables = logger_config.get('variables', {})
+        logger_variables = logger_def.get('variables', {})
         effective_variables.update(logger_variables)
 
-        # Create a deep copy of the template
-        processed_config = copy.deepcopy(template)
+        configs = logger_def.get('configs')
+        template_name = logger_def.get('logger_template')
+
+        # Need to have either 'configs' or 'logger_template' in def, but not both
+        if (configs and template_name) or (not configs and not template_name):
+            raise ValueError(f"Logger '{logger_name}' must specify either "
+                             f"configs or logger_template (but not both)")
+
+        # Get the template name from the logger configuration and copy it into configs
+        if template_name:
+            # Get the template
+            template = templates.get(template_name)
+            if not template:
+                raise ValueError(f"Template '{template_name}' not found in templates")
+
+            # Overlay the template on the existing logger definition, overwriting configs, etc.
+            logger_def.update(template)
 
         # Substitute variables
         try:
-            processed_config = substitute_variables(processed_config, effective_variables)
+            processed_definition = substitute_variables(logger_def, effective_variables)
         except ValueError as e:
             print(f"Error processing logger '{logger_name}': {e}")
             raise
 
-        # Store the processed configuration
-        config_dict['loggers'][logger_name] = processed_config
+        # Clean up things that aren't needed in expanded cruise_definition
+        if 'variables' in processed_definition:
+            del processed_definition['variables']
+        if 'logger_template' in processed_definition:
+            del processed_definition['logger_template']
+
+        # Store the processed definition
+        cruise_definition['loggers'][logger_name] = processed_definition
 
     # Get rid of logger_templates to keep config small
-    del config_dict['logger_templates']
+    if 'variables' in cruise_definition:
+        del cruise_definition['variables']
+    if 'logger_templates' in cruise_definition:
+        del cruise_definition['logger_templates']
 
     # Finally, apply global variables substitution to any variables remaining
     # at the top level (e.g in cruise section).
-    config_dict = substitute_variables(config_dict, global_variables)
+    cruise_definition = substitute_variables(cruise_definition, global_variables)
 
-    return config_dict
+    return cruise_definition
 
 
 # Define recursive ConfigValue type
