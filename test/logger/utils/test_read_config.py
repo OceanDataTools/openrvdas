@@ -794,6 +794,289 @@ class TestFindUnmatchedVariables(unittest.TestCase):
         self.assertEqual(read_config.find_unmatched_variables(duplicates), ["<<DUPLICATE>>"])
 
 
+class TestExpandModes(unittest.TestCase):
+    """Tests for the expand_modes function."""
+
+    def setUp(self):
+        """Set up test fixtures."""
+        # Basic valid input with dict-based modes
+        self.dict_modes_input = {
+            "loggers": {
+                "test_logger1": {
+                    "configs": ["test_logger1-off", "test_logger1-on"]
+                },
+                "test_logger2": {
+                    "configs": ["test_logger2-off", "test_logger2-on"]
+                }
+            },
+            "configs": {
+                "test_logger1-off": {},
+                "test_logger1-on": {},
+                "test_logger2-off": {},
+                "test_logger2-on": {}
+            },
+            "modes": {
+                "off": {
+                    "test_logger1": "test_logger1-off",
+                    "test_logger2": "test_logger2-off"
+                },
+                "on": {
+                    "test_logger1": "test_logger1-on",
+                    "test_logger2": "test_logger2-on"
+                }
+            }
+        }
+
+        # Valid input with list-based modes
+        self.list_modes_input = {
+            "loggers": {
+                "test_logger1": {
+                    "configs": ["test_logger1-off", "test_logger1-on"]
+                },
+                "test_logger2": {
+                    "configs": ["test_logger2-off", "test_logger2-on"]
+                }
+            },
+            "configs": {
+                "test_logger1-off": {},
+                "test_logger1-on": {},
+                "test_logger2-off": {},
+                "test_logger2-on": {}
+            },
+            "modes": {
+                "off": ["test_logger1-off", "test_logger2-off"],
+                "on": ["test_logger1-on", "test_logger2-on"]
+            }
+        }
+
+        # Input with no modes section
+        self.no_modes_input = {
+            "loggers": {
+                "test_logger1": {
+                    "configs": ["test_logger1-off", "test_logger1-on"]
+                },
+                "test_logger2": {
+                    "configs": ["test_logger2-off", "test_logger2-on"]
+                }
+            },
+            "configs": {
+                "test_logger1-off": {},
+                "test_logger1-on": {},
+                "test_logger2-off": {},
+                "test_logger2-on": {}
+            }
+        }
+
+        # Input with a mix of dict and list modes
+        self.mixed_modes_input = {
+            "loggers": {
+                "test_logger1": {
+                    "configs": ["test_logger1-off", "test_logger1-on"]
+                },
+                "test_logger2": {
+                    "configs": ["test_logger2-off", "test_logger2-on"]
+                }
+            },
+            "configs": {
+                "test_logger1-off": {},
+                "test_logger1-on": {},
+                "test_logger2-off": {},
+                "test_logger2-on": {}
+            },
+            "modes": {
+                "off": {
+                    "test_logger1": "test_logger1-off",
+                    "test_logger2": "test_logger2-off"
+                },
+                "on": ["test_logger1-on", "test_logger2-on"]
+            }
+        }
+
+        # Input with an invalid mode type (neither dict nor list)
+        self.invalid_mode_type_input = {
+            "loggers": {
+                "test_logger1": {
+                    "configs": ["test_logger1-off", "test_logger1-on"]
+                }
+            },
+            "configs": {
+                "test_logger1-off": {},
+                "test_logger1-on": {}
+            },
+            "modes": {
+                "invalid": "not_a_dict_or_list"
+            }
+        }
+
+        # Input with a list mode referencing a config that doesn't exist
+        self.nonexistent_config_input = {
+            "loggers": {
+                "test_logger1": {
+                    "configs": ["test_logger1-off", "test_logger1-on"]
+                }
+            },
+            "configs": {
+                "test_logger1-off": {},
+                "test_logger1-on": {}
+            },
+            "modes": {
+                "invalid": ["nonexistent-config"]
+            }
+        }
+
+        # Input with a list mode that doesn't define configs for all loggers
+        self.incomplete_list_mode_input = {
+            "loggers": {
+                "test_logger1": {
+                    "configs": ["test_logger1-off", "test_logger1-on"]
+                },
+                "test_logger2": {
+                    "configs": ["test_logger2-off", "test_logger2-on"]
+                }
+            },
+            "configs": {
+                "test_logger1-off": {},
+                "test_logger1-on": {},
+                "test_logger2-off": {},
+                "test_logger2-on": {}
+            },
+            "modes": {
+                "incomplete": ["test_logger1-on"]  # Missing test_logger2 config
+            }
+        }
+
+    def test_missing_loggers_key(self):
+        """Test that expand_modes raises ValueError when loggers key is missing."""
+        with self.assertRaises(ValueError):
+            read_config.expand_modes({"configs": {}})
+
+    def test_missing_configs_key(self):
+        """Test that expand_modes raises ValueError when configs key is missing."""
+        with self.assertRaises(ValueError):
+            read_config.expand_modes({"loggers": {}})
+
+    def test_dict_modes_unchanged(self):
+        """Test that dictionary-based modes are left unchanged."""
+        result = read_config.expand_modes(self.dict_modes_input)
+
+        # Verify that the modes dict is unchanged
+        self.assertEqual(result["modes"], self.dict_modes_input["modes"])
+
+    def test_list_modes_expansion(self):
+        """Test that list-based modes are correctly expanded to dictionaries."""
+        result = read_config.expand_modes(self.list_modes_input)
+
+        # Check that modes were converted to dictionaries
+        self.assertIsInstance(result["modes"]["off"], dict)
+        self.assertIsInstance(result["modes"]["on"], dict)
+
+        # Check that each logger has a config assigned
+        self.assertEqual(result["modes"]["off"]["test_logger1"], "test_logger1-off")
+        self.assertEqual(result["modes"]["off"]["test_logger2"], "test_logger2-off")
+        self.assertEqual(result["modes"]["on"]["test_logger1"], "test_logger1-on")
+        self.assertEqual(result["modes"]["on"]["test_logger2"], "test_logger2-on")
+
+    def test_no_modes_generates_default(self):
+        """Test that when no modes are provided, a default mode is created."""
+        with patch('logging.warning') as mock_log:
+            result = read_config.expand_modes(self.no_modes_input)
+
+            # Check that a warning was logged
+            mock_log.assert_called_once()
+            self.assertIn('No "modes" section found', mock_log.call_args[0][0])
+
+        # Check that a default mode was created
+        self.assertIn("modes", result)
+        self.assertIn("default", result["modes"])
+
+        # Check that the default mode uses the first config for each logger
+        self.assertEqual(result["modes"]["default"]["test_logger1"], "test_logger1-off")
+        self.assertEqual(result["modes"]["default"]["test_logger2"], "test_logger2-off")
+
+        # Check that default_mode was set
+        self.assertEqual(result["default_mode"], "default")
+
+    def test_mixed_modes_types(self):
+        """Test that a mix of dictionary and list-based modes are handled correctly."""
+        result = read_config.expand_modes(self.mixed_modes_input)
+
+        # Check that the dict mode is unchanged
+        self.assertIsInstance(result["modes"]["off"], dict)
+        self.assertEqual(result["modes"]["off"], self.mixed_modes_input["modes"]["off"])
+
+        # Check that the list mode was expanded
+        self.assertIsInstance(result["modes"]["on"], dict)
+        self.assertEqual(result["modes"]["on"]["test_logger1"], "test_logger1-on")
+        self.assertEqual(result["modes"]["on"]["test_logger2"], "test_logger2-on")
+
+    def test_invalid_mode_type(self):
+        """Test that an error is raised when a mode is neither a dict nor a list."""
+        with self.assertRaises(ValueError) as context:
+            read_config.expand_modes(self.invalid_mode_type_input)
+
+        self.assertIn("must be either dict or list", str(context.exception))
+
+    def test_nonexistent_config(self):
+        """Test that an error is raised when a list mode references a non-existent config."""
+        with self.assertRaises(ValueError) as context:
+            read_config.expand_modes(self.nonexistent_config_input)
+
+        self.assertIn("No logger found for", str(context.exception))
+
+    def test_incomplete_list_mode(self):
+        """Test that an error is raised when a list mode doesn't define configs for all loggers."""
+        with self.assertRaises(ValueError) as context:
+            read_config.expand_modes(self.incomplete_list_mode_input)
+
+        self.assertIn("No config defined for", str(context.exception))
+
+    def test_immutability(self):
+        """Test that the input dictionary is not modified."""
+        original = copy.deepcopy(self.list_modes_input)
+        read_config.expand_modes(self.list_modes_input)
+
+        # The original input should be unchanged
+        self.assertEqual(self.list_modes_input, original)
+
+    def test_from_yaml_string(self):
+        """Test with input from a YAML string."""
+        yaml_str = """
+        loggers:
+          logger1:
+            configs:
+              - logger1-config1
+              - logger1-config2
+          logger2:
+            configs:
+              - logger2-config1
+              - logger2-config2
+        configs:
+          logger1-config1: {}
+          logger1-config2: {}
+          logger2-config1: {}
+          logger2-config2: {}
+        modes:
+          mode1:
+            - logger1-config1
+            - logger2-config1
+          mode2:
+            - logger1-config2
+            - logger2-config2
+        """
+        input_dict = yaml.safe_load(yaml_str)
+        result = read_config.expand_modes(input_dict)
+
+        # Check that the list modes were expanded to dictionaries
+        self.assertIsInstance(result["modes"]["mode1"], dict)
+        self.assertIsInstance(result["modes"]["mode2"], dict)
+
+        # Check correct assignment of configs to loggers
+        self.assertEqual(result["modes"]["mode1"]["logger1"], "logger1-config1")
+        self.assertEqual(result["modes"]["mode1"]["logger2"], "logger2-config1")
+        self.assertEqual(result["modes"]["mode2"]["logger1"], "logger1-config2")
+        self.assertEqual(result["modes"]["mode2"]["logger2"], "logger2-config2")
+
+
 if __name__ == "__main__":
     import argparse
     import logging

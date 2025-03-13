@@ -96,11 +96,7 @@ def expand_cruise_definition(input_dict):
     result = expand_includes(input_dict)
     result = expand_logger_templates(result)
     result = expand_logger_definitions(result)
-
-    # No modes defined? Create a default one
-    if 'modes' not in result:
-        result = generate_default_mode(result)
-        logging.warning('No "modes" section found. Generating default mode.')
+    result = expand_modes(result)
 
     unmatched_vars = find_unmatched_variables(result)
     if unmatched_vars:
@@ -496,6 +492,83 @@ def expand_logger_definitions(input_dict):
 
             # Replace the logger's configs dict with the list of config names
             result['loggers'][logger_name]['configs'] = new_config_list
+
+    return result
+
+
+###################
+def expand_modes(input_dict):
+    """
+    Expand or infer the modes section of a cruise definition dict.
+
+    This function processes a dictionary with a 'loggers' key (required) and an optional
+    'configs' key. It extracts config dictionaries from each logger and moves them to the
+    top level 'configs' section, replacing them with a list of references.
+
+    Args:
+        input_dict (dict): The input dictionary (possibly) containing 'modes' and
+        'configs' keys.
+
+    Returns:
+        dict: A new dictionary with expanded configuration structure.
+
+    Raises:
+        ValueError: If the 'configs' key is missing or if referenced configs are missing.
+
+    ### This code is to support flexibility in defining cruise configurations. ###
+
+    In the past, cruise modes were required to be dicts mapping a logger name to config.
+    We can infer that dict from a simple list of configs.
+    """
+    # Validate input
+    if 'loggers' not in input_dict:
+        raise ValueError("Cruise definition missing loggers?!?")
+    if 'configs' not in input_dict:
+        raise ValueError("Cruise definition missing configs?!?")
+
+    # No modes defined? Create a default one
+    if 'modes' not in input_dict:
+        logging.warning('No "modes" section found. Generating default mode.')
+        return generate_default_mode(input_dict)
+
+    # This is the copy we're going to modify and return
+    result = copy.deepcopy(input_dict)
+
+    loggers = input_dict.get('loggers')
+    for mode_name, mode_configs in input_dict.get('modes').items():
+        # Mode is already in expanded form - nothing to do
+        if isinstance(mode_configs, dict):
+            continue
+
+        if not isinstance(mode_configs, list):
+            raise ValueError(f"Mode {mode_name} must be either dict "
+                             f"or list; found {type(mode_configs)}")
+
+        # If here, we've got a list of configs that should be run in this mode.
+        # Figure out which loggers they belong to and expand into the normal
+        # dict form.
+        mode_dict = {}
+        for config_name in mode_configs:
+            # Look through loggers for this config_name
+            found = False
+            for logger_name, logger_def in loggers.items():
+                logger_configs = logger_def.get('configs')
+                if not logger_configs:
+                    raise ValueError(f"Logger {logger_name} has no configs!")
+                if config_name in logger_configs:
+                    mode_dict[logger_name] = config_name
+                    found = True
+                    break
+            if not found:
+                raise ValueError(f"No logger found for {config_name} in mode {mode_name}")
+
+        # Now confirm that each logger has had a config defined
+        for logger_name in loggers:
+            if logger_name not in mode_dict:
+                raise ValueError(f"No config defined for {logger_name} in mode {mode_name}")
+
+        # Replace the config list with newly-created config dict
+        result['modes'][mode_name] = mode_dict
 
     return result
 
