@@ -526,10 +526,15 @@ def expand_modes(input_dict):
     if 'configs' not in input_dict:
         raise ValueError("Cruise definition missing configs?!?")
 
-    # No modes defined? Create a default one
-    if 'modes' not in input_dict:
+    # No modes defined (or an empty 'modes' declaration)? Create a default one
+    modes = input_dict.get('modes')
+    if not modes:
         logging.warning('No "modes" section found. Generating default mode.')
         return generate_default_mode(input_dict)
+
+    # 'modes' is there. Is it a dict?
+    if not isinstance(modes, dict):
+        raise ValueError(f"'modes' definition must be a dict of modes. Found {type(modes)}")
 
     # This is the copy we're going to modify and return
     result = copy.deepcopy(input_dict)
@@ -569,6 +574,12 @@ def expand_modes(input_dict):
 
         # Replace the config list with newly-created config dict
         result['modes'][mode_name] = mode_dict
+
+    # Is there a default mode defined? If not, pick the first one in the
+    # dict and define it as the default.
+    if 'default_mode' not in result:
+        first_mode = next(iter(result.get('modes')))
+        result['default_mode'] = first_mode
 
     return result
 
