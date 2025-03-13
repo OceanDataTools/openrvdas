@@ -26,17 +26,17 @@ variables:
   cruise: NBP1406
   cruise_start: '2019-07-01'
   cruise_end: '2019-12-31'
-  
+
   udp_destination: 255.255.255.255
   raw_udp_port: 6224
   parsed_udp_port: 6225
-  
+
   file_root: /var/tmp/log
   parse_definition_path: test/NBP1406/devices/nbp_devices.yaml
 
   data_server: localhost:8766
   influx_bucket_name: openrvdas
-  
+
   command_line: local/usap/create_template_cruise.py test/NBP1406/NBP1406_port_defs.yaml
   date_time: Thu Mar 13 04:38:45 2025
   user: pablo
@@ -148,7 +148,7 @@ loggers:
   # uses default global variables
   parse_data:
     logger_template: parse_data_logger_template
-    
+
   # Read course, heading, SOG and relative winds from CDS, compute
   # true winds and write back to CDS and optionally InfluxDB
   true_winds_port:
@@ -178,7 +178,7 @@ loggers:
       heading_true: S330HeadingTrue
       speed_over_ground: S330SpeedKt
       rel_wind_dir: MwxStbdRelWindDir
-      rel_wind_speed: MwxStbdRelWindSpeed     
+      rel_wind_speed: MwxStbdRelWindSpeed
 
       # Knots -> meters/sec
       convert_speed_factor: 0.5144
@@ -188,7 +188,7 @@ loggers:
       apparent_dir_name: StbdApparentWindDir
       true_dir_name: StbdTrueWindDir
       true_speed_name: StbdTrueWindSpeed
-            
+
   # Read a bunch of variables from CDS, compute 30-second snapshot and write back
   # to CDS and optionally InfluxDB. This *totally* needs a way to be generalized!!!
   snapshot:
@@ -201,21 +201,17 @@ loggers:
 
 ###########################################################
 modes:
-  'off':
+  'off':  # without a 'default_mode' key, first defined mode will be default
     [PCOD-off, cwnc-off, gp02-off, gyr1-off, adcp-off, eng1-off, svp1-off, twnc-off, mbdp-off, knud-off, grv1-off, mwx1-off, pco2-off, pguv-off, s330-off, tsg1-off, rtmp-off, hdas-off, tsg2-off, seap-off, parse_data-off, true_winds_port-off, true_winds_stbd-off, snapshot-off]
-    
+
   no_write:
     [PCOD-net, cwnc-net, gp02-net, gyr1-net, adcp-net, eng1-net, svp1-net, twnc-net, mbdp-net, knud-net, grv1-net, mwx1-net, pco2-net, pguv-net, s330-net, tsg1-net, rtmp-net, hdas-net, tsg2-net, seap-net, parse_data-on, true_winds_port-on, true_winds_stbd-on, snapshot-on]
 
   write:
     [PCOD-net+file, cwnc-net+file, gp02-net+file, gyr1-net+file, adcp-net+file, eng1-net+file, svp1-net+file, twnc-net+file, mbdp-net+file, knud-net+file, grv1-net+file, mwx1-net+file, pco2-net+file, pguv-net+file, s330-net+file, tsg1-net+file, rtmp-net+file, hdas-net+file, tsg2-net+file, seap-net+file, parse_data-on, true_winds_port-on, true_winds_stbd-on, snapshot-on]
-    
+
   no_write+influx:
     [PCOD-net, cwnc-net, gp02-net, gyr1-net, adcp-net, eng1-net, svp1-net, twnc-net, mbdp-net, knud-net, grv1-net, mwx1-net, pco2-net, pguv-net, s330-net, tsg1-net, rtmp-net, hdas-net, tsg2-net, seap-net, parse_data-on+influx, true_winds_port-on+influx, true_winds_stbd-on+influx, snapshot-on+influx]
 
   write+influx:
     [PCOD-net+file, cwnc-net+file, gp02-net+file, gyr1-net+file, adcp-net+file, eng1-net+file, svp1-net+file, twnc-net+file, mbdp-net+file, knud-net+file, grv1-net+file, mwx1-net+file, pco2-net+file, pguv-net+file, s330-net+file, tsg1-net+file, rtmp-net+file, hdas-net+file, tsg2-net+file, seap-net+file, parse_data-on+influx, true_winds_port-on+influx, true_winds_stbd-on+influx, snapshot-on+influx]
-
-###########################################################
-default_mode: 'off'
-
