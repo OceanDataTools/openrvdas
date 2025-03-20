@@ -183,6 +183,7 @@ class ListenerFromLoggerConfigString(ListenerFromLoggerConfig):
     def __init__(self, config_str, log_level=None):
         """Create a Listener from a JSON config string."""
         config = read_config.parse(config_str)
+        config = read_config.expand_cruise_definition(config)
         logging.info('Received config string: %s', pprint.pformat(config))
         super().__init__(config=config)
 
