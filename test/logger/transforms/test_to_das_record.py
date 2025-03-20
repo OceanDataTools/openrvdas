@@ -32,9 +32,6 @@ class TestToDASRecordTransform(unittest.TestCase):
 
         with self.assertLogs(level='WARNING'):
             das_record = t.transform('this should log a warning')
-
-            import pprint
-            logging.warning(f'DASRecord: {pprint.pformat(das_record)}')
         self.assertEqual(das_record, None)
 
         with self.assertLogs(level='WARNING'):
