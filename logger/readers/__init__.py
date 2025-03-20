@@ -14,3 +14,4 @@ from .tcp_reader import TCPReader
 from .text_file_reader import TextFileReader
 from .timeout_reader import TimeoutReader
 from .udp_reader import UDPReader
+from .socket_reader import SocketReader
