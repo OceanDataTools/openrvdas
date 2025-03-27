@@ -204,6 +204,7 @@ class ListenerFromLoggerConfigFile(ListenerFromLoggerConfig):
         if config_file.find(':') > 0:
             (config_file, config_name) = config_file.split(':', maxsplit=1)
         config = read_config.read_config(config_file)
+        config = read_config.expand_cruise_definition(config)
 
         if config_name:
             config_dict = config.get('configs')
