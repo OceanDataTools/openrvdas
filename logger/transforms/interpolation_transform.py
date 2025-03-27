@@ -8,6 +8,7 @@ import time
 
 from math import degrees, radians, sin, cos, atan2
 from statistics import mean
+from typing import Union
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
@@ -112,8 +113,9 @@ class InterpolationTransform(DerivedDataTransform):
                 self.source_fields.update(sources)
 
         else:
-            raise ValueError('InterpolationTransform: if field_spec must be either list '
-                             f'or dict. Found {type(spec_instance)}')
+            # Fix: Use the actual type of field_spec instead of spec_instance which doesn't exist here
+            raise ValueError('InterpolationTransform: field_spec must be either list '
+                             f'or dict. Found {type(field_spec)}')
 
         self.interval = interval
         self.window = window
@@ -126,6 +128,7 @@ class InterpolationTransform(DerivedDataTransform):
         # The next timestamp we'd like to emit. Is set the first time we
         # call transform().
         self.next_timestamp = 0
+        self.latest_timestamp = 0
         self.last_metadata_send = 0  # last time we've sent metadata
 
     ############################
@@ -161,8 +164,10 @@ class InterpolationTransform(DerivedDataTransform):
             timestamp = record.timestamp
             fields = record.fields
         else:
-            timestamp = record.get('timestamp')
+            timestamp = record.get('timestamp', 0)
             fields = record.get('fields')
+
+        self.latest_timestamp = max(timestamp, self.latest_timestamp)
 
         if not fields:
             logging.info('InterpolationTransform: record has no fields: %s', record)
@@ -203,7 +208,7 @@ class InterpolationTransform(DerivedDataTransform):
             self.cached_values[field] = cache[keep_index:]
 
     ############################
-    def transform(self, record):
+    def transform(self, record: Union[DASRecord, dict]):
         """Incorporate any useable fields in this record, and if it gives
         us any new subsampled values, aggregate and return them as a list of
         dicts of the form:
@@ -224,29 +229,24 @@ class InterpolationTransform(DerivedDataTransform):
         If there are insufficient data in the window to compute any
         subsampling, return an empty list.
         """
-        # If we've got a list, hope it's a list of records. Try to add
-        # them all.
-        if isinstance(record, list):
-            for single_record in record:
-                self._add_record(single_record)
-        # If it's a dict, hope it's a single record.
-        elif isinstance(record, dict):
-            self._add_record(record)
-        elif isinstance(record, DASRecord):
-            self._add_record(record.fields)
-        else:
-            logging.warning('InterpolationTransform Got non-list, non-dict '
-                            'non DASRecord to interpolate: %s', record)
-            return None
+        # See if it's something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from Transform()
+            return self.digest_record(record)  # inherited from Transform()
+
+        # With those formalities done, add the record and see if we can return
+        # return any snapshots
+        self._add_record(record)
 
         # Figure out what timestamp we'd like to compute next. First time
         # we're called, next_timestamp will be 0; set it to be the
         # earliest timestamp we've got in our cache.
         if not self.next_timestamp:
-            lowest_timestamp = min([values[0][0]
-                                    for field, values in self.cached_values.items()
-                                    if values])
-            self.next_timestamp = lowest_timestamp
+            values = [values[0][0]
+                      for field, values in self.cached_values.items()
+                      if values]
+            if values:
+                lowest_timestamp = min(values)
+                self.next_timestamp = lowest_timestamp
 
         non_empty = {}
         for dest, spec in self.field_spec.items():
@@ -262,6 +262,11 @@ class InterpolationTransform(DerivedDataTransform):
         now = time.time()
 
         while self.next_timestamp < now - self.window/2:
+
+            # But don't try to go out past our latest timestamp
+            if self.next_timestamp > self.latest_timestamp:
+                break
+
             # Clean out old data
             self._clean_cache()
 
