@@ -113,8 +113,9 @@ class InterpolationTransform(DerivedDataTransform):
                 self.source_fields.update(sources)
 
         else:
-            raise ValueError('InterpolationTransform: if field_spec must be either list '
-                             f'or dict. Found {type(spec_instance)}')
+            # Fix: Use the actual type of field_spec instead of spec_instance which doesn't exist here
+            raise ValueError('InterpolationTransform: field_spec must be either list '
+                             f'or dict. Found {type(field_spec)}')
 
         self.interval = interval
         self.window = window
