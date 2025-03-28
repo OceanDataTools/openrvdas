@@ -34,9 +34,9 @@ class LogfileReader(TimestampedReader):
     return the DASRecord encoded by the JSON string.
     """
     ############################
-
     def __init__(self, filebase=None, tail=False, refresh_file_spec=False,
                  retry_interval=0.1, interval=0, use_timestamps=False,
+                 time_acceleration_factor=1.0,
                  record_format=None,
                  time_format=timestamp.TIME_FORMAT,
                  date_format=timestamp.DATE_FORMAT,
@@ -68,6 +68,12 @@ class LogfileReader(TimestampedReader):
                      If True, use the timestamps from the log file to determine
                      at what interval each record should be emitted.
 
+        time_acceleration_factor
+                     When use_timestamps is True, multiplies the time intervals
+                     between records by this factor. Values greater than 1.0 will
+                     speed up playback, values between 0 and 1.0 will slow it down.
+                     Default is 1.0 (normal speed).
+
         record_format
                      If specified, a custom record format to use for extracting
                      timestamp and record. The default is '{timestamp:ti} {record}'.
@@ -91,6 +97,16 @@ class LogfileReader(TimestampedReader):
 
         self.filebase = filebase
         self.use_timestamps = use_timestamps
+
+        # Validate time_acceleration_factor
+        if time_acceleration_factor is None:
+            raise ValueError("time_acceleration_factor must be a number")
+        if not isinstance(time_acceleration_factor, (int, float)):
+            raise ValueError("time_acceleration_factor must be a number")
+        if time_acceleration_factor <= 0:
+            raise ValueError("time_acceleration_factor must be greater than zero")
+        self.time_acceleration_factor = time_acceleration_factor
+
         self.record_format = record_format or '{timestamp:ti} {record}'
         self.compiled_record_format = parse.compile(self.record_format)
         self.date_format = date_format
@@ -193,15 +209,22 @@ class LogfileReader(TimestampedReader):
                 logging.warning(f'Unable to parse record into "{self.record_format}"')
                 logging.warning(f'Record: "{record}"')
 
-        # If here, we've got a record and a timestamp and are intending to
-        # use it. Figure out how long we should sleep before returning it.
-        desired_interval = ts - self.last_timestamp
-        now = timestamp.timestamp()
-        actual_interval = now - self.last_read
-        logging.debug('Desired interval %f, actual %f; sleeping %f',
-                      desired_interval, actual_interval,
-                      max(0, desired_interval-actual_interval))
-        time.sleep(max(0, desired_interval - actual_interval))
+        # If this is not our first read, figure out how long we need to wait
+        # for our next one.
+        if self.last_read > 0:
+            # If here, we've got a record and a timestamp and are intending to
+            # use it. Figure out how long we should sleep before returning it.
+            desired_interval = ts - self.last_timestamp
+
+            # Apply the time acceleration factor to the desired interval
+            desired_interval = desired_interval / self.time_acceleration_factor
+
+            now = timestamp.timestamp()
+            actual_interval = now - self.last_read
+            logging.debug('Desired interval %f, actual %f; sleeping %f',
+                          desired_interval, actual_interval,
+                          max(0, desired_interval - actual_interval))
+            time.sleep(max(0, desired_interval - actual_interval))
 
         self.last_timestamp = ts
         self.last_read = timestamp.timestamp()
