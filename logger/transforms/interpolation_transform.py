@@ -113,7 +113,6 @@ class InterpolationTransform(DerivedDataTransform):
                 self.source_fields.update(sources)
 
         else:
-            # Fix: Use the actual type of field_spec instead of spec_instance which doesn't exist here
             raise ValueError('InterpolationTransform: field_spec must be either list '
                              f'or dict. Found {type(field_spec)}')
 
