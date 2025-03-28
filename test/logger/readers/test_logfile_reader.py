@@ -129,6 +129,64 @@ class TestLogfileReader(unittest.TestCase):
             self.assertEqual(None, reader.read())
 
     ############################
+    def test_time_acceleration_factor(self):
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            logging.info('created temporary directory "%s"', tmpdirname)
+            tmpfilename = tmpdirname + '/mylog-2017-02-02'
+            sample_lines = SAMPLE_DATA.split('\n')
+            create_file(tmpfilename, sample_lines)
+
+            # Logs timestamps were created artificially with ~0.25 intervals
+            # With a time_acceleration_factor of 2.0, we expect ~0.125 intervals
+            base_interval = 0.25
+            acceleration_factor = 2.0
+            expected_interval = base_interval / acceleration_factor
+
+            reader = LogfileReader(tmpfilename, use_timestamps=True,
+                                   time_acceleration_factor=acceleration_factor)
+            then = 0
+            for line in sample_lines:
+                result = reader.read()
+                self.assertEqual(line, result)
+                now = time.time()
+                if then:
+                    self.assertAlmostEqual(now-then, expected_interval, places=1)
+                then = now
+
+            self.assertEqual(None, reader.read())
+
+    ############################
+    def test_time_acceleration_factor_validation(self):
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            tmpfilename = tmpdirname + '/mylog-2017-02-02'
+            sample_lines = SAMPLE_DATA.split('\n')
+            create_file(tmpfilename, sample_lines)
+
+            # Test invalid time_acceleration_factor types
+            with self.assertRaises(ValueError) as cm:
+                LogfileReader(tmpfilename, use_timestamps=True,
+                              time_acceleration_factor="invalid")
+            self.assertEqual(str(cm.exception), "time_acceleration_factor must be a number")
+
+            with self.assertRaises(ValueError) as cm:
+                LogfileReader(tmpfilename, use_timestamps=True,
+                              time_acceleration_factor=None)
+            self.assertEqual(str(cm.exception), "time_acceleration_factor must be a number")
+
+            # Test invalid time_acceleration_factor values
+            with self.assertRaises(ValueError) as cm:
+                LogfileReader(tmpfilename, use_timestamps=True,
+                              time_acceleration_factor=0)
+            self.assertEqual(str(cm.exception),
+                             "time_acceleration_factor must be greater than zero")
+
+            with self.assertRaises(ValueError) as cm:
+                LogfileReader(tmpfilename, use_timestamps=True,
+                              time_acceleration_factor=-1.5)
+            self.assertEqual(str(cm.exception),
+                             "time_acceleration_factor must be greater than zero")
+
+    ############################
     def test_use_timestamps_das_record(self):
         with tempfile.TemporaryDirectory() as tmpdirname:
             logging.info('created temporary directory "%s"', tmpdirname)
