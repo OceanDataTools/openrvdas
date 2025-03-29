@@ -303,7 +303,7 @@ Below, we list and briefly describe (most of) the currently-implemented Reader, 
   Accept text records in "wire" format (with data\_id and timestamp prefixed) and return a Python dict of the record's field name/value pairs. Takes optional argument indicating location of device and device type definition files as a string of comma-separated paths, such as
 
   ```
-  parser = RecordParser(definition_path='local/devices/*.yaml,/opt/openrvdas/local/devices/*.yaml')
+  parser = RecordParser(definition_path='contrib/devices/*.yaml,/opt/openrvdas/contrib/devices/*.yaml')
   ```
 
   If ```return_json=True```, output a JSON-encoded string for the dict; if ```return_das_record=True```, return a [DASRecord](../logger/utils/das_record.py) for it. See [Parsing](parsing.md) for more details.
