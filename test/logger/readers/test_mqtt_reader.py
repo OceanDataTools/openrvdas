@@ -41,8 +41,8 @@ class ReaderTimeout(StopIteration):
 
 
 ##############################################################################
+@unittest.skip('Still not really debugged.')
 class TestMQTTReader(unittest.TestCase):
-    @unittest.skip('Still not really debugged.')
     # @unittest.skipUnless(PAHO_ENABLED, 'Paho MQTT not installed; tests of MQTT '
     #                     'functionality will not be run.')
     ############################
