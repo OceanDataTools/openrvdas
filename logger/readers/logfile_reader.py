@@ -156,7 +156,7 @@ class LogfileReader(TimestampedReader):
         # current file really does match our logfile name format...
         while True:
             record = self.reader.read()
-            if record is None:  # None means we're out of records
+            if not record:  # None means we're out of records
                 return record
 
             # If we've got a record and we're not using timestamps, we're
@@ -203,11 +203,12 @@ class LogfileReader(TimestampedReader):
                 pass
 
             # If we're here, we failed to parse the record. Complain, if appropriate,
-            # then discard, and go back to loop to try the next record.
+            # then spit out it out without updating timestamps.
             if not self.quiet:
                 logging.warning('Unable to parse record into DASRecord')
                 logging.warning(f'Unable to parse record into "{self.record_format}"')
                 logging.warning(f'Record: "{record}"')
+            return record
 
         # If this is not our first read, figure out how long we need to wait
         # for our next one.
