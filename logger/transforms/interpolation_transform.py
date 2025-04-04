@@ -166,11 +166,9 @@ class InterpolationTransform(DerivedDataTransform):
             timestamp = record.get('timestamp', 0)
             fields = record.get('fields')
 
-        self.latest_timestamp = max(timestamp, self.latest_timestamp)
-
         if not fields:
             logging.info('InterpolationTransform: record has no fields: %s', record)
-            return
+            return timestamp
 
         # First, copy the new data into our cache.  NOTE: It's a judgment
         # call whether it's more efficient to iterate over the fields
@@ -184,12 +182,18 @@ class InterpolationTransform(DerivedDataTransform):
             if type(new_value) is list:
                 for ts, val in new_value.items():
                     self.cached_values[field].append((ts, val))
+                    logging.debug(f'adding {ts}: {field} - {val}')
+
             # If not list, assume DASRecord or simple field dict; add tuple
             elif timestamp:
                 self.cached_values[field].append((timestamp, new_value))
+                logging.debug(f'adding {timestamp}: {field} - {new_value}')
             else:
-                logging.error('SubsampleTransform found no timestamp in '
+                logging.warning('SubsampleTransform found no timestamp in '
                               'record: %s', record)
+
+        # Return the timestamp of the record
+        return timestamp
 
     ############################
     def _clean_cache(self):
@@ -209,7 +213,7 @@ class InterpolationTransform(DerivedDataTransform):
     ############################
     def transform(self, record: Union[DASRecord, dict]):
         """Incorporate any useable fields in this record, and if it gives
-        us any new subsampled values, aggregate and return them as a list of
+        us any new interpolated values, aggregate and return them as a list of
         dicts of the form:
 
         [
@@ -226,27 +230,23 @@ class InterpolationTransform(DerivedDataTransform):
         ]
 
         If there are insufficient data in the window to compute any
-        subsampling, return an empty list.
+        interpolation, return an empty list.
         """
         # See if it's something we can process, and if not, try digesting
         if not self.can_process_record(record):  # inherited from Transform()
             return self.digest_record(record)  # inherited from Transform()
 
-        # With those formalities done, add the record and see if we can return
-        # return any snapshots
-        self._add_record(record)
+        # Add the record and remember its timestamp.
+        record_timestamp = self._add_record(record)
 
-        # Figure out what timestamp we'd like to compute next. First time
-        # we're called, next_timestamp will be 0; set it to be the
-        # earliest timestamp we've got in our cache.
+        # First time through, our 'next_timestamp' will be zero. Set it to
+        # a good starting place.
         if not self.next_timestamp:
-            values = [values[0][0]
-                      for field, values in self.cached_values.items()
-                      if values]
-            if values:
-                lowest_timestamp = min(values)
-                self.next_timestamp = lowest_timestamp
+            self.next_timestamp = record_timestamp
 
+        self.latest_timestamp = max(self.latest_timestamp, record_timestamp)
+
+        # What fields do we have data for in our cache?
         non_empty = {}
         for dest, spec in self.field_spec.items():
             source = spec.get('source')
@@ -256,16 +256,10 @@ class InterpolationTransform(DerivedDataTransform):
                     non_empty[dest] = [source, len(values)]
 
         # Iterate through all timestamps up to the edge of what we can fit
-        # in our window without running into the edge of 'now'.
+        # in our window without running into the edge of our latest timestamp.
         results = []
-        now = time.time()
-
-        while self.next_timestamp < now - self.window/2:
-
-            # But don't try to go out past our latest timestamp
-            if self.next_timestamp > self.latest_timestamp:
-                break
-
+        logging.debug(f'latest timestamp: {self.latest_timestamp}, next: {self.next_timestamp}')
+        while self.next_timestamp < self.latest_timestamp - self.window/2:
             # Clean out old data
             self._clean_cache()
 
@@ -276,7 +270,9 @@ class InterpolationTransform(DerivedDataTransform):
                 algorithm = entry.get('algorithm')
                 # logging.warning('%s->%s: %d values',
                 #                source, result_field, len(source_values))
-                value = interpolate(algorithm, source_values, self.next_timestamp, now)
+                value = interpolate(algorithm, source_values,
+                                    self.next_timestamp,
+                                    self.latest_timestamp)
                 if value is not None:
                     result[result_field] = value
             if result:
@@ -300,17 +296,17 @@ def interpolate(algorithm, values, timestamp, now):
 
     values       A list of [(timestamp, value),...] pairs
 
-    timestamp    The timestamp for which subsampling should be computed
+    timestamp    The timestamp for which interpolation should be computed
 
     now          Timestamp now. This should be used to determine whether
                  we're far enough beyond our timestamp to compute a value.
     """
     if not type(algorithm) is dict:
-        logging.warning('Function subsample() handed non-dict algorithm '
+        logging.warning('Function interpolate() handed non-dict algorithm '
                         'specification: %s', algorithm)
         return None
     if not values:
-        logging.debug('Function subsample() handed empty values list')
+        logging.debug('Function interpolate() handed empty values list')
         return None
 
     ##################
@@ -331,7 +327,7 @@ def interpolate(algorithm, values, timestamp, now):
         try:
             return mean(vals_to_average)
         except TypeError:
-            logging.error('Non-numeric value in subsample list: %s', vals_to_average)
+            logging.error('Non-numeric value in interpolation list: %s', vals_to_average)
             return None
 
     # nearest: return value of nearest timestamp. Note that we assume
@@ -370,11 +366,11 @@ def interpolate(algorithm, values, timestamp, now):
                 angle += 360
             return angle
         except TypeError:
-            logging.error('Non-numeric value in subsample list: %s', vals_to_average)
+            logging.error('Non-numeric value in interpolation list: %s', vals_to_average)
             return None
 
     # Not an algorithm we recognize
     else:
-        logging.warning('Function subsample() received unrecognized algorithm '
+        logging.warning('Function interpolate() received unrecognized algorithm '
                         'type: %s', alg_type)
         return None
