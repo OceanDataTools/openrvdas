@@ -4,12 +4,11 @@
 
 import logging
 import sys
-import time
 import bisect
 
 from math import degrees, radians, sin, cos, atan2
 from statistics import mean
-from typing import Union, List, Tuple, Dict, Any, Optional
+from typing import Union, Any
 
 from os.path import dirname, realpath
 
@@ -123,7 +122,8 @@ class InterpolationTransform(DerivedDataTransform):
         self.data_id = data_id
         self.metadata_interval = metadata_interval
 
-        # A dict of the cached values we're hanging onto - use sorted lists of (timestamp, value) pairs
+        # A dict of the cached values we're hanging onto - use sorted
+        # lists of (timestamp, value) pairs
         self.cached_values = {f: [] for f in self.source_fields}
 
         # The next timestamp we'd like to emit. Is set the first time we

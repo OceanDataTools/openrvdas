@@ -4,10 +4,7 @@
 import logging
 import sys
 import unittest
-from datetime import datetime, timedelta
 from os.path import dirname, realpath
-
-import numpy as np
 
 sys.path.append(dirname(dirname(dirname(dirname(realpath(__file__))))))
 from logger.transforms.interpolation_transform import InterpolationTransform  # noqa: E402
@@ -90,7 +87,8 @@ class TestInterpolationTransform(unittest.TestCase):
 
         # List with dict but sources not a list
         with self.assertRaises(ValueError):
-            InterpolationTransform([{'sources': 'Temperature', 'algorithm': 'boxcar_average'}], 10, 60)
+            InterpolationTransform([{'sources': 'Temperature',
+                                     'algorithm': 'boxcar_average'}], 10, 60)
 
     ############################
     def test_boxcar_average_transform(self):
@@ -138,7 +136,7 @@ class TestInterpolationTransform(unittest.TestCase):
             time_index = (result['timestamp'] - base_time) / 5
             expected_temp = 20 + time_index * 0.5
 
-            # The average should be close to the expected value (exact calculation depends on window)
+            # The average should be close to  expected value (exact  depends on window)
             self.assertLess(abs(result['fields']['AvgTemperature'] - expected_temp), 2.5)
 
     ############################
