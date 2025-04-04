@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compute subsamples of input data.
+"""Compute interpolations of input data.
 """
 
 import logging
@@ -61,7 +61,7 @@ class InterpolationTransform(DerivedDataTransform):
                  }
                ]
 
-        interval - At what intervals (in seconds) should the subsampling
+        interval - At what intervals (in seconds) should the interpolation
                be computed?
 
         window - Time window (in seconds) of data we should maintain
@@ -144,7 +144,7 @@ class InterpolationTransform(DerivedDataTransform):
         metadata_fields = {
             'field': {
                 'description':
-                    'Subsampled values of %s via %s' %
+                    'Interpolated values of %s via %s' %
                     (entry['source'], entry['algorithm']),
                 'device': 'InterpolationTransform',
                 'device_type': 'DerivedDataTransform',
@@ -158,7 +158,7 @@ class InterpolationTransform(DerivedDataTransform):
     def _add_record(self, record):
         """Cached the values contained in a new record, maintaining timestamp order."""
         if type(record) not in [DASRecord, dict]:
-            logging.error('SubsampleTransform records must be dict or '
+            logging.error('InterpolationTransform records must be dict or '
                           'DASRecord. Received type %s: %s', type(record), record)
             return 0
 
@@ -192,7 +192,7 @@ class InterpolationTransform(DerivedDataTransform):
                 self._insert_sorted(field, timestamp, new_value)
                 logging.debug(f'adding {timestamp}: {field} - {new_value}')
             else:
-                logging.warning('SubsampleTransform found no timestamp in '
+                logging.warning('Interpolation found no timestamp in '
                                 'record: %s', record)
 
         # Update our tracking of the earliest and latest timestamps we've seen
