@@ -164,7 +164,7 @@ command line **before** ```--transform_parse``` argument):
   ```
   logger/listener/listen.py \
       --udp 6224 \
-      --parse_definition_path "local/devices/*.yaml,/opt/openrvdas/local/devices/*.yaml" \
+      --parse_definition_path "contrib/devices/*.yaml,/opt/openrvdas/contrib/devices/*.yaml" \
       --parse_to_json \
       --transform_parse \
       --write_file -
@@ -281,7 +281,7 @@ Definitions should be encoded in a YAML file:
 includes:
   - local/usap/nbp/devices/HydroDasNBP.yaml
   - local/usap/devices/MastWx.yaml
-  - local/devices/*.yaml
+  - contrib/devices/*.yaml
 
 ######################################
 devices:
@@ -334,12 +334,12 @@ parser = RecordParser(definition_path='local/usap/nbp/devices/nbp_devices.yaml')
 
 ```
 # Manually including an assortment of definition files
-parser = RecordParser(definition_path='local/devices/*.yaml,/opt/openrvdas/local/devices/*.yaml')
+parser = RecordParser(definition_path='contrib/devices/*.yaml,/opt/openrvdas/contrib/devices/*.yaml')
 ```
 
 If no ``definition_path`` is specified, the RecordParser will look for
 definitions in ```DEFAULT_DEFINITION_PATH```, defined as
-```local/devices/*.yaml```.
+```contrib/devices/*.yaml```.
 
 ## Parser output format
 

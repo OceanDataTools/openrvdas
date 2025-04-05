@@ -91,7 +91,7 @@ class PolledSerialReader(SerialReader):
         just prior to the reader being destroyed.
 
         Notable arguments:
-
+        ```
         start_cmd
             If not None, may be string or list of strings. If a single string,
             it is sent to the serial port as soon as it is opened. If a list of
@@ -123,7 +123,7 @@ class PolledSerialReader(SerialReader):
             seconds. It will then reissue the pre_read_cmds, if there is one, and try
             reading again. If there is a dict of pre_read_cmds, it will progress to the
             next one in the dict.
-
+        ```
         For all of these arguments, a special string, ``__PAUSE__``, is recognized. If
         followed by a number (e.g. ``__PAUSE__ 5``), it will be interpreted as a command
         to pause for that many seconds prior to sending the next command. If no number
@@ -303,34 +303,38 @@ class PolledSerialReader(SerialReader):
 strings to send to the serial host on startup, before each read and
 just prior to the reader being destroyed.</p>
 <p>Notable arguments:</p>
-<p>start_cmd
-If not None, may be string or list of strings. If a single string,
-it is sent to the serial port as soon as it is opened. If a list of
-strings, each string in the list is sent in sequence.</p>
-<p>stop_cmd
-Much as start_cmd, but is sent when the PolledSerialReader is closed
-or destroyed.</p>
-<p>pre_read_cmd
-Much as start_cmd and stop_cmd, except the string or list of strings
-are sent each time the PolledSerialReader's read() method is called,
-prior to trying to read from the port.</p>
-<pre><code>In addition to a string or list of strings, pre_read_cmd may be a *dict*
-of lists of strings:
+<pre><code>start_cmd
+    If not None, may be string or list of strings. If a single string,
+    it is sent to the serial port as soon as it is opened. If a list of
+    strings, each string in the list is sent in sequence.
 
-    pre_read_cmd:
-      key1: ['command 1_1', 'command 1_2]
-      key2: ['command 2_1', 'command 2_2]
-      key3: ...
-    ...
-The first time read() is called, the strings associated with key1 will be
-sent. The second time, those associated with key2, and so on. When the end
-of the dict is reached, it will start again with key1.
+stop_cmd
+    Much as start_cmd, but is sent when the PolledSerialReader is closed
+    or destroyed.
+
+pre_read_cmd
+    Much as start_cmd and stop_cmd, except the string or list of strings
+    are sent each time the PolledSerialReader's read() method is called,
+    prior to trying to read from the port.
+
+    In addition to a string or list of strings, pre_read_cmd may be a *dict*
+    of lists of strings:
+
+        pre_read_cmd:
+          key1: ['command 1_1', 'command 1_2]
+          key2: ['command 2_1', 'command 2_2]
+          key3: ...
+        ...
+    The first time read() is called, the strings associated with key1 will be
+    sent. The second time, those associated with key2, and so on. When the end
+    of the dict is reached, it will start again with key1.
+
+timeout &lt;seconds&gt;
+    If timeout is specified, then the serial read will time out after this many
+    seconds. It will then reissue the pre_read_cmds, if there is one, and try
+    reading again. If there is a dict of pre_read_cmds, it will progress to the
+    next one in the dict.
 </code></pre>
-<p>timeout <seconds>
-If timeout is specified, then the serial read will time out after this many
-seconds. It will then reissue the pre_read_cmds, if there is one, and try
-reading again. If there is a dict of pre_read_cmds, it will progress to the
-next one in the dict.</p>
 <p>For all of these arguments, a special string, <code>__PAUSE__</code>, is recognized. If
 followed by a number (e.g. <code>__PAUSE__ 5</code>), it will be interpreted as a command
 to pause for that many seconds prior to sending the next command. If no number
@@ -355,7 +359,7 @@ is given, it will pause for one second.</p></div>
         just prior to the reader being destroyed.
 
         Notable arguments:
-
+        ```
         start_cmd
             If not None, may be string or list of strings. If a single string,
             it is sent to the serial port as soon as it is opened. If a list of
@@ -387,7 +391,7 @@ is given, it will pause for one second.</p></div>
             seconds. It will then reissue the pre_read_cmds, if there is one, and try
             reading again. If there is a dict of pre_read_cmds, it will progress to the
             next one in the dict.
-
+        ```
         For all of these arguments, a special string, ``__PAUSE__``, is recognized. If
         followed by a number (e.g. ``__PAUSE__ 5``), it will be interpreted as a command
         to pause for that many seconds prior to sending the next command. If no number

@@ -1,7 +1,7 @@
 ################################################################################
 # NBP-Specific Mast Weather Device Type Definitions
 #
-# See local/README.md
+# See contrib/devices/README.md
 
 ######################################
 MastWx:

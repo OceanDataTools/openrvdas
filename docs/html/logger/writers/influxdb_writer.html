@@ -66,7 +66,7 @@ class InfluxDBWriter(Writer):
     &#34;&#34;&#34;Write to the specified file. If filename is empty, write to stdout.&#34;&#34;&#34;
 
     def __init__(self, bucket_name=INFLUXDB_BUCKET, measurement_name=None,
-                 auth_token=INFLUXDB_AUTH_TOKEN,
+                 tags=None, auth_token=INFLUXDB_AUTH_TOKEN,
                  org=INFLUXDB_ORG, url=INFLUXDB_URL,
                  verify_ssl=INFLUXDB_VERIFY_SSL, quiet=False):
         &#34;&#34;&#34;Write data records to the InfluxDB.
@@ -76,6 +76,22 @@ class InfluxDBWriter(Writer):
 
         measurement_name - optional measurement name to use. If not provided,
                   writer will use the record&#39;s data_id.
+
+        tags - optional tags to be applied to records submitted to InfluxDB
+               API.
+
+               Example:
+               tags:
+                   tag0: value0
+                   tag1:
+                       value: value1
+                       filter:
+                           - measurement1
+                           - measurement2
+                       default: defaultValue1
+                   tag2:
+                       value: value2
+                       filter: measurement2
 
         auth_token - The auth token required by the InfluxDB instance. If omitted,
                   will look for value in imported INFLUXDB_AUTH_TOKEN and throw
@@ -127,6 +143,28 @@ class InfluxDBWriter(Writer):
             raise RuntimeError(&#39;Python module influxdb_client not found. Please &#39;
                                &#39;install using &#34;pip install influxdb_client&#34; prior &#39;
                                &#39;to using InfluxDBWriter.&#39;)
+
+        if tags and not isinstance(tags, dict):
+            raise RuntimeError(&#39;The specified tags kwarg must be None or a dict&#39;)
+
+        self.tags = {&#39;*&#39;: {}}
+        if tags:
+            for tag, details in tags.items():
+                if isinstance(details, str):
+                    self.tags[&#39;*&#39;][tag] = details
+
+                if isinstance(details, dict) and &#39;filter&#39; in details:
+                    if isinstance(details[&#39;filter&#39;], str):
+                        details[&#39;filter&#39;] = [details[&#39;filter&#39;]]
+
+                    if &#39;default&#39; in details:
+                        self.tags[&#39;*&#39;][tag] = details[&#39;default&#39;]
+
+                    for filter_item in details[&#39;filter&#39;]:
+                        if filter_item not in self.tags:
+                            self.tags[filter_item] = {}
+
+                        self.tags[filter_item][tag] = details[&#39;value&#39;]
 
         self.auth_token = auth_token
         self.org = org
@@ -208,9 +246,16 @@ class InfluxDBWriter(Writer):
                 data_id = record.get(&#39;data_id&#39;)
                 fields = record.get(&#39;fields&#39;, {})
                 timestamp = record.get(&#39;timestamp&#39;) or time.time()
+
+            measurement = self.measurement_name or data_id
+            tags = {**{&#39;sensor&#39;: measurement}, **self.tags[&#39;*&#39;]}
+
+            if measurement in self.tags:
+                tags = {**tags, **self.tags[measurement]}
+
             influxDB_record = {
                 &#39;measurement&#39;: self.measurement_name or data_id,
-                &#39;tags&#39;: {&#39;sensor&#39;: data_id or self.measurement_name or self.bucket_name},
+                &#39;tags&#39;: tags,
                 &#39;fields&#39;: fields,
                 &#39;time&#39;: int(timestamp * 1000000000)
             }
@@ -246,7 +291,7 @@ class InfluxDBWriter(Writer):
 <dl>
 <dt id="logger.writers.influxdb_writer.InfluxDBWriter"><code class="flex name class">
 <span>class <span class="ident">InfluxDBWriter</span></span>
-<span>(</span><span>bucket_name='openrvdas', measurement_name=None, auth_token='qctIRsZulATUECEOyrnbP0-5qdmYvt4H5S1ESAN7doEb2KV5IRUnnQNYnAslkL-n-JzrAp7FmymcU9KMIud-ug==', org='openrvdas', url='http://localhost:8086', verify_ssl=False, quiet=False)</span>
+<span>(</span><span>bucket_name='openrvdas', measurement_name=None, tags=None, auth_token='qctIRsZulATUECEOyrnbP0-5qdmYvt4H5S1ESAN7doEb2KV5IRUnnQNYnAslkL-n-JzrAp7FmymcU9KMIud-ug==', org='openrvdas', url='http://localhost:8086', verify_ssl=False, quiet=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Write to the specified file. If filename is empty, write to stdout.</p>
@@ -256,6 +301,22 @@ class InfluxDBWriter(Writer):
 
 measurement_name - optional measurement name to use. If not provided,
           writer will use the record's data_id.
+
+tags - optional tags to be applied to records submitted to InfluxDB
+       API.
+
+       Example:
+       tags:
+           tag0: value0
+           tag1:
+               value: value1
+               filter:
+                   - measurement1
+                   - measurement2
+               default: defaultValue1
+           tag2:
+               value: value2
+               filter: measurement2
 
 auth_token - The auth token required by the InfluxDB instance. If omitted,
           will look for value in imported INFLUXDB_AUTH_TOKEN and throw
@@ -281,7 +342,7 @@ verify_ssl - If the URL begins with 'https', SSL will be used for the
     &#34;&#34;&#34;Write to the specified file. If filename is empty, write to stdout.&#34;&#34;&#34;
 
     def __init__(self, bucket_name=INFLUXDB_BUCKET, measurement_name=None,
-                 auth_token=INFLUXDB_AUTH_TOKEN,
+                 tags=None, auth_token=INFLUXDB_AUTH_TOKEN,
                  org=INFLUXDB_ORG, url=INFLUXDB_URL,
                  verify_ssl=INFLUXDB_VERIFY_SSL, quiet=False):
         &#34;&#34;&#34;Write data records to the InfluxDB.
@@ -291,6 +352,22 @@ verify_ssl - If the URL begins with 'https', SSL will be used for the
 
         measurement_name - optional measurement name to use. If not provided,
                   writer will use the record&#39;s data_id.
+
+        tags - optional tags to be applied to records submitted to InfluxDB
+               API.
+
+               Example:
+               tags:
+                   tag0: value0
+                   tag1:
+                       value: value1
+                       filter:
+                           - measurement1
+                           - measurement2
+                       default: defaultValue1
+                   tag2:
+                       value: value2
+                       filter: measurement2
 
         auth_token - The auth token required by the InfluxDB instance. If omitted,
                   will look for value in imported INFLUXDB_AUTH_TOKEN and throw
@@ -342,6 +419,28 @@ verify_ssl - If the URL begins with 'https', SSL will be used for the
             raise RuntimeError(&#39;Python module influxdb_client not found. Please &#39;
                                &#39;install using &#34;pip install influxdb_client&#34; prior &#39;
                                &#39;to using InfluxDBWriter.&#39;)
+
+        if tags and not isinstance(tags, dict):
+            raise RuntimeError(&#39;The specified tags kwarg must be None or a dict&#39;)
+
+        self.tags = {&#39;*&#39;: {}}
+        if tags:
+            for tag, details in tags.items():
+                if isinstance(details, str):
+                    self.tags[&#39;*&#39;][tag] = details
+
+                if isinstance(details, dict) and &#39;filter&#39; in details:
+                    if isinstance(details[&#39;filter&#39;], str):
+                        details[&#39;filter&#39;] = [details[&#39;filter&#39;]]
+
+                    if &#39;default&#39; in details:
+                        self.tags[&#39;*&#39;][tag] = details[&#39;default&#39;]
+
+                    for filter_item in details[&#39;filter&#39;]:
+                        if filter_item not in self.tags:
+                            self.tags[filter_item] = {}
+
+                        self.tags[filter_item][tag] = details[&#39;value&#39;]
 
         self.auth_token = auth_token
         self.org = org
@@ -423,9 +522,16 @@ verify_ssl - If the URL begins with 'https', SSL will be used for the
                 data_id = record.get(&#39;data_id&#39;)
                 fields = record.get(&#39;fields&#39;, {})
                 timestamp = record.get(&#39;timestamp&#39;) or time.time()
+
+            measurement = self.measurement_name or data_id
+            tags = {**{&#39;sensor&#39;: measurement}, **self.tags[&#39;*&#39;]}
+
+            if measurement in self.tags:
+                tags = {**tags, **self.tags[measurement]}
+
             influxDB_record = {
                 &#39;measurement&#39;: self.measurement_name or data_id,
-                &#39;tags&#39;: {&#39;sensor&#39;: data_id or self.measurement_name or self.bucket_name},
+                &#39;tags&#39;: tags,
                 &#39;fields&#39;: fields,
                 &#39;time&#39;: int(timestamp * 1000000000)
             }
@@ -485,9 +591,16 @@ bucket_name we were initialized with.</p></div>
             data_id = record.get(&#39;data_id&#39;)
             fields = record.get(&#39;fields&#39;, {})
             timestamp = record.get(&#39;timestamp&#39;) or time.time()
+
+        measurement = self.measurement_name or data_id
+        tags = {**{&#39;sensor&#39;: measurement}, **self.tags[&#39;*&#39;]}
+
+        if measurement in self.tags:
+            tags = {**tags, **self.tags[measurement]}
+
         influxDB_record = {
             &#39;measurement&#39;: self.measurement_name or data_id,
-            &#39;tags&#39;: {&#39;sensor&#39;: data_id or self.measurement_name or self.bucket_name},
+            &#39;tags&#39;: tags,
             &#39;fields&#39;: fields,
             &#39;time&#39;: int(timestamp * 1000000000)
         }
