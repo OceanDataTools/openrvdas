@@ -1,0 +1,50 @@
+logger_templates:
+  #################
+  snapshot_logger_template:
+    configs:
+      'off': {}
+
+      'on': &snapshot_on
+        readers:
+        - class: CachedDataReader
+          kwargs:
+            data_server: <<data_server>>
+            subscription:
+              fields: <<snapshot_fields>>
+        transforms:
+        - class: InterpolationTransform
+          module: logger.transforms.interpolation_transform
+          kwargs:
+            interval: <<interval>>
+            window: <<window>>
+            data_id: <<logger>>
+            metadata_interval: 60  # send metadata every 60 seconds
+            field_spec: [
+              # These fields we do a simple boxcar average on
+              { sources: [MwxAirTemp, RTMPTemp,PortTrueWindSpeed, StbdTrueWindSpeed,
+                          MwxBarometer, KnudDepthHF, KnudDepthLF, Grv1Value],
+                algorithm: boxcar_average,
+                window: <<window>>,
+                result_prefix: Avg  # Prefix each field name with this for output
+            },
+              # These fields we do a polar average on
+              { sources: [PortTrueWindDir, StbdTrueWindDir],
+                algorithm: polar_average,
+                window: <<window>>,
+                result_prefix: Avg  # Prefix each field name with this for output
+              }
+            ]
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: <<data_server>>
+
+      on+influx:
+        <<: *snapshot_on
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: <<data_server>>
+        - class: InfluxDBWriter
+          kwargs:
+            bucket_name: <<influx_bucket_name>>

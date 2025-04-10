@@ -7,12 +7,12 @@ cruise:
 
 defaults:
   sourceip: '224.0.36.0'
-  definition_path: /opt/openrvdas/local/devices/devices.yaml
+  definition_path: /opt/openrvdas/contrib/devices/devices.yaml
   file_pathbase: /home/rvdas #base path for TextFileWriter filename & LogFileWriter filebase kwargs
   prefix: shipname
 
 devices:
-  winch: 
+  winch:
     port: 50000
 
   met:

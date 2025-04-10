@@ -1,0 +1,63 @@
+###################
+logger_templates:
+  #################
+  # Derived true winds logger
+  true_winds_logger_template:
+    configs:
+      'off': {}
+
+      'on': &true_winds_on
+        readers:
+        - class: CachedDataReader
+          kwargs:
+            data_server: <<data_server>>
+            subscription:
+              fields:
+                <<course_true>>:
+                  seconds: 0
+                <<heading_true>>:
+                  seconds: 0
+                <<speed_over_ground>>:
+                  seconds: 0
+                <<rel_wind_dir>>:
+                  seconds: 0
+                <<rel_wind_speed>>:
+                  seconds: 0
+        transforms:
+        - class: TrueWindsTransform
+          kwargs:
+            data_id: <<logger>>
+            convert_speed_factor: <<convert_speed_factor>>
+            course_field: <<course_true>>
+            heading_field: <<heading_true>>
+            speed_field: <<speed_over_ground>>
+            wind_dir_field: <<rel_wind_dir>>
+            wind_speed_field: <<rel_wind_speed>>
+
+            # Output fields
+            apparent_dir_name: <<apparent_dir_name>>
+            true_dir_name: <<true_dir_name>>
+            true_speed_name: <<true_speed_name>>
+            update_on_fields:
+            - <<rel_wind_dir>>
+            max_field_age:
+              <<course_true>>: <<max_field_age>>
+              <<heading_true>>: <<max_field_age>>
+              <<speed_over_ground>>: <<max_field_age>>
+              <<rel_wind_dir>>: <<max_field_age>>
+              <<rel_wind_speed>>: <<max_field_age>>
+            metadata_interval: 10
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: <<data_server>>
+
+      on+influx:
+        <<: *true_winds_on
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: <<data_server>>
+        - class: InfluxDBWriter
+          kwargs:
+            bucket_name: <<influx_bucket_name>>

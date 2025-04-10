@@ -183,6 +183,7 @@ class ListenerFromLoggerConfigString(ListenerFromLoggerConfig):
     def __init__(self, config_str, log_level=None):
         """Create a Listener from a JSON config string."""
         config = read_config.parse(config_str)
+        config = read_config.expand_cruise_definition(config)
         logging.info('Received config string: %s', pprint.pformat(config))
         super().__init__(config=config)
 
@@ -203,6 +204,7 @@ class ListenerFromLoggerConfigFile(ListenerFromLoggerConfig):
         if config_file.find(':') > 0:
             (config_file, config_name) = config_file.split(':', maxsplit=1)
         config = read_config.read_config(config_file)
+        config = read_config.expand_cruise_definition(config)
 
         if config_name:
             config_dict = config.get('configs')
@@ -363,19 +365,19 @@ if __name__ == '__main__':
                         default=nmea_parser.DEFAULT_MESSAGE_PATH,
                         help='Comma-separated globs of NMEA message definition '
                         'file names, e.g. '
-                        'local/message/*.yaml')
+                        'local/usap/message/*.yaml')
     parser.add_argument('--parse_nmea_sensor_path',
                         dest='parse_nmea_sensor_path',
                         default=nmea_parser.DEFAULT_SENSOR_PATH,
                         help='Comma-separated globs of NMEA sensor definition '
                         'file names, e.g. '
-                        'local/sensor/*.yaml')
+                        'local/usap/sensor/*.yaml')
     parser.add_argument('--parse_nmea_sensor_model_path',
                         dest='parse_nmea_sensor_model_path',
                         default=nmea_parser.DEFAULT_SENSOR_MODEL_PATH,
                         help='Comma-separated globs of NMEA sensor model '
                         'definition file names, e.g. '
-                        'local/sensor_model/*.yaml')
+                        'local/usap/sensor_model/*.yaml')
 
     parser.add_argument('--transform_parse', dest='parse',
                         action='store_true', default=False,
@@ -387,7 +389,7 @@ if __name__ == '__main__':
                         default=record_parser.DEFAULT_DEFINITION_PATH,
                         help='Comma-separated globs of device definition '
                         'file names, e.g. '
-                        'local/devices/*.yaml')
+                        'local/usap/devices/*.yaml')
     parser.add_argument('--parse_to_json',
                         dest='parse_to_json', action='store_true',
                         help='If specified, parser outputs JSON.')

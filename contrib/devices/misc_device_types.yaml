@@ -1,0 +1,272 @@
+################################################################################
+# Miscellaneous Device Type Definitions
+#
+# See README.md in this directory
+
+######################################
+ADCP_OS75:
+  category: "device_type"
+  description: "RD Industries OS-75 Acoustic Doppler Current Profiler"
+  
+  format:
+    PUHAW: "$PUHAW,UVH,{VelocityE:f},{VelocityN:f},{HeadingT:f}"
+    VDVBW: "$VDVBW,{LongWaterSpeed:f},{TransWaterSpeed:f},{WaterSpeedStatus:ow},{LongGroundSpeed:of},{TransGroundSpeed:of},{GroundSpeedStatus:ow}*{Checksum:x}"
+
+  fields:
+    VelocityE:
+      units: ""
+      description: "Current velocity to (relative) east"
+    VelocityN:
+      units: ""
+      description: "Current velocity to (relative) north"
+    HeadingT:
+      units: "degrees"
+      description: "True Heading"
+    LongWaterSpeed:
+      units: "knots"
+      description: "Longitudinal water speed (negative means astern)"
+    TransWaterSpeed:
+      units: "knots"
+      description: "Longitudinal water speed (negative means port)"
+    WaterSpeedStatus:
+      description: "A = Data Valid"
+    LongGroundSpeed:
+      units: "knots"
+      description: "Longitudinal ground speed (negative means astern)"
+    TransGroundSpeed:
+      units: "knots"
+      description: "Transverse ground speed (negative means port)"
+    GroundSpeedStatus:
+      description: "A = Data Valid"
+
+######################################
+Gravimeter_BGM3:
+  category: "device_type"
+  description: "Bell Aerospace BGM-3"
+
+  format: "{CounterUnits:d}:{GravityValue:d} {GravityError:d}"
+
+  fields:
+    CounterUnits:
+      description: "apparently a constant 01"
+    GravityValue:
+      units: "Flit Count"
+      description: "mgal = flit count x 4.994072552 + bias"
+    GravityError:
+      description: "unknown semantics"
+
+######################################
+Gyrocompass:
+  category: "device_type"
+  description: "Gyrocompass"
+
+  format:
+    HEHDT: "$HEHDT,{HeadingTrue:g},T*{Checksum:x}"
+    HEROT: "$HEROT,{RateOfTurn:g},A*{Checksum:x}"
+
+  fields:
+    HeadingTrue:
+      units: "degrees"
+      description: "True heading"
+    RateOfTurn:
+      units: "degrees/min"
+      description: "Rate of turn"
+
+######################################
+MultibeamEM122:
+  category: "device_type"
+  description: "Simrad EM122 Multibeam"
+
+  format: "$KIDPT,{Depth:g},{WaterlineDist:g},{MaxRange:g}*{Checksum:x}"
+
+  fields:
+    Depth:
+      units: "m"
+      description: "Depth at transducer"
+    WaterlineDist:
+      units: "m"
+      description: "Distance to waterline from transducer"
+    MaxRange:
+      units: "m"
+      description: "Maximum range in use"
+
+######################################
+PCO2_LDEO:
+  category: "device_type"
+  description: "LDEO pCO2 Equilibration System"
+
+  # 2015056.60236  2608.36  30.14  977.91  48.25  368.76  353.92  -1.18  -1.26  0.00  Equil
+  # 2014213.00116  2733.40  41.52  1022.65  56.29  388.56 382.41  21.83  21.94   0.00  Equil
+  format: "{TimeTag:f}{:s}{Voltage:g}{:s}{CellTemp:g}{:s}{EquilPressure:g}{:s}{FlowRate:g}{:s}{PCO2Pressure:g}{:s}{VCO2Concentration:g}{:s}{EquilTempRTD:g}{:s}{EquilTempSBE38:g}{:s}{ValvePosition:g}{:s}{Source:w}"
+
+  fields:
+    TimeTag:
+      units: "UTC"
+      description: "yyyyddd.ttt - where ttt is frational time of day"
+    Voltage:
+      units: "mV"
+      description: "Raw Voltage"
+    CellTemp:
+      units: "C"
+      description: "Cell temperature"
+    EquilPressure:
+      units: "mBar"
+      description: "Equilibration pressure"
+    FlowRate:
+      units: "cm3/min"
+      description: "Flow rate"
+    PCO2Pressure:
+      units: "uAtm"
+      description: "pCO2 pressure"
+    VCO2Concentration:
+      units: "ppm"
+      description: "VCO2 concentration"
+    EquilTempRTD:
+      units: "C"
+      description: "Equilibrator Temperature, RTD"
+    EquilTempSBE38:
+      units: "C"
+      description: "Equilibrator Temperature, SBE38"
+    ValvePosition:
+      units: ""
+      description: "Longitude in degrees west"
+    Source:
+      units: ""
+      description: "Source of flow; Equil = pCO2 measurement"
+
+
+######################################
+PGUV:
+  category: "device_type"
+  description: "Biospherical Instruments GUV-2511"
+
+  # 022615 065133 .000132 .010878 .047479 .004407 -.002799 .014652 .027558 .094395 .417814 -4.466095
+  format: "{Date:d} {Time:d} {GroundVoltage:of} {Irradiance320:of} {Irradiance340:of} {Irradiance313:of} {Irradiance305:of} {Irradiance380:of} {Irradiance400:of} {Irradiance395:of} {Temp:of} {InputVoltage:of}"
+
+  fields:
+    Date:
+      units: "UTC-4"
+      description: "Date MMDDYY"
+    Time:
+      units: "UTC-4"
+      description: "Time HHMMSS"
+    GroundVoltage:
+      units: "V"
+      description: "Sensor ground voltage"
+    Irradiance320:
+      units: "uW"
+      description: "Ed0320 (downwelling 320nm irradiance)"
+    Irradiance340:
+      units: "uW"
+      description: "Ed0340 (downwelling 340nm irradiance)"
+    Irradiance313:
+      units: "uW"
+      description: "Ed013 (downwelling 313nm irradiance)"
+    Irradiance305:
+      units: "uW"
+      description: "Ed0305 (downwelling 305nm irradiance)"
+    Irradiance380:
+      units: "uW"
+      description: "Ed0380 (downwelling 380nm irradiance)"
+    Irradiance400:
+      units: "uW"
+      description: "Ed0400 (downwelling 400nm irradiance)"
+    Irradiance395:
+      units: "uW"
+      description: "Ed0395 (downwelling 395nm irradiance)"
+    Temp:
+      units: "C"
+      description: "Sensor array temperature"
+    InputVoltage:
+      units: "V"
+      description: "Sensor input voltage"
+
+######################################
+SBE38:
+  category: "device_type"
+  description: "Digital Remote Temperature Sensor Sea-Bird SBE-38"
+
+  format: "{Temp:g}"
+
+  fields:
+    Temp:
+      units: "C"
+      description: "Seawater intake temperature"
+
+######################################
+SBE48:
+  category: "device_type"
+  description: "Digital Remote Temperature Sensor Sea-Bird SBE-48"
+
+  format: "# {Temp:g}, {Date:nc}, {Time:nc}"
+
+  fields:
+    Temp:
+      units: "C"
+      description: "Seawater intake temperature"
+    Date:
+      description: "Date in 'DD Mon YYYY' format"
+    Time:
+      description: "Time in HH:MM:SS format"
+
+######################################
+SVP:
+  category: "device_type"
+  description: "Sound velocity profiler"
+
+  format: "{Velocity:g}"
+
+  fields:
+    Velocity:
+      units: "m/s"
+      description: "Sound Velocity, from ADCP sonar well"
+
+######################################
+TSG_SBE45:
+  category: "device_type"
+  description: "Thermosalinograph Sea-Bird SBE-45"
+
+  format:
+  - "{Temp:og},{Conductivity:og},{Salinity:og},{SoundVelocity:og}"
+  - "{Temp:og},{Conductivity:og},{Salinity:og}"
+
+  fields:
+    Temp:
+      units: "C"
+      description: "Temperature"
+    Conductivity:
+      units: "s/m"
+      description: "Conductivity"
+    Salinity:
+      units: "PSU"
+      description: "Salinity"
+    SoundVelocity:
+      units: "m/s"
+      description: "SoundVelocity"
+
+######################################
+Winch:
+  category: "device_type"
+  description: "Unknown winch model"
+
+  format: "{LANID:nc},{WinchTime:ti},{Name:nc},{Tension:of},{Speed:of},{Payout:of},{Checksum:g}"
+
+  fields:
+    LANID:
+      units: ""
+      description: ""
+    WinchTime:
+      units: "yyyy-mm-ddThh:mm:ss.sss"
+      description: "LCI-90i Date and Time"
+    Name:
+      units: ""
+      description: "Name of winch"
+    Tension:
+      units: "lbs"
+      description: "Winch tension"
+    Speed:
+      units: "meters/min"
+      description: "Winch payout speed"
+    Payout:
+      units: "meters"
+      description: "Winch payout"

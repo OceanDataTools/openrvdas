@@ -80,9 +80,14 @@ to initialize the type checking and set its debugging level. If it is not explic
 initialized, it will be done implicitly the first time can_process_record() or
 digest_record() are called, but with the default of quiet=False.
 &#34;&#34;&#34;
-import logging
 import inspect
+import logging
+import sys
 from typing import get_args
+
+from os.path import dirname, realpath
+sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
+from logger.utils.das_record import DASRecord  # noqa E402
 
 
 ########################################
@@ -224,6 +229,10 @@ class BaseModule:
         # Is record a number we can convert to a string?
         if str in self.input_types and isinstance(record, (int, float)):
             return str(record)
+
+        # If it&#39;s a DASRecord, serialize it as JSON
+        if str in self.input_types and isinstance(record, DASRecord):
+            return record.as_json()
 
         # If we don&#39;t know how to deal with it
         if not self.quiet:
@@ -417,6 +426,10 @@ list of records into its elements and calling subclass transform() on them.</p><
         if str in self.input_types and isinstance(record, (int, float)):
             return str(record)
 
+        # If it&#39;s a DASRecord, serialize it as JSON
+        if str in self.input_types and isinstance(record, DASRecord):
+            return record.as_json()
+
         # If we don&#39;t know how to deal with it
         if not self.quiet:
             logging.warning(f&#39;Unable to convert record to format &#34;{self.class_name}&#34; can process&#39;)
@@ -524,6 +537,10 @@ records that we need to break into individual records.</p></div>
     # Is record a number we can convert to a string?
     if str in self.input_types and isinstance(record, (int, float)):
         return str(record)
+
+    # If it&#39;s a DASRecord, serialize it as JSON
+    if str in self.input_types and isinstance(record, DASRecord):
+        return record.as_json()
 
     # If we don&#39;t know how to deal with it
     if not self.quiet:

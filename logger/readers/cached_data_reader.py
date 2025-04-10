@@ -40,6 +40,12 @@ class CachedDataReader(Reader):
             subscription = {'fields':{'S330CourseTrue':{seconds:0},
                                       'S330HeadingTrue':{seconds:0}}}
 
+            If the value of 'fields' is a list instead of a dict, it will be
+            interpreted as a list of field names to be subscribed to with a
+            value of seconds = 0. e.g.:
+
+            subscription = {'fields':['S330CourseTrue', 'S330HeadingTrue']}
+
         data_server - the host and port at which to try to connect to a
             CachedDataServer
 
@@ -76,6 +82,15 @@ class CachedDataReader(Reader):
                 or bundle_seconds < 0:
             raise ValueError('CachedDataReader parameter "bundle_seconds" must be a number '
                              f'greater than or equal to zero. Found "{bundle_seconds}"')
+
+        # To simplify templating, subscription may be a list of fields instead of a dict.
+        # If so, convert it to a dict here.from
+        subscription_fields = subscription.get('fields')
+        if not subscription_fields:
+            raise ValueError('CachedDataReader subscription - no "fields" found!')
+        elif isinstance(subscription_fields, list):
+            new_fields = {field: {'seconds': 0} for field in subscription_fields}
+            subscription['fields'] = new_fields
 
         self.subscription = subscription
         subscription['type'] = 'subscribe'

@@ -61,7 +61,7 @@ class InfluxDBWriter(Writer):
                            - measurement1
                            - measurement2
                        default: defaultValue1
-                   tag2: 
+                   tag2:
                        value: value2
                        filter: measurement2
 
@@ -137,7 +137,7 @@ class InfluxDBWriter(Writer):
                             self.tags[filter_item] = {}
 
                         self.tags[filter_item][tag] = details['value']
-                        
+
         self.auth_token = auth_token
         self.org = org
         self.url = url
