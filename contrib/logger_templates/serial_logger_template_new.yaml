@@ -1,0 +1,20 @@
+###################
+logger_templates:
+  #################
+  serial_logger_template:
+    configs:
+      'off': {}
+      net:
+        config_template: serial_net_config_template
+        variables:
+          baud_rate: <<baud_rate>>
+          serial_port: <<serial_port>>
+          raw_udp_port: <<raw_udp_port>>
+          udp_destination: <<udp_destination>>
+      net+file:
+        config_template: serial_net_file_config_template
+        variables:
+          baud_rate: <<baud_rate>>
+          serial_port: <<serial_port>>
+          raw_udp_port: <<raw_udp_port>>
+          udp_destination: <<udp_destination>>
