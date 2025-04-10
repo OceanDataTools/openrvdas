@@ -15,10 +15,10 @@ cruise:
 
 ###########################################################
 includes:
-  - local/logger_templates/serial_logger_template.yaml
-  - local/logger_templates/parse_data_logger_template.yaml
-  - local/logger_templates/true_winds_logger_template.yaml
-  - local/logger_templates/snapshot_logger_template.yaml
+  - contrib/logger_templates/serial_logger_template.yaml
+  - contrib/logger_templates/parse_data_logger_template.yaml
+  - contrib/logger_templates/true_winds_logger_template.yaml
+  - contrib/logger_templates/snapshot_logger_template.yaml
 
 ###########################################################
 # Global variables - can be overridden by individual loggers

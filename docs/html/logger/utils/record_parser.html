@@ -24,8 +24,8 @@
 <section id="section-intro">
 <p>Tools for parsing NMEA and other text records.</p>
 <p>By default, will load device and device_type definitions from files in
-local/devices/*.yaml. Please see documentation in
-local/devices/README.md for a description of the format these
+contrib/devices/*.yaml. Please see documentation in
+contrib/devices/README.md for a description of the format these
 definitions should take.</p>
 <details class="source">
 <summary>
@@ -36,8 +36,8 @@ definitions should take.</p>
 &#34;&#34;&#34;Tools for parsing NMEA and other text records.
 
 By default, will load device and device_type definitions from files in
-local/devices/*.yaml. Please see documentation in
-local/devices/README.md for a description of the format these
+contrib/devices/*.yaml. Please see documentation in
+contrib/devices/README.md for a description of the format these
 definitions should take.
 &#34;&#34;&#34;
 import datetime
@@ -63,7 +63,7 @@ from logger.utils.das_record import DASRecord  # noqa: E402
 # parse module.
 from logger.utils.record_parser_formats import extra_format_types  # noqa: E402
 
-DEFAULT_DEFINITION_PATH = &#39;local/devices/*.yaml&#39;
+DEFAULT_DEFINITION_PATH = &#39;contrib/devices/*.yaml&#39;
 DEFAULT_RECORD_FORMAT = &#39;{data_id:w} {timestamp:ti} {field_string}&#39;
 
 
@@ -602,7 +602,7 @@ class RecordParser:
 <dl>
 <dt id="logger.utils.record_parser.RecordParser"><code class="flex name class">
 <span>class <span class="ident">RecordParser</span></span>
-<span>(</span><span>record_format=None, field_patterns=None, metadata=None, definition_path='local/devices/*.yaml', return_das_record=False, return_json=False, metadata_interval=None, strip_unprintable=False, quiet=False, prepend_data_id=False, delimiter=':')</span>
+<span>(</span><span>record_format=None, field_patterns=None, metadata=None, definition_path='contrib/devices/*.yaml', return_das_record=False, return_json=False, metadata_interval=None, strip_unprintable=False, quiet=False, prepend_data_id=False, delimiter=':')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Create a parser that will parse field values out of a text record

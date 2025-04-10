@@ -38,6 +38,7 @@ from typing import Union
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
+from logger.utils.das_record import DASRecord  # noqa E402
 from logger.writers.writer import Writer  # noqa E402
 
 # So that we can write the user&#39;s record no matter how silly big it is, we
@@ -255,13 +256,16 @@ class UDPWriter(Writer):
             return None
 
     ############################
-    def write(self, record: Union[str, bytes]):
+    def write(self, record: Union[str, bytes, DASRecord]):
         &#34;&#34;&#34;Write the record to the network.&#34;&#34;&#34;
 
         # See if it&#39;s something we can process, and if not, try digesting
         if not self.can_process_record(record):  # inherited from BaseModule()
             self.digest_record(record)  # inherited from BaseModule()
             return
+
+        if isinstance(record, DASRecord):
+            record = record.as_json()
 
         # Append eol if configured
         if self.eol:
@@ -337,7 +341,9 @@ class UDPWriter(Writer):
                 # If we failed, complain, unless we&#39;ve already complained too much
                 self.good_writes = 0
                 if self.num_warnings &lt; self.warning_limit:
-                    logging.error(&#39;UDPWriter: send() error: %s: %s&#39;, self.target_str, str(e))
+                    logging.error(f&#39;UDPWriter: send() error: {self.target_str}: {str(e)}&#39;)
+                    if &#39;Message too long&#39; in str(e):
+                        logging.error(f&#39;Message length is {rec_len}&#39;)
                     self.num_warnings += 1
                     if self.num_warnings == self.warning_limit:
                         logging.error(&#39;UDPWriter.write() - muting errors&#39;)
@@ -561,13 +567,16 @@ encoding_errors - 'ignore' by default. Other error strategies are
             return None
 
     ############################
-    def write(self, record: Union[str, bytes]):
+    def write(self, record: Union[str, bytes, DASRecord]):
         &#34;&#34;&#34;Write the record to the network.&#34;&#34;&#34;
 
         # See if it&#39;s something we can process, and if not, try digesting
         if not self.can_process_record(record):  # inherited from BaseModule()
             self.digest_record(record)  # inherited from BaseModule()
             return
+
+        if isinstance(record, DASRecord):
+            record = record.as_json()
 
         # Append eol if configured
         if self.eol:
@@ -643,7 +652,9 @@ encoding_errors - 'ignore' by default. Other error strategies are
                 # If we failed, complain, unless we&#39;ve already complained too much
                 self.good_writes = 0
                 if self.num_warnings &lt; self.warning_limit:
-                    logging.error(&#39;UDPWriter: send() error: %s: %s&#39;, self.target_str, str(e))
+                    logging.error(f&#39;UDPWriter: send() error: {self.target_str}: {str(e)}&#39;)
+                    if &#39;Message too long&#39; in str(e):
+                        logging.error(f&#39;Message length is {rec_len}&#39;)
                     self.num_warnings += 1
                     if self.num_warnings == self.warning_limit:
                         logging.error(&#39;UDPWriter.write() - muting errors&#39;)
@@ -660,7 +671,7 @@ encoding_errors - 'ignore' by default. Other error strategies are
 <h3>Methods</h3>
 <dl>
 <dt id="logger.writers.udp_writer.UDPWriter.write"><code class="name flex">
-<span>def <span class="ident">write</span></span>(<span>self, record: Union[str, bytes])</span>
+<span>def <span class="ident">write</span></span>(<span>self, record: Union[str, bytes, <a title="logger.utils.das_record.DASRecord" href="../utils/das_record.html#logger.utils.das_record.DASRecord">DASRecord</a>])</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Write the record to the network.</p></div>
@@ -668,13 +679,16 @@ encoding_errors - 'ignore' by default. Other error strategies are
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def write(self, record: Union[str, bytes]):
+<pre><code class="python">def write(self, record: Union[str, bytes, DASRecord]):
     &#34;&#34;&#34;Write the record to the network.&#34;&#34;&#34;
 
     # See if it&#39;s something we can process, and if not, try digesting
     if not self.can_process_record(record):  # inherited from BaseModule()
         self.digest_record(record)  # inherited from BaseModule()
         return
+
+    if isinstance(record, DASRecord):
+        record = record.as_json()
 
     # Append eol if configured
     if self.eol:
@@ -750,7 +764,9 @@ encoding_errors - 'ignore' by default. Other error strategies are
             # If we failed, complain, unless we&#39;ve already complained too much
             self.good_writes = 0
             if self.num_warnings &lt; self.warning_limit:
-                logging.error(&#39;UDPWriter: send() error: %s: %s&#39;, self.target_str, str(e))
+                logging.error(f&#39;UDPWriter: send() error: {self.target_str}: {str(e)}&#39;)
+                if &#39;Message too long&#39; in str(e):
+                    logging.error(f&#39;Message length is {rec_len}&#39;)
                 self.num_warnings += 1
                 if self.num_warnings == self.warning_limit:
                     logging.error(&#39;UDPWriter.write() - muting errors&#39;)

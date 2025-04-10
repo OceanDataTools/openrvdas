@@ -229,7 +229,7 @@ The basic specification of the `ParseTransform` requires only telling it where t
 ```buildoutcfg
 logger/listener/listen.py \
     --udp 6224 \
-    --parse_definition_path "local/devices/*.yaml,/opt/openrvdas/local/devices/*.yaml" \
+    --parse_definition_path "contrib/devices/*.yaml,/opt/openrvdas/contrib/devices/*.yaml" \
     --transform_parse \
     --write_file -
 ```

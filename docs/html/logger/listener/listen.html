@@ -238,6 +238,7 @@ class ListenerFromLoggerConfigString(ListenerFromLoggerConfig):
     def __init__(self, config_str, log_level=None):
         &#34;&#34;&#34;Create a Listener from a JSON config string.&#34;&#34;&#34;
         config = read_config.parse(config_str)
+        config = read_config.expand_cruise_definition(config)
         logging.info(&#39;Received config string: %s&#39;, pprint.pformat(config))
         super().__init__(config=config)
 
@@ -258,6 +259,7 @@ class ListenerFromLoggerConfigFile(ListenerFromLoggerConfig):
         if config_file.find(&#39;:&#39;) &gt; 0:
             (config_file, config_name) = config_file.split(&#39;:&#39;, maxsplit=1)
         config = read_config.read_config(config_file)
+        config = read_config.expand_cruise_definition(config)
 
         if config_name:
             config_dict = config.get(&#39;configs&#39;)
@@ -418,19 +420,19 @@ if __name__ == &#39;__main__&#39;:
                         default=nmea_parser.DEFAULT_MESSAGE_PATH,
                         help=&#39;Comma-separated globs of NMEA message definition &#39;
                         &#39;file names, e.g. &#39;
-                        &#39;local/message/*.yaml&#39;)
+                        &#39;local/usap/message/*.yaml&#39;)
     parser.add_argument(&#39;--parse_nmea_sensor_path&#39;,
                         dest=&#39;parse_nmea_sensor_path&#39;,
                         default=nmea_parser.DEFAULT_SENSOR_PATH,
                         help=&#39;Comma-separated globs of NMEA sensor definition &#39;
                         &#39;file names, e.g. &#39;
-                        &#39;local/sensor/*.yaml&#39;)
+                        &#39;local/usap/sensor/*.yaml&#39;)
     parser.add_argument(&#39;--parse_nmea_sensor_model_path&#39;,
                         dest=&#39;parse_nmea_sensor_model_path&#39;,
                         default=nmea_parser.DEFAULT_SENSOR_MODEL_PATH,
                         help=&#39;Comma-separated globs of NMEA sensor model &#39;
                         &#39;definition file names, e.g. &#39;
-                        &#39;local/sensor_model/*.yaml&#39;)
+                        &#39;local/usap/sensor_model/*.yaml&#39;)
 
     parser.add_argument(&#39;--transform_parse&#39;, dest=&#39;parse&#39;,
                         action=&#39;store_true&#39;, default=False,
@@ -442,7 +444,7 @@ if __name__ == &#39;__main__&#39;:
                         default=record_parser.DEFAULT_DEFINITION_PATH,
                         help=&#39;Comma-separated globs of device definition &#39;
                         &#39;file names, e.g. &#39;
-                        &#39;local/devices/*.yaml&#39;)
+                        &#39;local/usap/devices/*.yaml&#39;)
     parser.add_argument(&#39;--parse_to_json&#39;,
                         dest=&#39;parse_to_json&#39;, action=&#39;store_true&#39;,
                         help=&#39;If specified, parser outputs JSON.&#39;)
@@ -1120,6 +1122,7 @@ cruise definition, and look for the config itself under the
         if config_file.find(&#39;:&#39;) &gt; 0:
             (config_file, config_name) = config_file.split(&#39;:&#39;, maxsplit=1)
         config = read_config.read_config(config_file)
+        config = read_config.expand_cruise_definition(config)
 
         if config_name:
             config_dict = config.get(&#39;configs&#39;)
@@ -1168,6 +1171,7 @@ cruise definition, and look for the config itself under the
     def __init__(self, config_str, log_level=None):
         &#34;&#34;&#34;Create a Listener from a JSON config string.&#34;&#34;&#34;
         config = read_config.parse(config_str)
+        config = read_config.expand_cruise_definition(config)
         logging.info(&#39;Received config string: %s&#39;, pprint.pformat(config))
         super().__init__(config=config)</code></pre>
 </details>

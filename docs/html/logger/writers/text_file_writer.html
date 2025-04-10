@@ -31,9 +31,11 @@
 import os.path
 import sys
 import datetime
+from typing import Union
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
+from logger.utils.das_record import DASRecord  # noqa E402
 from logger.writers.writer import Writer  # noqa: E402
 
 
@@ -167,12 +169,15 @@ class TextFileWriter(Writer):
             self.file.write(self.header)
 
     ############################
-    def write(self, record: str):
+    def write(self, record: Union[str, DASRecord]):
         &#34;&#34;&#34; Write out record, appending a newline at end.&#34;&#34;&#34;
 
         if not self.can_process_record(record):  # inherited from BaseModule()
             self.digest_record(record)           # inherited from BaseModule()
             return
+
+        if isinstance(record, DASRecord):
+            record = record.as_json()
 
         # If we&#39;re splitting by date, make sure that we&#39;re still writing
         # to the right file.
@@ -352,12 +357,15 @@ Add the content of the specified file to each file.
             self.file.write(self.header)
 
     ############################
-    def write(self, record: str):
+    def write(self, record: Union[str, DASRecord]):
         &#34;&#34;&#34; Write out record, appending a newline at end.&#34;&#34;&#34;
 
         if not self.can_process_record(record):  # inherited from BaseModule()
             self.digest_record(record)           # inherited from BaseModule()
             return
+
+        if isinstance(record, DASRecord):
+            record = record.as_json()
 
         # If we&#39;re splitting by date, make sure that we&#39;re still writing
         # to the right file.
@@ -377,7 +385,7 @@ Add the content of the specified file to each file.
 <h3>Methods</h3>
 <dl>
 <dt id="logger.writers.text_file_writer.TextFileWriter.write"><code class="name flex">
-<span>def <span class="ident">write</span></span>(<span>self, record: str)</span>
+<span>def <span class="ident">write</span></span>(<span>self, record: Union[str, <a title="logger.utils.das_record.DASRecord" href="../utils/das_record.html#logger.utils.das_record.DASRecord">DASRecord</a>])</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Write out record, appending a newline at end.</p></div>
@@ -385,12 +393,15 @@ Add the content of the specified file to each file.
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def write(self, record: str):
+<pre><code class="python">def write(self, record: Union[str, DASRecord]):
     &#34;&#34;&#34; Write out record, appending a newline at end.&#34;&#34;&#34;
 
     if not self.can_process_record(record):  # inherited from BaseModule()
         self.digest_record(record)           # inherited from BaseModule()
         return
+
+    if isinstance(record, DASRecord):
+        record = record.as_json()
 
     # If we&#39;re splitting by date, make sure that we&#39;re still writing
     # to the right file.

@@ -37,6 +37,7 @@ import time
 
 from math import degrees, radians, sin, cos, atan2
 from statistics import mean
+from typing import Union
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
@@ -49,7 +50,7 @@ class InterpolationTransform(DerivedDataTransform):
     &#34;&#34;&#34;Transform that computes interpolations of the specified variables.
     &#34;&#34;&#34;
 
-    def __init__(self, field_spec, interval, window, metadata_interval=None):
+    def __init__(self, field_spec, interval, window, data_id=None, metadata_interval=None):
         &#34;&#34;&#34;
         ```
         field_spec - a dict of interpolated variables that are to be created,
@@ -72,11 +73,29 @@ class InterpolationTransform(DerivedDataTransform):
                  ...
                }
 
+               To simplify templating, can also accept a spec of the form
+               of a list:
+
+               [
+                 { sources: [MwxAirTemp, RTMPTemp, ...],
+                   algorithm: boxcar_average,
+                   window: 10,
+                   result_prefix: Avg
+                 },
+                 { sources: [PortTrueWindDir, StbdTrueWindDir],
+                   algorithm: polar_average,
+                   window: 10,
+                   result_prefix: Avg
+                 }
+               ]
+
         interval - At what intervals (in seconds) should the subsampling
                be computed?
 
         window - Time window (in seconds) of data we should maintain
                around the computation we&#39;re going to make.
+
+        data_id - What data id to assign to the output
 
         metadata_interval - how many seconds between when we attach field metadata
                to a record we send out.
@@ -85,16 +104,50 @@ class InterpolationTransform(DerivedDataTransform):
         &#34;&#34;&#34;
         self.field_spec = {}
         self.source_fields = set()
-        for result_field, entry in field_spec.items():
-            if &#39;source&#39; in entry and &#39;algorithm&#39; in entry:
-                self.field_spec[result_field] = entry
-                self.source_fields.add(entry.get(&#39;source&#39;))
-            else:
-                logging.warning(&#39;InterpolationTransform field definition for %s &#39;
-                                &#39;must specify both &#34;source&#34; and &#34;algorithm&#34;: %s&#39;,
-                                result_field, entry)
+        if isinstance(field_spec, dict):
+            for result_field, entry in field_spec.items():
+                if &#39;source&#39; in entry and &#39;algorithm&#39; in entry:
+                    self.field_spec[result_field] = entry
+                    self.source_fields.add(entry.get(&#39;source&#39;))
+                else:
+                    logging.warning(&#39;InterpolationTransform field definition for %s &#39;
+                                    &#39;must specify both &#34;source&#34; and &#34;algorithm&#34;: %s&#39;,
+                                    result_field, entry)
+
+        # Alternate way of setting up a field spec that makes it easier to templatize.
+        # We&#39;ll expand the list of specs into a traditional field_spec
+        elif isinstance(field_spec, list):
+            for spec_instance in field_spec:
+                # Each spec_instance should be a dict of fields:, algorithm:,
+                # output_field_prefix: and window:
+                if not isinstance(spec_instance, dict):
+                    raise ValueError(&#39;InterpolationTransform: if field_spec is list, must be &#39;
+                                     f&#39;a list of dicts; found list of {type(spec_instance)}&#39;)
+                sources = spec_instance.get(&#39;sources&#39;)
+
+                if not isinstance(sources, list):
+                    raise ValueError(&#39;InterpolationTransform: sources for field spec must be &#39;
+                                     f&#39;a list ; found {type(spec_instance)}&#39;)
+
+                # Expand source list into a traditional field_spec
+                algorithm = spec_instance.get(&#39;algorithm&#39;)
+                window = spec_instance.get(&#39;window&#39;)
+                result_prefix = spec_instance.get(&#39;result_prefix&#39;)
+                for source in sources:
+                    entry = {&#39;source&#39;: source, &#39;algorithm&#39;: {&#39;type&#39;: algorithm, &#39;window&#39;: window}}
+                    result_field = result_prefix + source
+                    self.field_spec[result_field] = entry
+
+                # Finally, stash sources so we know what to look for
+                self.source_fields.update(sources)
+
+        else:
+            raise ValueError(&#39;InterpolationTransform: field_spec must be either list &#39;
+                             f&#39;or dict. Found {type(field_spec)}&#39;)
+
         self.interval = interval
         self.window = window
+        self.data_id = data_id
         self.metadata_interval = metadata_interval
 
         # A dict of the cached values we&#39;re hanging onto
@@ -103,6 +156,7 @@ class InterpolationTransform(DerivedDataTransform):
         # The next timestamp we&#39;d like to emit. Is set the first time we
         # call transform().
         self.next_timestamp = 0
+        self.latest_timestamp = 0
         self.last_metadata_send = 0  # last time we&#39;ve sent metadata
 
     ############################
@@ -138,8 +192,10 @@ class InterpolationTransform(DerivedDataTransform):
             timestamp = record.timestamp
             fields = record.fields
         else:
-            timestamp = record.get(&#39;timestamp&#39;)
+            timestamp = record.get(&#39;timestamp&#39;, 0)
             fields = record.get(&#39;fields&#39;)
+
+        self.latest_timestamp = max(timestamp, self.latest_timestamp)
 
         if not fields:
             logging.info(&#39;InterpolationTransform: record has no fields: %s&#39;, record)
@@ -180,7 +236,7 @@ class InterpolationTransform(DerivedDataTransform):
             self.cached_values[field] = cache[keep_index:]
 
     ############################
-    def transform(self, record):
+    def transform(self, record: Union[DASRecord, dict]):
         &#34;&#34;&#34;Incorporate any useable fields in this record, and if it gives
         us any new subsampled values, aggregate and return them as a list of
         dicts of the form:
@@ -201,27 +257,24 @@ class InterpolationTransform(DerivedDataTransform):
         If there are insufficient data in the window to compute any
         subsampling, return an empty list.
         &#34;&#34;&#34;
-        # If we&#39;ve got a list, hope it&#39;s a list of records. Try to add
-        # them all.
-        if type(record) is list:
-            for single_record in record:
-                self._add_record(single_record)
-        # If it&#39;s a dict, hope it&#39;s a single record.
-        elif type(record) is dict:
-            self._add_record(record)
-        else:
-            logging.warning(&#39;InterpolationTransform Got non-list, non-dict &#39;
-                            &#39;record to interpolate: %s&#39;, record)
-            return None
+        # See if it&#39;s something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from Transform()
+            return self.digest_record(record)  # inherited from Transform()
+
+        # With those formalities done, add the record and see if we can return
+        # return any snapshots
+        self._add_record(record)
 
         # Figure out what timestamp we&#39;d like to compute next. First time
         # we&#39;re called, next_timestamp will be 0; set it to be the
         # earliest timestamp we&#39;ve got in our cache.
         if not self.next_timestamp:
-            lowest_timestamp = min([values[0][0]
-                                    for field, values in self.cached_values.items()
-                                    if values])
-            self.next_timestamp = lowest_timestamp
+            values = [values[0][0]
+                      for field, values in self.cached_values.items()
+                      if values]
+            if values:
+                lowest_timestamp = min(values)
+                self.next_timestamp = lowest_timestamp
 
         non_empty = {}
         for dest, spec in self.field_spec.items():
@@ -230,28 +283,36 @@ class InterpolationTransform(DerivedDataTransform):
                 values = self.cached_values.get(source, [])
                 if len(values):
                     non_empty[dest] = [source, len(values)]
-        # logging.warning(&#39;Non-empty: %s&#39;, &#39;,&#39;.join(non_empty.keys()))
 
         # Iterate through all timestamps up to the edge of what we can fit
         # in our window without running into the edge of &#39;now&#39;.
         results = []
         now = time.time()
+
         while self.next_timestamp &lt; now - self.window/2:
+
+            # But don&#39;t try to go out past our latest timestamp
+            if self.next_timestamp &gt; self.latest_timestamp:
+                break
+
             # Clean out old data
             self._clean_cache()
 
             result = {}
             for result_field, entry in self.field_spec.items():
-                source = entry[&#39;source&#39;]
-                source_values = self.cached_values[source]
-                algorithm = entry[&#39;algorithm&#39;]
+                source = entry.get(&#39;source&#39;)
+                source_values = self.cached_values.get(source)
+                algorithm = entry.get(&#39;algorithm&#39;)
                 # logging.warning(&#39;%s-&gt;%s: %d values&#39;,
                 #                source, result_field, len(source_values))
                 value = interpolate(algorithm, source_values, self.next_timestamp, now)
                 if value is not None:
                     result[result_field] = value
             if result:
-                results.append({&#39;timestamp&#39;: self.next_timestamp, &#39;fields&#39;: result})
+                result_record = {&#39;timestamp&#39;: self.next_timestamp, &#39;fields&#39;: result}
+                if self.data_id:
+                    result_record[&#39;data_id&#39;] = self.data_id
+                results.append(result_record)
             self.next_timestamp += self.interval
 
         return results
@@ -473,7 +534,7 @@ we're far enough beyond our timestamp to compute a value.</p></div>
 <dl>
 <dt id="logger.transforms.interpolation_transform.InterpolationTransform"><code class="flex name class">
 <span>class <span class="ident">InterpolationTransform</span></span>
-<span>(</span><span>field_spec, interval, window, metadata_interval=None)</span>
+<span>(</span><span>field_spec, interval, window, data_id=None, metadata_interval=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Transform that computes interpolations of the specified variables.</p>
@@ -497,11 +558,29 @@ we're far enough beyond our timestamp to compute a value.</p></div>
          ...
        }
 
+       To simplify templating, can also accept a spec of the form
+       of a list:
+
+       [
+         { sources: [MwxAirTemp, RTMPTemp, ...],
+           algorithm: boxcar_average,
+           window: 10,
+           result_prefix: Avg
+         },
+         { sources: [PortTrueWindDir, StbdTrueWindDir],
+           algorithm: polar_average,
+           window: 10,
+           result_prefix: Avg
+         }
+       ]
+
 interval - At what intervals (in seconds) should the subsampling
        be computed?
 
 window - Time window (in seconds) of data we should maintain
        around the computation we're going to make.
+
+data_id - What data id to assign to the output
 
 metadata_interval - how many seconds between when we attach field metadata
        to a record we send out.
@@ -514,7 +593,7 @@ metadata_interval - how many seconds between when we attach field metadata
     &#34;&#34;&#34;Transform that computes interpolations of the specified variables.
     &#34;&#34;&#34;
 
-    def __init__(self, field_spec, interval, window, metadata_interval=None):
+    def __init__(self, field_spec, interval, window, data_id=None, metadata_interval=None):
         &#34;&#34;&#34;
         ```
         field_spec - a dict of interpolated variables that are to be created,
@@ -537,11 +616,29 @@ metadata_interval - how many seconds between when we attach field metadata
                  ...
                }
 
+               To simplify templating, can also accept a spec of the form
+               of a list:
+
+               [
+                 { sources: [MwxAirTemp, RTMPTemp, ...],
+                   algorithm: boxcar_average,
+                   window: 10,
+                   result_prefix: Avg
+                 },
+                 { sources: [PortTrueWindDir, StbdTrueWindDir],
+                   algorithm: polar_average,
+                   window: 10,
+                   result_prefix: Avg
+                 }
+               ]
+
         interval - At what intervals (in seconds) should the subsampling
                be computed?
 
         window - Time window (in seconds) of data we should maintain
                around the computation we&#39;re going to make.
+
+        data_id - What data id to assign to the output
 
         metadata_interval - how many seconds between when we attach field metadata
                to a record we send out.
@@ -550,16 +647,50 @@ metadata_interval - how many seconds between when we attach field metadata
         &#34;&#34;&#34;
         self.field_spec = {}
         self.source_fields = set()
-        for result_field, entry in field_spec.items():
-            if &#39;source&#39; in entry and &#39;algorithm&#39; in entry:
-                self.field_spec[result_field] = entry
-                self.source_fields.add(entry.get(&#39;source&#39;))
-            else:
-                logging.warning(&#39;InterpolationTransform field definition for %s &#39;
-                                &#39;must specify both &#34;source&#34; and &#34;algorithm&#34;: %s&#39;,
-                                result_field, entry)
+        if isinstance(field_spec, dict):
+            for result_field, entry in field_spec.items():
+                if &#39;source&#39; in entry and &#39;algorithm&#39; in entry:
+                    self.field_spec[result_field] = entry
+                    self.source_fields.add(entry.get(&#39;source&#39;))
+                else:
+                    logging.warning(&#39;InterpolationTransform field definition for %s &#39;
+                                    &#39;must specify both &#34;source&#34; and &#34;algorithm&#34;: %s&#39;,
+                                    result_field, entry)
+
+        # Alternate way of setting up a field spec that makes it easier to templatize.
+        # We&#39;ll expand the list of specs into a traditional field_spec
+        elif isinstance(field_spec, list):
+            for spec_instance in field_spec:
+                # Each spec_instance should be a dict of fields:, algorithm:,
+                # output_field_prefix: and window:
+                if not isinstance(spec_instance, dict):
+                    raise ValueError(&#39;InterpolationTransform: if field_spec is list, must be &#39;
+                                     f&#39;a list of dicts; found list of {type(spec_instance)}&#39;)
+                sources = spec_instance.get(&#39;sources&#39;)
+
+                if not isinstance(sources, list):
+                    raise ValueError(&#39;InterpolationTransform: sources for field spec must be &#39;
+                                     f&#39;a list ; found {type(spec_instance)}&#39;)
+
+                # Expand source list into a traditional field_spec
+                algorithm = spec_instance.get(&#39;algorithm&#39;)
+                window = spec_instance.get(&#39;window&#39;)
+                result_prefix = spec_instance.get(&#39;result_prefix&#39;)
+                for source in sources:
+                    entry = {&#39;source&#39;: source, &#39;algorithm&#39;: {&#39;type&#39;: algorithm, &#39;window&#39;: window}}
+                    result_field = result_prefix + source
+                    self.field_spec[result_field] = entry
+
+                # Finally, stash sources so we know what to look for
+                self.source_fields.update(sources)
+
+        else:
+            raise ValueError(&#39;InterpolationTransform: field_spec must be either list &#39;
+                             f&#39;or dict. Found {type(field_spec)}&#39;)
+
         self.interval = interval
         self.window = window
+        self.data_id = data_id
         self.metadata_interval = metadata_interval
 
         # A dict of the cached values we&#39;re hanging onto
@@ -568,6 +699,7 @@ metadata_interval - how many seconds between when we attach field metadata
         # The next timestamp we&#39;d like to emit. Is set the first time we
         # call transform().
         self.next_timestamp = 0
+        self.latest_timestamp = 0
         self.last_metadata_send = 0  # last time we&#39;ve sent metadata
 
     ############################
@@ -603,8 +735,10 @@ metadata_interval - how many seconds between when we attach field metadata
             timestamp = record.timestamp
             fields = record.fields
         else:
-            timestamp = record.get(&#39;timestamp&#39;)
+            timestamp = record.get(&#39;timestamp&#39;, 0)
             fields = record.get(&#39;fields&#39;)
+
+        self.latest_timestamp = max(timestamp, self.latest_timestamp)
 
         if not fields:
             logging.info(&#39;InterpolationTransform: record has no fields: %s&#39;, record)
@@ -645,7 +779,7 @@ metadata_interval - how many seconds between when we attach field metadata
             self.cached_values[field] = cache[keep_index:]
 
     ############################
-    def transform(self, record):
+    def transform(self, record: Union[DASRecord, dict]):
         &#34;&#34;&#34;Incorporate any useable fields in this record, and if it gives
         us any new subsampled values, aggregate and return them as a list of
         dicts of the form:
@@ -666,27 +800,24 @@ metadata_interval - how many seconds between when we attach field metadata
         If there are insufficient data in the window to compute any
         subsampling, return an empty list.
         &#34;&#34;&#34;
-        # If we&#39;ve got a list, hope it&#39;s a list of records. Try to add
-        # them all.
-        if type(record) is list:
-            for single_record in record:
-                self._add_record(single_record)
-        # If it&#39;s a dict, hope it&#39;s a single record.
-        elif type(record) is dict:
-            self._add_record(record)
-        else:
-            logging.warning(&#39;InterpolationTransform Got non-list, non-dict &#39;
-                            &#39;record to interpolate: %s&#39;, record)
-            return None
+        # See if it&#39;s something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from Transform()
+            return self.digest_record(record)  # inherited from Transform()
+
+        # With those formalities done, add the record and see if we can return
+        # return any snapshots
+        self._add_record(record)
 
         # Figure out what timestamp we&#39;d like to compute next. First time
         # we&#39;re called, next_timestamp will be 0; set it to be the
         # earliest timestamp we&#39;ve got in our cache.
         if not self.next_timestamp:
-            lowest_timestamp = min([values[0][0]
-                                    for field, values in self.cached_values.items()
-                                    if values])
-            self.next_timestamp = lowest_timestamp
+            values = [values[0][0]
+                      for field, values in self.cached_values.items()
+                      if values]
+            if values:
+                lowest_timestamp = min(values)
+                self.next_timestamp = lowest_timestamp
 
         non_empty = {}
         for dest, spec in self.field_spec.items():
@@ -695,28 +826,36 @@ metadata_interval - how many seconds between when we attach field metadata
                 values = self.cached_values.get(source, [])
                 if len(values):
                     non_empty[dest] = [source, len(values)]
-        # logging.warning(&#39;Non-empty: %s&#39;, &#39;,&#39;.join(non_empty.keys()))
 
         # Iterate through all timestamps up to the edge of what we can fit
         # in our window without running into the edge of &#39;now&#39;.
         results = []
         now = time.time()
+
         while self.next_timestamp &lt; now - self.window/2:
+
+            # But don&#39;t try to go out past our latest timestamp
+            if self.next_timestamp &gt; self.latest_timestamp:
+                break
+
             # Clean out old data
             self._clean_cache()
 
             result = {}
             for result_field, entry in self.field_spec.items():
-                source = entry[&#39;source&#39;]
-                source_values = self.cached_values[source]
-                algorithm = entry[&#39;algorithm&#39;]
+                source = entry.get(&#39;source&#39;)
+                source_values = self.cached_values.get(source)
+                algorithm = entry.get(&#39;algorithm&#39;)
                 # logging.warning(&#39;%s-&gt;%s: %d values&#39;,
                 #                source, result_field, len(source_values))
                 value = interpolate(algorithm, source_values, self.next_timestamp, now)
                 if value is not None:
                     result[result_field] = value
             if result:
-                results.append({&#39;timestamp&#39;: self.next_timestamp, &#39;fields&#39;: result})
+                result_record = {&#39;timestamp&#39;: self.next_timestamp, &#39;fields&#39;: result}
+                if self.data_id:
+                    result_record[&#39;data_id&#39;] = self.data_id
+                results.append(result_record)
             self.next_timestamp += self.interval
 
         return results</code></pre>
@@ -744,7 +883,7 @@ metadata_interval - how many seconds between when we attach field metadata
 </details>
 </dd>
 <dt id="logger.transforms.interpolation_transform.InterpolationTransform.transform"><code class="name flex">
-<span>def <span class="ident">transform</span></span>(<span>self, record)</span>
+<span>def <span class="ident">transform</span></span>(<span>self, record: Union[<a title="logger.utils.das_record.DASRecord" href="../utils/das_record.html#logger.utils.das_record.DASRecord">DASRecord</a>, dict])</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Incorporate any useable fields in this record, and if it gives
@@ -768,7 +907,7 @@ subsampling, return an empty list.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def transform(self, record):
+<pre><code class="python">def transform(self, record: Union[DASRecord, dict]):
     &#34;&#34;&#34;Incorporate any useable fields in this record, and if it gives
     us any new subsampled values, aggregate and return them as a list of
     dicts of the form:
@@ -789,27 +928,24 @@ subsampling, return an empty list.</p></div>
     If there are insufficient data in the window to compute any
     subsampling, return an empty list.
     &#34;&#34;&#34;
-    # If we&#39;ve got a list, hope it&#39;s a list of records. Try to add
-    # them all.
-    if type(record) is list:
-        for single_record in record:
-            self._add_record(single_record)
-    # If it&#39;s a dict, hope it&#39;s a single record.
-    elif type(record) is dict:
-        self._add_record(record)
-    else:
-        logging.warning(&#39;InterpolationTransform Got non-list, non-dict &#39;
-                        &#39;record to interpolate: %s&#39;, record)
-        return None
+    # See if it&#39;s something we can process, and if not, try digesting
+    if not self.can_process_record(record):  # inherited from Transform()
+        return self.digest_record(record)  # inherited from Transform()
+
+    # With those formalities done, add the record and see if we can return
+    # return any snapshots
+    self._add_record(record)
 
     # Figure out what timestamp we&#39;d like to compute next. First time
     # we&#39;re called, next_timestamp will be 0; set it to be the
     # earliest timestamp we&#39;ve got in our cache.
     if not self.next_timestamp:
-        lowest_timestamp = min([values[0][0]
-                                for field, values in self.cached_values.items()
-                                if values])
-        self.next_timestamp = lowest_timestamp
+        values = [values[0][0]
+                  for field, values in self.cached_values.items()
+                  if values]
+        if values:
+            lowest_timestamp = min(values)
+            self.next_timestamp = lowest_timestamp
 
     non_empty = {}
     for dest, spec in self.field_spec.items():
@@ -818,28 +954,36 @@ subsampling, return an empty list.</p></div>
             values = self.cached_values.get(source, [])
             if len(values):
                 non_empty[dest] = [source, len(values)]
-    # logging.warning(&#39;Non-empty: %s&#39;, &#39;,&#39;.join(non_empty.keys()))
 
     # Iterate through all timestamps up to the edge of what we can fit
     # in our window without running into the edge of &#39;now&#39;.
     results = []
     now = time.time()
+
     while self.next_timestamp &lt; now - self.window/2:
+
+        # But don&#39;t try to go out past our latest timestamp
+        if self.next_timestamp &gt; self.latest_timestamp:
+            break
+
         # Clean out old data
         self._clean_cache()
 
         result = {}
         for result_field, entry in self.field_spec.items():
-            source = entry[&#39;source&#39;]
-            source_values = self.cached_values[source]
-            algorithm = entry[&#39;algorithm&#39;]
+            source = entry.get(&#39;source&#39;)
+            source_values = self.cached_values.get(source)
+            algorithm = entry.get(&#39;algorithm&#39;)
             # logging.warning(&#39;%s-&gt;%s: %d values&#39;,
             #                source, result_field, len(source_values))
             value = interpolate(algorithm, source_values, self.next_timestamp, now)
             if value is not None:
                 result[result_field] = value
         if result:
-            results.append({&#39;timestamp&#39;: self.next_timestamp, &#39;fields&#39;: result})
+            result_record = {&#39;timestamp&#39;: self.next_timestamp, &#39;fields&#39;: result}
+            if self.data_id:
+                result_record[&#39;data_id&#39;] = self.data_id
+            results.append(result_record)
         self.next_timestamp += self.interval
 
     return results</code></pre>
