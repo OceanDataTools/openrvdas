@@ -29,8 +29,11 @@ class SocketReader(Reader):
 
         Args:
             channel: A string identifier for the communication channel
+
             timeout: Maximum time to wait for a record when reading (None means wait forever)
+
             buffer_size: Max record size to expect
+
             keep_binary: If true, don't convert received record to string
         """
         self.timeout = timeout
