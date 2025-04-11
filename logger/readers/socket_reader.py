@@ -23,14 +23,19 @@ class SocketReader(Reader):
     Reads records from a Unix domain socket.
     """
 
-    def __init__(self, channel: str, timeout: Optional[float] = None):
+    def __init__(self, channel: str, timeout: Optional[float] = None,
+                 buffer_size: int = 4096, keep_binary: bool = False):
         """Initialize a Reader for the specified channel.
 
         Args:
             channel: A string identifier for the communication channel
             timeout: Maximum time to wait for a record when reading (None means wait forever)
+            buffer_size: Max record size to expect
+            keep_binary: If true, don't convert received record to string
         """
         self.timeout = timeout
+        self.buffer_size = buffer_size
+        self.keep_binary = keep_binary
 
         # Create a unique socket path based on the channel name
         import hashlib
@@ -66,18 +71,20 @@ class SocketReader(Reader):
         # Register cleanup on exit
         atexit.register(self.close)
 
-    def read(self) -> bytes:
+    def read(self) -> str:
         """Read a record from the channel, blocking until one is available.
 
         Returns:
-            bytes: The data that was read
+            str: The data that was read
 
         Raises:
             TimeoutError: If no data is available within the timeout period
         """
         try:
-            data, _ = self.sock.recvfrom(4096)
-            return data
+            record, _ = self.sock.recvfrom(self.buffer_size)
+            if not self.keep_binary:
+                record = record.decode('utf-8')
+            return record
         except socket.timeout:
             raise TimeoutError('No data available within timeout period')
 

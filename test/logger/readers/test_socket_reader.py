@@ -67,11 +67,11 @@ class TestSocketReader(unittest.TestCase):
 
         # Read the message
         received = self.reader.read()
-        self.assertEqual(received.decode('utf-8'), message)
+        self.assertEqual(received, message)
 
     def test_read_binary(self):
         """Test reading binary data."""
-        self.reader = SocketReader(self.channel, timeout=0.5)
+        self.reader = SocketReader(self.channel, timeout=0.5, keep_binary=True)
 
         # Give reader time to initialize
         time.sleep(0.1)
@@ -104,7 +104,7 @@ class TestSocketReader(unittest.TestCase):
             writer.write(msg)
             # Read message immediately after writing
             received = self.reader.read()
-            self.assertEqual(received.decode('utf-8'), msg)
+            self.assertEqual(received, msg)
 
     def test_multiple_writers(self):
         """Test reading from multiple writers."""
@@ -123,11 +123,11 @@ class TestSocketReader(unittest.TestCase):
 
         writer1.write(msg1)
         received1 = self.reader.read()
-        self.assertEqual(received1.decode('utf-8'), msg1)
+        self.assertEqual(received1, msg1)
 
         writer2.write(msg2)
         received2 = self.reader.read()
-        self.assertEqual(received2.decode('utf-8'), msg2)
+        self.assertEqual(received2, msg2)
 
     def test_reader_before_writer(self):
         """Test creating reader before writer."""
@@ -160,7 +160,7 @@ class TestSocketReader(unittest.TestCase):
 
         # Check result
         self.assertIsNone(exception[0], f'Exception occurred: {exception[0]}')
-        self.assertEqual(result[0].decode('utf-8'), test_msg)
+        self.assertEqual(result[0], test_msg)
 
     def test_automatic_cleanup(self):
         """Test that resources are cleaned up when reader is closed."""

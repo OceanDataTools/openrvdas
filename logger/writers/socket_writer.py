@@ -48,30 +48,30 @@ class SocketWriter(Writer):
         # Register cleanup on exit
         atexit.register(self.close)
 
-    def write(self, data: Any) -> bool:
+    def write(self, record: Any) -> bool:
         """Write a record to the channel.
 
         If no Reader is waiting, the record is discarded.
 
         Args:
-            data: The data to write (will be converted to bytes)
+            record: The data to write (will be converted to bytes)
 
         Returns:
             bool: True if data was written, False if it was discarded
         """
-        if isinstance(data, str):
-            data = data.encode('utf-8')
-        elif not isinstance(data, bytes):
-            data = str(data).encode('utf-8')
+        if isinstance(record, str):
+            record = record.encode('utf-8')
+        elif not isinstance(record, bytes):
+            record = str(record).encode('utf-8')
 
         # Check if the socket path exists (indicating a receiver)
         if not os.path.exists(self.socket_path):
             # No reader is waiting, discard the message
             return False
 
-        # Send the data
+        # Send the record
         try:
-            self.sock.sendto(data, self.socket_path)
+            self.sock.sendto(record, self.socket_path)
             return True
         except (ConnectionRefusedError, FileNotFoundError):
             # No reader is available
