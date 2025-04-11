@@ -2,20 +2,34 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.10.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+<meta name="generator" content="pdoc3 0.11.6">
 <title>logger.transforms.nmea_transform API documentation</title>
 <meta name="description" content="Take in a dict of various values and emit NMEA strings appropriate
 for them. NMEATransform is a thin wrapper around a set of individual
-NMEA …" />
-<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
-<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
-<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
-<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
-<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+NMEA …">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
-<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => {
+hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
+hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
+})</script>
 </head>
 <body>
 <main>
@@ -39,467 +53,6 @@ standard OpenRVDAS dict format:</p>
 <p>If they're not too terribly ugly, the NMEA transforms should be placed
 in this file so as to minimize the risk that they may be inadvertently
 used elsewhere.</p>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">#!/usr/bin/env python3
-&#34;&#34;&#34;Take in a dict of various values and emit NMEA strings appropriate
-for them. NMEATransform is a thin wrapper around a set of individual
-NMEA message-generating transforms.
-
-Each transform&#39;s __init__(self) method should expect a single &#39;kwargs&#39;
-dict as its initialization argument, in which it will search for the
-keyword args it needs in order to function. If it does not find the
-necessary args, then rather than throwing an error, its transform
-method should just always return None.
-
-Each transform&#39;s transform(record) method should expect its input in
-standard OpenRVDAS dict format:
-
-{&#39;timestamp&#39;:5345345, &#39;fields&#39;:{&#39;field1&#39;: value1, &#39;field2&#39;:value2,...}}
-
-Each transform should return a (possibly empty) list of NMEA strings.
-
-If they&#39;re not too terribly ugly, the NMEA transforms should be placed
-in this file so as to minimize the risk that they may be inadvertently
-used elsewhere.
-&#34;&#34;&#34;
-# flake8: noqa E501  - ignore long comment lines that describe formats
-
-import logging
-import importlib
-import inspect
-
-# For efficient checksum code
-from functools import reduce
-from operator import xor
-
-
-############################
-def checksum(source):
-    &#34;&#34;&#34;Return hex checksum for source string.&#34;&#34;&#34;
-    return &#39;%02X&#39; % reduce(xor, (ord(c) for c in source))
-
-
-################################################################################
-class NMEATransform:
-    &#34;&#34;&#34;Call our various component transforms and generate NMEA strings from them.
-    &#34;&#34;&#34;
-
-    def __init__(self, nmea_list: list = [], **kwargs):
-        &#34;&#34;&#34;
-        nmea_list
-                List of the nmea transforms that will be used.
-        **kwargs
-                Arugments needed for the nmea transforms, see transforms below for what will be included.
-        &#34;&#34;&#34;
-
-        self.transforms = []
-
-        # If nmea_list is not given as list, force it into one
-        if not isinstance(nmea_list, list):
-            nmea_list = [nmea_list]
-
-        if not nmea_list:
-            self.transforms = [MWDTransform(kwargs), XDRTransform(kwargs)]
-            return
-
-        class_module_name = &#39;logger.transforms.nmea_transform&#39;
-        module = importlib.import_module(class_module_name)
-
-        # Get all classes within this file
-        classes = [cls_name for cls_name, cls_obj in inspect.getmembers(module) if
-                   inspect.isclass(cls_obj)]
-
-        for transform in nmea_list:
-            if transform in classes:
-                class_const = getattr(module, transform)
-                self.transforms.append(class_const(kwargs))
-            else:
-                logging.error(&#39;%s is not in classes %s&#39;, transform, classes)
-
-
-    ############################
-    def transform(self, record):
-        &#34;&#34;&#34;Expect a record dict (with &#39;timestamp&#39; and &#39;fields&#39; keys.&#34;&#34;&#34;
-        results = []
-
-        # Do we have more than one record here? Normalize so that
-        # following code assumes a list of records.
-        if not type(record) is list:
-            record = [record]
-
-        for single_record in record:
-            for t in self.transforms:
-                result = t.transform(single_record)
-                logging.debug(&#39;transform %s: %s&#39;, t, result)
-
-                # Transforms may return zero, one or more results
-                if not result:
-                    continue
-                elif type(result) is list:
-                    results.extend(result)
-                else:
-                    results.append(result)
-
-        # Just keep the results that are non-empty
-        pruned_results = [r for r in results if r]
-
-        # Return None, a single result or a list of results
-        if len(pruned_results) == 0:
-            return None
-        elif len(pruned_results) == 1:
-            return pruned_results[0]
-        else:
-            return pruned_results
-
-
-################################################################################
-&#34;&#34;&#34;MWD - Wind Direction &amp; Speed
-$--MWD, x.x,T,x.x,M,x.x,N,x.x,M*hh&lt;CR&gt;&lt;LF&gt;
-
-$--: Talker identifier*
-MWD: Sentence formatter*
-x.x,T: Wind direction, 0° to 359° true*
-x.x,M: Wind direction, 0° to 359° magnetic*
-x.x,N: Wind speed, knots*
-x.x,M: Wind speed, meters/second*
-*hh: Checksum*
-
-We get true wind direction ab initio, but if we don&#39;t have access to
-vessel&#39;s magnetic variation, we can&#39;t generate the magnetic wind
-direction, so omit if not available.
-&#34;&#34;&#34;
-################################################################################
-
-
-class MWDTransform:
-    &#34;&#34;&#34;Output a NMEA MWD string, given true wind and (when available)
-    magnetic variation.
-    &#34;&#34;&#34;
-
-    def __init__(self, kwargs):
-        &#34;&#34;&#34;
-        Look for these keys in the kwargs dict:
-        ```
-        true_wind_dir_field
-                 Field name to look for true wind direction
-        true_wind_speed_kt_field
-                 Field name to look for wind speed in knots. Either this
-                 or true_wind_speed_ms_field must be non-empty.
-        true_wind_speed_ms_field
-                 Field name to look for wind speed in meters per second.
-                 Either this or true_wind_speed_kt_field must be non-empty.
-        magnetic_variation_field
-                 Vessel magnetic variation. If omitted, only true winds
-                 will be emitted.
-        mwd_talker_id
-                 Should be format &#39;--MWD&#39; to identify the instrument
-                 that&#39;s creating the message.
-        ```
-        &#34;&#34;&#34;
-        self.true_wind_dir_field = kwargs.get(&#39;true_wind_dir_field&#39;)
-        self.true_wind_speed_kt_field = kwargs.get(&#39;true_wind_speed_kt_field&#39;)
-        self.true_wind_speed_ms_field = kwargs.get(&#39;true_wind_speed_ms_field&#39;)
-        self.magnetic_variation_field = kwargs.get(&#39;magnetic_variation_field&#39;)
-        self.mwd_talker_id = kwargs.get(&#39;mwd_talker_id&#39;)
-
-        self.true_wind_dir = None
-        self.true_wind_speed_kt = None
-        self.true_wind_speed_ms = None
-        self.magnetic_variation = None
-
-    ############################
-    def transform(self, record):
-        &#34;&#34;&#34;Incorporate any useable fields in this record. If it gives us a
-        new MWD record, return it.
-        &#34;&#34;&#34;
-        # Check that we&#39;ve got the right record type - it should be a
-        # single record.
-        if not record or type(record) is not dict:
-            logging.warning(&#39;Improper type for record: %s&#39;, type(record))
-            return None
-        fields = record.get(&#39;fields&#39;)
-        if not fields:
-            logging.debug(&#39;MWDTransform got record with no fields: %s&#39;, record)
-            return None
-
-        # Grab any relevant values
-        self.true_wind_dir = fields.get(self.true_wind_dir_field,
-                                        self.true_wind_dir)
-        if self.true_wind_speed_kt_field:
-            self.true_wind_speed_kt = fields.get(self.true_wind_speed_kt_field,
-                                                 self.true_wind_speed_kt)
-        if self.true_wind_speed_ms_field:
-            self.true_wind_speed_ms = fields.get(self.true_wind_speed_ms_field,
-                                                 self.true_wind_speed_ms)
-        if self.magnetic_variation_field:
-            self.magnetic_variation = fields.get(self.magnetic_variation_field,
-                                                 self.magnetic_variation)
-
-        # Do we have enough values to emit a record? If not, go home.
-        if self.true_wind_dir is None:
-            logging.debug(&#39;Not all required values present - skipping&#39;)
-            return None
-        if self.true_wind_speed_kt is None and self.true_wind_speed_ms is None:
-            logging.debug(&#39;Not all required values present - skipping&#39;)
-            return None
-
-        # Are we filling in meters per second from knots?
-        if self.true_wind_speed_ms_field is None and \
-           self.true_wind_speed_kt_field and \
-           self.true_wind_speed_kt is not None:
-            self.true_wind_speed_ms = self.true_wind_speed_kt * 0.514444
-
-        # Are we filling in knots from meters per second from?
-        if self.true_wind_speed_kt_field is None and \
-           self.true_wind_speed_ms_field and \
-           self.true_wind_speed_ms is not None:
-            self.true_wind_speed_kt = self.true_wind_speed_kt * 1.94384
-
-        # Do we have a magnetic variation? If so, provide mag winds,
-        # otherwise use an empty string.
-        if self.magnetic_variation is not None:
-            mag_winds = &#39;%3.1f&#39; % (self.true_wind_dir - self.magnetic_variation)
-        else:
-            mag_winds = &#39;&#39;
-
-        # Assemble string, compute checksum, and return it.
-        result_str = &#39;%s,%3.1f,T,%s,M,%3.1f,N,%3.1f,M&#39; % \
-                     (self.mwd_talker_id, self.true_wind_dir, mag_winds,
-                      self.true_wind_speed_kt, self.true_wind_speed_ms)
-        checksum = reduce(xor, (ord(c) for c in result_str))
-        return &#39;$%s*%02X&#39; % (result_str, checksum)
-
-
-#################################################################################
-&#34;&#34;&#34;Take in records and emit a NMEA XDR string, as per format:
-
-  $--XDR,a,x.x,a,c--c, ..... *hh&lt;CR&gt;&lt;LF&gt; \\
-Field Number:
-1) Transducer Type
-2) Measurement Data
-3) Units of measurement
-4) Name of transducer
-x) More of the same
-n) Checksum
-Example:
-$IIXDR,C,19.52,C,TempAir*19
-$IIXDR,P,1.02481,B,Barometer*29
-Measured Value | Transducer Type | Measured Data   | Unit of measure | Transducer Name
-------------------------------------------------------------------------------------------------------
-barometric     | &#34;P&#34; pressure    | 0.8..1.1 or 800..1100           | &#34;B&#34; bar         | &#34;Barometer&#34;
-air temperature| &#34;C&#34; temperature |   2 decimals                    | &#34;C&#34; celsius     | &#34;TempAir&#34; or &#34;ENV_OUTAIR_T&#34;
-pitch          | &#34;A&#34; angle       |-180..0 nose down 0..180 nose up | &#34;D&#34; degrees     | &#34;PTCH&#34; or &#34;PITCH&#34;
-rolling        | &#34;A&#34; angle       |-180..0 L         0..180 R       | &#34;D&#34; degrees     | &#34;ROLL&#34;
-water temp     | &#34;C&#34; temperature |   2 decimals                    | &#34;C&#34; celsius     | &#34;ENV_WATER_T&#34;
------------------------------------------------------------------------------------------------------
-
-We&#39;re going to cheat a bit here, as traditionally, a Transform is only
-supposed to output zero or one record for every input record it
-gets. We&#39;re going to emit multiple records as separate lines in a
-single record and count on whatever gets them next (UDPWriter or
-TextFileWriter, for example) acting appropriately.
-&#34;&#34;&#34;
-################################################################################
-
-
-class XDRTransform:
-    &#34;&#34;&#34;Output a NMEA XDR string, given whatever variables we can find.
-    &#34;&#34;&#34;
-
-    def __init__(self, kwargs):
-        &#34;&#34;&#34;
-        Look for these keys in the kwargs dict:
-        ```
-        barometer_field
-                 Name of field that contains barometric pressure.
-        barometer_output_field
-                 Transducer name of that should be output with barometer data.
-                 Defaults to barometer_field.
-        air_temp_field
-                 Name of field that contains air temperature
-        air_temp_output_field
-                 Transducer name of that should be output with air temp data.
-                 Defaults to air_temp_field.
-        sea_temp_field
-                 Name of field that contains water temperature
-        sea_temp_output_field
-                 Transducer name of that should be output with sea temp data.
-                 Defaults to sea_temp_field.
-        talker_id
-                 Should be format &#39;--XDR&#39; to identify the instrument
-                 that&#39;s creating the message.
-        ```
-        &#34;&#34;&#34;
-        self.barometer_field = kwargs.get(&#39;barometer_field&#39;)
-        self.barometer_output_field = kwargs.get(&#39;barometer_output_field&#39;,
-                                                 self.barometer_field)
-        self.air_temp_field = kwargs.get(&#39;air_temp_field&#39;)
-        self.air_temp_output_field = kwargs.get(&#39;air_temp_output_field&#39;,
-                                                self.air_temp_field)
-        self.sea_temp_field = kwargs.get(&#39;sea_temp_field&#39;)
-        self.sea_temp_output_field = kwargs.get(&#39;sea_temp_output_field&#39;,
-                                                self.sea_temp_field)
-        self.xdr_talker_id = kwargs.get(&#39;xdr_talker_id&#39;)
-
-    ############################
-    def transform(self, record):
-        &#34;&#34;&#34;Incorporate any useable fields in this record, and if it gives us a
-        new true wind value, return the results.
-        &#34;&#34;&#34;
-        # Assume we have a single record; check that we&#39;ve got the right
-        # record type.
-        if not record or type(record) is not dict:
-            logging.warning(&#39;Improper type for value dict: %s&#39;, type(record))
-            return None
-        fields = record.get(&#39;fields&#39;)
-        if not fields:
-            logging.debug(&#39;XDRTransform got record with no fields: %s&#39;, record)
-            return None
-
-        # Grab any relevant values
-        results = []
-        if self.barometer_field in fields:
-            barometer = fields.get(self.barometer_field)
-            barometer_data = &#39;%s,P,%s,B,%s&#39; % (self.xdr_talker_id, barometer,
-                                               self.barometer_output_field)
-            barometer_str = &#39;$%s*%s&#39; % (barometer_data, checksum(barometer_data))
-            results.append(barometer_str)
-
-        if self.air_temp_field in fields:
-            air_temp = fields.get(self.air_temp_field)
-            air_temp_data = &#39;%s,C,%3.2f,C,%s&#39; % (self.xdr_talker_id, float(air_temp),
-                                                 self.air_temp_output_field)
-            air_temp_str = &#39;$%s*%s&#39; % (air_temp_data, checksum(air_temp_data))
-            results.append(air_temp_str)
-
-        if self.sea_temp_field in fields:
-            sea_temp = fields.get(self.sea_temp_field)
-            sea_temp_data = &#39;%s,C,%3.2f,C,%s&#39; % (self.xdr_talker_id, float(sea_temp),
-                                                 self.sea_temp_output_field)
-            sea_temp_str = &#39;$%s*%s&#39; % (sea_temp_data, checksum(sea_temp_data))
-            results.append(sea_temp_str)
-
-        return results
-
-################################################################################
-
-class DPTTransform:
-    &#34;&#34;&#34;Take in records and emit a NMEA DPT string, as per format:
-      $--DPT,x.x,x.x,*nn&lt;CR&gt;&lt;LF&gt; \\
-    Field Number:
-    1) Depth in meters
-    2) Offset from transducer: Positive - distance from transducer to water line,
-        or Negative - distance from transducer to keel
-    n) Checksum
-
-    e.g. $GPDPT,200.3,0.0*46
-    &#34;&#34;&#34;
-
-    def __init__(self, kwargs):
-        &#34;&#34;&#34;
-        Look for these keys in the kwargs dict:
-        ```
-        depth_field
-                 name of field that contains Depth
-        offset_field
-                 Name of field that contains Offset
-        position_source_field
-                 Name of field that contains position source
-        dpt_talker_id
-                 Should be format &#39;--DPT&#39; to identify the instrument
-                 that&#39;s creating the message.
-        ```
-        &#34;&#34;&#34;
-
-        self.depth_field = kwargs.get(&#39;depth_field&#39;)
-        self.offset_field = kwargs.get(&#39;offset_field&#39;)
-
-        self.dpt_talker_id = kwargs.get(&#39;dpt_talker_id&#39;)
-
-    ############################
-    def transform(self, record):
-        &#34;&#34;&#34;Incorporate any useable fields in this record, and if it gives us a
-        new true wind value, return the results.
-        &#34;&#34;&#34;
-        # Check that we&#39;ve got the right record type - it should be a
-        # single record.
-        if not record or type(record) is not dict:
-            logging.warning(&#39;Improper type for record: %s&#39;, type(record))
-            return None
-        fields = record.get(&#39;fields&#39;)
-        if not fields:
-            logging.debug(&#39;MWDTransform got record with no fields: %s&#39;, record)
-            return None
-
-        depth = fields.get(self.depth_field)
-        offset = fields.get(self.offset_field)
-
-        if depth:
-            data = f&#39;{self.dpt_talker_id},{depth},{offset}&#39;
-            string = f&#39;${data}*{checksum(data)}&#39;
-            return string
-
-        return None
-
-
-################################################################################
-
-class STNTransform:
-    &#34;&#34;&#34;This sentence is transmitted before each individual sentence where there is a need for the
-    Listener to determine the exact source of data in the system. Examples might include
-    dual-frequency depth sounding equipment or equipment that integrates data from a
-    number of sources and produces a single output.
-
-    Take in records and emit a NMEA STN string, as per format:
-      $--STN,x.x*hh&lt;CR&gt;&lt;LF&gt;
-    Field Number:
-    1) Talker ID Number/Name
-    2) Checksum
-
-    e.g. $
-    &#34;&#34;&#34;
-
-    def __init__(self, kwargs):
-        &#34;&#34;&#34;
-        Look for these keys in the kwargs dict:
-        ```
-        id_field
-                 name of field that contains id
-        stn_talker_id
-                Should be format &#39;--STN&#39; to identify the instrument
-                 that&#39;s creating the message.
-        ```
-        &#34;&#34;&#34;
-        self.id_field = kwargs.get(&#39;id_field&#39;)
-
-        self.stn_talker_id = kwargs.get(&#39;stn_talker_id&#39;)
-
-    ############################
-    def transform(self, record):
-        &#34;&#34;&#34;Incorporate any useable fields in this record.
-        &#34;&#34;&#34;
-        # Check that we&#39;ve got the right record type - it should be a
-        # single record.
-        if not record or type(record) is not dict:
-            logging.warning(&#39;Improper type for record: %s&#39;, type(record))
-            return None
-        fields = record.get(&#39;fields&#39;)
-        if not fields:
-            logging.debug(&#39;MWDTransform got record with no fields: %s&#39;, record)
-            return None
-
-        id = fields.get(self.id_field)
-
-        if id:
-            data = f&#39;{self.stn_talker_id},{id}&#39;
-            string = f&#39;${data}*{checksum(data)}&#39;
-            return string
-
-        return None</code></pre>
-</details>
 </section>
 <section>
 </section>
@@ -512,7 +65,6 @@ class STNTransform:
 <span>def <span class="ident">checksum</span></span>(<span>source)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Return hex checksum for source string.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -521,6 +73,7 @@ class STNTransform:
     &#34;&#34;&#34;Return hex checksum for source string.&#34;&#34;&#34;
     return &#39;%02X&#39; % reduce(xor, (ord(c) for c in source))</code></pre>
 </details>
+<div class="desc"><p>Return hex checksum for source string.</p></div>
 </dd>
 </dl>
 </section>
@@ -532,25 +85,6 @@ class STNTransform:
 <span>(</span><span>kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Take in records and emit a NMEA DPT string, as per format:
-$&ndash;DPT,x.x,x.x,*nn<CR><LF> \
-Field Number:
-1) Depth in meters
-2) Offset from transducer: Positive - distance from transducer to water line,
-or Negative - distance from transducer to keel
-n) Checksum</p>
-<p>e.g. $GPDPT,200.3,0.0*46</p>
-<p>Look for these keys in the kwargs dict:</p>
-<pre><code>depth_field
-         name of field that contains Depth
-offset_field
-         Name of field that contains Offset
-position_source_field
-         Name of field that contains position source
-dpt_talker_id
-         Should be format '--DPT' to identify the instrument
-         that's creating the message.
-</code></pre></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -613,14 +147,31 @@ dpt_talker_id
 
         return None</code></pre>
 </details>
+<div class="desc"><p>Take in records and emit a NMEA DPT string, as per format:
+$&ndash;DPT,x.x,x.x,*nn<CR><LF> \
+Field Number:
+1) Depth in meters
+2) Offset from transducer: Positive - distance from transducer to water line,
+or Negative - distance from transducer to keel
+n) Checksum</p>
+<p>e.g. $GPDPT,200.3,0.0*46</p>
+<p>Look for these keys in the kwargs dict:</p>
+<pre><code>depth_field
+         name of field that contains Depth
+offset_field
+         Name of field that contains Offset
+position_source_field
+         Name of field that contains position source
+dpt_talker_id
+         Should be format '--DPT' to identify the instrument
+         that's creating the message.
+</code></pre></div>
 <h3>Methods</h3>
 <dl>
 <dt id="logger.transforms.nmea_transform.DPTTransform.transform"><code class="name flex">
 <span>def <span class="ident">transform</span></span>(<span>self, record)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Incorporate any useable fields in this record, and if it gives us a
-new true wind value, return the results.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -649,6 +200,8 @@ new true wind value, return the results.</p></div>
 
     return None</code></pre>
 </details>
+<div class="desc"><p>Incorporate any useable fields in this record, and if it gives us a
+new true wind value, return the results.</p></div>
 </dd>
 </dl>
 </dd>
@@ -657,24 +210,6 @@ new true wind value, return the results.</p></div>
 <span>(</span><span>kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Output a NMEA MWD string, given true wind and (when available)
-magnetic variation.</p>
-<p>Look for these keys in the kwargs dict:</p>
-<pre><code>true_wind_dir_field
-         Field name to look for true wind direction
-true_wind_speed_kt_field
-         Field name to look for wind speed in knots. Either this
-         or true_wind_speed_ms_field must be non-empty.
-true_wind_speed_ms_field
-         Field name to look for wind speed in meters per second.
-         Either this or true_wind_speed_kt_field must be non-empty.
-magnetic_variation_field
-         Vessel magnetic variation. If omitted, only true winds
-         will be emitted.
-mwd_talker_id
-         Should be format '--MWD' to identify the instrument
-         that's creating the message.
-</code></pre></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -777,14 +312,30 @@ mwd_talker_id
         checksum = reduce(xor, (ord(c) for c in result_str))
         return &#39;$%s*%02X&#39; % (result_str, checksum)</code></pre>
 </details>
+<div class="desc"><p>Output a NMEA MWD string, given true wind and (when available)
+magnetic variation.</p>
+<p>Look for these keys in the kwargs dict:</p>
+<pre><code>true_wind_dir_field
+         Field name to look for true wind direction
+true_wind_speed_kt_field
+         Field name to look for wind speed in knots. Either this
+         or true_wind_speed_ms_field must be non-empty.
+true_wind_speed_ms_field
+         Field name to look for wind speed in meters per second.
+         Either this or true_wind_speed_kt_field must be non-empty.
+magnetic_variation_field
+         Vessel magnetic variation. If omitted, only true winds
+         will be emitted.
+mwd_talker_id
+         Should be format '--MWD' to identify the instrument
+         that's creating the message.
+</code></pre></div>
 <h3>Methods</h3>
 <dl>
 <dt id="logger.transforms.nmea_transform.MWDTransform.transform"><code class="name flex">
 <span>def <span class="ident">transform</span></span>(<span>self, record)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Incorporate any useable fields in this record. If it gives us a
-new MWD record, return it.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -850,6 +401,8 @@ new MWD record, return it.</p></div>
     checksum = reduce(xor, (ord(c) for c in result_str))
     return &#39;$%s*%02X&#39; % (result_str, checksum)</code></pre>
 </details>
+<div class="desc"><p>Incorporate any useable fields in this record. If it gives us a
+new MWD record, return it.</p></div>
 </dd>
 </dl>
 </dd>
@@ -858,11 +411,6 @@ new MWD record, return it.</p></div>
 <span>(</span><span>nmea_list: list = [], **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Call our various component transforms and generate NMEA strings from them.</p>
-<p>nmea_list
-List of the nmea transforms that will be used.
-**kwargs
-Arugments needed for the nmea transforms, see transforms below for what will be included.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -938,13 +486,17 @@ Arugments needed for the nmea transforms, see transforms below for what will be 
         else:
             return pruned_results</code></pre>
 </details>
+<div class="desc"><p>Call our various component transforms and generate NMEA strings from them.</p>
+<p>nmea_list
+List of the nmea transforms that will be used.
+**kwargs
+Arugments needed for the nmea transforms, see transforms below for what will be included.</p></div>
 <h3>Methods</h3>
 <dl>
 <dt id="logger.transforms.nmea_transform.NMEATransform.transform"><code class="name flex">
 <span>def <span class="ident">transform</span></span>(<span>self, record)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Expect a record dict (with 'timestamp' and 'fields' keys.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -982,6 +534,7 @@ Arugments needed for the nmea transforms, see transforms below for what will be 
     else:
         return pruned_results</code></pre>
 </details>
+<div class="desc"><p>Expect a record dict (with 'timestamp' and 'fields' keys.</p></div>
 </dd>
 </dl>
 </dd>
@@ -990,23 +543,6 @@ Arugments needed for the nmea transforms, see transforms below for what will be 
 <span>(</span><span>kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>This sentence is transmitted before each individual sentence where there is a need for the
-Listener to determine the exact source of data in the system. Examples might include
-dual-frequency depth sounding equipment or equipment that integrates data from a
-number of sources and produces a single output.</p>
-<p>Take in records and emit a NMEA STN string, as per format:
-$&ndash;STN,x.x*hh<CR><LF>
-Field Number:
-1) Talker ID Number/Name
-2) Checksum</p>
-<p>e.g. $</p>
-<p>Look for these keys in the kwargs dict:</p>
-<pre><code>id_field
-         name of field that contains id
-stn_talker_id
-        Should be format '--STN' to identify the instrument
-         that's creating the message.
-</code></pre></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1064,13 +600,29 @@ stn_talker_id
 
         return None</code></pre>
 </details>
+<div class="desc"><p>This sentence is transmitted before each individual sentence where there is a need for the
+Listener to determine the exact source of data in the system. Examples might include
+dual-frequency depth sounding equipment or equipment that integrates data from a
+number of sources and produces a single output.</p>
+<p>Take in records and emit a NMEA STN string, as per format:
+$&ndash;STN,x.x*hh<CR><LF>
+Field Number:
+1) Talker ID Number/Name
+2) Checksum</p>
+<p>e.g. $</p>
+<p>Look for these keys in the kwargs dict:</p>
+<pre><code>id_field
+         name of field that contains id
+stn_talker_id
+        Should be format '--STN' to identify the instrument
+         that's creating the message.
+</code></pre></div>
 <h3>Methods</h3>
 <dl>
 <dt id="logger.transforms.nmea_transform.STNTransform.transform"><code class="name flex">
 <span>def <span class="ident">transform</span></span>(<span>self, record)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Incorporate any useable fields in this record.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1097,6 +649,7 @@ stn_talker_id
 
     return None</code></pre>
 </details>
+<div class="desc"><p>Incorporate any useable fields in this record.</p></div>
 </dd>
 </dl>
 </dd>
@@ -1105,27 +658,6 @@ stn_talker_id
 <span>(</span><span>kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Output a NMEA XDR string, given whatever variables we can find.</p>
-<p>Look for these keys in the kwargs dict:</p>
-<pre><code>barometer_field
-         Name of field that contains barometric pressure.
-barometer_output_field
-         Transducer name of that should be output with barometer data.
-         Defaults to barometer_field.
-air_temp_field
-         Name of field that contains air temperature
-air_temp_output_field
-         Transducer name of that should be output with air temp data.
-         Defaults to air_temp_field.
-sea_temp_field
-         Name of field that contains water temperature
-sea_temp_output_field
-         Transducer name of that should be output with sea temp data.
-         Defaults to sea_temp_field.
-talker_id
-         Should be format '--XDR' to identify the instrument
-         that's creating the message.
-</code></pre></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1209,14 +741,33 @@ talker_id
 
         return results</code></pre>
 </details>
+<div class="desc"><p>Output a NMEA XDR string, given whatever variables we can find.</p>
+<p>Look for these keys in the kwargs dict:</p>
+<pre><code>barometer_field
+         Name of field that contains barometric pressure.
+barometer_output_field
+         Transducer name of that should be output with barometer data.
+         Defaults to barometer_field.
+air_temp_field
+         Name of field that contains air temperature
+air_temp_output_field
+         Transducer name of that should be output with air temp data.
+         Defaults to air_temp_field.
+sea_temp_field
+         Name of field that contains water temperature
+sea_temp_output_field
+         Transducer name of that should be output with sea temp data.
+         Defaults to sea_temp_field.
+talker_id
+         Should be format '--XDR' to identify the instrument
+         that's creating the message.
+</code></pre></div>
 <h3>Methods</h3>
 <dl>
 <dt id="logger.transforms.nmea_transform.XDRTransform.transform"><code class="name flex">
 <span>def <span class="ident">transform</span></span>(<span>self, record)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Incorporate any useable fields in this record, and if it gives us a
-new true wind value, return the results.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1260,6 +811,8 @@ new true wind value, return the results.</p></div>
 
     return results</code></pre>
 </details>
+<div class="desc"><p>Incorporate any useable fields in this record, and if it gives us a
+new true wind value, return the results.</p></div>
 </dd>
 </dl>
 </dd>
@@ -1267,7 +820,6 @@ new true wind value, return the results.</p></div>
 </section>
 </article>
 <nav id="sidebar">
-<h1>Index</h1>
 <div class="toc">
 <ul></ul>
 </div>
@@ -1320,7 +872,7 @@ new true wind value, return the results.</p></div>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.6</a>.</p>
 </footer>
 </body>
 </html>

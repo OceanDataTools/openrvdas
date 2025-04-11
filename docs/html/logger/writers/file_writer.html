@@ -2,18 +2,32 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.10.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+<meta name="generator" content="pdoc3 0.11.6">
 <title>logger.writers.file_writer API documentation</title>
-<meta name="description" content="" />
-<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
-<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
-<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
-<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
-<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<meta name="description" content="">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
-<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => {
+hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
+hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
+})</script>
 </head>
 <body>
 <main>
@@ -22,323 +36,6 @@
 <h1 class="title">Module <code>logger.writers.file_writer</code></h1>
 </header>
 <section id="section-intro">
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">#!/usr/bin/env python3
-
-import logging
-import os.path
-import sys
-import math
-
-from datetime import datetime, timedelta, timezone
-from typing import Union
-
-from os.path import dirname, realpath
-sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
-
-from logger.utils.timestamp import time_str, DATE_FORMAT  # noqa: E402
-from logger.writers.writer import Writer  # noqa: E402
-
-
-class FileWriter(Writer):
-    &#34;&#34;&#34;Write to the specified file. If filename is empty, write to stdout.&#34;&#34;&#34;
-
-    def __init__(self, filename=None, mode=&#39;a&#39;, delimiter=&#39;\n&#39;, flush=True,
-                 split_by_time=False, split_interval=None, header=None,
-                 header_file=None, time_format=&#39;-&#39; + DATE_FORMAT,
-                 time_zone=timezone.utc, create_path=True, quiet=False,
-                 encoding=&#39;utf-8&#39;, encoding_errors=&#39;ignore&#39;):
-        &#34;&#34;&#34;Write text records to a file. If no filename is specified, write to
-        stdout.
-        ```
-        filename     Name of file to write to. If None, write to stdout
-
-        mode         Mode with which to open file. &#39;a&#39; by default to append, but
-                     can also be &#39;w&#39; to truncate, &#39;ab&#39; to append in binary
-                     mode, or any other valid Python write file mode.
-
-        delimiter    By default, append a newline after each record
-                     written. Set to None to disable appending any record
-                     delimiter.
-
-        flush        If True, flush after each write.
-
-        split_by_time Create a separate text file for each (by default)
-                     day, appending a -YYYY-MM-DD string to the specified
-                     filename. By overridding time_format, other split
-                     intervals, such as hourly or monthly, may be imposed.
-
-        split_interval Splits files based on a defined hour (H) or minute (M)
-                     time interval such as every 2 hours (2H) or 15 minutes
-                     (15M). Currently H and M are the only options.
-
-        header       Add the specified header string to each file.
-
-        header_file  Add the content of the specified file to each file.
-
-        time_format  By default ISO 8601-compliant &#39;-%Y-%m-%d&#39;. If,
-                     e.g. &#39;-%Y-%m&#39; is used, files will be split by month;
-                     if -%y-%m-%d:%H&#39; is specified, splits will be
-                     hourly. If &#39;%y+%j&#39; is specified, splits will be
-                     daily, but named via Julian date.  Putting &#39;-&#39; or &#39;.&#39; on
-                     the left indicates timestamp suffix, putting it on the
-                     right indicates timestamp prefix.  If you put &#39;-&#39; or &#39;.&#39;
-                     on both sides, it&#39;s handled as a suffix.
-
-        time_zone    Time zone to use for determining splits. By default UTC.
-
-        create_path  Create directory path to file if it doesn&#39;t exist
-
-        quiet - Silence errors in input records.
-
-        encoding - &#39;utf-8&#39; by default. If empty or None, do not attempt any
-                decoding and return raw bytes. Other possible encodings are
-                listed in online documentation here:
-                https://docs.python.org/3/library/codecs.html#standard-encodings
-
-        encoding_errors - &#39;ignore&#39; by default. Other error strategies are
-                &#39;strict&#39;, &#39;replace&#39;, and &#39;backslashreplace&#39;, described here:
-                https://docs.python.org/3/howto/unicode.html#encodings
-        ```
-        &#34;&#34;&#34;
-        super().__init__(quiet=quiet, encoding=encoding,
-                         encoding_errors=encoding_errors)
-
-        self.filename = filename
-        self.mode = mode
-        self.flush = flush
-        self.split_by_time = split_by_time
-        self.time_format = time_format
-        self.time_zone = time_zone
-        self.split_interval = None
-        self.split_interval_in_seconds = 0
-        self.header = None
-        self.next_file_split = datetime.now(self.time_zone)
-
-        # &#39;delimiter&#39; comes in as a (probably escaped) string. We need to
-        # unescape it, which means converting to bytes and back.
-        if delimiter:
-            if self.encoding:
-                # NOTE: Technically, it&#39;s safe to call _unescape_str() with no
-                #       encoding, it just returns the str/bytes/thing
-                #       unmodified.  But why tempt fate, right?
-                delimiter = self._unescape_str(delimiter)
-            else:
-                # if encoding has been set to &#39;&#39; or None, we&#39;re dealing with
-                # raw/binary output.  encode delimiter so we can append it
-                # safely in write()
-                delimiter = delimiter.encode()
-        self.delimiter = delimiter
-
-        if (split_by_time or split_interval) is not None and not filename:
-            raise ValueError(&#39;FileWriter: filename must be specified if &#39;
-                             &#39;split_by_time is specified or split_interval &#39;
-                             &#39;is True.&#39;)
-
-        if split_interval is not None:
-            # Verify the split_interval argument is valid be confirming
-            # the last charater is &#39;H&#39; or &#39;M&#39; and the preceding characters
-            # parse as an integer
-
-            if split_interval[-1] not in [&#39;H&#39;, &#39;M&#39;]:
-                raise ValueError(&#39;FileWriter: split_interval must be an integer &#39;
-                                 &#39;followed by \&#39;H\&#39; or \&#39;M\&#39;.&#39;)
-            try:
-                self.split_interval = (int(split_interval[:-1]), split_interval[-1])
-                self.split_interval_in_seconds = self._get_split_interval_in_seconds(split_interval)
-            except ValueError:
-                raise ValueError(&#39;FileWriter: split_interval must be an integer &#39;
-                                 &#39;followed by \&#39;H\&#39; or \&#39;M\&#39;.&#39;)
-
-        if header is not None and header_file is not None:
-            raise ValueError(&#39;FileWriter: cannot specify the header and &#39;
-                             &#39;header_file arguments.&#39;)
-
-        if header is not None:
-            if isinstance(header, str):
-                self.header = header + &#39;\n&#39;
-            else:
-                raise ValueError(&#39;FileWriter: Unable to add header to data &#39;
-                                 &#39;file. header argument must be a string: %s&#39;,
-                                 header)
-
-        if header_file is not None:
-            try:
-                with open(header_file, &#39;r&#39;) as file:
-                    self.header = file.read()
-            except:  # noqa E722
-                raise ValueError(&#39;FileWriter: Unable to add header to data &#39;
-                                 &#39;file. header_file argument must be a valid &#39;
-                                 &#39;filepath: %s&#39;, header_file)
-
-        if self.header is not None and &#39;b&#39; in mode:
-            raise ValueError(&#39;FileWriter: Unable to add header to a binary &#39;
-                             &#39;data file&#39;)
-
-        # If we&#39;re splitting by time, keep track of current file suffix so
-        # we know when to roll over.
-        self.file_suffix = None
-        self.file = None
-
-        # A hook to aid in debugging; should be None to use system time.
-        self.timestamp = None
-
-        # If directory doesn&#39;t exist, try to create it
-        if filename and create_path:
-            file_dir = os.path.dirname(filename)
-            if file_dir:
-                os.makedirs(file_dir, exist_ok=True)
-
-    ############################
-    def __del__(self):
-        if self.file:
-            self.file.close()
-
-    ############################
-    def _get_split_interval_in_seconds(self, split_interval):
-        if split_interval[1] == &#39;H&#39;:
-
-            # automatically update default time_format
-            if self.time_format == &#39;-&#39; + DATE_FORMAT:
-                self.time_format = &#39;-&#39; + DATE_FORMAT + &#39;T%H00&#39;
-
-            # raise error if the custom time_format does not contain
-            # an hour designation
-            elif &#34;%H&#34; not in self.time_format:
-                raise ValueError(&#39;FileWriter: time_format must contain a &#39;
-                                 &#39;hour designation (%H).&#39;)
-
-            return split_interval[0] * 3600
-
-        if split_interval[1] == &#39;M&#39;:
-            # automatically update default time_format
-            if self.time_format == &#39;-&#39; + DATE_FORMAT:
-                self.time_format = &#39;-&#39; + DATE_FORMAT + &#39;T%H%M&#39;
-
-            # raise error if the custom time_format does not contain
-            # an hour designation
-            elif &#34;%H&#34; not in self.time_format or &#34;%M&#34; not in self.time_format:
-                raise ValueError(&#39;FileWriter: time_format must contain a &#39;
-                                 &#39;hour designation (%H) and minute &#39;
-                                 &#39;designation (%M).&#39;)
-
-            return split_interval[0] * 60
-
-        return 0
-
-    ############################
-    def _get_file_suffix(self):
-        &#34;&#34;&#34;Return a string to be used for the file suffix.&#34;&#34;&#34;
-
-        # Note: the self.timestamp variable exists for debugging, and
-        # should be left as None in actual use, which tells the time_str
-        # method to use current system time.
-
-        # if there is no split interval
-        if self.split_interval is None:
-            return time_str(timestamp=self.timestamp, time_zone=self.time_zone,
-                            time_format=self.time_format)
-
-        # if the data is being split by N hours
-        elif self.split_interval[1] == &#39;H&#39;:  # hour
-            timestamp_raw = datetime.now(self.time_zone)
-            timestamp_hour = (self.split_interval[0] *
-                              math.floor(timestamp_raw.hour/self.split_interval[0]))
-            timestamp_proc = timestamp_raw.replace(hour=timestamp_hour, minute=0, second=0)
-            self.next_file_split = (timestamp_proc +
-                                    timedelta(seconds=self.split_interval_in_seconds))
-
-            return time_str(timestamp=timestamp_proc.timestamp(), time_zone=self.time_zone,
-                            time_format=self.time_format)
-
-        # if the data is being split by N minutes
-        elif self.split_interval[1] == &#39;M&#39;:  # minute
-            timestamp_raw = datetime.now(self.time_zone)
-            timestamp_minute = (self.split_interval[0] *
-                                math.floor(timestamp_raw.minute/self.split_interval[0]))
-            timestamp_proc = timestamp_raw.replace(minute=timestamp_minute, second=0)
-            self.next_file_split = (timestamp_proc +
-                                    timedelta(seconds=self.split_interval_in_seconds))
-
-            return time_str(timestamp=timestamp_proc.timestamp(), time_zone=self.time_zone,
-                            time_format=self.time_format)
-
-    ############################
-    def _set_file(self, filename):
-        &#34;&#34;&#34;Set the current file to the specified filename.&#34;&#34;&#34;
-
-        # If they haven&#39;t given us a filename, we&#39;ll write to stdout
-        if filename is None:
-            self.file = sys.stdout
-
-            if self.header is not None:
-                self.file.write(self.header)
-
-            return
-
-        # If here, we have a filename. If we already have a file open,
-        # close it, then open the new one.
-        if self.file:
-            self.file.close()
-
-        # Check to see if file already exists
-        file_is_new = not os.path.isfile(filename)
-
-        # Finally, open the specified file with the specified mode and encoding
-        logging.info(&#34;opening %s with mode=%s and encoding=%s&#34;, filename, self.mode, self.encoding)
-        self.file = open(filename, self.mode, encoding=self.encoding)
-
-        # Add header record to file if a header was specified and the file was
-        # just created.
-        if file_is_new and self.header is not None:
-            self.file.write(self.header)
-
-    ############################
-    def write(self, record: Union[str, bytes]):
-        &#34;&#34;&#34; Write out record, appending a newline at end.&#34;&#34;&#34;
-
-        # See if it&#39;s something we can process, and if not, try digesting
-        if not self.can_process_record(record):  # inherited from BaseModule()
-            self.digest_record(record)  # inherited from BaseModule()
-            return
-
-        # If we&#39;re splitting by some time interval, see if it&#39;s time to
-        # roll over to a new file.
-        # if self.split_by_time or self.split_interval is not None:
-        if self.split_by_time or (self.split_interval and
-                                  datetime.now(self.time_zone) &gt; self.next_file_split):
-            new_file_suffix = self._get_file_suffix()
-            if new_file_suffix != self.file_suffix:
-                self.file_suffix = new_file_suffix
-                if new_file_suffix.startswith(&#39;-&#39;) or new_file_suffix.startswith(&#39;.&#39;):
-                    # it&#39;s a suffix
-                    self._set_file(self.filename + new_file_suffix)
-                elif new_file_suffix.endswith(&#39;-&#39;) or new_file_suffix.endswith(&#39;.&#39;):
-                    # make it a prefix even though we&#39;ve called it a suffix
-                    # this whole time.
-                    self._set_file(os.path.join(os.path.dirname(self.filename),
-                                                new_file_suffix + os.path.basename(self.filename)))
-                else:
-                    # well, this is probably gonna look ugly w/out a separator
-                    # character, but go ahead and treat it as a suffix
-                    self._set_file(self.filename + new_file_suffix)
-
-        # If we&#39;re not splitting by intervals, still check that we&#39;ve got
-        # a file open we can write to. If not, open it.
-        else:
-            if not self.file:
-                self._set_file(self.filename)
-
-        # Write the record and flush if requested
-        self.file.write(record)
-        if self.delimiter is not None:
-            self.file.write(self.delimiter)
-        if self.flush:
-            self.file.flush()</code></pre>
-</details>
 </section>
 <section>
 </section>
@@ -351,61 +48,9 @@ class FileWriter(Writer):
 <dl>
 <dt id="logger.writers.file_writer.FileWriter"><code class="flex name class">
 <span>class <span class="ident">FileWriter</span></span>
-<span>(</span><span>filename=None, mode='a', delimiter='\n', flush=True, split_by_time=False, split_interval=None, header=None, header_file=None, time_format='-%Y-%m-%d', time_zone=datetime.timezone.utc, create_path=True, quiet=False, encoding='utf-8', encoding_errors='ignore')</span>
+<span>(</span><span>filename=None,<br>mode='a',<br>delimiter='\n',<br>flush=True,<br>split_by_time=False,<br>split_interval=None,<br>header=None,<br>header_file=None,<br>time_format='-%Y-%m-%d',<br>time_zone=datetime.timezone.utc,<br>create_path=True,<br>quiet=False,<br>encoding='utf-8',<br>encoding_errors='ignore')</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Write to the specified file. If filename is empty, write to stdout.</p>
-<p>Write text records to a file. If no filename is specified, write to
-stdout.</p>
-<pre><code>filename     Name of file to write to. If None, write to stdout
-
-mode         Mode with which to open file. 'a' by default to append, but
-             can also be 'w' to truncate, 'ab' to append in binary
-             mode, or any other valid Python write file mode.
-
-delimiter    By default, append a newline after each record
-             written. Set to None to disable appending any record
-             delimiter.
-
-flush        If True, flush after each write.
-
-split_by_time Create a separate text file for each (by default)
-             day, appending a -YYYY-MM-DD string to the specified
-             filename. By overridding time_format, other split
-             intervals, such as hourly or monthly, may be imposed.
-
-split_interval Splits files based on a defined hour (H) or minute (M)
-             time interval such as every 2 hours (2H) or 15 minutes
-             (15M). Currently H and M are the only options.
-
-header       Add the specified header string to each file.
-
-header_file  Add the content of the specified file to each file.
-
-time_format  By default ISO 8601-compliant '-%Y-%m-%d'. If,
-             e.g. '-%Y-%m' is used, files will be split by month;
-             if -%y-%m-%d:%H' is specified, splits will be
-             hourly. If '%y+%j' is specified, splits will be
-             daily, but named via Julian date.  Putting '-' or '.' on
-             the left indicates timestamp suffix, putting it on the
-             right indicates timestamp prefix.  If you put '-' or '.'
-             on both sides, it's handled as a suffix.
-
-time_zone    Time zone to use for determining splits. By default UTC.
-
-create_path  Create directory path to file if it doesn't exist
-
-quiet - Silence errors in input records.
-
-encoding - 'utf-8' by default. If empty or None, do not attempt any
-        decoding and return raw bytes. Other possible encodings are
-        listed in online documentation here:
-        https://docs.python.org/3/library/codecs.html#standard-encodings
-
-encoding_errors - 'ignore' by default. Other error strategies are
-        'strict', 'replace', and 'backslashreplace', described here:
-        https://docs.python.org/3/howto/unicode.html#encodings
-</code></pre></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -706,6 +351,58 @@ encoding_errors - 'ignore' by default. Other error strategies are
         if self.flush:
             self.file.flush()</code></pre>
 </details>
+<div class="desc"><p>Write to the specified file. If filename is empty, write to stdout.</p>
+<p>Write text records to a file. If no filename is specified, write to
+stdout.</p>
+<pre><code>filename     Name of file to write to. If None, write to stdout
+
+mode         Mode with which to open file. 'a' by default to append, but
+             can also be 'w' to truncate, 'ab' to append in binary
+             mode, or any other valid Python write file mode.
+
+delimiter    By default, append a newline after each record
+             written. Set to None to disable appending any record
+             delimiter.
+
+flush        If True, flush after each write.
+
+split_by_time Create a separate text file for each (by default)
+             day, appending a -YYYY-MM-DD string to the specified
+             filename. By overridding time_format, other split
+             intervals, such as hourly or monthly, may be imposed.
+
+split_interval Splits files based on a defined hour (H) or minute (M)
+             time interval such as every 2 hours (2H) or 15 minutes
+             (15M). Currently H and M are the only options.
+
+header       Add the specified header string to each file.
+
+header_file  Add the content of the specified file to each file.
+
+time_format  By default ISO 8601-compliant '-%Y-%m-%d'. If,
+             e.g. '-%Y-%m' is used, files will be split by month;
+             if -%y-%m-%d:%H' is specified, splits will be
+             hourly. If '%y+%j' is specified, splits will be
+             daily, but named via Julian date.  Putting '-' or '.' on
+             the left indicates timestamp suffix, putting it on the
+             right indicates timestamp prefix.  If you put '-' or '.'
+             on both sides, it's handled as a suffix.
+
+time_zone    Time zone to use for determining splits. By default UTC.
+
+create_path  Create directory path to file if it doesn't exist
+
+quiet - Silence errors in input records.
+
+encoding - 'utf-8' by default. If empty or None, do not attempt any
+        decoding and return raw bytes. Other possible encodings are
+        listed in online documentation here:
+        https://docs.python.org/3/library/codecs.html#standard-encodings
+
+encoding_errors - 'ignore' by default. Other error strategies are
+        'strict', 'replace', and 'backslashreplace', described here:
+        https://docs.python.org/3/howto/unicode.html#encodings
+</code></pre></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="logger.writers.writer.Writer" href="writer.html#logger.writers.writer.Writer">Writer</a></li>
@@ -714,10 +411,9 @@ encoding_errors - 'ignore' by default. Other error strategies are
 <h3>Methods</h3>
 <dl>
 <dt id="logger.writers.file_writer.FileWriter.write"><code class="name flex">
-<span>def <span class="ident">write</span></span>(<span>self, record: Union[str, bytes])</span>
+<span>def <span class="ident">write</span></span>(<span>self, record: str | bytes)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Write out record, appending a newline at end.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -764,6 +460,7 @@ encoding_errors - 'ignore' by default. Other error strategies are
     if self.flush:
         self.file.flush()</code></pre>
 </details>
+<div class="desc"><p>Write out record, appending a newline at end.</p></div>
 </dd>
 </dl>
 <h3>Inherited members</h3>
@@ -780,7 +477,6 @@ encoding_errors - 'ignore' by default. Other error strategies are
 </section>
 </article>
 <nav id="sidebar">
-<h1>Index</h1>
 <div class="toc">
 <ul></ul>
 </div>
@@ -804,7 +500,7 @@ encoding_errors - 'ignore' by default. Other error strategies are
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.6</a>.</p>
 </footer>
 </body>
 </html>
