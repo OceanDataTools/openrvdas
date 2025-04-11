@@ -204,9 +204,12 @@ class ListenerFromLoggerConfigFile(ListenerFromLoggerConfig):
         if config_file.find(':') > 0:
             (config_file, config_name) = config_file.split(':', maxsplit=1)
         config = read_config.read_config(config_file)
-        config = read_config.expand_cruise_definition(config)
 
+        # If we're loading a single config from a cruise definition file,
+        # expand the file.
         if config_name:
+            config = read_config.expand_cruise_definition(config)
+
             config_dict = config.get('configs')
             if not config_dict:
                 raise ValueError('Configuration name "%s" specified, but no '
