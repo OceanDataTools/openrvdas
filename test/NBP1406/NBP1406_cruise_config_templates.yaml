@@ -57,15 +57,11 @@ loggers:
         variables:
           baud_rate: 9600
           serial_port: /tmp/tty_s330
-          writer_udp_port: <<raw_udp_port>>
-          writer_udp_destination: <<udp_destination>>
       net+file:
         config_template: serial_net_file_config_template
         variables:
           baud_rate: 9600
           serial_port: /tmp/tty_s330
-          writer_udp_port: <<raw_udp_port>>
-          writer_udp_destination: <<udp_destination>>
 
   # Parse raw UDP data and send to CDS, and optionally InfluxDB;
   # uses default global variables
