@@ -343,7 +343,7 @@ if __name__ == '__main__':
                         'Note: zero-base indexing, so "1:" means "start at '
                         'second element.')
 
-    parser.add_argument('--slice_separator', dest='slice_separator', default=' ',
+    parser.add_argument('--slice_separator', dest='slice_separator', default=None,
                         help='Field separator for --slice.')
 
     parser.add_argument('--transform_regex_filter', dest='regex_filter',
