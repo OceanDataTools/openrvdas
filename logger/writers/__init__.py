@@ -19,3 +19,4 @@ from .text_file_writer import TextFileWriter
 from .timeout_writer import TimeoutWriter
 from .udp_writer import UDPWriter
 from .websocket_writer import WebsocketWriter
+from .socket_writer import SocketWriter
