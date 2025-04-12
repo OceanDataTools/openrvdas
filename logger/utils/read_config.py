@@ -328,10 +328,12 @@ def expand_templates(cruise_definition: Dict[str, Dict[str, Any]]) -> Dict[str, 
             for var in unmatched:
                 # Extract the variable name from the <<var>> format
                 var_name = var.strip('<>')
-                # If it's missing from the effective variables but exists in globals, use the global value
+                # If it's missing from the effective variables but exists
+                # in globals, use the global value
                 if var_name not in effective_variables and var_name in global_variables:
                     logging.info(
-                        f"Using global value for '{var_name}' in config '{config_name}' for logger '{logger_name}'")
+                        f"Using global value for '{var_name}' in config "
+                        f"'{config_name}' for logger '{logger_name}'")
                     effective_variables[var_name] = global_variables[var_name]
 
             # Apply variable substitution to the config
@@ -339,8 +341,10 @@ def expand_templates(cruise_definition: Dict[str, Dict[str, Any]]) -> Dict[str, 
                 processed_config = substitute_variables(merged_config, effective_variables)
             except ValueError as e:
                 missing_var = str(e).split("'")[1] if "Variable '" in str(e) else "unknown"
-                logging.error(f"Missing variable '{missing_var}' in config '{config_name}' for logger '{logger_name}'")
-                logging.error(f"Available variables: {', '.join(sorted(effective_variables.keys()))}")
+                logging.error(f"Missing variable '{missing_var}' "
+                              f"in config '{config_name}' for logger '{logger_name}'")
+                logging.error(f"Available variables: "
+                              f"{', '.join(sorted(effective_variables.keys()))}")
                 raise
 
             # Merge any extra non-template keys from the original config

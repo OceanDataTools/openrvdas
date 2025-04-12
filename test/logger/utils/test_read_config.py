@@ -679,7 +679,6 @@ loggers:
         with self.assertRaises(ValueError):
             read_config.expand_templates(test_config)
 
-
     def test_no_template_specified(self) -> None:
         """Test that a ValueError is raised when no template is specified."""
         # Create a test config with no template specified
@@ -705,11 +704,13 @@ loggers:
             processed = read_config.expand_templates(test_config)
 
             # Either assert that the logger was left unchanged since no template was specified
-            self.assertEqual(processed['loggers']['test_logger'], test_config['loggers']['test_logger'])
+            self.assertEqual(processed['loggers']['test_logger'],
+                             test_config['loggers']['test_logger'])
 
             # Or if your combined function does throw an error for this case, keep the assertion:
             # with self.assertRaises(ValueError):
             #     read_config.expand_templates(test_config)
+
 
 class TestConfigTemplateExpansion(unittest.TestCase):
     """Tests for the config template expansion functionality."""
@@ -981,7 +982,8 @@ loggers:
                 "<<KEY_VAR>>": "<<VALUE_VAR>>"
             }
             expected = ["<<VARIABLE>>", "<<KEY_VAR>>", "<<VALUE_VAR>>"]
-            self.assertEqual(sorted(read_config.find_unmatched_variables(test_dict)), sorted(expected))
+            self.assertEqual(sorted(read_config.find_unmatched_variables(test_dict)),
+                             sorted(expected))
 
         def test_list_items(self):
             """Test with list items."""
@@ -992,7 +994,8 @@ loggers:
                 {"key": "<<DICT_VAR>>"}
             ]
             expected = ["<<VARIABLE>>", "<<NESTED_VAR>>", "<<DICT_VAR>>"]
-            self.assertEqual(sorted(read_config.find_unmatched_variables(test_list)), sorted(expected))
+            self.assertEqual(sorted(read_config.find_unmatched_variables(test_list)),
+                             sorted(expected))
 
         def test_nested_structures(self):
             """Test with deeply nested structures."""
@@ -1023,7 +1026,8 @@ loggers:
                 "<<KEY_VAR>>": 456
             }
             expected = ["<<STRING_VAR>>", "<<LIST_VAR>>", "<<KEY_VAR>>"]
-            self.assertEqual(sorted(read_config.find_unmatched_variables(mixed_data)), sorted(expected))
+            self.assertEqual(sorted(read_config.find_unmatched_variables(mixed_data)),
+                             sorted(expected))
 
         def test_edge_cases(self):
             """Test edge cases."""
@@ -1272,14 +1276,16 @@ loggers:
             self.assertIn("must be either dict or list", str(context.exception))
 
         def test_nonexistent_config(self):
-            """Test that an error is raised when a list mode references a non-existent config."""
+            """Test that an error is raised when a list mode references
+               a non-existent config."""
             with self.assertRaises(ValueError) as context:
                 read_config.expand_modes(self.nonexistent_config_input)
 
             self.assertIn("No logger found for", str(context.exception))
 
         def test_incomplete_list_mode(self):
-            """Test that an error is raised when a list mode doesn't define configs for all loggers."""
+            """Test that an error is raised when a list mode
+               doesn't define configs for all loggers."""
             with self.assertRaises(ValueError) as context:
                 read_config.expand_modes(self.incomplete_list_mode_input)
 
