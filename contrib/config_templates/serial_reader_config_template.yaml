@@ -1,0 +1,41 @@
+###################
+config_templates:
+  #################
+  serial_net_config_template: &serial_net_config_base
+    readers:
+    - class: SerialReader
+      kwargs:
+        baudrate: <<baud_rate>>
+        port: <<serial_port>>
+    transforms:
+    - class: TimestampTransform
+    writers:
+    - class: ComposedWriter
+      kwargs:
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: <<logger>>
+        writers:
+        - class: UDPWriter
+          kwargs:
+            port: <<raw_udp_port>>
+            destination: <<udp_destination>>
+
+  serial_net_file_config_template:
+    <<: *serial_net_config_base
+    writers:
+    - class: LogfileWriter
+      kwargs:
+        filebase: <<file_root>>/<<logger>>/raw/<<cruise>>_<<logger>>
+    - class: ComposedWriter
+      kwargs:
+        transforms:
+        - class: PrefixTransform
+          kwargs:
+            prefix: <<logger>>
+        writers:
+        - class: UDPWriter
+          kwargs:
+            port: <<raw_udp_port>>
+            destination: <<udp_destination>>

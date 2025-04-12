@@ -1,0 +1,116 @@
+###########################################################
+###########################################################
+# YAML cruise definition file for OpenRVDAS.
+#
+# Created by:
+#   command:  <<command_line>>
+#   time:     <<date_time>> UTC
+#   user:     <<user>>
+#
+###########################################################
+cruise:
+  id: <<cruise>>
+  start: '<<cruise_start>>'
+  end: '<<cruise_end>>'
+
+###########################################################
+includes:
+  - contrib/config_templates/serial_reader_config_template.yaml
+  - contrib/logger_templates/serial_logger_template_new.yaml
+  - contrib/logger_templates/parse_data_logger_template.yaml
+  - contrib/logger_templates/true_winds_logger_template.yaml
+  - contrib/logger_templates/snapshot_logger_template.yaml
+
+###########################################################
+# Global variables - can be overridden by individual loggers
+variables:
+  cruise: NBP1406
+  cruise_start: '2019-07-01'
+  cruise_end: '2019-12-31'
+
+  udp_destination: 255.255.255.255
+  raw_udp_port: 6224
+  parsed_udp_port: 6225
+
+  file_root: /var/tmp/log
+  parse_definition_path: test/NBP1406/devices/nbp_devices.yaml
+
+  data_server: localhost:8766
+  influx_bucket_name: openrvdas
+
+  command_line: local/usap/create_template_cruise.py test/NBP1406/NBP1406_port_defs.yaml
+  date_time: Thu Mar 13 04:38:45 2025
+  user: pablo
+
+###########################################################
+loggers:
+  mwx1:
+    logger_template: serial_logger_template
+    variables:
+      serial_port: /tmp/tty_mwx1
+      baud_rate: 9600
+  s330:
+    configs:
+      'off': {}
+      net:
+        config_template: serial_net_config_template
+        variables:
+          baud_rate: 9600
+          serial_port: /tmp/tty_s330
+      net+file:
+        config_template: serial_net_file_config_template
+        variables:
+          baud_rate: 9600
+          serial_port: /tmp/tty_s330
+
+  # Parse raw UDP data and send to CDS, and optionally InfluxDB;
+  # uses default global variables
+  parse_data:
+    logger_template: parse_data_logger_template
+
+  # Read course, heading, SOG and relative winds from CDS, compute
+  # true winds and write back to CDS and optionally InfluxDB
+  true_winds_port:
+    logger_template: true_winds_logger_template
+    variables:
+      # Where to find the inputs
+      course_true: S330CourseTrue
+      heading_true: S330HeadingTrue
+      speed_over_ground: S330SpeedKt
+      rel_wind_dir: MwxPortRelWindDir
+      rel_wind_speed: MwxPortRelWindSpeed
+
+      # Knots -> meters/sec
+      convert_speed_factor: 0.5144
+      max_field_age: 15
+
+      # What to call the outputs
+      apparent_dir_name: PortApparentWindDir
+      true_dir_name: PortTrueWindDir
+      true_speed_name: PortTrueWindSpeed
+
+  # # Read a bunch of variables from CDS, compute 30-second snapshot and write back
+  # # to CDS and optionally InfluxDB. This *totally* needs a way to be generalized!!!
+  snapshot:
+    logger_template: snapshot_logger_template
+    variables:
+      snapshot_fields: [MwxAirTemp, PortTrueWindDir, PortTrueWindSpeed, MwxBarometer]
+      interval: 30
+      window: 30
+
+###########################################################
+modes:
+  'off':  # without a 'default_mode' key, first defined mode will be default
+    [s330-off, mwx1-off, parse_data-off, true_winds_port-off, snapshot-off]
+
+  no_write:
+    [s330-net, mwx1-net, parse_data-on, true_winds_port-on, snapshot-on]
+
+  write:
+    [s330-net+file, mwx1-net+file, parse_data-on, true_winds_port-on, snapshot-on]
+
+  no_write+influx:
+    [s330-net, mwx1-net, parse_data-on+influx, true_winds_port-on+influx, snapshot-on+influx]
+
+  write+influx:
+    [s330-net+file, mwx1-net+file, parse_data-on+influx, true_winds_port-on+influx, snapshot-on+influx]
