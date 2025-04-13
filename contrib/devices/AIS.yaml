@@ -7,7 +7,9 @@
 AIS:
   category: "device_type"
   # !AIVDM,1,1,,B,15O5G4000oKPfggK2F2RQj7>0@FU,0*04
-  format: "!AIVDM,{NumMessages:d},{MessageNum:d},{NextMessage:od},{Channel:w},{Body:nc},{FillBits:d}*{Checksum:x}"
+  format:
+    AIVDM: "!AIVDM,{NumMessages:d},{MessageNum:d},{NextMessage:od},{Channel:ow},{Body:nc},{FillBits:d}*{Checksum:x}"
+    AIVDO: "!AIVDO,{NumMessages:d},{MessageNum:d},{NextMessage:od},{Channel:ow},{Body:nc},{FillBits:d}*{Checksum:x}"
 
   fields:
     NumMessages:
@@ -28,6 +30,3 @@ AIS:
     FillBits:
       description: "Number of fill bits"
       units: ""
-
-
-
