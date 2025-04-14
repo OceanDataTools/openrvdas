@@ -210,6 +210,8 @@ class RecordParser:
                 logging.warning('Record: %s', record)
             return None
 
+        data_id = parsed_record.get('data_id','no_data_id')
+
         # Convert timestamp to numeric, if it's there
         timestamp = parsed_record.get('timestamp')
         if timestamp is not None and isinstance(timestamp, datetime.datetime):
@@ -234,23 +236,15 @@ class RecordParser:
                 logging.warning('No field_string found in record "%s"', record)
             return None
 
-        fields = {}
-
         # If we've been given a set of field_patterns to apply, use the
         # first that matches.
         if self.field_patterns:
-            data_id = None
             fields, message_type = self._parse_field_string(field_string,
                                                             self.compiled_field_patterns)
         # If we were given no explicit field_patterns to use, we need to
         # count on the record having a data_id that lets us figure out
         # which device, and therefore which field_patterns to try.
         else:
-            data_id = parsed_record.get('data_id')
-            if data_id is None:
-                if not self.quiet:
-                    logging.warning('No data id found in record: %s', record)
-                return None
             fields, message_type = self.parse_for_data_id(data_id, field_string)
 
         # We should now have a dictionary of fields. If not, go home
