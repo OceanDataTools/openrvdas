@@ -248,6 +248,8 @@ class RecordParser:
 
             # If no patterns to try, go home emptyhanded
             if not patterns:
+                if not self.quiet:
+                    logging.warning(f'No parse field patterns matched data_id "{data_id}"')
                 return None
             fields, message_type = self._parse_field_string(field_string, patterns)
 
