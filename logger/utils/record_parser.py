@@ -236,11 +236,21 @@ class RecordParser:
                 logging.warning('No field_string found in record "%s"', record)
             return None
 
-        # If we've been given a set of field_patterns to apply, use the
-        # first that matches.
+        # If we've been given a set of field_patterns: If they're a dict, see if there's
+        # a key that matches our data_id. If so, only look at those patterns. Otherwise
+        # try them all and use the first that matches.
         if self.field_patterns:
-            fields, message_type = self._parse_field_string(field_string,
-                                                            self.compiled_field_patterns)
+            # If field_patterns is a dict, see if our data_id matches any of the keys
+            if isinstance(self.field_patterns, dict):
+                patterns = self.compiled_field_patterns.get(data_id)
+            else:
+                patterns = self.compiled_field_patterns
+
+            # If no patterns to try, go home emptyhanded
+            if not patterns:
+                return None
+            fields, message_type = self._parse_field_string(field_string, patterns)
+
         # If we were given no explicit field_patterns to use, we need to
         # count on the record having a data_id that lets us figure out
         # which device, and therefore which field_patterns to try.
