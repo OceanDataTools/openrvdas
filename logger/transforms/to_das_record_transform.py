@@ -39,7 +39,7 @@ class ToDASRecordTransform(Transform):
                 return DASRecord(data_id=self.data_id, fields={self.field_name: record})
             else:
                 try:
-                    return DASRecord(record)
+                    return DASRecord(json_str=record)
                 except JSONDecodeError:
                     logging.warning(f'String could not be parsed as JSON DASRecord: {record}')
                     return None
