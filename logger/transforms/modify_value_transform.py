@@ -6,6 +6,7 @@ import copy
 import logging
 import sys
 import time
+from typing import Union
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
@@ -18,7 +19,7 @@ class ModifyValueTransform(DerivedDataTransform):
     """Modify the value of specified fields according to simple formulae.
     """
 
-    def __init__(self, fields, delete_unmatched=False, quiet=False,
+    def __init__(self, fields, data_id=None, delete_unmatched=False, quiet=False,
                  metadata_interval=None):
         """
         fields
@@ -50,6 +51,10 @@ class ModifyValueTransform(DerivedDataTransform):
               metadata (default=None)
                 If specified, any metadata associated with the new value
 
+        data_id (default None)
+          If not None, the data_id to substitute into the record. Otherwise use
+          data_id found in the original record, if available.
+
         delete_unmatched (default=False)
           If true, delete any unmatched fields from the record
 
@@ -64,6 +69,7 @@ class ModifyValueTransform(DerivedDataTransform):
         super().__init__(quiet=quiet)
 
         self.fields = fields
+        self.data_id = data_id
         self.delete_unmatched = delete_unmatched
         self.metadata_interval = metadata_interval or 0
 
@@ -91,7 +97,7 @@ class ModifyValueTransform(DerivedDataTransform):
                 raise ValueError(f'Invalid "add_factor" for field "{field}". Must be numeric.')
 
     ############################
-    def transform(self, record: DASRecord):
+    def transform(self, record: Union[DASRecord, dict]):
         """
         Transform a record or list of records.
 
@@ -105,6 +111,10 @@ class ModifyValueTransform(DerivedDataTransform):
         # See if it's something we can process, and if not, try digesting
         if not self.can_process_record(record):  # inherited from Transform()
             return self.digest_record(record)  # inherited from Transform()
+
+        # If we've got a dict, convert it to a DASRecord for uniform handling
+        if isinstance(record, dict):
+            record = DASRecord(record, data_id=self.data_id)
 
         # Make a copy of the original record we're going to munge
         result = copy.deepcopy(record)
