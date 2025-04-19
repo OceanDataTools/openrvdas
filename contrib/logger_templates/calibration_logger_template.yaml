@@ -7,13 +7,13 @@
 #   # Default calibration factors
 #
 #   # Rtmp calibration
-#   rtmp_file_name: RTmpValue
+#   rtmp_field_name: RTmpValue
 #   rtmp_output_name: CalibratedRTmpValue
 #   rtmp_mult_factor: 1.00223
 #   rtmp_add_factor: 0.0442
 #
 #   # SSpd calibration
-#   sspd_file_name: SSpd
+#   sspd_field_name: SSpd
 #   sspd_output_name: CalibratedSSpd
 #   sspd_mult_factor: 0.5443
 #   sspd_add_factor: 0
