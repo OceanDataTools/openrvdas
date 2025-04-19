@@ -39,12 +39,22 @@ class ToDASRecordTransform(Transform):
                 return DASRecord(data_id=self.data_id, fields={self.field_name: record})
             else:
                 try:
-                    return DASRecord(record)
+                    return DASRecord(json_str=record)
                 except JSONDecodeError:
                     logging.warning(f'String could not be parsed as JSON DASRecord: {record}')
                     return None
-        # Else, if it's a dict use keys, values as fields
+        # Else, if it's a dict, figure out whether it's a simple dict, or has a timestamp,
+        # fields, etc. If not, use keys, values as fields
         elif isinstance(record, dict):
+            data_id = self.data_id or record.get('data_id')
+            timestamp = record.get('timestamp')
+            fields = record.get('fields')
+
+            # Does it have keys that mark it as a proper DASRecord already?
+            if isinstance(fields, dict):
+                return DASRecord(data_id=data_id, timestamp=timestamp, fields=fields)
+
+            # Otherwise, assume the whole dict is a dict of fields
             return DASRecord(data_id=self.data_id, fields=record)
         else:
             logging.warning('ToDASRecordTransform input should be of type '

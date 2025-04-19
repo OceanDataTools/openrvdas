@@ -175,7 +175,7 @@ class LogfileReader(TimestampedReader):
                 # adds overhead, but our assumption is that the throughput on
                 # a LogfileReader is going to be pretty low.
                 try:
-                    das_record = DASRecord(record)
+                    das_record = DASRecord(json_str=record)
                     return das_record
                 except json.JSONDecodeError:
                     return record
@@ -196,7 +196,7 @@ class LogfileReader(TimestampedReader):
             # Try parsing as JSON DASRecord. If we succeed, grab the
             # timestamp and break out of loop.
             try:
-                record = DASRecord(record)
+                record = DASRecord(json_str=record)
                 ts = record.timestamp
                 break
             except json.JSONDecodeError:

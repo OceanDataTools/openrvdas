@@ -104,7 +104,7 @@ class DASRecord:
         return self.fields.get(field, default)
 
 
-def to_das_record_list(record):
+def to_das_record_list(record, data_id=None):
     """Utility function to normalize different types of records into a
     list of DASRecords.
 
@@ -138,7 +138,8 @@ def to_das_record_list(record):
 
     # If it's a single timestamp dict, it's easy
     elif 'timestamp' in record and 'fields' in record:
-        return [DASRecord(timestamp=record['timestamp'],
+        return [DASRecord(data_id=data_id,
+                          timestamp=record['timestamp'],
                           fields=record['fields'],
                           metadata=record.get('metadata'))]
 
@@ -159,7 +160,7 @@ def to_das_record_list(record):
                 by_timestamp[timestamp][field] = value
 
         # Now copy the entries into an ordered-by-timestamp list.
-        results = [DASRecord(timestamp=ts, fields=by_timestamp[ts])
+        results = [DASRecord(data_id=data_id, timestamp=ts, fields=by_timestamp[ts])
                    for ts in sorted(by_timestamp)]
         return results
     except ValueError:

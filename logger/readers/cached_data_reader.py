@@ -18,6 +18,7 @@ except ModuleNotFoundError:
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.readers.reader import Reader  # noqa: E402
+from logger.utils.das_record import to_das_record_list
 
 DEFAULT_SERVER_WEBSOCKET = 'localhost:8766'
 
@@ -29,7 +30,8 @@ class CachedDataReader(Reader):
     """
 
     def __init__(self, subscription, data_server=DEFAULT_SERVER_WEBSOCKET,
-                 bundle_seconds=0, use_wss=False, check_cert=False):
+                 bundle_seconds=0, return_das_record=False, data_id=None,
+                 use_wss=False, check_cert=False):
         """
         ```
         subscription - a dictionary corresponding to the full
@@ -52,6 +54,10 @@ class CachedDataReader(Reader):
         bundle_seconds - If specified, aggregate this many seconds worth of records
                       and return as a list of records. Note that as implemented, it
                       bundles by system clock time, and not by DASRecord timestamp.
+
+        return_das_record - If True, return results as DASRecords.
+
+        data_id - If return_das_record, use this as the records' data_id
 
         use_wss -     If True, use secure websockets
 
@@ -96,6 +102,8 @@ class CachedDataReader(Reader):
         subscription['type'] = 'subscribe'
         self.data_server = data_server
         self.bundle_seconds = bundle_seconds
+        self.return_das_record = return_das_record
+        self.data_id = data_id
         self.use_wss = use_wss
         self.check_cert = check_cert
 
@@ -257,6 +265,8 @@ class CachedDataReader(Reader):
 
                 # If we're not bundling results, just return the result
                 if not self.bundle_seconds:
+                    if self.return_das_record:
+                        result = to_das_record_list(result, data_id=self.data_id)
                     return result
                 else:
                     result_list.append(result)
@@ -268,6 +278,8 @@ class CachedDataReader(Reader):
             # or None if the list is empty.
             now = time.time()
             if now > start_time + self.bundle_seconds:
+                if self.return_das_record:
+                    result_list = to_das_record_list(result_list, data_id=self.data_id)
                 return result_list
 
         # If we've fallen out because of a quit...
