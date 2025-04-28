@@ -3,9 +3,11 @@
 import os.path
 import sys
 import datetime
+from typing import Union
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
+from logger.utils.das_record import DASRecord  # noqa E402
 from logger.writers.writer import Writer  # noqa: E402
 
 
@@ -139,12 +141,15 @@ class TextFileWriter(Writer):
             self.file.write(self.header)
 
     ############################
-    def write(self, record: str):
+    def write(self, record: Union[str, DASRecord]):
         """ Write out record, appending a newline at end."""
 
         if not self.can_process_record(record):  # inherited from BaseModule()
             self.digest_record(record)           # inherited from BaseModule()
             return
+
+        if isinstance(record, DASRecord):
+            record = record.as_json()
 
         # If we're splitting by date, make sure that we're still writing
         # to the right file.

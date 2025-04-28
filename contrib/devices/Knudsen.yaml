@@ -1,0 +1,42 @@
+######################################
+Knudsen3260:
+  category: "device_type"
+  description: "Knudsen Chirp 3260"
+
+  format:
+    - "{LF:g}kHz,{LFDepth:of},{LFValid:od},{HF:g}kHz,{HFDepth:of},{HFValid:od},{SoundSpeed:g},{Latitude:f},{Longitude:f}"
+    - ",,,{HF:g}kHz,{HFDepth:of},{HFValid:od},{SoundSpeed:g},{Latitude:f},{Longitude:f}"
+    - "{LF:g}kHz,{LFDepth:of},{LFValid:od},,,,{SoundSpeed:g},{Latitude:f},{Longitude:f}"
+    - "$PKEL99,{LF:g}kHz,{LFDepth:of},{LFValid:od},{HF:g}kHz,{HFDepth:of},{HFValid:od},{SoundSpeed:g},{Latitude:f},{Longitude:f}"
+    - "$PKEL99,{LF:g}kHz,{LFDepth:of},{LFValid:od},,,,{SoundSpeed:g},{Latitude:f},{Longitude:f}"
+    - "$PKEL99,,,,{HF:g}kHz,{HFDepth:of},{HFValid:od},{SoundSpeed:g},{Latitude:f},{Longitude:f}"
+
+  fields:
+    LF:
+      units: "kHz"
+      description: "Frequency of low frequency transducer"
+    LFDepth:
+      units: "meters"
+      description:  Depth in meters from transducer"
+    LFValid:
+      units: "0"
+      description: "Valid if present (value may always be zero?)"
+    HF:
+      units: "kHz"
+      description: "Frequency of high frequency transducer"
+    HFDepth:
+      units: "meters"
+      description:  Depth in meters from transducer"
+    HFValid:
+      units: "0"
+      description: "Valid if present (value may always be zero?)"
+    SoundSpeed:
+      units: "meters/second"
+      description: "Sound speed velocity"
+    Latitude:
+      units: "degrees north"
+      description: "Latitude in degrees north"
+    Longitude:
+      units: "degrees west"
+      description: "Longitude in degrees west"
+

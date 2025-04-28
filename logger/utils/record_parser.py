@@ -3,8 +3,8 @@
 """Tools for parsing NMEA and other text records.
 
 By default, will load device and device_type definitions from files in
-local/devices/*.yaml. Please see documentation in
-local/devices/README.md for a description of the format these
+contrib/devices/*.yaml. Please see documentation in
+contrib/devices/README.md for a description of the format these
 definitions should take.
 """
 import datetime
@@ -30,7 +30,7 @@ from logger.utils.das_record import DASRecord  # noqa: E402
 # parse module.
 from logger.utils.record_parser_formats import extra_format_types  # noqa: E402
 
-DEFAULT_DEFINITION_PATH = 'local/devices/*.yaml'
+DEFAULT_DEFINITION_PATH = 'contrib/devices/*.yaml'
 DEFAULT_RECORD_FORMAT = '{data_id:w} {timestamp:ti} {field_string}'
 
 
@@ -210,6 +210,8 @@ class RecordParser:
                 logging.warning('Record: %s', record)
             return None
 
+        data_id = parsed_record.get('data_id','no_data_id')
+
         # Convert timestamp to numeric, if it's there
         timestamp = parsed_record.get('timestamp')
         if timestamp is not None and isinstance(timestamp, datetime.datetime):
@@ -234,23 +236,27 @@ class RecordParser:
                 logging.warning('No field_string found in record "%s"', record)
             return None
 
-        fields = {}
-
-        # If we've been given a set of field_patterns to apply, use the
-        # first that matches.
+        # If we've been given a set of field_patterns: If they're a dict, see if there's
+        # a key that matches our data_id. If so, only look at those patterns. Otherwise
+        # try them all and use the first that matches.
         if self.field_patterns:
-            data_id = None
-            fields, message_type = self._parse_field_string(field_string,
-                                                            self.compiled_field_patterns)
+            # If field_patterns is a dict, see if our data_id matches any of the keys
+            if isinstance(self.field_patterns, dict):
+                patterns = self.compiled_field_patterns.get(data_id)
+            else:
+                patterns = self.compiled_field_patterns
+
+            # If no patterns to try, go home emptyhanded
+            if not patterns:
+                if not self.quiet:
+                    logging.warning(f'No parse field patterns matched data_id "{data_id}"')
+                return None
+            fields, message_type = self._parse_field_string(field_string, patterns)
+
         # If we were given no explicit field_patterns to use, we need to
         # count on the record having a data_id that lets us figure out
         # which device, and therefore which field_patterns to try.
         else:
-            data_id = parsed_record.get('data_id')
-            if data_id is None:
-                if not self.quiet:
-                    logging.warning('No data id found in record: %s', record)
-                return None
             fields, message_type = self.parse_for_data_id(data_id, field_string)
 
         # We should now have a dictionary of fields. If not, go home

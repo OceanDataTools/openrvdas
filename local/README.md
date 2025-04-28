@@ -44,7 +44,6 @@ The effective file structure should look something like:
 For example, 
 ```
   local/
-    devices/   - Definitions for widely-used device types (SeaPath, Garmin, etc.)
     usap/
       nbp/       - Subdirectory for device and cruise definitions for the NB Palmer
         devices/   - Device types and physical devices specific to the NB Palmer
@@ -66,7 +65,7 @@ For example,
 ## Local Device/Device Type Definitions
 
 By default, the parser transform (class ``ParseTransform``) will look
-for device and device type definitions in ``local/devices/*.yaml``. If
+for device and device type definitions in ``contrib/devices/*.yaml``. If
 you wish to also use devices/device types defined in any other
 directories, you can specify the path in the config file in which you
 specify the parser:
@@ -78,7 +77,7 @@ specify the parser:
    transforms:
      class: ParseTransform
      kwargs:
-       definition_path: local/devices/*.yaml,local/devices/nbp/devices/*.yaml
+       definition_path: contrib/devices/*.yaml,local/usap/nbp/devices/*.yaml
    writers:
      class: UDPWriter
      kwargs:
@@ -90,7 +89,7 @@ parser transform) on the command line:
 ```
   logger/listener/listen.py \
       --udp 6224 \
-      --parse_definition_path "local/devices/*.yaml,local/devices/nbp/devices/*.yaml" \
+      --parse_definition_path "contrib/devices/*.yaml,local/usap/nbp/devices/*.yaml" \
       --transform_parse \
       --write_udp 6225
 ```

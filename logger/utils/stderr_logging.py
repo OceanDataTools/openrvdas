@@ -11,7 +11,6 @@ from logger.utils.timestamp import LOGGING_TIME_FORMAT  # noqa: E402
 
 DEFAULT_LOGGING_FORMAT = ' '.join([
     '%(asctime)-15sZ',
-    # '%(asctime)s',
     '%(levelno)s',
     '%(levelname)s',
     '%(filename)s:%(lineno)d',

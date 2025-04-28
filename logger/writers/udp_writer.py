@@ -10,6 +10,7 @@ from typing import Union
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
+from logger.utils.das_record import DASRecord  # noqa E402
 from logger.writers.writer import Writer  # noqa E402
 
 # So that we can write the user's record no matter how silly big it is, we
@@ -227,13 +228,16 @@ class UDPWriter(Writer):
             return None
 
     ############################
-    def write(self, record: Union[str, bytes]):
+    def write(self, record: Union[str, bytes, DASRecord]):
         """Write the record to the network."""
 
         # See if it's something we can process, and if not, try digesting
         if not self.can_process_record(record):  # inherited from BaseModule()
             self.digest_record(record)  # inherited from BaseModule()
             return
+
+        if isinstance(record, DASRecord):
+            record = record.as_json()
 
         # Append eol if configured
         if self.eol:
@@ -309,7 +313,9 @@ class UDPWriter(Writer):
                 # If we failed, complain, unless we've already complained too much
                 self.good_writes = 0
                 if self.num_warnings < self.warning_limit:
-                    logging.error('UDPWriter: send() error: %s: %s', self.target_str, str(e))
+                    logging.error(f'UDPWriter: send() error: {self.target_str}: {str(e)}')
+                    if 'Message too long' in str(e):
+                        logging.error(f'Message length is {rec_len}')
                     self.num_warnings += 1
                     if self.num_warnings == self.warning_limit:
                         logging.error('UDPWriter.write() - muting errors')
