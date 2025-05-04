@@ -29,7 +29,7 @@ if (websocket_server.indexOf('//:') > 0) {
   websocket_server = websocket_server.replace('//:', '//' + location.hostname + ':');
 }
 const url = new URL(websocket_server);
-const port_spec = window.location.port ? ':' + window.location.port : ''
+const port_spec = window.location.port ? ':' + window.location.port : '';
 websocket_server = url.protocol + '//' + window.location.hostname + port_spec + url.pathname;
 
 //////////////////////////////////////////////////////////////
