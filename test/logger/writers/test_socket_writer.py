@@ -43,7 +43,7 @@ class TestSocketWriter(unittest.TestCase):
 
     def test_write_string(self):
         """Test writing a string message."""
-        reader = SocketReader(self.channel, timeout=0.5)
+        reader = SocketReader(self.channel, timeout=0.5, keep_binary=True)
         self.readers.append(reader)
 
         # Give reader time to initialize
@@ -64,7 +64,7 @@ class TestSocketWriter(unittest.TestCase):
 
     def test_write_bytes(self):
         """Test writing bytes."""
-        reader = SocketReader(self.channel, timeout=0.5)
+        reader = SocketReader(self.channel, timeout=0.5, keep_binary=True)
         self.readers.append(reader)
 
         # Give reader time to initialize
@@ -101,7 +101,7 @@ class TestSocketWriter(unittest.TestCase):
 
         # Read the message back
         received = reader.read()
-        self.assertEqual(received.decode('utf-8'), '42')
+        self.assertEqual(received, '42')
 
     def test_write_no_reader(self):
         """Test writing when no reader is available."""
@@ -134,7 +134,7 @@ class TestSocketWriter(unittest.TestCase):
 
         # First reader should receive it
         received1 = reader1.read()
-        self.assertEqual(received1.decode('utf-8'), message1)
+        self.assertEqual(received1, message1)
 
         # Write message to second channel
         message2 = 'Message to second channel'
@@ -142,7 +142,7 @@ class TestSocketWriter(unittest.TestCase):
 
         # Second reader should receive it
         received2 = reader2.read()
-        self.assertEqual(received2.decode('utf-8'), message2)
+        self.assertEqual(received2, message2)
 
         # Close second writer
         writer2.close()
