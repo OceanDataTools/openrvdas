@@ -7,9 +7,6 @@
 #   # Default calibration factors
 #
 #   # Rtmp calibration
-<<<<<<< HEAD
-#   rtmp_file_name: RTmpValue
-=======
 #   rtmp_field_name: RTmpValue
 #   rtmp_output_name: CalibratedRTmpValue
 #   rtmp_mult_factor: 1.00223
