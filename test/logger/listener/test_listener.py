@@ -10,7 +10,7 @@ import warnings
 sys.path.append('.')
 from logger.readers.text_file_reader import TextFileReader  # noqa: E402
 from logger.transforms.prefix_transform import PrefixTransform  # noqa: E402
-from logger.transforms.to_das_record_transform import ToDASRecordTransform  # noqa: E402
+from logger.transforms.count_transform import CountTransform  # noqa: E402
 from logger.writers.text_file_writer import TextFileWriter  # noqa: E402
 from logger.listener.listener import Listener  # noqa: E402
 
@@ -62,7 +62,7 @@ class TestListener(unittest.TestCase):
         outfilename = self.tmpdirname + '/type_hints_out.txt'
 
         l1 = Listener(readers=[TextFileReader(self.tmpfilenames[0])],
-                      transforms=[ToDASRecordTransform(field_name='test')],
+                      transforms=[CountTransform()],
                       writers=[TextFileWriter(filename=outfilename)])
 
         with self.assertLogs(logging.getLogger(), logging.WARNING):
