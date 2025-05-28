@@ -120,7 +120,7 @@ class FileWriter(Writer):
                                  'followed by \'H\' or \'M\'.')
             try:
                 self.split_interval = (int(split_interval[:-1]), split_interval[-1])
-                self.split_interval_in_seconds = self._get_split_interval_in_seconds(split_interval)
+                self.split_interval_in_seconds = self._get_split_interval_in_seconds(self.split_interval)
             except ValueError:
                 raise ValueError('FileWriter: split_interval must be an integer '
                                  'followed by \'H\' or \'M\'.')
@@ -166,7 +166,7 @@ class FileWriter(Writer):
 
     ############################
     def __del__(self):
-        if self.file:
+        if hasattr(self, 'file') and self.file:
             self.file.close()
 
     ############################
