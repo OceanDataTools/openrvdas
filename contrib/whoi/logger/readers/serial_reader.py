@@ -22,7 +22,8 @@ class SerialReader(Reader):
                  write_timeout=None, dsrdtr=False, inter_byte_timeout=None,
                  exclusive=None, max_bytes=None, eol=None,
                  encoding='utf-8', encoding_errors='ignore',
-                 prefix=None, time_format=LOGGING_TIME_FORMAT, time_zone = TIMEZONE):
+                 prefix=None, sensor=None, time_format=LOGGING_TIME_FORMAT,
+                 time_zone = TIMEZONE):
         """If max_bytes is specified on initialization, read up to that many
         bytes when read() is called. If eol is not specified, read() will
         read up to the first newline it receives. In both cases, if
@@ -53,7 +54,9 @@ class SerialReader(Reader):
         prefix - Add a prefix to all incoming messages, even if blank
 
         time_format - Format of time string added after prefix, Added ONLY if
-                      there is data.
+                      there is prefix.
+
+        sensor - Add string after timestamp, only if there is a prefix
 
         time_zone - Time zone used when adding the time string 
         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ FOR WHOI ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -87,6 +90,13 @@ class SerialReader(Reader):
             if prefix is not None and self.encoding
             else None
         )
+
+        self.sensor = (
+            self._encode_str(sensor + ' ', unescape=True)
+            if sensor is not None and prefix is not None and self.encoding
+            else b''
+        )
+
         self.time_format = time_format
         self.time_zone = time_zone
 
@@ -119,7 +129,8 @@ class SerialReader(Reader):
                                         time_zone=self.time_zone)
                 ts = self._encode_str(ts, unescape=True)
 
-                record = self.prefix + b' ' + ts + b' ' + record
+                record = self.prefix + b' ' + ts + b' ' + self.sensor + record
+
             else:
                 record = record
 

@@ -53,6 +53,7 @@ SAMPLE_TIMEOUT = ['$HEHDT,234.76,T*1b',
                   '$HEHDT,234.73,T*1e']
 
 PREFIX = 'SSW'
+SENSOR = 'SBE48'
 
 
 ################################################################################
@@ -105,6 +106,30 @@ class TestSerialReader(unittest.TestCase):
             prefix, date_str, time_str, remainder = record.split(' ', 3)
             self.assertEqual(prefix, PREFIX)
             self.assertTrue(self.is_valid_timestamp(date_str, time_str))
+            self.assertEqual(data, remainder)
+
+    ############################
+    # When max_bytes is not specified, SerialReader should read port up
+    # to a newline character.
+    def test_readline_with_sensor(self):
+        port = self.port + '_readline'
+        sim = SimSerial(port=port, filebase=self.logfile_filename)
+        sim_thread = threading.Thread(target=sim.run)
+        sim_thread.start()
+
+        slice = SliceTransform('1:')  # we'll want to strip out timestamp
+
+        # Then read from serial port
+        s = SerialReader(port, prefix=PREFIX, sensor=SENSOR)
+        for line in SAMPLE_DATA.split('\n'):
+            data = slice.transform(line)
+            record = s.read()
+            logging.debug('data: %s, read: %s', data, record)
+
+            prefix, date_str, time_str, sensor, remainder = record.split(' ', 4)
+            self.assertEqual(prefix, PREFIX)
+            self.assertTrue(self.is_valid_timestamp(date_str, time_str))
+            self.assertEqual(sensor, SENSOR)
             self.assertEqual(data, remainder)
 
     ############################
