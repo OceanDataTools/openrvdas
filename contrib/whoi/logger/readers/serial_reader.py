@@ -86,9 +86,9 @@ class SerialReader(Reader):
                          max_bytes=max_bytes, eol=eol)
 
         self.prefix = (
-            self._encode_str(prefix, unescape=True)
+            self._encode_str(prefix + ' ', unescape=True)
             if prefix is not None and self.encoding
-            else None
+            else b''
         )
 
         self.sensor = (
@@ -124,15 +124,11 @@ class SerialReader(Reader):
             #     return None
 
             if self.prefix:
-
                 ts = timestamp.time_str(time_format=self.time_format,
                                         time_zone=self.time_zone)
-                ts = self._encode_str(ts, unescape=True)
+                ts = self._encode_str(ts + ' ', unescape=True)
 
-                record = self.prefix + b' ' + ts + b' ' + self.sensor + record
-
-            else:
-                record = record
+                record = self.prefix + ts + self.sensor + record
 
             return self._decode_bytes(record)
 
