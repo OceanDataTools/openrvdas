@@ -67,9 +67,12 @@ class Reader:
         return the_str.encode(encoding=self.encoding, errors=self.encoding_errors)
 
     ############################
-    def _decode_bytes(self, record):
+    def _decode_bytes(self, record, keep_empty_records: bool = False):
         """Decode a record from bytes to str, if we have an encoding specified."""
-        if not record:
+        if record is None:
+            return None
+
+        if not record and not keep_empty_records:  # if it's an empty record but not None
             return None
 
         if not self.encoding:
