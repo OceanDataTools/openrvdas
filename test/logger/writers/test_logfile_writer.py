@@ -5,6 +5,8 @@ import sys
 import tempfile
 import unittest
 
+from os.path import exists
+
 sys.path.append('.')
 from logger.utils.das_record import DASRecord  # noqa: E402
 from logger.writers.logfile_writer import LogfileWriter  # noqa: E402
@@ -43,6 +45,8 @@ SAMPLE_DATA_DASRECORD_STR = """{"data_id": "test", "message_type": null, "timest
 {"data_id": "test", "message_type": null, "timestamp": 1691410661.0, "fields": {"F1": 7.26, "F2": 121733.82}, "metadata": {}}
 """
 
+SAMPLE_HEADER="""This is the sample header"""
+
 
 class TestLogfileWriter(unittest.TestCase):
     ############################
@@ -72,6 +76,92 @@ class TestLogfileWriter(unittest.TestCase):
             with open(filebase + '-2017-11-04', 'r') as outfile:
                 for i in r:
                     self.assertEqual(lines[i], outfile.readline().rstrip())
+
+    ############################
+    def test_write_with_header(self):
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            lines = SAMPLE_DATA.split('\n')
+
+            filebase = tmpdirname + '/logfile'
+
+            writer = LogfileWriter(filebase, header=SAMPLE_HEADER)
+
+            with self.assertLogs(logging.getLogger(), logging.ERROR):
+                writer.write('there is no timestamp here')
+
+            r = range(0, 3)
+            for i in r:
+                writer.write(lines[i])
+
+            with open(filebase + '-2017-11-03', 'r') as outfile:
+                self.assertEqual(SAMPLE_HEADER, outfile.readline().rstrip())
+
+                for i in r:
+                    self.assertEqual(lines[i], outfile.readline().rstrip())
+
+            r = range(3, 9)
+            for i in r:
+                writer.write(lines[i])
+
+            with open(filebase + '-2017-11-04', 'r') as outfile:
+                self.assertEqual(SAMPLE_HEADER, outfile.readline().rstrip())
+
+                for i in r:
+                    self.assertEqual(lines[i], outfile.readline().rstrip())
+
+    ############################
+    def test_write_with_suffix(self):
+
+        suffix = '.txt'
+
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            lines = SAMPLE_DATA.split('\n')
+
+            filebase = tmpdirname + '/logfile'
+
+            writer = LogfileWriter(filebase, suffix=suffix)
+
+            for line in lines:
+                writer.write(line)
+
+            self.assertTrue(exists(filebase + '-2017-11-03' + suffix), f"File '{filebase + '-2017-11-03' + suffix}' does not exist.")
+            self.assertTrue(exists(filebase + '-2017-11-04' + suffix), f"File '{filebase + '-2017-11-04' + suffix}' does not exist.")
+
+    ############################
+    def test_write_with_header_file(self):
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            lines = SAMPLE_DATA.split('\n')
+
+            with open(f'{tmpdirname}/header_file', "w") as file:
+                file.write(f'{SAMPLE_HEADER}\n')
+
+            filebase = tmpdirname + '/logfile'
+
+            writer = LogfileWriter(filebase, header_file=f'{tmpdirname}/header_file')
+
+            with self.assertLogs(logging.getLogger(), logging.ERROR):
+                writer.write('there is no timestamp here')
+
+            r = range(0, 3)
+            for i in r:
+                writer.write(lines[i])
+
+            with open(filebase + '-2017-11-03', 'r') as outfile:
+                self.assertEqual(SAMPLE_HEADER, outfile.readline().rstrip())
+
+                for i in r:
+                    self.assertEqual(lines[i], outfile.readline().rstrip())
+
+            r = range(3, 9)
+            for i in r:
+                writer.write(lines[i])
+
+            with open(filebase + '-2017-11-04', 'r') as outfile:
+                self.assertEqual(SAMPLE_HEADER, outfile.readline().rstrip())
+
+                for i in r:
+                    self.assertEqual(lines[i], outfile.readline().rstrip())
+
 
     ############################
     def test_write_dict(self):
@@ -151,6 +241,116 @@ class TestLogfileWriter(unittest.TestCase):
                 self.assertEqual(lines[6], outfile.readline().rstrip())
                 self.assertEqual(lines[7], outfile.readline().rstrip())
                 self.assertEqual('', outfile.readline().rstrip())
+
+
+    ############################
+    def test_map_write_with_header(self):
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            lines = SAMPLE_DATA.split('\n')
+
+            header = {
+                'AAA': 'header_AAA',
+                'BBB': 'header_BBB',
+                'CCC': 'header_CCC',
+            }
+
+            filebase = {
+                'AAA': tmpdirname + '/logfile_A',
+                'BBB': tmpdirname + '/logfile_B',
+                'CCC': tmpdirname + '/logfile_C',
+            }
+            writer = LogfileWriter(filebase=filebase, header=header)
+
+            bad_line = 'there is no timestamp here'
+            with self.assertLogs(logging.getLogger(), logging.ERROR) as cm:
+                writer.write(bad_line)
+            error = f'ERROR:root:LogfileWriter.write() - bad timestamp: "{bad_line}"'
+            self.assertEqual(cm.output, [error])
+
+            for line in lines:
+                writer.write(line)
+
+            with open(tmpdirname + '/logfile_A-2017-11-03', 'r') as outfile:
+                self.assertEqual(header.get('AAA'), outfile.readline().rstrip())
+                self.assertEqual(lines[0], outfile.readline().rstrip())
+                self.assertEqual('', outfile.readline().rstrip())
+
+            with open(tmpdirname + '/logfile_A-2017-11-04', 'r') as outfile:
+                self.assertEqual(header.get('AAA'), outfile.readline().rstrip())
+                self.assertEqual(lines[4], outfile.readline().rstrip())
+                self.assertEqual(lines[7], outfile.readline().rstrip())
+                self.assertEqual('', outfile.readline().rstrip())
+
+            with open(tmpdirname + '/logfile_B-2017-11-03', 'r') as outfile:
+                self.assertEqual(header.get('BBB'), outfile.readline().rstrip())
+                self.assertEqual(lines[1], outfile.readline().rstrip())
+                self.assertEqual('', outfile.readline().rstrip())
+            with open(tmpdirname + '/logfile_B-2017-11-04', 'r') as outfile:
+                self.assertEqual(header.get('BBB'), outfile.readline().rstrip())
+                self.assertEqual(lines[3], outfile.readline().rstrip())
+                self.assertEqual(lines[5], outfile.readline().rstrip())
+                self.assertEqual(lines[8], outfile.readline().rstrip())
+                self.assertEqual('', outfile.readline().rstrip())
+
+            with open(tmpdirname + '/logfile_C-2017-11-03', 'r') as outfile:
+                self.assertEqual(header.get('CCC'), outfile.readline().rstrip())
+                self.assertEqual(lines[2], outfile.readline().rstrip())
+                self.assertEqual('', outfile.readline().rstrip())
+            with open(tmpdirname + '/logfile_C-2017-11-04', 'r') as outfile:
+                self.assertEqual(header.get('CCC'), outfile.readline().rstrip())
+                self.assertEqual(lines[5], outfile.readline().rstrip())
+                self.assertEqual(lines[6], outfile.readline().rstrip())
+                self.assertEqual(lines[7], outfile.readline().rstrip())
+                self.assertEqual('', outfile.readline().rstrip())
+
+    ############################
+    def test_map_write_with_suffix(self):
+
+        suffix = {
+            'AAA': '.AAA',
+            'BBB': '.BBB',
+            'CCC': '.CCC',
+        }
+
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            lines = SAMPLE_DATA.split('\n')
+
+            filebase = tmpdirname + '/logfile'
+
+            writer = LogfileWriter(filebase, suffix=suffix)
+
+            for line in lines:
+                writer.write(line)
+
+            self.assertTrue(exists(filebase + '-2017-11-03' + '.AAA'), f"File '{filebase + '-2017-11-03' + '.AAA'}' does not exist.")
+            self.assertTrue(exists(filebase + '-2017-11-03' + '.BBB'), f"File '{filebase + '-2017-11-03' + '.BBB'}' does not exist.")
+
+
+    ############################
+    def test_map_write_with_suffix_and_filebase(self):
+
+        suffix = {
+            'AAA': '.AAA',
+            'BBB': '.BBB',
+            'CCC': '.CCC',
+        }
+
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            lines = SAMPLE_DATA.split('\n')
+
+            filebase = {
+                'AAA': tmpdirname + '/logfile_A',
+                'BBB': tmpdirname + '/logfile_B',
+                'CCC': tmpdirname + '/logfile_C',
+            }
+
+            writer = LogfileWriter(filebase, suffix=suffix)
+
+            for line in lines:
+                writer.write(line)
+
+            self.assertTrue(exists(tmpdirname + '/logfile_A' + '-2017-11-03' + '.AAA'), f"File '{tmpdirname + '/logfile_A' + '-2017-11-03' + '.AAA'}' does not exist.")
+            self.assertTrue(exists(tmpdirname + '/logfile_B' + '-2017-11-03' + '.BBB'), f"File '{tmpdirname + '/logfile_B' + '-2017-11-03' + '.BBB'}' does not exist.")
 
 
 if __name__ == '__main__':

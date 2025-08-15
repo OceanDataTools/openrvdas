@@ -6,7 +6,7 @@ import re
 import sys
 
 from typing import Union
-from os.path import dirname, realpath
+from os.path import dirname, realpath, isfile
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.utils.das_record import DASRecord  # noqa: E402
 from logger.utils import timestamp  # noqa: E402
@@ -22,7 +22,7 @@ class LogfileWriter(Writer):
     def __init__(self, filebase=None, flush=True,
                  time_format=timestamp.TIME_FORMAT,
                  date_format=timestamp.DATE_FORMAT,
-                 split_char=' ', suffix='', header=None,
+                 split_char=' ', suffix=None, header=None,
                  header_file=None, rollover_hourly=False,
                  quiet=False):
         """Write timestamped records to a filebase. The filebase will
@@ -76,7 +76,8 @@ class LogfileWriter(Writer):
         self.time_format = time_format
         self.date_format = date_format
         self.split_char = split_char
-        self.suffix = suffix
+        self.suffix = suffix or ''
+
         self.header = header
         self.header_file = header_file
         self.rollover_hourly = rollover_hourly
@@ -90,8 +91,90 @@ class LogfileWriter(Writer):
             self.compiled_filebase_map = {
                 pattern: re.compile(pattern) for pattern in self.filebase
             }
+
+        # If our suffix is a dict, we're going to be doing our
+        # fancy pattern->suffix mapping.
+        self.do_suffix_mapping = isinstance(self.suffix, dict)
+
+        if self.do_suffix_mapping:
+            # Do our matches faster by precompiling
+            self.compiled_suffix_map = {
+                pattern: re.compile(pattern) for pattern in self.suffix
+            }
+
+        # If our header is a dict, we're going to be doing our
+        # fancy pattern->header mapping.
+        self.do_header_mapping = isinstance(self.header, dict)
+
+        if self.do_header_mapping:
+            # Do our matches faster by precompiling
+            self.compiled_header_map = {
+                pattern: re.compile(pattern) for pattern in self.header
+            }
+
+        # If our header_file is a dict, we're going to be doing our
+        # fancy pattern->header_file mapping.
+        self.do_header_file_mapping = isinstance(self.header_file, dict)
+
+        if self.do_header_file_mapping:
+            # Do our matches faster by precompiling
+            self.compiled_header_file_map = {
+                pattern: re.compile(pattern) for pattern in self.header_file
+            }
+
         self.current_filename = {}
         self.writer = {}
+
+    ############################
+    def fetch_suffix(self, record: str, filename_pattern: str='fixed'):
+
+        if not self.do_suffix_mapping:
+            return self.suffix
+
+        if filename_pattern != "fixed":
+            return_suffix = self.suffix.get(filename_pattern)
+
+            if return_suffix:
+                return return_suffix
+
+        for pattern in self.suffix:
+            regex  = self.compiled_suffix_map.get(pattern)
+            if regex and regex.search(record):
+                return self.suffix.get(pattern)
+
+    ############################
+    def fetch_header(self, record: str, filename_pattern: str='fixed'):
+
+        if not self.do_header_mapping:
+            return self.header
+
+        if filename_pattern != "fixed":
+            return_header = self.header.get(filename_pattern)
+
+            if return_header:
+                return return_header
+
+        for pattern in self.header:
+            regex  = self.compiled_header_map.get(pattern)
+            if regex and regex.search(record):
+                return self.header.get(pattern)
+
+    ############################
+    def fetch_header_file(self, record: str, filename_pattern: str='fixed'):
+
+        if not self.do_header_file_mapping:
+            return self.header_file
+
+        if filename_pattern != "fixed":
+            return_header_file = self.header_file.get(filename_pattern)
+
+            if return_header_file:
+                return return_header_file
+
+        for pattern in self.header_file:
+            regex  = self.compiled_header_file_map.get(pattern)
+            if regex and regex.search(record):
+                return self.header_file.get(pattern)
 
     ############################
     def write(self, record: Union[str, DASRecord, dict]):
@@ -134,8 +217,7 @@ class LogfileWriter(Writer):
         hr_str = self.rollover_hourly and \
             timestamp.date_str(ts, date_format='_%H00') or ""
         date_str = timestamp.date_str(ts, date_format=self.date_format)
-        time_str = date_str + hr_str + self.suffix
-        logging.debug('LogfileWriter time_str: %s', time_str)
+        time_str = date_str + hr_str
 
         # Figure out where we're going to write
         if self.do_filebase_mapping:
@@ -147,7 +229,9 @@ class LogfileWriter(Writer):
                                     f'options for record "{record}"')
         else:
             pattern = 'fixed'  # just an arbitrary fixed pattern
-            filename = self.filebase + '-' + time_str
+
+            suffix = self.fetch_suffix(record, pattern)
+            filename = self.filebase + '-' + time_str + suffix
             self.write_filename(record, pattern, filename)
 
     ############################
@@ -169,7 +253,9 @@ class LogfileWriter(Writer):
             logging.error(f'System error: found no filebase matching pattern "{pattern}"!')
             return None
 
-        filename = filebase + '-' + time_str
+        suffix = self.fetch_suffix(record, pattern)
+
+        filename = filebase + '-' + time_str + suffix
         self.write_filename(record, pattern, filename)
         return True
 
@@ -181,11 +267,15 @@ class LogfileWriter(Writer):
 
         # Are we currently writing to this file? If not, open/create it.
         if not filename == self.current_filename.get(pattern):
-            logging.info('LogfileWriter opening new file: %s', filename)
+
+            # calculate header/header_file and suffix
+            header = self.fetch_header(record, pattern) if self.do_header_mapping else self.header
+            header_file = self.fetch_header_file(record) if self.do_header_file_mapping else self.header_file
+
             self.current_filename[pattern] = filename
             self.writer[pattern] = FileWriter(filename=filename,
-                                              header=self.header,
-                                              header_file=self.header_file,
+                                              header=header,
+                                              header_file=header_file,
                                               flush=self.flush)
         # Now, if our logic is correct, should *always* have a matching_writer
         matching_writer = self.writer.get(pattern)
