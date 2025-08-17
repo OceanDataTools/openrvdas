@@ -17,6 +17,7 @@ import os
 import sys
 
 from os.path import dirname, realpath
+
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.utils.das_record import DASRecord  # noqa: E402
 from logger.writers.writer import Writer  # noqa: E402
@@ -72,12 +73,13 @@ class GoogleSheetsWriter(Writer):
 
     EXAMPLE USAGE:
 
-        # Initialize writer
+        # Initialize writer with force_create enabled
         writer = GoogleSheetsWriter(
             sheet_name_or_id="1ABC123def456...",  # Your spreadsheet ID
             auth_key_path="path/to/service-account-key.json",
             use_service_account=True,
-            worksheet_name="Sheet1"
+            worksheet_name="MyData",
+            force_create=True  # Will create "MyData" worksheet if it doesn't exist
         )
 
         # Write single dictionary (timestamp automatically goes first)
@@ -105,11 +107,12 @@ class GoogleSheetsWriter(Writer):
         sheet_id (str): The Google Sheets spreadsheet ID
         headers (list): Current column headers in the sheet
         worksheet_name (str): Name of the worksheet/tab being used
+        force_create (bool): Whether to create the worksheet if it doesn't exist
         service: Google Sheets API service object
     """
 
     def __init__(self, sheet_name_or_id, auth_key_path=None,
-                 use_service_account=True, worksheet_name="Sheet1"):
+                 use_service_account=True, worksheet_name="Sheet1", force_create=False):
         """
         Initialize GoogleSheetsWriter with spreadsheet name/ID and authentication.
 
@@ -122,6 +125,7 @@ class GoogleSheetsWriter(Writer):
                                If None and use_service_account=False, looks for 'token.json'
             use_service_account (bool): True for service account auth, False for OAuth user auth
             worksheet_name (str): Name of the specific worksheet/tab to write to (default: "Sheet1")
+            force_create (bool): If True, create the worksheet if it doesn't exist (default: False)
 
         Raises:
             ValueError: If authentication parameters are invalid
@@ -131,6 +135,7 @@ class GoogleSheetsWriter(Writer):
         self.auth_key_path = auth_key_path
         self.use_service_account = use_service_account
         self.worksheet_name = worksheet_name
+        self.force_create = force_create
         self.service = None
         self.sheet_id = None
         self.headers = []
@@ -138,6 +143,7 @@ class GoogleSheetsWriter(Writer):
         # Initialize the service
         self._authenticate()
         self._get_sheet_id()
+        self._ensure_worksheet_exists()
         self._load_existing_headers()
 
     def _authenticate(self):
@@ -199,6 +205,60 @@ class GoogleSheetsWriter(Writer):
             else:
                 # Assume it's a spreadsheet ID
                 self.sheet_id = self.sheet_name_or_id
+
+    def _ensure_worksheet_exists(self):
+        """
+        Ensure the specified worksheet exists, creating it if necessary and force_create is True.
+
+        Checks if the worksheet exists in the spreadsheet. If force_create is True and the
+        worksheet doesn't exist, creates it.
+
+        Raises:
+            Exception: If worksheet doesn't exist and force_create is False, or if creation fails
+        """
+        try:
+            # Get spreadsheet metadata to check existing worksheets
+            spreadsheet = self.service.spreadsheets().get(
+                spreadsheetId=self.sheet_id
+            ).execute()
+
+            # Check if the worksheet already exists
+            existing_sheets = [sheet['properties']['title']
+                               for sheet in spreadsheet.get('sheets', [])]
+
+            if self.worksheet_name in existing_sheets:
+                # Worksheet exists, nothing to do
+                return
+
+            if not self.force_create:
+                # Worksheet doesn't exist and we're not allowed to create it
+                raise Exception(f"Worksheet '{self.worksheet_name}' does not exist in spreadsheet. "
+                                f"Set force_create=True to create it automatically.")
+
+            # Create the worksheet
+            requests = [{
+                'addSheet': {
+                    'properties': {
+                        'title': self.worksheet_name
+                    }
+                }
+            }]
+
+            body = {'requests': requests}
+
+            self.service.spreadsheets().batchUpdate(
+                spreadsheetId=self.sheet_id,
+                body=body
+            ).execute()
+
+            print(f"Created worksheet '{self.worksheet_name}' in spreadsheet")
+
+        except Exception as e:
+            if "force_create=True" in str(e):
+                # Re-raise our custom error message
+                raise e
+            else:
+                raise Exception(f"Failed to ensure worksheet exists: {str(e)}")
 
     def _load_existing_headers(self):
         """
@@ -459,11 +519,11 @@ class GoogleSheetsWriter(Writer):
 
             if len(rows_data) == 1:
                 # Single row
-                range_name = f"{self.worksheet_name}!A{next_row}:{chr(65 + len(self.headers) - 1)}{next_row}"
+                range_name = f"{self.worksheet_name}!A{next_row}:{chr(65 + len(self.headers) - 1)}{next_row}"  # noqa E501
             else:
                 # Multiple rows
                 end_row = next_row + len(rows_data) - 1
-                range_name = f"{self.worksheet_name}!A{next_row}:{chr(65 + len(self.headers) - 1)}{end_row}"
+                range_name = f"{self.worksheet_name}!A{next_row}:{chr(65 + len(self.headers) - 1)}{end_row}"  # noqa E501
 
             # Write the data
             body = {'values': rows_data}
