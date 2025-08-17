@@ -137,8 +137,7 @@ class LogfileWriter(Writer):
             if return_suffix:
                 return return_suffix
 
-        for pattern in self.suffix:
-            regex  = self.compiled_suffix_map.get(pattern)
+        for pattern, regex in self.compiled_suffix_map.items():
             if regex and regex.search(record):
                 return self.suffix.get(pattern)
 
@@ -154,8 +153,7 @@ class LogfileWriter(Writer):
             if return_header:
                 return return_header
 
-        for pattern in self.header:
-            regex  = self.compiled_header_map.get(pattern)
+        for pattern, regex in self.compiled_header_map.items():
             if regex and regex.search(record):
                 return self.header.get(pattern)
 
@@ -171,8 +169,7 @@ class LogfileWriter(Writer):
             if return_header_file:
                 return return_header_file
 
-        for pattern in self.header_file:
-            regex  = self.compiled_header_file_map.get(pattern)
+        for pattern, regex in self.compiled_header_file_map.items():
             if regex and regex.search(record):
                 return self.header_file.get(pattern)
 
