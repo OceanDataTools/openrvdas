@@ -6,7 +6,7 @@ import re
 import sys
 
 from typing import Union
-from os.path import dirname, realpath, isfile
+from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.utils.das_record import DASRecord  # noqa: E402
 from logger.utils import timestamp  # noqa: E402
@@ -144,9 +144,15 @@ class LogfileWriter(Writer):
             if return_suffix:
                 return return_suffix
 
+            if not self.quiet:
+                logging.warning('LogfileWriter.fetch_suffix() - no suffix match: "%s"!', record)
+            return
+
         for pattern, regex in self.compiled_suffix_map.items():
             if regex and regex.search(record):
                 return self.suffix.get(pattern)
+
+        logging.warning('LogfileWriter.fetch_suffix() - no suffix match: "%s"!', record)
 
     ############################
     def fetch_header(self, record: str, filename_pattern: str='fixed'):
@@ -160,9 +166,16 @@ class LogfileWriter(Writer):
             if return_header:
                 return return_header
 
+            if not self.quiet:
+                logging.warning('LogfileWriter.fetch_header() - no header match: "%s"', record)
+            return ''
+
         for pattern, regex in self.compiled_header_map.items():
             if regex and regex.search(record):
-                return self.header.get(pattern)
+                return self.header.get(pattern, '')
+
+        logging.warning('LogfileWriter.fetch_header() - no header match: "%s"', record)
+        return ''
 
     ############################
     def fetch_header_file(self, record: str, filename_pattern: str='fixed'):
@@ -176,9 +189,15 @@ class LogfileWriter(Writer):
             if return_header_file:
                 return return_header_file
 
+            if not self.quiet:
+                logging.warning('LogfileWriter.fetch_header_file() - no header file match: "%s"', record)
+            return
+
         for pattern, regex in self.compiled_header_file_map.items():
             if regex and regex.search(record):
                 return self.header_file.get(pattern)
+
+        logging.warning('LogfileWriter.fetch_header_file() - no header file match: "%s"', record)
 
     ############################
     def write(self, record: Union[str, DASRecord, dict]):
@@ -235,6 +254,10 @@ class LogfileWriter(Writer):
             pattern = 'fixed'  # just an arbitrary fixed pattern
 
             suffix = self.fetch_suffix(record, pattern)
+            if suffix is None:
+                logging.error(f'System error: found no suffix matching record: "{record}"!')
+                return None
+
             filename = self.filebase + '-' + time_str + suffix
             self.write_filename(record, pattern, filename)
 
@@ -244,7 +267,7 @@ class LogfileWriter(Writer):
         # Find the compiled regex matching the pattern
         regex = self.compiled_filebase_map.get(pattern)
         if not regex:
-            logging.error(f'System error: found no regex pattern matching "{pattern}"!')
+            logging.error(f'System error: found no regex matching pattern: "{pattern}"!')
             return None
 
         # If the pattern isn't in this record, go home quietly
@@ -258,6 +281,9 @@ class LogfileWriter(Writer):
             return None
 
         suffix = self.fetch_suffix(record, pattern)
+        if suffix is None:
+            logging.error(f'System error: found no suffix matching pattern: "{pattern}"!')
+            return None
 
         filename = filebase + '-' + time_str + suffix
         self.write_filename(record, pattern, filename)
@@ -274,7 +300,7 @@ class LogfileWriter(Writer):
 
             # calculate header/header_file and suffix
             header = self.fetch_header(record, pattern) if self.do_header_mapping else self.header
-            header_file = self.fetch_header_file(record) if self.do_header_file_mapping else self.header_file
+            header_file = self.fetch_header_file(record, pattern) if self.do_header_file_mapping else self.header_file
 
             self.current_filename[pattern] = filename
             self.writer[pattern] = FileWriter(filename=filename,

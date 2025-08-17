@@ -162,7 +162,6 @@ class TestLogfileWriter(unittest.TestCase):
                 for i in r:
                     self.assertEqual(lines[i], outfile.readline().rstrip())
 
-
     ############################
     def test_write_dict(self):
         with tempfile.TemporaryDirectory() as tmpdirname:
@@ -245,13 +244,35 @@ class TestLogfileWriter(unittest.TestCase):
 
     ############################
     def test_map_write_with_header(self):
+
         with tempfile.TemporaryDirectory() as tmpdirname:
+
+            header = {'AAA': 'header_AAA'}
+
+            writer = LogfileWriter(filebase=f'{tmpdirname}/logfile_bad', header=header)
+
+            bad_line = 'there is no timestamp here'
+            with self.assertLogs(logging.getLogger(), logging.ERROR) as cm:
+                writer.write(bad_line)
+
+                error = f'ERROR:root:LogfileWriter.write() - bad timestamp: "{bad_line}"'
+                self.assertEqual(cm.output, [error])
+
+            no_match = '2017-11-03T17:23:04.833188Z CCC this will not match a header'
+            # writer.write(no_match)
+            with self.assertLogs(logging.getLogger(), logging.WARNING) as cm:
+                no_match = '2017-11-03T17:23:04.833188Z CCC this will not match a header'
+                writer.write(no_match)
+
+                error = f'WARNING:root:LogfileWriter.fetch_header() - no header match: "{no_match}"'
+                self.assertEqual(cm.output, [error])
+
             lines = SAMPLE_DATA.split('\n')
 
             header = {
                 'AAA': 'header_AAA',
                 'BBB': 'header_BBB',
-                'CCC': 'header_CCC',
+                'CCC': 'header_CCC'
             }
 
             filebase = {
@@ -259,13 +280,100 @@ class TestLogfileWriter(unittest.TestCase):
                 'BBB': tmpdirname + '/logfile_B',
                 'CCC': tmpdirname + '/logfile_C',
             }
+
             writer = LogfileWriter(filebase=filebase, header=header)
+
+            for line in lines:
+                writer.write(line)
+
+            with open(tmpdirname + '/logfile_A-2017-11-03', 'r') as outfile:
+                self.assertEqual(header.get('AAA'), outfile.readline().rstrip())
+                self.assertEqual(lines[0], outfile.readline().rstrip())
+                self.assertEqual('', outfile.readline().rstrip())
+
+            with open(tmpdirname + '/logfile_A-2017-11-04', 'r') as outfile:
+                self.assertEqual(header.get('AAA'), outfile.readline().rstrip())
+                self.assertEqual(lines[4], outfile.readline().rstrip())
+                self.assertEqual(lines[7], outfile.readline().rstrip())
+                self.assertEqual('', outfile.readline().rstrip())
+
+            with open(tmpdirname + '/logfile_B-2017-11-03', 'r') as outfile:
+                self.assertEqual(header.get('BBB'), outfile.readline().rstrip())
+                self.assertEqual(lines[1], outfile.readline().rstrip())
+                self.assertEqual('', outfile.readline().rstrip())
+            with open(tmpdirname + '/logfile_B-2017-11-04', 'r') as outfile:
+                self.assertEqual(header.get('BBB'), outfile.readline().rstrip())
+                self.assertEqual(lines[3], outfile.readline().rstrip())
+                self.assertEqual(lines[5], outfile.readline().rstrip())
+                self.assertEqual(lines[8], outfile.readline().rstrip())
+                self.assertEqual('', outfile.readline().rstrip())
+
+            with open(tmpdirname + '/logfile_C-2017-11-03', 'r') as outfile:
+                self.assertEqual(header.get('CCC'), outfile.readline().rstrip())
+                self.assertEqual(lines[2], outfile.readline().rstrip())
+                self.assertEqual('', outfile.readline().rstrip())
+            with open(tmpdirname + '/logfile_C-2017-11-04', 'r') as outfile:
+                self.assertEqual(header.get('CCC'), outfile.readline().rstrip())
+                self.assertEqual(lines[5], outfile.readline().rstrip())
+                self.assertEqual(lines[6], outfile.readline().rstrip())
+                self.assertEqual(lines[7], outfile.readline().rstrip())
+                self.assertEqual('', outfile.readline().rstrip())
+
+    ############################
+    def test_map_write_with_header_file(self):
+        header = {
+            'AAA': 'header_AAA',
+            'BBB': 'header_BBB',
+            'CCC': 'header_CCC'
+        }
+
+        with tempfile.TemporaryDirectory() as tmpdirname:
+
+            header_file_a = f'{tmpdirname}/header_file_a'
+            with open(header_file_a, "w") as file:
+                file.write(f'{header["AAA"]}\n')
+
+            header_file_b = f'{tmpdirname}/header_file_b'
+            with open(header_file_b, "w") as file:
+                file.write(f'{header["BBB"]}\n')
+
+            header_file_c = f'{tmpdirname}/header_file_c'
+            with open(header_file_c, "w") as file:
+                file.write(f'{header["CCC"]}\n')
+
+            writer = LogfileWriter(filebase=f'{tmpdirname}/logfile_bad', header_file={'AAA': header_file_a})
 
             bad_line = 'there is no timestamp here'
             with self.assertLogs(logging.getLogger(), logging.ERROR) as cm:
                 writer.write(bad_line)
-            error = f'ERROR:root:LogfileWriter.write() - bad timestamp: "{bad_line}"'
-            self.assertEqual(cm.output, [error])
+
+                error = f'ERROR:root:LogfileWriter.write() - bad timestamp: "{bad_line}"'
+                self.assertEqual(cm.output, [error])
+
+            no_match = '2017-11-03T17:23:04.833188Z CCC this will not match a header file'
+            # writer.write(no_match)
+            with self.assertLogs(logging.getLogger(), logging.WARNING) as cm:
+                no_match = '2017-11-03T17:23:04.833188Z CCC this will not match a header file'
+                writer.write(no_match)
+
+                error = f'WARNING:root:LogfileWriter.fetch_header_file() - no header file match: "{no_match}"'
+                self.assertEqual(cm.output, [error])
+
+            lines = SAMPLE_DATA.split('\n')
+
+            header_file = {
+                'AAA': header_file_a,
+                'BBB': header_file_b,
+                'CCC': header_file_c
+            }
+
+            filebase = {
+                'AAA': tmpdirname + '/logfile_A',
+                'BBB': tmpdirname + '/logfile_B',
+                'CCC': tmpdirname + '/logfile_C',
+            }
+
+            writer = LogfileWriter(filebase=filebase, header_file=header_file)
 
             for line in lines:
                 writer.write(line)
@@ -309,22 +417,32 @@ class TestLogfileWriter(unittest.TestCase):
         suffix = {
             'AAA': '.AAA',
             'BBB': '.BBB',
-            'CCC': '.CCC',
+            'CCC': '.CCC'
         }
 
+        lines = SAMPLE_DATA.split('\n')
+
         with tempfile.TemporaryDirectory() as tmpdirname:
-            lines = SAMPLE_DATA.split('\n')
 
             filebase = tmpdirname + '/logfile'
 
-            writer = LogfileWriter(filebase, suffix=suffix)
+            no_match = '2017-11-03T17:23:04.833188Z CCC this will not match a suffix'
+            writer = LogfileWriter(filebase=f'{tmpdirname}/logfile_bad', suffix={'AAA': '.AAA'})
 
+            with self.assertLogs(logging.getLogger(), logging.ERROR) as cm:
+                writer.write(no_match)
+
+                error = f'ERROR:root:System error: found no suffix matching record: "{no_match}"!'
+                self.assertEqual(cm.output, [error])
+
+            writer = LogfileWriter(filebase=filebase, suffix=suffix)
+            
             for line in lines:
                 writer.write(line)
 
             self.assertTrue(exists(filebase + '-2017-11-03' + '.AAA'), f"File '{filebase + '-2017-11-03' + '.AAA'}' does not exist.")
             self.assertTrue(exists(filebase + '-2017-11-03' + '.BBB'), f"File '{filebase + '-2017-11-03' + '.BBB'}' does not exist.")
-
+            self.assertTrue(exists(filebase + '-2017-11-03' + '.CCC'), f"File '{filebase + '-2017-11-03' + '.CCC'}' does not exist.")
 
     ############################
     def test_map_write_with_suffix_and_filebase(self):
@@ -335,8 +453,11 @@ class TestLogfileWriter(unittest.TestCase):
             'CCC': '.CCC',
         }
 
+        lines = SAMPLE_DATA.split('\n')
+
         with tempfile.TemporaryDirectory() as tmpdirname:
-            lines = SAMPLE_DATA.split('\n')
+
+            filebase = tmpdirname + '/logfile'
 
             filebase = {
                 'AAA': tmpdirname + '/logfile_A',
