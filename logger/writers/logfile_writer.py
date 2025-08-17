@@ -56,11 +56,18 @@ class LogfileWriter(Writer):
 
         split_char      Delimiter between timestamp and rest of message
 
-        suffix          string to apply to the end of the log filename
+        suffix          A suffix string to add to the log filename or a dict
+                        mapping <string>:<suffix> to select the suffix to
+                        add to a filename based on the record contents.
 
-        header          Add the specified header string to each file.
+        header          A string to add to the beginning of a new log file
+                        or a dict mapping <string>:<header> to select the
+                        header string based on the record contents.
 
-        header_file     Add the content of the specified file to each file.
+        header_file     A string containing the path to file containing a
+                        header string to add to the beginning of a new log
+                        file or a dict mapping <string>:<header_file> to select
+                        the header filepath based on the record contents.
 
         rollover_hourly Set files to truncate by hour.  By default files will
                         truncate by day
