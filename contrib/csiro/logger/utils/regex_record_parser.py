@@ -6,8 +6,8 @@ Organisation: CSIRO
 Tools for parsing NMEA and other text records using regular expressions.
 
 By default, will load device and device_type definitions from files in
-local/devices/*.yaml. Please see documentation in
-local/devices/README.md for a description of the format these
+contrib/devices/*.yaml. Please see documentation in
+contrib/devices/README.md for a description of the format these
 definitions should take.
 """
 import datetime
@@ -32,7 +32,7 @@ from logger.utils.das_record import DASRecord  # noqa: E402
 # from logger.utils.record_parser_formats import extra_format_types  # noqa: E402
 from logger.utils.record_parser import RecordParser
 
-DEFAULT_DEFINITION_PATH = 'local/devices/*.yaml'
+DEFAULT_DEFINITION_PATH = 'contrib/devices/*.yaml'
 DEFAULT_RECORD_FORMAT = '{data_id:w} {timestamp:ti} {field_string}'
 
 

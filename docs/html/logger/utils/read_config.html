@@ -2,18 +2,32 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.10.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+<meta name="generator" content="pdoc3 0.11.6">
 <title>logger.utils.read_config API documentation</title>
-<meta name="description" content="Utilities for reading/processing JSON data." />
-<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
-<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
-<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
-<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
-<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<meta name="description" content="Utilities for reading/processing JSON data.">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
-<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => {
+hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
+hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
+})</script>
 </head>
 <body>
 <main>
@@ -23,40 +37,6 @@
 </header>
 <section id="section-intro">
 <p>Utilities for reading/processing JSON data.</p>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">#!/usr/bin/env python3
-&#34;&#34;&#34;Utilities for reading/processing JSON data.
-&#34;&#34;&#34;
-
-try:
-    import yaml
-except ModuleNotFoundError:
-    pass
-
-
-def parse(source):
-    &#34;&#34;&#34;Read the passed text/stream assuming it&#39;s YAML or JSON (a subset of
-    YAML) and try to parse it into a Python dict.
-    &#34;&#34;&#34;
-    try:
-        try:
-            return yaml.load(source, Loader=yaml.FullLoader)
-        except AttributeError:
-            # If they&#39;ve got an older yaml, it may not have FullLoader)
-            return yaml.load(source)
-    except NameError:
-        raise ImportError(&#39;No YAML module available. Please ensure that &#39;
-                          &#39;PyYAML or equivalent is installed (e.g. via &#39;
-                          &#39;&#34;pip3 install PyYAML&#34;&#39;)
-
-
-def read_config(filename):
-    with open(filename, &#39;r&#39;) as file:
-        return parse(file)</code></pre>
-</details>
 </section>
 <section>
 </section>
@@ -65,45 +45,952 @@ def read_config(filename):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="logger.utils.read_config.parse"><code class="name flex">
-<span>def <span class="ident">parse</span></span>(<span>source)</span>
+<dt id="logger.utils.read_config.deep_merge"><code class="name flex">
+<span>def <span class="ident">deep_merge</span></span>(<span>base: Dict[str, Any], overlay: Dict[str, Any]) ‑> Dict[str, Any]</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Read the passed text/stream assuming it's YAML or JSON (a subset of
-YAML) and try to parse it into a Python dict.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def parse(source):
-    &#34;&#34;&#34;Read the passed text/stream assuming it&#39;s YAML or JSON (a subset of
-    YAML) and try to parse it into a Python dict.
+<pre><code class="python">def deep_merge(base: Dict[str, Any], overlay: Dict[str, Any]) -&gt; Dict[str, Any]:
+    &#34;&#34;&#34;
+    Deeply merge two dictionaries with special handling for different value types:
+    - Scalar values: overwrite
+    - Lists: append
+    - Dictionaries: recursively merge
+
+    Args:
+        base: Base dictionary to merge into
+        overlay: Dictionary to merge on top of base
+
+    Returns:
+        Merged dictionary
+    &#34;&#34;&#34;
+    result = base.copy()
+
+    for key, value in overlay.items():
+        if key in result:
+            # If both values are dictionaries, merge them recursively
+            if isinstance(result[key], dict) and isinstance(value, dict):
+                result[key] = deep_merge(result[key], value)
+
+            # If both values are lists, append them
+            elif isinstance(result[key], list) and isinstance(value, list):
+                result[key] = result[key] + value
+
+            # Otherwise overwrite (handles scalar case)
+            else:
+                result[key] = value
+        else:
+            # Key doesn&#39;t exist in result, just add it
+            result[key] = value
+
+    return result</code></pre>
+</details>
+<div class="desc"><p>Deeply merge two dictionaries with special handling for different value types:
+- Scalar values: overwrite
+- Lists: append
+- Dictionaries: recursively merge</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>base</code></strong></dt>
+<dd>Base dictionary to merge into</dd>
+<dt><strong><code>overlay</code></strong></dt>
+<dd>Dictionary to merge on top of base</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>Merged dictionary</p></div>
+</dd>
+<dt id="logger.utils.read_config.expand_cruise_definition"><code class="name flex">
+<span>def <span class="ident">expand_cruise_definition</span></span>(<span>input_dict)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def expand_cruise_definition(input_dict):
+    &#34;&#34;&#34;
+    Expand a configuration dictionary with loggers and configs structure.
+
+    Process a dictionary with a &#39;loggers&#39; key (required) and an optional
+    &#39;configs&#39; key. It extracts config dictionaries from each logger and moves them to the
+    top level &#39;configs&#39; section, replacing them with a list of references.
+
+    Also, if no &#39;modes&#39; section is found, a &#39;default&#39; mode will be created using the first
+    config defined for each logger.
+
+    Args:
+        input_dict (dict): The input dictionary containing &#39;loggers&#39; and optionally
+        &#39;configs&#39; keys.
+
+    Returns:
+        dict: A new dictionary with expanded configuration structure.
+
+    Raises:
+        ValueError: If the &#39;loggers&#39; key is missing or if referenced configs are missing.
+    &#34;&#34;&#34;
+    result = expand_includes(input_dict)
+    result = expand_logger_templates(result)
+    result = expand_logger_definitions(result)
+    result = expand_modes(result)
+
+    unmatched_vars = find_unmatched_variables(result)
+    if unmatched_vars:
+        logging.error(f&#39;Unexpanded variables found: {&#34;, &#34;.join(unmatched_vars)}&#39;)
+
+    return result</code></pre>
+</details>
+<div class="desc"><p>Expand a configuration dictionary with loggers and configs structure.</p>
+<p>Process a dictionary with a 'loggers' key (required) and an optional
+'configs' key. It extracts config dictionaries from each logger and moves them to the
+top level 'configs' section, replacing them with a list of references.</p>
+<p>Also, if no 'modes' section is found, a 'default' mode will be created using the first
+config defined for each logger.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>input_dict</code></strong> :&ensp;<code>dict</code></dt>
+<dd>The input dictionary containing 'loggers' and optionally</dd>
+</dl>
+<p>'configs' keys.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>dict</code></dt>
+<dd>A new dictionary with expanded configuration structure.</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ValueError</code></dt>
+<dd>If the 'loggers' key is missing or if referenced configs are missing.</dd>
+</dl></div>
+</dd>
+<dt id="logger.utils.read_config.expand_includes"><code class="name flex">
+<span>def <span class="ident">expand_includes</span></span>(<span>input_dict: dict) ‑> Dict[str, Any]</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def expand_includes(input_dict: dict) -&gt; Dict[str, Any]:
+    &#34;&#34;&#34;
+    Recursively process any included YAML files and merge them into the top level.
+
+    Args:
+        input_dict (dict): The input dictionary optionally containing &#39;includes&#39;
+        and &#39;includes_base_dir&#39; keys.
+
+    Returns:
+        Dictionary containing the merged YAML content or empty dict on error
+
+    Raises:
+        ValueError: If any included files are not found.
+    &#34;&#34;&#34;
+
+    # Default base_dir is top level project directory
+    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+
+    # If they&#39;ve got an &#39;includes_base_dir&#39; key in the file, use that.
+    includes_base_dir = input_dict.get(&#39;includes_base_dir&#39;)
+    if includes_base_dir is not None:
+        if not isinstance(includes_base_dir, str):
+            logging.error(f&#39;Key &#34;includes_base_dir&#34; must be a dir path str; &#39;
+                          f&#39;found: {includes_base_dir}. Ignoring.&#39;)
+        else:
+            base_dir = includes_base_dir
+
+    # Handle includes if present
+    if &#39;includes&#39; in input_dict and isinstance(input_dict[&#39;includes&#39;], list):
+        included_data = {}
+
+        # Process each included file or pattern
+        for include_pattern in input_dict[&#39;includes&#39;]:
+            # Expand wildcards to get list of matching files
+            matching_files = expand_wildcards(include_pattern, base_dir)
+
+            # Process each matching file
+            for include_path in matching_files:
+                # Use the directory of the include_path as the base_dir for nested includes
+                file_path = os.path.join(base_dir, include_path)
+
+                # Load the included file
+                included_content = read_config(file_path)
+
+                # Merge with current data
+                included_data = deep_merge(included_data, included_content)
+
+        # Remove the includes key before merging
+        includes_value = input_dict.pop(&#39;includes&#39;)
+
+        # Merge the original data on top of the included data
+        result = deep_merge(included_data, input_dict)
+
+        # Restore the includes key if needed
+        input_dict[&#39;includes&#39;] = includes_value
+
+        return result
+
+    return input_dict</code></pre>
+</details>
+<div class="desc"><p>Recursively process any included YAML files and merge them into the top level.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>input_dict</code></strong> :&ensp;<code>dict</code></dt>
+<dd>The input dictionary optionally containing 'includes'</dd>
+</dl>
+<p>and 'includes_base_dir' keys.</p>
+<h2 id="returns">Returns</h2>
+<p>Dictionary containing the merged YAML content or empty dict on error</p>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ValueError</code></dt>
+<dd>If any included files are not found.</dd>
+</dl></div>
+</dd>
+<dt id="logger.utils.read_config.expand_logger_definitions"><code class="name flex">
+<span>def <span class="ident">expand_logger_definitions</span></span>(<span>input_dict)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def expand_logger_definitions(input_dict):
+    &#34;&#34;&#34;
+    Expand a configuration dictionary with loggers and configs structure.
+
+    This function processes a dictionary with a &#39;loggers&#39; key (required) and an optional
+    &#39;configs&#39; key. It extracts config dictionaries from each logger and moves them to the
+    top level &#39;configs&#39; section, replacing them with a list of references.
+
+    Args:
+        input_dict (dict): The input dictionary containing &#39;loggers&#39; and optionally
+        &#39;configs&#39; keys.
+
+    Returns:
+        dict: A new dictionary with expanded configuration structure.
+
+    Raises:
+        ValueError: If the &#39;loggers&#39; key is missing or if referenced configs are missing.
+
+    ###This code is to support flexibility in defining cruise configurations.###
+
+    In the past, the &#34;loggers&#34; section of a cruise definition only allowed declaring the
+    names of each configuration associated with a logger. The actual definition of each
+    configuration had to be placed in a following top-level &#34;configs&#34; section.
+
+    For example:
+
+    loggers:
+     PCOD:
+       configs:
+       - PCOD-off
+       - PCOD-net
+       - PCOD-net+file
+     cwnc:
+       ...
+
+    configs:
+      PCOD-off: {}
+      PCOD-net:
+        readers:
+          key1: value1
+        writers:
+          key2: value2
+      PCOD-net+file:
+        readers:
+          key1: value1
+        writers:
+          key2: value2
+
+    The old declaration-followed-by-definition method still works, but now, if desired,
+    the relevant configs may instead be defined within the logger definition itself.
+
+    For example:
+
+    loggers:
+     PCOD:
+       configs:
+         &#39;off&#39;: {}
+         net:
+           readers:
+             key1: value1
+           writers:
+             key2: value2
+         net+file:
+           readers:
+             key1: value1
+           writers:
+             key2: value2
+
+    In this case, the config names will have the logger name prepended (e.g. &#39;off&#39; becomes
+    PCOD-off, net becomes PCOD-net, etc.)
+
+    Note that both methods may be used in a single cruise definition, though for clarity,
+    this is not advised.
+    &#34;&#34;&#34;
+    # Validate input
+    if &#39;loggers&#39; not in input_dict:
+        raise ValueError(&#34;Input dictionary must have a &#39;loggers&#39; key&#34;)
+
+    # Create a new dictionary to avoid modifying the input
+    result = copy.deepcopy(input_dict)
+
+    # Ensure configs key exists in the result
+    if &#39;configs&#39; not in result:
+        result[&#39;configs&#39;] = {}
+
+    # Process each logger
+    for logger_name, logger_data in input_dict[&#39;loggers&#39;].items():
+        # Skip if no configs key in this logger
+        if &#39;configs&#39; not in logger_data:
+            continue
+
+        # Get the configs for this logger
+        logger_configs = logger_data[&#39;configs&#39;]
+
+        # Handle the case where configs is a list of strings
+        if isinstance(logger_configs, list):
+            # Verify each referenced config exists in top-level configs
+            for config_name in logger_configs:
+                if config_name not in result[&#39;configs&#39;]:
+                    raise ValueError(f&#34;Referenced config &#39;{config_name}&#39; &#34;
+                                     &#34;not found in top-level configs&#34;)
+
+        # Handle the case where configs is a dictionary of dictionaries
+        elif isinstance(logger_configs, dict):
+            # Create a new config list for this logger
+            new_config_list = []
+
+            # Process each config in this logger
+            for config_key, config_value in logger_configs.items():
+                # Generate the new config name
+                config_name = f&#34;{logger_name}-{config_key}&#34;
+
+                # Add to the config list
+                new_config_list.append(config_name)
+
+                # Check for potential overwrites in the top-level configs
+                if config_name in result[&#39;configs&#39;]:
+                    print(f&#34;Warning: Overwriting existing config &#39;{config_name}&#39;&#34;
+                          &#34;in top-level configs&#34;)
+
+                # Add the config to the top-level configs
+                result[&#39;configs&#39;][config_name] = config_value
+
+            # Replace the logger&#39;s configs dict with the list of config names
+            result[&#39;loggers&#39;][logger_name][&#39;configs&#39;] = new_config_list
+
+    return result</code></pre>
+</details>
+<div class="desc"><p>Expand a configuration dictionary with loggers and configs structure.</p>
+<p>This function processes a dictionary with a 'loggers' key (required) and an optional
+'configs' key. It extracts config dictionaries from each logger and moves them to the
+top level 'configs' section, replacing them with a list of references.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>input_dict</code></strong> :&ensp;<code>dict</code></dt>
+<dd>The input dictionary containing 'loggers' and optionally</dd>
+</dl>
+<p>'configs' keys.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>dict</code></dt>
+<dd>A new dictionary with expanded configuration structure.</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ValueError</code></dt>
+<dd>If the 'loggers' key is missing or if referenced configs are missing.</dd>
+</dl>
+<h3 id="this-code-is-to-support-flexibility-in-defining-cruise-configurations">This code is to support flexibility in defining cruise configurations.</h3>
+<p>In the past, the "loggers" section of a cruise definition only allowed declaring the
+names of each configuration associated with a logger. The actual definition of each
+configuration had to be placed in a following top-level "configs" section.</p>
+<p>For example:</p>
+<p>loggers:
+PCOD:
+configs:
+- PCOD-off
+- PCOD-net
+- PCOD-net+file
+cwnc:
+&hellip;</p>
+<p>configs:
+PCOD-off: {}
+PCOD-net:
+readers:
+key1: value1
+writers:
+key2: value2
+PCOD-net+file:
+readers:
+key1: value1
+writers:
+key2: value2</p>
+<p>The old declaration-followed-by-definition method still works, but now, if desired,
+the relevant configs may instead be defined within the logger definition itself.</p>
+<p>For example:</p>
+<p>loggers:
+PCOD:
+configs:
+'off': {}
+net:
+readers:
+key1: value1
+writers:
+key2: value2
+net+file:
+readers:
+key1: value1
+writers:
+key2: value2</p>
+<p>In this case, the config names will have the logger name prepended (e.g. 'off' becomes
+PCOD-off, net becomes PCOD-net, etc.)</p>
+<p>Note that both methods may be used in a single cruise definition, though for clarity,
+this is not advised.</p></div>
+</dd>
+<dt id="logger.utils.read_config.expand_logger_templates"><code class="name flex">
+<span>def <span class="ident">expand_logger_templates</span></span>(<span>cruise_definition: Dict[str, Dict[str, Any]]) ‑> Dict[str, Dict[str, Any]]</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def expand_logger_templates(cruise_definition:
+                            Dict[str, Dict[str, Any]]) -&gt; Dict[str, Dict[str, Any]]:
+    &#34;&#34;&#34;
+    Process a complete configuration dictionary with templates and loggers.
+
+    Args:
+        cruise_definition: Dictionary containing &#39;logger_templates&#39;, &#39;loggers&#39;,
+                    and optionally &#39;variables&#39; as top-level keys
+
+    Returns:
+        Dictionary with fully processed logger configurations
+    &#34;&#34;&#34;
+    # Extract components from the configuration dictionary
+    templates = cruise_definition.get(&#39;logger_templates&#39;, {})
+    logger_definitions = cruise_definition.get(&#39;loggers&#39;, {})
+    global_variables = cruise_definition.get(&#39;variables&#39;, {})
+
+    for logger_name, logger_def in logger_definitions.items():
+        if not isinstance(logger_def, dict):
+            raise ValueError(f&#39;Malformed logger definition for {logger_name}; should be dict.&#39;)
+
+        # Copy global variables so we can modify them
+        effective_variables = copy.deepcopy(global_variables)
+
+        # Add logger name as a variable
+        effective_variables[&#39;logger&#39;] = logger_name
+
+        # Override with logger-specific variables
+        logger_variables = logger_def.get(&#39;variables&#39;, {})
+        effective_variables.update(logger_variables)
+
+        configs = logger_def.get(&#39;configs&#39;)
+        template_name = logger_def.get(&#39;logger_template&#39;)
+
+        # Need to have either &#39;configs&#39; or &#39;logger_template&#39; in def, but not both
+        if (configs and template_name) or (not configs and not template_name):
+            raise ValueError(f&#34;Logger &#39;{logger_name}&#39; must specify either &#34;
+                             f&#34;configs or logger_template (but not both)&#34;)
+
+        # Get the template name from the logger configuration and copy it into configs
+        if template_name:
+            # Get the template
+            template = templates.get(template_name)
+            if not template:
+                raise ValueError(f&#34;Template &#39;{template_name}&#39; not found in templates&#34;)
+
+            # Overlay the template on the existing logger definition, overwriting configs, etc.
+            logger_def.update(template)
+
+        # Substitute variables
+        try:
+            processed_definition = substitute_variables(logger_def, effective_variables)
+        except ValueError as e:
+            print(f&#34;Error processing logger &#39;{logger_name}&#39;: {e}&#34;)
+            raise
+
+        # Clean up things that aren&#39;t needed in expanded cruise_definition
+        if &#39;variables&#39; in processed_definition:
+            del processed_definition[&#39;variables&#39;]
+        if &#39;logger_template&#39; in processed_definition:
+            del processed_definition[&#39;logger_template&#39;]
+
+        # Store the processed definition
+        cruise_definition[&#39;loggers&#39;][logger_name] = processed_definition
+
+    # Get rid of logger_templates to keep config small
+    if &#39;variables&#39; in cruise_definition:
+        del cruise_definition[&#39;variables&#39;]
+    if &#39;logger_templates&#39; in cruise_definition:
+        del cruise_definition[&#39;logger_templates&#39;]
+
+    # Finally, apply global variables substitution to any variables remaining
+    # at the top level (e.g in cruise section).
+    cruise_definition = substitute_variables(cruise_definition, global_variables)
+
+    return cruise_definition</code></pre>
+</details>
+<div class="desc"><p>Process a complete configuration dictionary with templates and loggers.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>cruise_definition</code></strong></dt>
+<dd>Dictionary containing 'logger_templates', 'loggers',
+and optionally 'variables' as top-level keys</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>Dictionary with fully processed logger configurations</p></div>
+</dd>
+<dt id="logger.utils.read_config.expand_modes"><code class="name flex">
+<span>def <span class="ident">expand_modes</span></span>(<span>input_dict)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def expand_modes(input_dict):
+    &#34;&#34;&#34;
+    Expand or infer the modes section of a cruise definition dict.
+
+    This function processes a dictionary with a &#39;loggers&#39; key (required) and an optional
+    &#39;configs&#39; key. It extracts config dictionaries from each logger and moves them to the
+    top level &#39;configs&#39; section, replacing them with a list of references.
+
+    Args:
+        input_dict (dict): The input dictionary (possibly) containing &#39;modes&#39; and
+        &#39;configs&#39; keys.
+
+    Returns:
+        dict: A new dictionary with expanded configuration structure.
+
+    Raises:
+        ValueError: If the &#39;configs&#39; key is missing or if referenced configs are missing.
+
+    ### This code is to support flexibility in defining cruise configurations. ###
+
+    In the past, cruise modes were required to be dicts mapping a logger name to config.
+    We can infer that dict from a simple list of configs.
+    &#34;&#34;&#34;
+    # Validate input
+    if &#39;loggers&#39; not in input_dict:
+        raise ValueError(&#34;Cruise definition missing loggers?!?&#34;)
+    if &#39;configs&#39; not in input_dict:
+        raise ValueError(&#34;Cruise definition missing configs?!?&#34;)
+
+    # No modes defined (or an empty &#39;modes&#39; declaration)? Create a default one
+    modes = input_dict.get(&#39;modes&#39;)
+    if not modes:
+        logging.warning(&#39;No &#34;modes&#34; section found. Generating default mode.&#39;)
+        return generate_default_mode(input_dict)
+
+    # &#39;modes&#39; is there. Is it a dict?
+    if not isinstance(modes, dict):
+        raise ValueError(f&#34;&#39;modes&#39; definition must be a dict of modes. Found {type(modes)}&#34;)
+
+    # This is the copy we&#39;re going to modify and return
+    result = copy.deepcopy(input_dict)
+
+    loggers = input_dict.get(&#39;loggers&#39;)
+    for mode_name, mode_configs in input_dict.get(&#39;modes&#39;).items():
+        # Mode is already in expanded form - nothing to do
+        if isinstance(mode_configs, dict):
+            continue
+
+        if not isinstance(mode_configs, list):
+            raise ValueError(f&#34;Mode {mode_name} must be either dict &#34;
+                             f&#34;or list; found {type(mode_configs)}&#34;)
+
+        # If here, we&#39;ve got a list of configs that should be run in this mode.
+        # Figure out which loggers they belong to and expand into the normal
+        # dict form.
+        mode_dict = {}
+        for config_name in mode_configs:
+            # Look through loggers for this config_name
+            found = False
+            for logger_name, logger_def in loggers.items():
+                logger_configs = logger_def.get(&#39;configs&#39;)
+                if not logger_configs:
+                    raise ValueError(f&#34;Logger {logger_name} has no configs!&#34;)
+                if config_name in logger_configs:
+                    mode_dict[logger_name] = config_name
+                    found = True
+                    break
+            if not found:
+                raise ValueError(f&#34;No logger found for {config_name} in mode {mode_name}&#34;)
+
+        # Now confirm that each logger has had a config defined
+        for logger_name in loggers:
+            if logger_name not in mode_dict:
+                raise ValueError(f&#34;No config defined for {logger_name} in mode {mode_name}&#34;)
+
+        # Replace the config list with newly-created config dict
+        result[&#39;modes&#39;][mode_name] = mode_dict
+
+    # Is there a default mode defined? If not, pick the first one in the
+    # dict and define it as the default.
+    if &#39;default_mode&#39; not in result:
+        first_mode = next(iter(result.get(&#39;modes&#39;)))
+        result[&#39;default_mode&#39;] = first_mode
+
+    return result</code></pre>
+</details>
+<div class="desc"><p>Expand or infer the modes section of a cruise definition dict.</p>
+<p>This function processes a dictionary with a 'loggers' key (required) and an optional
+'configs' key. It extracts config dictionaries from each logger and moves them to the
+top level 'configs' section, replacing them with a list of references.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>input_dict</code></strong> :&ensp;<code>dict</code></dt>
+<dd>The input dictionary (possibly) containing 'modes' and</dd>
+</dl>
+<p>'configs' keys.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>dict</code></dt>
+<dd>A new dictionary with expanded configuration structure.</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ValueError</code></dt>
+<dd>If the 'configs' key is missing or if referenced configs are missing.</dd>
+</dl>
+<h3 id="this-code-is-to-support-flexibility-in-defining-cruise-configurations">This code is to support flexibility in defining cruise configurations.</h3>
+<p>In the past, cruise modes were required to be dicts mapping a logger name to config.
+We can infer that dict from a simple list of configs.</p></div>
+</dd>
+<dt id="logger.utils.read_config.expand_wildcards"><code class="name flex">
+<span>def <span class="ident">expand_wildcards</span></span>(<span>include_pattern: str, base_dir: str) ‑> List[str]</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def expand_wildcards(include_pattern: str, base_dir: str) -&gt; List[str]:
+    &#34;&#34;&#34;
+    Expand a potentially wildcard-containing path to a list of matching files.
+
+    Args:
+        include_pattern: Pattern that may contain wildcards (e.g., &#34;*.yaml&#34;)
+        base_dir: Base directory to resolve the pattern from
+
+    Returns:
+        List of matching file paths
+    &#34;&#34;&#34;
+    # Resolve relative paths
+    if not os.path.isabs(include_pattern):
+        full_pattern = os.path.normpath(os.path.join(base_dir, include_pattern))
+    else:
+        full_pattern = include_pattern
+
+    # Use glob to expand the pattern
+    matching_files = glob.glob(full_pattern)
+
+    if not matching_files:
+        logging.warning(f&#39;No files found matching pattern: &#34;{include_pattern}&#34;&#39;)
+
+    return matching_files</code></pre>
+</details>
+<div class="desc"><p>Expand a potentially wildcard-containing path to a list of matching files.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>include_pattern</code></strong></dt>
+<dd>Pattern that may contain wildcards (e.g., "*.yaml")</dd>
+<dt><strong><code>base_dir</code></strong></dt>
+<dd>Base directory to resolve the pattern from</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>List of matching file paths</p></div>
+</dd>
+<dt id="logger.utils.read_config.find_unmatched_variables"><code class="name flex">
+<span>def <span class="ident">find_unmatched_variables</span></span>(<span>data: Dict | List | str | Any) ‑> List[str]</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def find_unmatched_variables(data: Union[Dict, List, str, Any]) -&gt; List[str]:
+    &#34;&#34;&#34;
+    Recursively searches through a nested data structure (dicts, lists, strings)
+    and finds all variables that begin with &#34;&lt;&lt;&#34; and end with &#34;&gt;&gt;&#34;,
+    returning them with the brackets intact. These typically represent template variables.
+
+    Args:
+        data: A dict, list, string, or other value to search through
+
+    Returns:
+        List of extracted strings with &#34;&lt;&lt;&#34; and &#34;&gt;&gt;&#34; included
+    &#34;&#34;&#34;
+    results = []
+
+    if isinstance(data, dict):
+        # Search through dictionary keys and values
+        for key, value in data.items():
+            # Check if key is a string that might contain bracketed strings
+            if isinstance(key, str):
+                results.extend(_extract_from_string(key))
+
+            # Recursively check the value
+            results.extend(find_unmatched_variables(value))
+
+    elif isinstance(data, list):
+        # Search through list elements
+        for item in data:
+            results.extend(find_unmatched_variables(item))
+
+    elif isinstance(data, str):
+        # Search within the string
+        results.extend(_extract_from_string(data))
+
+    # Return unique results (no duplicates)
+    return list(set(results))</code></pre>
+</details>
+<div class="desc"><p>Recursively searches through a nested data structure (dicts, lists, strings)
+and finds all variables that begin with "&lt;&lt;" and end with "&gt;&gt;",
+returning them with the brackets intact. These typically represent template variables.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>data</code></strong></dt>
+<dd>A dict, list, string, or other value to search through</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>List of extracted strings with "&lt;&lt;" and "&gt;&gt;" included</p></div>
+</dd>
+<dt id="logger.utils.read_config.generate_default_mode"><code class="name flex">
+<span>def <span class="ident">generate_default_mode</span></span>(<span>input_dict)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def generate_default_mode(input_dict):
+    &#34;&#34;&#34;
+    If no &#39;modes&#39; section is present in input_dict, create one that has a single
+    mode, named &#39;default&#39;, using the first config defined for each logger.
+
+    Args:
+        input_dict (dict): The input dictionary containing &#39;loggers&#39; and optionally
+        &#39;configs&#39; keys.
+
+    Returns:
+        dict: A new dictionary with modes and default_mode keys.
+
+    Raises:
+        ValueError: If the &#39;loggers&#39; key is missing or if referenced configs are missing.
+    &#34;&#34;&#34;
+
+    # Now it&#39;s time to check up on modes - do we actually have a modes key?
+    if &#39;modes&#39; in input_dict:
+        return input_dict
+
+    # If not, create one.
+    # Create a new dictionary to avoid modifying the input
+    result = copy.deepcopy(input_dict)
+    default_mode = {}
+
+    for logger_name, logger_data in input_dict[&#39;loggers&#39;].items():
+        # Skip if no configs key in this logger
+        if &#39;configs&#39; not in logger_data:
+            raise ValueError(f&#34;Logger {logger_name} has no configs&#34;)
+        # Get the configs for this logger
+        logger_configs = logger_data[&#39;configs&#39;]
+
+        # Handle the case where configs is a list of strings
+        if not isinstance(logger_configs, list) or not len(logger_configs):
+            raise ValueError(f&#34;Logger {logger_name} config list is not a list? &#34;
+                             f&#34;Found type {type(logger_configs)}: {logger_configs}&#34;)
+        default_mode[logger_name] = logger_configs[0]
+    result[&#39;modes&#39;] = {&#39;default&#39;: default_mode}
+    result[&#39;default_mode&#39;] = &#39;default&#39;
+
+    return result</code></pre>
+</details>
+<div class="desc"><p>If no 'modes' section is present in input_dict, create one that has a single
+mode, named 'default', using the first config defined for each logger.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>input_dict</code></strong> :&ensp;<code>dict</code></dt>
+<dd>The input dictionary containing 'loggers' and optionally</dd>
+</dl>
+<p>'configs' keys.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>dict</code></dt>
+<dd>A new dictionary with modes and default_mode keys.</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ValueError</code></dt>
+<dd>If the 'loggers' key is missing or if referenced configs are missing.</dd>
+</dl></div>
+</dd>
+<dt id="logger.utils.read_config.parse"><code class="name flex">
+<span>def <span class="ident">parse</span></span>(<span>content: str, file_path: str = None) ‑> Dict[str, Any]</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def parse(content: str, file_path: str = None) -&gt; Dict[str, Any]:
+    &#34;&#34;&#34;
+    Parse YAML content and process includes.
+
+    Args:
+        content: The YAML content as a string
+        file_path: The original file path (for error reporting)
+
+    Returns:
+        Dictionary containing the merged YAML content or empty dict on error
     &#34;&#34;&#34;
     try:
+        # Parse the YAML content
         try:
-            return yaml.load(source, Loader=yaml.FullLoader)
+            data = yaml.load(content, Loader=yaml.FullLoader)
         except AttributeError:
             # If they&#39;ve got an older yaml, it may not have FullLoader)
-            return yaml.load(source)
-    except NameError:
-        raise ImportError(&#39;No YAML module available. Please ensure that &#39;
-                          &#39;PyYAML or equivalent is installed (e.g. via &#39;
-                          &#39;&#34;pip3 install PyYAML&#34;&#39;)</code></pre>
+            data = yaml.load(content)
+        # Handle empty file
+        if data is None:
+            return {}
+        return data
+
+    except yaml.YAMLError as e:
+        logging.error(f&#39;Invalid YAML syntax in &#34;{file_path}&#34;: {str(e)}&#39;)
+        return {}
+    except Exception as e:
+        logging.error(f&#39;Error parsing YAML in &#34;{file_path}&#34;: {str(e)}&#39;)
+        return {}</code></pre>
 </details>
+<div class="desc"><p>Parse YAML content and process includes.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>content</code></strong></dt>
+<dd>The YAML content as a string</dd>
+<dt><strong><code>file_path</code></strong></dt>
+<dd>The original file path (for error reporting)</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>Dictionary containing the merged YAML content or empty dict on error</p></div>
 </dd>
 <dt id="logger.utils.read_config.read_config"><code class="name flex">
-<span>def <span class="ident">read_config</span></span>(<span>filename)</span>
+<span>def <span class="ident">read_config</span></span>(<span>file_path: str) ‑> Dict[str, Any]</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def read_config(filename):
-    with open(filename, &#39;r&#39;) as file:
-        return parse(file)</code></pre>
+<pre><code class="python">def read_config(file_path: str) -&gt; Dict[str, Any]:
+    &#34;&#34;&#34;
+    Read a YAML configuration file.
+
+    Args:
+        file_path: Path to the YAML configuration file
+
+    Returns:
+        Dictionary containing the YAML content or empty dict on error
+    &#34;&#34;&#34;
+    try:
+        # Load the YAML file
+        with open(file_path, &#39;r&#39;) as file:
+            file_content = file.read()
+        return parse(file_content, file_path)
+
+    except FileNotFoundError:
+        logging.error(f&#39;YAML file not found: &#34;{file_path}&#34;&#39;)
+        return {}
+    except Exception as e:
+        logging.error(f&#39;Error reading file &#34;{file_path}&#34;: {str(e)}&#39;)
+        return {}</code></pre>
 </details>
+<div class="desc"><p>Read a YAML configuration file.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>file_path</code></strong></dt>
+<dd>Path to the YAML configuration file</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>Dictionary containing the YAML content or empty dict on error</p></div>
+</dd>
+<dt id="logger.utils.read_config.substitute_variables"><code class="name flex">
+<span>def <span class="ident">substitute_variables</span></span>(<span>config: Dict[str, Any] | List[Any] | str | int | float | bool | None,<br>variables: Dict[str, Any]) ‑> Dict[str, Any] | List[Any] | str | int | float | bool | None</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def substitute_variables(config: ConfigValue, variables: Dict[str, Any]) -&gt; ConfigValue:
+    &#34;&#34;&#34;
+    Recursively substitute template variables in a configuration dictionary.
+
+    Args:
+        config: Dictionary or list containing template variables
+        variables: Dictionary of variable names and their values
+
+    Returns:
+        Configuration with all variables substituted
+    &#34;&#34;&#34;
+    if isinstance(config, dict):
+        # Create a new dict to hold the result with substituted keys and values
+        result = {}
+        for k, v in config.items():
+            # Substitute variables in keys if they are strings
+            if isinstance(k, str):
+                new_key = substitute_variables(k, variables)
+            else:
+                new_key = k
+            # Substitute variables in values
+            new_value = substitute_variables(v, variables)
+            result[new_key] = new_value
+        return result
+    elif isinstance(config, list):
+        return [substitute_variables(item, variables) for item in config]
+    elif isinstance(config, str):
+        # Use regex to find and replace all &lt;&lt;variable&gt;&gt; patterns
+        pattern = r&#39;&lt;&lt;([^&gt;]+)&gt;&gt;&#39;
+
+        # Check if the string is ONLY a variable pattern
+        match = re.fullmatch(pattern, config)
+        if match:
+            # It&#39;s a standalone variable, preserve its type
+            var_name = match.group(1)
+            if var_name in variables:
+                return variables[var_name]  # Return the original value with its type
+            else:
+                raise ValueError(f&#34;Variable &#39;{var_name}&#39; not found in provided variables&#34;)
+        else:
+            # It&#39;s a string with embedded variables, do string substitution
+            def replace_match(match):
+                var_name = match.group(1)
+                if var_name in variables:
+                    return str(variables[var_name])
+                else:
+                    raise ValueError(f&#34;Variable &#39;{var_name}&#39; not found in provided variables&#34;)
+
+            return re.sub(pattern, replace_match, config)
+    else:
+        return config</code></pre>
+</details>
+<div class="desc"><p>Recursively substitute template variables in a configuration dictionary.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>config</code></strong></dt>
+<dd>Dictionary or list containing template variables</dd>
+<dt><strong><code>variables</code></strong></dt>
+<dd>Dictionary of variable names and their values</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>Configuration with all variables substituted</p></div>
 </dd>
 </dl>
 </section>
@@ -111,7 +998,6 @@ YAML) and try to parse it into a Python dict.</p></div>
 </section>
 </article>
 <nav id="sidebar">
-<h1>Index</h1>
 <div class="toc">
 <ul></ul>
 </div>
@@ -123,15 +1009,25 @@ YAML) and try to parse it into a Python dict.</p></div>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="logger.utils.read_config.deep_merge" href="#logger.utils.read_config.deep_merge">deep_merge</a></code></li>
+<li><code><a title="logger.utils.read_config.expand_cruise_definition" href="#logger.utils.read_config.expand_cruise_definition">expand_cruise_definition</a></code></li>
+<li><code><a title="logger.utils.read_config.expand_includes" href="#logger.utils.read_config.expand_includes">expand_includes</a></code></li>
+<li><code><a title="logger.utils.read_config.expand_logger_definitions" href="#logger.utils.read_config.expand_logger_definitions">expand_logger_definitions</a></code></li>
+<li><code><a title="logger.utils.read_config.expand_logger_templates" href="#logger.utils.read_config.expand_logger_templates">expand_logger_templates</a></code></li>
+<li><code><a title="logger.utils.read_config.expand_modes" href="#logger.utils.read_config.expand_modes">expand_modes</a></code></li>
+<li><code><a title="logger.utils.read_config.expand_wildcards" href="#logger.utils.read_config.expand_wildcards">expand_wildcards</a></code></li>
+<li><code><a title="logger.utils.read_config.find_unmatched_variables" href="#logger.utils.read_config.find_unmatched_variables">find_unmatched_variables</a></code></li>
+<li><code><a title="logger.utils.read_config.generate_default_mode" href="#logger.utils.read_config.generate_default_mode">generate_default_mode</a></code></li>
 <li><code><a title="logger.utils.read_config.parse" href="#logger.utils.read_config.parse">parse</a></code></li>
 <li><code><a title="logger.utils.read_config.read_config" href="#logger.utils.read_config.read_config">read_config</a></code></li>
+<li><code><a title="logger.utils.read_config.substitute_variables" href="#logger.utils.read_config.substitute_variables">substitute_variables</a></code></li>
 </ul>
 </li>
 </ul>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.6</a>.</p>
 </footer>
 </body>
 </html>

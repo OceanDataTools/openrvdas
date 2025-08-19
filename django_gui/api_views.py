@@ -23,7 +23,7 @@ import yaml
 import os
 from rest_framework.settings import api_settings
 # Read in JSON with comments
-from logger.utils.read_config import parse, read_config  # noqa: E402
+from logger.utils.read_config import read_config, expand_cruise_definition  # noqa: E402
 
 # RVDAS API Views + Serializers
 
@@ -45,6 +45,18 @@ from logger.utils.read_config import parse, read_config  # noqa: E402
 
 # Interacting with the Django DB via its API class
 # As per the standard view.
+
+### example process to add custom API endpoints ###
+# from contrib.ship.views.api_views import ship_specific_paths, ship_specific_schema
+
+# import and add your own API routes here, should be a list matching urlpatterns below
+custom_paths = []
+# custom_paths += ship_specific_paths()
+
+def get_custom_schema(request, format=None):
+    # your method should return a dict like the get method of ApiRoot below
+    # return ship_specific_schema(request, format)
+    return {}
 
 api = None
 
@@ -76,7 +88,7 @@ class ApiRoot(APIView):
     """
 
     serializer_class = GetSerializer
-    
+
     def get(self, request, format=None):
         return Response({
             "login": reverse("rest_framework:login", request=request, format=format),
@@ -88,6 +100,7 @@ class ApiRoot(APIView):
             "delete-configuration": reverse("delete-configuration", request=request, format=format),
             "edit-logger-config": reverse("edit-logger-config", request=request, format=format),
             "load-configuration-file": reverse("load-configuration-file", request=request, format=format),
+            **get_custom_schema(request, format),
         })
 
 
@@ -237,8 +250,8 @@ class CruiseSelectModeAPIView(APIView):
 
 
 class CruiseReloadCurrentConfiguartionSerializer(serializers.Serializer):
-    # The presence of the value implies true, as the implementation in the the main views.py at 
-    # line: ~93 switches on the presence of a form element. For consistency, the input object is 
+    # The presence of the value implies true, as the implementation in the the main views.py at
+    # line: ~93 switches on the presence of a form element. For consistency, the input object is
     # expecting json {"reload": "true"} but the reload key is really the switch.
     reload = serializers.CharField(required=True)
 
@@ -294,7 +307,8 @@ class CruiseReloadCurrentConfigurationAPIView(APIView):
                 filename = cruise["config_filename"]
                 # Load the file to memory and parse to a dict. Add the name
                 # of the file we've just loaded to the dict.
-                config = read_config(filename)
+                config = expand_cruise_definition(config)
+
                 if "cruise" in config:
                     config["cruise"]["config_filename"] = filename
                 api.load_configuration(config)
@@ -567,16 +581,17 @@ class LoadConfigurationFileAPIView(APIView):
             if target_file is None:
                 return Response({"status": f"File not found. {target_file}"}, 404)
             try:
-                with open(target_file, "r") as config_file:
-                    configuration = parse(config_file.read())
-                    if "cruise" in configuration:
-                        configuration["cruise"]["config_filename"] = target_file
-                    # Load the config and set to the default mode
-                    api.load_configuration(configuration)
-                    default_mode = api.get_default_mode()
-                    if default_mode:
-                        api.set_active_mode(default_mode)
-                    return Response({"status": f"target_file loaded {target_file}"}, 200)
+                config = read_config(target_file)
+                config = expand_cruise_definition(config)
+
+                if "cruise" in configuration:
+                    config["cruise"]["config_filename"] = target_file
+                # Load the config and set to the default mode
+                api.load_configuration(config)
+                default_mode = api.get_default_mode()
+                if default_mode:
+                    api.set_active_mode(default_mode)
+                return Response({"status": f"target_file loaded {target_file}"}, 200)
 
             except (json.JSONDecodeError, yaml.scanner.ScannerError) as e:
                 load_errors.append('Error loading "%s": %s' % (target_file, str(e)))
@@ -603,5 +618,4 @@ urlpatterns = [
     path('load-configuration-file/', LoadConfigurationFileAPIView.as_view(), name='load-configuration-file'),
     path('reload-current-configuration/', CruiseReloadCurrentConfigurationAPIView.as_view(), name='reload-current-configuration'),
     path('select-cruise-mode/', CruiseSelectModeAPIView.as_view(), name='select-cruise-mode'),
-]
-    
+] + custom_paths

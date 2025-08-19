@@ -25,7 +25,7 @@ import sys
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(realpath(__file__))))
-from logger.utils.read_config import read_config  # noqa: E402
+from logger.utils.read_config import read_config, expand_cruise_definition  # noqa: E402
 from server.server_api import ServerAPI  # noqa: E402
 
 LOGGING_FORMAT = '%(asctime)-15s %(filename)s:%(lineno)d %(message)s'
@@ -155,6 +155,8 @@ class ServerAPICommandLine:
                     # Load the file to memory and parse to a dict. Add the name
                     # of the file we've just loaded to the dict.
                     config = read_config(filename)
+                    config = expand_cruise_definition(config)
+
                     if 'cruise' in config:
                         config['cruise']['config_filename'] = filename
                     self.api.load_configuration(config)

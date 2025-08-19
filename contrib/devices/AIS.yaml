@@ -1,0 +1,32 @@
+################################################################################
+# AIS Device Type definition
+#
+# See README.md in this directory
+
+######################################
+AIS:
+  category: "device_type"
+  # !AIVDM,1,1,,B,15O5G4000oKPfggK2F2RQj7>0@FU,0*04
+  format:
+    AIVDM: "!AIVDM,{NumMessages:d},{MessageNum:d},{NextMessage:od},{Channel:ow},{Body:nc},{FillBits:d}*{Checksum:x}"
+    AIVDO: "!AIVDO,{NumMessages:d},{MessageNum:d},{NextMessage:od},{Channel:ow},{Body:nc},{FillBits:d}*{Checksum:x}"
+
+  fields:
+    NumMessages:
+      description: "Total number of sentences needed to transfer message"
+      units: ""
+    MessageNum:
+      description: "Message sentence number"
+      units: ""
+    NextMessage:
+      description: "Sequential identifier to link multiple messages"
+      units: ""
+    Channel:
+      description: "AIS channel"
+      units: ""
+    Body:
+      description: "Encapsulated Binary Coded Data (as per ITU-R M.1371)"
+      units: ""
+    FillBits:
+      description: "Number of fill bits"
+      units: ""

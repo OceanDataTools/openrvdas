@@ -88,7 +88,7 @@ configs:
         transforms:
           class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,test/NBP1406/devices/*.yaml
+            definition_path: contrib/devices/*.yaml,test/NBP1406/devices/*.yaml
         writers:
           class: UDPWriter
           kwargs:
@@ -125,7 +125,7 @@ configs:
             prefix: twnc
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,test/NBP1406/devices/*.yaml
+            definition_path: contrib/devices/*.yaml,test/NBP1406/devices/*.yaml
         writers:
           class: UDPWriter
           kwargs:
@@ -152,7 +152,7 @@ configs:
         transforms:
           class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,test/NBP1406/devices/*.yaml
+            definition_path: contrib/devices/*.yaml,test/NBP1406/devices/*.yaml
         writers:
           class: UDPWriter
           kwargs:
@@ -189,7 +189,7 @@ configs:
             prefix: cwnc
         - class: ParseTransform
           kwargs:
-            definition_path: local/devices/*.yaml,test/NBP1406/devices/*.yaml
+            definition_path: contrib/devices/*.yaml,test/NBP1406/devices/*.yaml
         writers:
           class: UDPWriter
           kwargs:

@@ -1,0 +1,83 @@
+# How to use this template
+#
+# Put this in your calibrations file, e,g.
+#    local/your_ship/calibration_files/calibrations-2025-04-15.yaml:
+#
+# variables:
+#   # Default calibration factors
+#
+#   # Rtmp calibration
+#   rtmp_field_name: RTmpValue
+#   rtmp_output_name: CalibratedRTmpValue
+#   rtmp_mult_factor: 1.00223
+#   rtmp_add_factor: 0.0442
+#
+#   # SSpd calibration
+#   sspd_field_name: SSpd
+#   sspd_output_name: CalibratedSSpd
+#   sspd_mult_factor: 0.5443
+#   sspd_add_factor: 0
+#
+# Put these loggers in your cruise definition file:
+#
+# includes:
+#   local/your_ship/calibration_files/calibrations-2025-04-15.yaml
+#
+# loggers:
+#   rtmp_cal:  # compute and write out calibrated values for rtmp
+#     logger_template: calibration_logger_template
+#     variables:
+#       field_name: rtmp_field_name
+#       output_name: rtmp_output_name
+#       mult_factor: rtmp_mult_factor
+#       add_factor: rtmp_add_factor
+#
+#   sspd_cal:  # compute and write out calibrated values for sspd
+#     logger_template: calibration_logger_template
+#     variables:
+#       field_name: sspd_field_name
+#       output_name: sspd_output_name
+#       mult_factor: sspd_mult_factor
+#       add_factor: sspd_add_factor
+
+logger_templates:
+  #################
+  calibration_logger_template:
+    configs:
+      'off': {}
+
+      # Write calibrated values back to CDS
+      'on': &calibration_on
+        readers:
+        - class: CachedDataReader
+          kwargs:
+            return_das_record: true
+            data_id: <<data_id>>
+            data_server: <<data_server>>
+            subscription:
+              fields: [<<field_name>>]
+        transforms:
+        - class: ModifyValueTransform
+          kwargs:
+            #quiet: true
+            fields:
+              <<field_name>>:
+                mult_factor: <<mult_factor>>
+                add_factor: <<add_factor>>
+                output_name: <<output_name>>
+                delete_original: true
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: <<data_server>>
+
+      # Write calibrated values back to CDS and InfluxDB
+      on+influx:
+        <<: *calibration_on
+        writers:
+        - class: CachedDataWriter
+          kwargs:
+            data_server: <<data_server>>
+        - class: InfluxDBWriter
+          kwargs:
+            bucket_name: <<influx_bucket_name>>

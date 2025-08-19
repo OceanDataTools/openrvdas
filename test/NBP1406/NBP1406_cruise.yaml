@@ -3,1515 +3,215 @@
 # YAML cruise definition file for OpenRVDAS.
 #
 # Created by:
-#   command:  local/usap/create_cruise.py test/NBP1406/NBP1406_port_defs.yaml
-#   time:     Wed Feb  2 22:47:13 2022 UTC
-#   user:     pablo
+#   command:  <<command_line>>
+#   time:     <<date_time>> UTC
+#   user:     <<user>>
 #
-########################################
+###########################################################
 cruise:
-  id: NBP1406
-  start: '2019-07-01'
-  end: '2019-12-31'
+  id: <<cruise>>
+  start: '<<cruise_start>>'
+  end: '<<cruise_end>>'
 
-########################################
+###########################################################
+includes:
+  - contrib/logger_templates/serial_logger_template.yaml
+  - contrib/logger_templates/parse_data_logger_template.yaml
+  - contrib/logger_templates/true_winds_logger_template.yaml
+  - contrib/logger_templates/snapshot_logger_template.yaml
+
+###########################################################
+# Global variables - can be overridden by individual loggers
+variables:
+  cruise: NBP1406
+  cruise_start: '2019-07-01'
+  cruise_end: '2019-12-31'
+
+  udp_destination: 255.255.255.255
+  raw_udp_port: 6224
+  parsed_udp_port: 6225
+
+  file_root: /var/tmp/log
+  parse_definition_path: test/NBP1406/devices/nbp_devices.yaml
+
+  data_server: localhost:8766
+  influx_bucket_name: openrvdas
+
+  command_line: local/usap/create_template_cruise.py test/NBP1406/NBP1406_port_defs.yaml
+  date_time: Thu Mar 13 04:38:45 2025
+  user: pablo
+
+###########################################################
 loggers:
   PCOD:
-    configs:
-    - PCOD-off
-    - PCOD-net
-    - PCOD-net+file
+    logger_template: serial_logger_template
+    variables:
+      serial_port: /tmp/tty_PCOD
+      baud_rate: 4800
   cwnc:
-    configs:
-    - cwnc-off
-    - cwnc-net
-    - cwnc-net+file
+    logger_template: serial_logger_template
+    variables:
+      serial_port: /tmp/tty_cwnc
+      baud_rate: 19200
   gp02:
-    configs:
-    - gp02-off
-    - gp02-net
-    - gp02-net+file
+    logger_template: serial_logger_template
+    variables:
+      serial_port: /tmp/tty_gp02
+      baud_rate: 4800
   gyr1:
-    configs:
-    - gyr1-off
-    - gyr1-net
-    - gyr1-net+file
+    logger_template: serial_logger_template
+    variables:
+      serial_port: /tmp/tty_gyr1
+      baud_rate: 4800
   adcp:
-    configs:
-    - adcp-off
-    - adcp-net
-    - adcp-net+file
+    logger_template: serial_logger_template
+    variables:
+      serial_port: /tmp/tty_adcp
+      baud_rate: 9600
   eng1:
-    configs:
-    - eng1-off
-    - eng1-net
-    - eng1-net+file
+    logger_template: serial_logger_template
+    variables:
+      serial_port: /tmp/tty_eng1
+      baud_rate: 9600
   svp1:
-    configs:
-    - svp1-off
-    - svp1-net
-    - svp1-net+file
+    logger_template: serial_logger_template
+    variables:
+      serial_port: /tmp/tty_svp1
+      baud_rate: 9600
   twnc:
-    configs:
-    - twnc-off
-    - twnc-net
-    - twnc-net+file
+    logger_template: serial_logger_template
+    variables:
+      serial_port: /tmp/tty_twnc
+      baud_rate: 19200
   mbdp:
-    configs:
-    - mbdp-off
-    - mbdp-net
-    - mbdp-net+file
+    logger_template: serial_logger_template
+    variables:
+      serial_port: /tmp/tty_mbdp
+      baud_rate: 9600
   knud:
-    configs:
-    - knud-off
-    - knud-net
-    - knud-net+file
+    logger_template: serial_logger_template
+    variables:
+      serial_port: /tmp/tty_knud
+      baud_rate: 19200
   grv1:
-    configs:
-    - grv1-off
-    - grv1-net
-    - grv1-net+file
+    logger_template: serial_logger_template
+    variables:
+      serial_port: /tmp/tty_grv1
+      baud_rate: 9600
   mwx1:
-    configs:
-    - mwx1-off
-    - mwx1-net
-    - mwx1-net+file
+    logger_template: serial_logger_template
+    variables:
+      serial_port: /tmp/tty_mwx1
+      baud_rate: 9600
   pco2:
-    configs:
-    - pco2-off
-    - pco2-net
-    - pco2-net+file
+    logger_template: serial_logger_template
+    variables:
+      serial_port: /tmp/tty_pco2
+      baud_rate: 9600
   pguv:
-    configs:
-    - pguv-off
-    - pguv-net
-    - pguv-net+file
+    logger_template: serial_logger_template
+    variables:
+      serial_port: /tmp/tty_pguv
+      baud_rate: 9600
   s330:
-    configs:
-    - s330-off
-    - s330-net
-    - s330-net+file
+    logger_template: serial_logger_template
+    variables:
+      serial_port: /tmp/tty_s330
+      baud_rate: 9600
   tsg1:
-    configs:
-    - tsg1-off
-    - tsg1-net
-    - tsg1-net+file
+    logger_template: serial_logger_template
+    variables:
+      serial_port: /tmp/tty_tsg1
+      baud_rate: 9600
   rtmp:
-    configs:
-    - rtmp-off
-    - rtmp-net
-    - rtmp-net+file
+    logger_template: serial_logger_template
+    variables:
+      serial_port: /tmp/tty_rtmp
+      baud_rate: 9600
   hdas:
-    configs:
-    - hdas-off
-    - hdas-net
-    - hdas-net+file
+    logger_template: serial_logger_template
+    variables:
+      serial_port: /tmp/tty_hdas
+      baud_rate: 9600
   tsg2:
-    configs:
-    - tsg2-off
-    - tsg2-net
-    - tsg2-net+file
+    logger_template: serial_logger_template
+    variables:
+      serial_port: /tmp/tty_tsg2
+      baud_rate: 9600
   seap:
-    configs:
-    - seap-off
-    - seap-net
-    - seap-net+file
-  net_reader:
-    configs:
-    - net_reader-off
-    - net_reader-on
-    - net_reader-on+influx
-  true_wind:
-    configs:
-    - true_wind-off
-    - true_wind-on
-    - true_wind-on+influx
-  snapshot:
-    configs:
-    - snapshot-off
-    - snapshot-on
-    - snapshot-on+influx
+    logger_template: serial_logger_template
+    variables:
+      serial_port: /tmp/tty_seap
+      baud_rate: 9600
 
-########################################
+  # Parse raw UDP data and send to CDS, and optionally InfluxDB;
+  # uses default global variables
+  parse_data:
+    logger_template: parse_data_logger_template
+
+  # Read course, heading, SOG and relative winds from CDS, compute
+  # true winds and write back to CDS and optionally InfluxDB
+  true_winds_port:
+    logger_template: true_winds_logger_template
+    variables:
+      # Where to find the inputs
+      course_true: S330CourseTrue
+      heading_true: S330HeadingTrue
+      speed_over_ground: S330SpeedKt
+      rel_wind_dir: MwxPortRelWindDir
+      rel_wind_speed: MwxPortRelWindSpeed
+
+      # Knots -> meters/sec
+      convert_speed_factor: 0.5144
+      max_field_age: 15
+
+      # What to call the outputs
+      apparent_dir_name: PortApparentWindDir
+      true_dir_name: PortTrueWindDir
+      true_speed_name: PortTrueWindSpeed
+
+  true_winds_stbd:
+    logger_template: true_winds_logger_template
+    variables:
+      # Where to find the inputs
+      course_true: S330CourseTrue
+      heading_true: S330HeadingTrue
+      speed_over_ground: S330SpeedKt
+      rel_wind_dir: MwxStbdRelWindDir
+      rel_wind_speed: MwxStbdRelWindSpeed
+
+      # Knots -> meters/sec
+      convert_speed_factor: 0.5144
+      max_field_age: 15
+
+      # What to call the outputs
+      apparent_dir_name: StbdApparentWindDir
+      true_dir_name: StbdTrueWindDir
+      true_speed_name: StbdTrueWindSpeed
+
+  # Read a bunch of variables from CDS, compute 30-second snapshot and write back
+  # to CDS and optionally InfluxDB. This *totally* needs a way to be generalized!!!
+  snapshot:
+    logger_template: snapshot_logger_template
+    variables:
+      snapshot_fields: [MwxAirTemp, RTMPTemp, PortTrueWindDir, PortTrueWindSpeed, StbdTrueWindDir,
+                        StbdTrueWindSpeed, MwxBarometer, KnudDepthHF, KnudDepthLF, Grv1Value]
+      interval: 30
+      window: 30
+
+###########################################################
 modes:
-  'off':
-    PCOD: PCOD-off
-    cwnc: cwnc-off
-    gp02: gp02-off
-    gyr1: gyr1-off
-    adcp: adcp-off
-    eng1: eng1-off
-    svp1: svp1-off
-    twnc: twnc-off
-    mbdp: mbdp-off
-    knud: knud-off
-    grv1: grv1-off
-    mwx1: mwx1-off
-    pco2: pco2-off
-    pguv: pguv-off
-    s330: s330-off
-    tsg1: tsg1-off
-    rtmp: rtmp-off
-    hdas: hdas-off
-    tsg2: tsg2-off
-    seap: seap-off
-    net_reader: net_reader-off
-    true_wind: true_wind-off
-    snapshot: snapshot-off
+  'off':  # without a 'default_mode' key, first defined mode will be default
+    [PCOD-off, cwnc-off, gp02-off, gyr1-off, adcp-off, eng1-off, svp1-off, twnc-off, mbdp-off, knud-off, grv1-off, mwx1-off, pco2-off, pguv-off, s330-off, tsg1-off, rtmp-off, hdas-off, tsg2-off, seap-off, parse_data-off, true_winds_port-off, true_winds_stbd-off, snapshot-off]
 
   no_write:
-    PCOD: PCOD-net
-    cwnc: cwnc-net
-    gp02: gp02-net
-    gyr1: gyr1-net
-    adcp: adcp-net
-    eng1: eng1-net
-    svp1: svp1-net
-    twnc: twnc-net
-    mbdp: mbdp-net
-    knud: knud-net
-    grv1: grv1-net
-    mwx1: mwx1-net
-    pco2: pco2-net
-    pguv: pguv-net
-    s330: s330-net
-    tsg1: tsg1-net
-    rtmp: rtmp-net
-    hdas: hdas-net
-    tsg2: tsg2-net
-    seap: seap-net
-    net_reader: net_reader-on
-    true_wind: true_wind-on
-    snapshot: snapshot-on
-
-  no_write+influx:
-    PCOD: PCOD-net
-    cwnc: cwnc-net
-    gp02: gp02-net
-    gyr1: gyr1-net
-    adcp: adcp-net
-    eng1: eng1-net
-    svp1: svp1-net
-    twnc: twnc-net
-    mbdp: mbdp-net
-    knud: knud-net
-    grv1: grv1-net
-    mwx1: mwx1-net
-    pco2: pco2-net
-    pguv: pguv-net
-    s330: s330-net
-    tsg1: tsg1-net
-    rtmp: rtmp-net
-    hdas: hdas-net
-    tsg2: tsg2-net
-    seap: seap-net
-    net_reader: net_reader-on+influx
-    true_wind: true_wind-on+influx
-    snapshot: snapshot-on+influx
+    [PCOD-net, cwnc-net, gp02-net, gyr1-net, adcp-net, eng1-net, svp1-net, twnc-net, mbdp-net, knud-net, grv1-net, mwx1-net, pco2-net, pguv-net, s330-net, tsg1-net, rtmp-net, hdas-net, tsg2-net, seap-net, parse_data-on, true_winds_port-on, true_winds_stbd-on, snapshot-on]
 
   write:
-    PCOD: PCOD-net+file
-    cwnc: cwnc-net+file
-    gp02: gp02-net+file
-    gyr1: gyr1-net+file
-    adcp: adcp-net+file
-    eng1: eng1-net+file
-    svp1: svp1-net+file
-    twnc: twnc-net+file
-    mbdp: mbdp-net+file
-    knud: knud-net+file
-    grv1: grv1-net+file
-    mwx1: mwx1-net+file
-    pco2: pco2-net+file
-    pguv: pguv-net+file
-    s330: s330-net+file
-    tsg1: tsg1-net+file
-    rtmp: rtmp-net+file
-    hdas: hdas-net+file
-    tsg2: tsg2-net+file
-    seap: seap-net+file
-    net_reader: net_reader-on
-    true_wind: true_wind-on
-    snapshot: snapshot-on
+    [PCOD-net+file, cwnc-net+file, gp02-net+file, gyr1-net+file, adcp-net+file, eng1-net+file, svp1-net+file, twnc-net+file, mbdp-net+file, knud-net+file, grv1-net+file, mwx1-net+file, pco2-net+file, pguv-net+file, s330-net+file, tsg1-net+file, rtmp-net+file, hdas-net+file, tsg2-net+file, seap-net+file, parse_data-on, true_winds_port-on, true_winds_stbd-on, snapshot-on]
+
+  no_write+influx:
+    [PCOD-net, cwnc-net, gp02-net, gyr1-net, adcp-net, eng1-net, svp1-net, twnc-net, mbdp-net, knud-net, grv1-net, mwx1-net, pco2-net, pguv-net, s330-net, tsg1-net, rtmp-net, hdas-net, tsg2-net, seap-net, parse_data-on+influx, true_winds_port-on+influx, true_winds_stbd-on+influx, snapshot-on+influx]
 
   write+influx:
-    PCOD: PCOD-net+file
-    cwnc: cwnc-net+file
-    gp02: gp02-net+file
-    gyr1: gyr1-net+file
-    adcp: adcp-net+file
-    eng1: eng1-net+file
-    svp1: svp1-net+file
-    twnc: twnc-net+file
-    mbdp: mbdp-net+file
-    knud: knud-net+file
-    grv1: grv1-net+file
-    mwx1: mwx1-net+file
-    pco2: pco2-net+file
-    pguv: pguv-net+file
-    s330: s330-net+file
-    tsg1: tsg1-net+file
-    rtmp: rtmp-net+file
-    hdas: hdas-net+file
-    tsg2: tsg2-net+file
-    seap: seap-net+file
-    net_reader: net_reader-on+influx
-    true_wind: true_wind-on+influx
-    snapshot: snapshot-on+influx
-
-########################################
-default_mode: 'off'
-
-########################################
-configs:
-  ########
-  PCOD-off: {}
-
-  PCOD-net:
-    readers:                    # Read from serial port
-    - class: SerialReader
-      kwargs:
-        baudrate: 4800
-        port: /tmp/tty_PCOD
-    transforms:                 # Add timestamp and logger label
-    - class: TimestampTransform
-    - class: PrefixTransform
-      kwargs:
-        prefix: PCOD
-    writers:
-    - class: UDPWriter
-      kwargs:
-        port: 6224
-        destination: 255.255.255.255
-
-  PCOD-net+file:
-    readers:                    # Read from serial port
-    - class: SerialReader
-      kwargs:
-        baudrate: 4800
-        port: /tmp/tty_PCOD
-    transforms:                 # Add timestamp
-    - class: TimestampTransform
-    writers:
-    - class: LogfileWriter      # Write to logfile
-      kwargs:
-        filebase: /var/tmp/log/PCOD/raw/NBP1406_PCOD
-    - class: ComposedWriter
-      kwargs:
-        transforms:
-        - class: PrefixTransform
-          kwargs:
-            prefix: PCOD
-        writers:
-        - class: UDPWriter
-          kwargs:
-            port: 6224
-            destination: 255.255.255.255
-  ########
-  cwnc-off: {}
-
-  cwnc-net:
-    readers:                    # Read from serial port
-    - class: SerialReader
-      kwargs:
-        baudrate: 19200
-        port: /tmp/tty_cwnc
-    transforms:                 # Add timestamp and logger label
-    - class: TimestampTransform
-    - class: PrefixTransform
-      kwargs:
-        prefix: cwnc
-    writers:
-    - class: UDPWriter
-      kwargs:
-        port: 6224
-        destination: 255.255.255.255
-
-  cwnc-net+file:
-    readers:                    # Read from serial port
-    - class: SerialReader
-      kwargs:
-        baudrate: 19200
-        port: /tmp/tty_cwnc
-    transforms:                 # Add timestamp
-    - class: TimestampTransform
-    writers:
-    - class: LogfileWriter      # Write to logfile
-      kwargs:
-        filebase: /var/tmp/log/cwnc/raw/NBP1406_cwnc
-    - class: ComposedWriter
-      kwargs:
-        transforms:
-        - class: PrefixTransform
-          kwargs:
-            prefix: cwnc
-        writers:
-        - class: UDPWriter
-          kwargs:
-            port: 6224
-            destination: 255.255.255.255
-  ########
-  gp02-off: {}
-
-  gp02-net:
-    readers:                    # Read from serial port
-    - class: SerialReader
-      kwargs:
-        baudrate: 4800
-        port: /tmp/tty_gp02
-    transforms:                 # Add timestamp and logger label
-    - class: TimestampTransform
-    - class: PrefixTransform
-      kwargs:
-        prefix: gp02
-    writers:
-    - class: UDPWriter
-      kwargs:
-        port: 6224
-        destination: 255.255.255.255
-
-  gp02-net+file:
-    readers:                    # Read from serial port
-    - class: SerialReader
-      kwargs:
-        baudrate: 4800
-        port: /tmp/tty_gp02
-    transforms:                 # Add timestamp
-    - class: TimestampTransform
-    writers:
-    - class: LogfileWriter      # Write to logfile
-      kwargs:
-        filebase: /var/tmp/log/gp02/raw/NBP1406_gp02
-    - class: ComposedWriter
-      kwargs:
-        transforms:
-        - class: PrefixTransform
-          kwargs:
-            prefix: gp02
-        writers:
-        - class: UDPWriter
-          kwargs:
-            port: 6224
-            destination: 255.255.255.255
-  ########
-  gyr1-off: {}
-
-  gyr1-net:
-    readers:                    # Read from serial port
-    - class: SerialReader
-      kwargs:
-        baudrate: 4800
-        port: /tmp/tty_gyr1
-    transforms:                 # Add timestamp and logger label
-    - class: TimestampTransform
-    - class: PrefixTransform
-      kwargs:
-        prefix: gyr1
-    writers:
-    - class: UDPWriter
-      kwargs:
-        port: 6224
-        destination: 255.255.255.255
-
-  gyr1-net+file:
-    readers:                    # Read from serial port
-    - class: SerialReader
-      kwargs:
-        baudrate: 4800
-        port: /tmp/tty_gyr1
-    transforms:                 # Add timestamp
-    - class: TimestampTransform
-    writers:
-    - class: LogfileWriter      # Write to logfile
-      kwargs:
-        filebase: /var/tmp/log/gyr1/raw/NBP1406_gyr1
-    - class: ComposedWriter
-      kwargs:
-        transforms:
-        - class: PrefixTransform
-          kwargs:
-            prefix: gyr1
-        writers:
-        - class: UDPWriter
-          kwargs:
-            port: 6224
-            destination: 255.255.255.255
-  ########
-  adcp-off: {}
-
-  adcp-net:
-    readers:                    # Read from serial port
-    - class: SerialReader
-      kwargs:
-        baudrate: 9600
-        port: /tmp/tty_adcp
-    transforms:                 # Add timestamp and logger label
-    - class: TimestampTransform
-    - class: PrefixTransform
-      kwargs:
-        prefix: adcp
-    writers:
-    - class: UDPWriter
-      kwargs:
-        port: 6224
-        destination: 255.255.255.255
-
-  adcp-net+file:
-    readers:                    # Read from serial port
-    - class: SerialReader
-      kwargs:
-        baudrate: 9600
-        port: /tmp/tty_adcp
-    transforms:                 # Add timestamp
-    - class: TimestampTransform
-    writers:
-    - class: LogfileWriter      # Write to logfile
-      kwargs:
-        filebase: /var/tmp/log/adcp/raw/NBP1406_adcp
-    - class: ComposedWriter
-      kwargs:
-        transforms:
-        - class: PrefixTransform
-          kwargs:
-            prefix: adcp
-        writers:
-        - class: UDPWriter
-          kwargs:
-            port: 6224
-            destination: 255.255.255.255
-  ########
-  eng1-off: {}
-
-  eng1-net:
-    readers:                    # Read from serial port
-    - class: SerialReader
-      kwargs:
-        baudrate: 9600
-        port: /tmp/tty_eng1
-    transforms:                 # Add timestamp and logger label
-    - class: TimestampTransform
-    - class: PrefixTransform
-      kwargs:
-        prefix: eng1
-    writers:
-    - class: UDPWriter
-      kwargs:
-        port: 6224
-        destination: 255.255.255.255
-
-  eng1-net+file:
-    readers:                    # Read from serial port
-    - class: SerialReader
-      kwargs:
-        baudrate: 9600
-        port: /tmp/tty_eng1
-    transforms:                 # Add timestamp
-    - class: TimestampTransform
-    writers:
-    - class: LogfileWriter      # Write to logfile
-      kwargs:
-        filebase: /var/tmp/log/eng1/raw/NBP1406_eng1
-    - class: ComposedWriter
-      kwargs:
-        transforms:
-        - class: PrefixTransform
-          kwargs:
-            prefix: eng1
-        writers:
-        - class: UDPWriter
-          kwargs:
-            port: 6224
-            destination: 255.255.255.255
-  ########
-  svp1-off: {}
-
-  svp1-net:
-    readers:                    # Read from serial port
-    - class: SerialReader
-      kwargs:
-        baudrate: 9600
-        port: /tmp/tty_svp1
-    transforms:                 # Add timestamp and logger label
-    - class: TimestampTransform
-    - class: PrefixTransform
-      kwargs:
-        prefix: svp1
-    writers:
-    - class: UDPWriter
-      kwargs:
-        port: 6224
-        destination: 255.255.255.255
-
-  svp1-net+file:
-    readers:                    # Read from serial port
-    - class: SerialReader
-      kwargs:
-        baudrate: 9600
-        port: /tmp/tty_svp1
-    transforms:                 # Add timestamp
-    - class: TimestampTransform
-    writers:
-    - class: LogfileWriter      # Write to logfile
-      kwargs:
-        filebase: /var/tmp/log/svp1/raw/NBP1406_svp1
-    - class: ComposedWriter
-      kwargs:
-        transforms:
-        - class: PrefixTransform
-          kwargs:
-            prefix: svp1
-        writers:
-        - class: UDPWriter
-          kwargs:
-            port: 6224
-            destination: 255.255.255.255
-  ########
-  twnc-off: {}
-
-  twnc-net:
-    readers:                    # Read from serial port
-    - class: SerialReader
-      kwargs:
-        baudrate: 19200
-        port: /tmp/tty_twnc
-    transforms:                 # Add timestamp and logger label
-    - class: TimestampTransform
-    - class: PrefixTransform
-      kwargs:
-        prefix: twnc
-    writers:
-    - class: UDPWriter
-      kwargs:
-        port: 6224
-        destination: 255.255.255.255
-
-  twnc-net+file:
-    readers:                    # Read from serial port
-    - class: SerialReader
-      kwargs:
-        baudrate: 19200
-        port: /tmp/tty_twnc
-    transforms:                 # Add timestamp
-    - class: TimestampTransform
-    writers:
-    - class: LogfileWriter      # Write to logfile
-      kwargs:
-        filebase: /var/tmp/log/twnc/raw/NBP1406_twnc
-    - class: ComposedWriter
-      kwargs:
-        transforms:
-        - class: PrefixTransform
-          kwargs:
-            prefix: twnc
-        writers:
-        - class: UDPWriter
-          kwargs:
-            port: 6224
-            destination: 255.255.255.255
-  ########
-  mbdp-off: {}
-
-  mbdp-net:
-    readers:                    # Read from serial port
-    - class: SerialReader
-      kwargs:
-        baudrate: 9600
-        port: /tmp/tty_mbdp
-    transforms:                 # Add timestamp and logger label
-    - class: TimestampTransform
-    - class: PrefixTransform
-      kwargs:
-        prefix: mbdp
-    writers:
-    - class: UDPWriter
-      kwargs:
-        port: 6224
-        destination: 255.255.255.255
-
-  mbdp-net+file:
-    readers:                    # Read from serial port
-    - class: SerialReader
-      kwargs:
-        baudrate: 9600
-        port: /tmp/tty_mbdp
-    transforms:                 # Add timestamp
-    - class: TimestampTransform
-    writers:
-    - class: LogfileWriter      # Write to logfile
-      kwargs:
-        filebase: /var/tmp/log/mbdp/raw/NBP1406_mbdp
-    - class: ComposedWriter
-      kwargs:
-        transforms:
-        - class: PrefixTransform
-          kwargs:
-            prefix: mbdp
-        writers:
-        - class: UDPWriter
-          kwargs:
-            port: 6224
-            destination: 255.255.255.255
-  ########
-  knud-off: {}
-
-  knud-net:
-    readers:                    # Read from serial port
-    - class: SerialReader
-      kwargs:
-        baudrate: 19200
-        port: /tmp/tty_knud
-    transforms:                 # Add timestamp and logger label
-    - class: TimestampTransform
-    - class: PrefixTransform
-      kwargs:
-        prefix: knud
-    writers:
-    - class: UDPWriter
-      kwargs:
-        port: 6224
-        destination: 255.255.255.255
-
-  knud-net+file:
-    readers:                    # Read from serial port
-    - class: SerialReader
-      kwargs:
-        baudrate: 19200
-        port: /tmp/tty_knud
-    transforms:                 # Add timestamp
-    - class: TimestampTransform
-    writers:
-    - class: LogfileWriter      # Write to logfile
-      kwargs:
-        filebase: /var/tmp/log/knud/raw/NBP1406_knud
-    - class: ComposedWriter
-      kwargs:
-        transforms:
-        - class: PrefixTransform
-          kwargs:
-            prefix: knud
-        writers:
-        - class: UDPWriter
-          kwargs:
-            port: 6224
-            destination: 255.255.255.255
-  ########
-  grv1-off: {}
-
-  grv1-net:
-    readers:                    # Read from serial port
-    - class: SerialReader
-      kwargs:
-        baudrate: 9600
-        port: /tmp/tty_grv1
-    transforms:                 # Add timestamp and logger label
-    - class: TimestampTransform
-    - class: PrefixTransform
-      kwargs:
-        prefix: grv1
-    writers:
-    - class: UDPWriter
-      kwargs:
-        port: 6224
-        destination: 255.255.255.255
-
-  grv1-net+file:
-    readers:                    # Read from serial port
-    - class: SerialReader
-      kwargs:
-        baudrate: 9600
-        port: /tmp/tty_grv1
-    transforms:                 # Add timestamp
-    - class: TimestampTransform
-    writers:
-    - class: LogfileWriter      # Write to logfile
-      kwargs:
-        filebase: /var/tmp/log/grv1/raw/NBP1406_grv1
-    - class: ComposedWriter
-      kwargs:
-        transforms:
-        - class: PrefixTransform
-          kwargs:
-            prefix: grv1
-        writers:
-        - class: UDPWriter
-          kwargs:
-            port: 6224
-            destination: 255.255.255.255
-  ########
-  mwx1-off: {}
-
-  mwx1-net:
-    readers:                    # Read from serial port
-    - class: SerialReader
-      kwargs:
-        baudrate: 9600
-        port: /tmp/tty_mwx1
-    transforms:                 # Add timestamp and logger label
-    - class: TimestampTransform
-    - class: PrefixTransform
-      kwargs:
-        prefix: mwx1
-    writers:
-    - class: UDPWriter
-      kwargs:
-        port: 6224
-        destination: 255.255.255.255
-
-  mwx1-net+file:
-    readers:                    # Read from serial port
-    - class: SerialReader
-      kwargs:
-        baudrate: 9600
-        port: /tmp/tty_mwx1
-    transforms:                 # Add timestamp
-    - class: TimestampTransform
-    writers:
-    - class: LogfileWriter      # Write to logfile
-      kwargs:
-        filebase: /var/tmp/log/mwx1/raw/NBP1406_mwx1
-    - class: ComposedWriter
-      kwargs:
-        transforms:
-        - class: PrefixTransform
-          kwargs:
-            prefix: mwx1
-        writers:
-        - class: UDPWriter
-          kwargs:
-            port: 6224
-            destination: 255.255.255.255
-  ########
-  pco2-off: {}
-
-  pco2-net:
-    readers:                    # Read from serial port
-    - class: SerialReader
-      kwargs:
-        baudrate: 9600
-        port: /tmp/tty_pco2
-    transforms:                 # Add timestamp and logger label
-    - class: TimestampTransform
-    - class: PrefixTransform
-      kwargs:
-        prefix: pco2
-    writers:
-    - class: UDPWriter
-      kwargs:
-        port: 6224
-        destination: 255.255.255.255
-
-  pco2-net+file:
-    readers:                    # Read from serial port
-    - class: SerialReader
-      kwargs:
-        baudrate: 9600
-        port: /tmp/tty_pco2
-    transforms:                 # Add timestamp
-    - class: TimestampTransform
-    writers:
-    - class: LogfileWriter      # Write to logfile
-      kwargs:
-        filebase: /var/tmp/log/pco2/raw/NBP1406_pco2
-    - class: ComposedWriter
-      kwargs:
-        transforms:
-        - class: PrefixTransform
-          kwargs:
-            prefix: pco2
-        writers:
-        - class: UDPWriter
-          kwargs:
-            port: 6224
-            destination: 255.255.255.255
-  ########
-  pguv-off: {}
-
-  pguv-net:
-    readers:                    # Read from serial port
-    - class: SerialReader
-      kwargs:
-        baudrate: 9600
-        port: /tmp/tty_pguv
-    transforms:                 # Add timestamp and logger label
-    - class: TimestampTransform
-    - class: PrefixTransform
-      kwargs:
-        prefix: pguv
-    writers:
-    - class: UDPWriter
-      kwargs:
-        port: 6224
-        destination: 255.255.255.255
-
-  pguv-net+file:
-    readers:                    # Read from serial port
-    - class: SerialReader
-      kwargs:
-        baudrate: 9600
-        port: /tmp/tty_pguv
-    transforms:                 # Add timestamp
-    - class: TimestampTransform
-    writers:
-    - class: LogfileWriter      # Write to logfile
-      kwargs:
-        filebase: /var/tmp/log/pguv/raw/NBP1406_pguv
-    - class: ComposedWriter
-      kwargs:
-        transforms:
-        - class: PrefixTransform
-          kwargs:
-            prefix: pguv
-        writers:
-        - class: UDPWriter
-          kwargs:
-            port: 6224
-            destination: 255.255.255.255
-  ########
-  s330-off: {}
-
-  s330-net:
-    readers:                    # Read from serial port
-    - class: SerialReader
-      kwargs:
-        baudrate: 9600
-        port: /tmp/tty_s330
-    transforms:                 # Add timestamp and logger label
-    - class: TimestampTransform
-    - class: PrefixTransform
-      kwargs:
-        prefix: s330
-    writers:
-    - class: UDPWriter
-      kwargs:
-        port: 6224
-        destination: 255.255.255.255
-
-  s330-net+file:
-    readers:                    # Read from serial port
-    - class: SerialReader
-      kwargs:
-        baudrate: 9600
-        port: /tmp/tty_s330
-    transforms:                 # Add timestamp
-    - class: TimestampTransform
-    writers:
-    - class: LogfileWriter      # Write to logfile
-      kwargs:
-        filebase: /var/tmp/log/s330/raw/NBP1406_s330
-    - class: ComposedWriter
-      kwargs:
-        transforms:
-        - class: PrefixTransform
-          kwargs:
-            prefix: s330
-        writers:
-        - class: UDPWriter
-          kwargs:
-            port: 6224
-            destination: 255.255.255.255
-  ########
-  tsg1-off: {}
-
-  tsg1-net:
-    readers:                    # Read from serial port
-    - class: SerialReader
-      kwargs:
-        baudrate: 9600
-        port: /tmp/tty_tsg1
-    transforms:                 # Add timestamp and logger label
-    - class: TimestampTransform
-    - class: PrefixTransform
-      kwargs:
-        prefix: tsg1
-    writers:
-    - class: UDPWriter
-      kwargs:
-        port: 6224
-        destination: 255.255.255.255
-
-  tsg1-net+file:
-    readers:                    # Read from serial port
-    - class: SerialReader
-      kwargs:
-        baudrate: 9600
-        port: /tmp/tty_tsg1
-    transforms:                 # Add timestamp
-    - class: TimestampTransform
-    writers:
-    - class: LogfileWriter      # Write to logfile
-      kwargs:
-        filebase: /var/tmp/log/tsg1/raw/NBP1406_tsg1
-    - class: ComposedWriter
-      kwargs:
-        transforms:
-        - class: PrefixTransform
-          kwargs:
-            prefix: tsg1
-        writers:
-        - class: UDPWriter
-          kwargs:
-            port: 6224
-            destination: 255.255.255.255
-  ########
-  rtmp-off: {}
-
-  rtmp-net:
-    readers:                    # Read from serial port
-    - class: SerialReader
-      kwargs:
-        baudrate: 9600
-        port: /tmp/tty_rtmp
-    transforms:                 # Add timestamp and logger label
-    - class: TimestampTransform
-    - class: PrefixTransform
-      kwargs:
-        prefix: rtmp
-    writers:
-    - class: UDPWriter
-      kwargs:
-        port: 6224
-        destination: 255.255.255.255
-
-  rtmp-net+file:
-    readers:                    # Read from serial port
-    - class: SerialReader
-      kwargs:
-        baudrate: 9600
-        port: /tmp/tty_rtmp
-    transforms:                 # Add timestamp
-    - class: TimestampTransform
-    writers:
-    - class: LogfileWriter      # Write to logfile
-      kwargs:
-        filebase: /var/tmp/log/rtmp/raw/NBP1406_rtmp
-    - class: ComposedWriter
-      kwargs:
-        transforms:
-        - class: PrefixTransform
-          kwargs:
-            prefix: rtmp
-        writers:
-        - class: UDPWriter
-          kwargs:
-            port: 6224
-            destination: 255.255.255.255
-  ########
-  hdas-off: {}
-
-  hdas-net:
-    readers:                    # Read from serial port
-    - class: SerialReader
-      kwargs:
-        baudrate: 9600
-        port: /tmp/tty_hdas
-    transforms:                 # Add timestamp and logger label
-    - class: TimestampTransform
-    - class: PrefixTransform
-      kwargs:
-        prefix: hdas
-    writers:
-    - class: UDPWriter
-      kwargs:
-        port: 6224
-        destination: 255.255.255.255
-
-  hdas-net+file:
-    readers:                    # Read from serial port
-    - class: SerialReader
-      kwargs:
-        baudrate: 9600
-        port: /tmp/tty_hdas
-    transforms:                 # Add timestamp
-    - class: TimestampTransform
-    writers:
-    - class: LogfileWriter      # Write to logfile
-      kwargs:
-        filebase: /var/tmp/log/hdas/raw/NBP1406_hdas
-    - class: ComposedWriter
-      kwargs:
-        transforms:
-        - class: PrefixTransform
-          kwargs:
-            prefix: hdas
-        writers:
-        - class: UDPWriter
-          kwargs:
-            port: 6224
-            destination: 255.255.255.255
-  ########
-  tsg2-off: {}
-
-  tsg2-net:
-    readers:                    # Read from serial port
-    - class: SerialReader
-      kwargs:
-        baudrate: 9600
-        port: /tmp/tty_tsg2
-    transforms:                 # Add timestamp and logger label
-    - class: TimestampTransform
-    - class: PrefixTransform
-      kwargs:
-        prefix: tsg2
-    writers:
-    - class: UDPWriter
-      kwargs:
-        port: 6224
-        destination: 255.255.255.255
-
-  tsg2-net+file:
-    readers:                    # Read from serial port
-    - class: SerialReader
-      kwargs:
-        baudrate: 9600
-        port: /tmp/tty_tsg2
-    transforms:                 # Add timestamp
-    - class: TimestampTransform
-    writers:
-    - class: LogfileWriter      # Write to logfile
-      kwargs:
-        filebase: /var/tmp/log/tsg2/raw/NBP1406_tsg2
-    - class: ComposedWriter
-      kwargs:
-        transforms:
-        - class: PrefixTransform
-          kwargs:
-            prefix: tsg2
-        writers:
-        - class: UDPWriter
-          kwargs:
-            port: 6224
-            destination: 255.255.255.255
-  ########
-  seap-off: {}
-
-  seap-net:
-    readers:                    # Read from serial port
-    - class: SerialReader
-      kwargs:
-        baudrate: 9600
-        port: /tmp/tty_seap
-    transforms:                 # Add timestamp and logger label
-    - class: TimestampTransform
-    - class: PrefixTransform
-      kwargs:
-        prefix: seap
-    writers:
-    - class: UDPWriter
-      kwargs:
-        port: 6224
-        destination: 255.255.255.255
-
-  seap-net+file:
-    readers:                    # Read from serial port
-    - class: SerialReader
-      kwargs:
-        baudrate: 9600
-        port: /tmp/tty_seap
-    transforms:                 # Add timestamp
-    - class: TimestampTransform
-    writers:
-    - class: LogfileWriter      # Write to logfile
-      kwargs:
-        filebase: /var/tmp/log/seap/raw/NBP1406_seap
-    - class: ComposedWriter
-      kwargs:
-        transforms:
-        - class: PrefixTransform
-          kwargs:
-            prefix: seap
-        writers:
-        - class: UDPWriter
-          kwargs:
-            port: 6224
-            destination: 255.255.255.255
-  ########
-  net_reader-off: {}
-
-  net_reader-on:
-    readers:                    # Read from simulated serial port
-    - class: UDPReader
-      kwargs:
-        port: 6224
-    transforms:                 # Add timestamp and logger label
-    - class: ParseTransform
-      kwargs:
-        metadata_interval: 10
-        definition_path: test/NBP1406/devices/nbp_devices.yaml
-    writers:
-    - class: CachedDataWriter
-      kwargs:
-        data_server: localhost:8766
-
-  net_reader-on+influx:
-    readers:                    # Read from simulated serial port
-    - class: UDPReader
-      kwargs:
-        port: 6224
-    transforms:                 # Add timestamp and logger label
-    - class: ParseTransform
-      kwargs:
-        metadata_interval: 10
-        definition_path: test/NBP1406/devices/nbp_devices.yaml
-    writers:
-    - class: CachedDataWriter
-      kwargs:
-        data_server: localhost:8766
-    - class: InfluxDBWriter
-      kwargs:
-        bucket_name: openrvdas
-        tags:
-          restricted:
-            value: 'yes'
-            filter: ['s330','gyr1']
-            default: 'no' 
-  ########
-  true_wind-off: {}
-
-  true_wind-on:
-    readers:
-    - class: CachedDataReader
-      kwargs:
-        data_server: localhost:8766
-        subscription:
-          fields:
-            S330CourseTrue:
-              seconds: 0
-            S330HeadingTrue:
-              seconds: 0
-            S330SpeedKt:
-              seconds: 0
-            MwxPortRelWindDir:
-              seconds: 0
-            MwxPortRelWindSpeed:
-              seconds: 0
-            MwxStbdRelWindDir:
-              seconds: 0
-            MwxStbdRelWindSpeed:
-              seconds: 0
-    writers:
-    - class: ComposedWriter
-      kwargs:
-        transforms:
-        - class: TrueWindsTransform
-          kwargs:
-            apparent_dir_name: PortApparentWindDir
-            convert_speed_factor: 0.5144
-            course_field: S330CourseTrue
-            heading_field: S330HeadingTrue
-            speed_field: S330SpeedKt
-            wind_dir_field: MwxPortRelWindDir
-            wind_speed_field: MwxPortRelWindSpeed
-            true_dir_name: PortTrueWindDir
-            true_speed_name: PortTrueWindSpeed
-            update_on_fields:
-            - MwxPortRelWindDir
-            max_field_age:
-              S330CourseTrue: 15
-              S330HeadingTrue: 15
-              S330SpeedKt: 15
-              MwxPortRelWindDir: 15
-              MwxPortRelWindSpeed: 15
-            metadata_interval: 10
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-    - class: ComposedWriter
-      kwargs:
-        transforms:
-        - class: TrueWindsTransform
-          kwargs:
-            apparent_dir_name: StbdApparentWindDir
-            convert_speed_factor: 0.5144
-            course_field: S330CourseTrue
-            heading_field: S330HeadingTrue
-            speed_field: S330SpeedKt
-            wind_dir_field: MwxStbdRelWindDir
-            wind_speed_field: MwxStbdRelWindSpeed
-            true_dir_name: StbdTrueWindDir
-            true_speed_name: StbdTrueWindSpeed
-            update_on_fields:
-            - MwxStbdRelWindDir
-            max_field_age:
-              S330CourseTrue: 15
-              S330HeadingTrue: 15
-              S330SpeedKt: 15
-              MwxStbdRelWindDir: 15
-              MwxStbdRelWindSpeed: 15
-            metadata_interval: 10
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-
-  true_wind-on+influx:
-    readers:
-    - class: CachedDataReader
-      kwargs:
-        data_server: localhost:8766
-        subscription:
-          fields:
-            S330CourseTrue:
-              seconds: 0
-            S330HeadingTrue:
-              seconds: 0
-            S330SpeedKt:
-              seconds: 0
-            MwxPortRelWindDir:
-              seconds: 0
-            MwxPortRelWindSpeed:
-              seconds: 0
-            MwxStbdRelWindDir:
-              seconds: 0
-            MwxStbdRelWindSpeed:
-              seconds: 0
-    writers:
-    - class: ComposedWriter
-      kwargs:
-        transforms:
-        - class: TrueWindsTransform
-          kwargs:
-            apparent_dir_name: PortApparentWindDir
-            convert_speed_factor: 0.5144
-            course_field: S330CourseTrue
-            heading_field: S330HeadingTrue
-            speed_field: S330SpeedKt
-            wind_dir_field: MwxPortRelWindDir
-            wind_speed_field: MwxPortRelWindSpeed
-            true_dir_name: PortTrueWindDir
-            true_speed_name: PortTrueWindSpeed
-            update_on_fields:
-            - MwxPortRelWindDir
-            max_field_age:
-              S330CourseTrue: 15
-              S330HeadingTrue: 15
-              S330SpeedKt: 15
-              MwxPortRelWindDir: 15
-              MwxPortRelWindSpeed: 15
-            metadata_interval: 10
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-        - class: InfluxDBWriter
-          kwargs:
-            bucket_name: openrvdas
-            measurement_name: true_wind
-    - class: ComposedWriter
-      kwargs:
-        transforms:
-        - class: TrueWindsTransform
-          kwargs:
-            apparent_dir_name: StbdApparentWindDir
-            convert_speed_factor: 0.5144
-            course_field: S330CourseTrue
-            heading_field: S330HeadingTrue
-            speed_field: S330SpeedKt
-            wind_dir_field: MwxStbdRelWindDir
-            wind_speed_field: MwxStbdRelWindSpeed
-            true_dir_name: StbdTrueWindDir
-            true_speed_name: StbdTrueWindSpeed
-            update_on_fields:
-            - MwxStbdRelWindDir
-            max_field_age:
-              S330CourseTrue: 15
-              S330HeadingTrue: 15
-              S330SpeedKt: 15
-              MwxStbdRelWindDir: 15
-              MwxStbdRelWindSpeed: 15
-            metadata_interval: 10
-        writers:
-        - class: CachedDataWriter
-          kwargs:
-            data_server: localhost:8766
-        - class: InfluxDBWriter
-          kwargs:
-            bucket_name: openrvdas
-            measurement_name: true_wind
-
-  ########
-  # Derived data subsampling logger
-  snapshot-off: {}
-
-  snapshot-on:
-    readers:
-    - class: CachedDataReader
-      kwargs:
-        data_server: localhost:8766
-        subscription:
-          fields:
-            MwxAirTemp:
-              seconds: 0
-            RTMPTemp:
-              seconds: 0
-            PortTrueWindDir:
-              seconds: 0
-            PortTrueWindSpeed:
-              seconds: 0
-            StbdTrueWindDir:
-              seconds: 0
-            StbdTrueWindSpeed:
-              seconds: 0
-            MwxBarometer:
-              seconds: 0
-            KnudDepthHF:
-              seconds: 0
-            KnudDepthLF:
-              seconds: 0
-            Grv1Value:
-              seconds: 0
-    transforms:
-    - class: InterpolationTransform
-      module: logger.transforms.interpolation_transform
-      kwargs:
-        interval: 30
-        window: 30
-        metadata_interval: 60  # send metadata every 60 seconds
-        field_spec:
-          AvgMwxAirTemp:
-            source: MwxAirTemp
-            algorithm:
-              type: boxcar_average
-              window: 30
-          AvgRTMPTemp:
-            source: RTMPTemp
-            algorithm:
-              type: boxcar_average
-              window: 30
-          AvgPortTrueWindDir:
-            source: PortTrueWindDir
-            algorithm:
-              type: polar_average
-              window: 30
-          AvgPortTrueWindSpeed:
-            source: PortTrueWindSpeed
-            algorithm:
-              type: boxcar_average
-              window: 30
-          AvgStbdTrueWindDir:
-            source: StbdTrueWindDir
-            algorithm:
-              type: polar_average
-              window: 30
-          AvgStbdTrueWindSpeed:
-            source: StbdTrueWindSpeed
-            algorithm:
-              type: boxcar_average
-              window: 30
-          AvgMwxBarometer:
-            source: MwxBarometer
-            algorithm:
-              type: boxcar_average
-              window: 30
-          AvgKnudDepthHF:
-            source: KnudDepthHF
-            algorithm:
-              type: boxcar_average
-              window: 30
-          AvgKnudDepthLF:
-            source: KnudDepthLF
-            algorithm:
-              type: boxcar_average
-              window: 30
-          AvgGrv1Value:
-            source: Grv1Value
-            algorithm:
-              type: boxcar_average
-              window: 30
-    writers:
-    - class: CachedDataWriter
-      kwargs:
-        data_server: localhost:8766
-
-  snapshot-on+influx:
-    readers:
-    - class: CachedDataReader
-      kwargs:
-        data_server: localhost:8766
-        subscription:
-          fields:
-            MwxAirTemp:
-              seconds: 0
-            RTMPTemp:
-              seconds: 0
-            PortTrueWindDir:
-              seconds: 0
-            PortTrueWindSpeed:
-              seconds: 0
-            StbdTrueWindDir:
-              seconds: 0
-            StbdTrueWindSpeed:
-              seconds: 0
-            MwxBarometer:
-              seconds: 0
-            KnudDepthHF:
-              seconds: 0
-            KnudDepthLF:
-              seconds: 0
-            Grv1Value:
-              seconds: 0
-    transforms:
-    - class: InterpolationTransform
-      module: logger.transforms.interpolation_transform
-      kwargs:
-        interval: 30
-        window: 30
-        metadata_interval: 60  # send metadata every 60 seconds
-        field_spec:
-          AvgMwxAirTemp:
-            source: MwxAirTemp
-            algorithm:
-              type: boxcar_average
-              window: 30
-          AvgRTMPTemp:
-            source: RTMPTemp
-            algorithm:
-              type: boxcar_average
-              window: 30
-          AvgPortTrueWindDir:
-            source: PortTrueWindDir
-            algorithm:
-              type: polar_average
-              window: 30
-          AvgPortTrueWindSpeed:
-            source: PortTrueWindSpeed
-            algorithm:
-              type: boxcar_average
-              window: 30
-          AvgStbdTrueWindDir:
-            source: StbdTrueWindDir
-            algorithm:
-              type: polar_average
-              window: 30
-          AvgStbdTrueWindSpeed:
-            source: StbdTrueWindSpeed
-            algorithm:
-              type: boxcar_average
-              window: 30
-          AvgMwxBarometer:
-            source: MwxBarometer
-            algorithm:
-              type: boxcar_average
-              window: 30
-          AvgKnudDepthHF:
-            source: KnudDepthHF
-            algorithm:
-              type: boxcar_average
-              window: 30
-          AvgKnudDepthLF:
-            source: KnudDepthLF
-            algorithm:
-              type: boxcar_average
-              window: 30
-          AvgGrv1Value:
-            source: Grv1Value
-            algorithm:
-              type: boxcar_average
-              window: 30
-    writers:
-    - class: CachedDataWriter
-      kwargs:
-        data_server: localhost:8766
-    - class: InfluxDBWriter
-      kwargs:
-        bucket_name: openrvdas
-        measurement_name: snapshot
+    [PCOD-net+file, cwnc-net+file, gp02-net+file, gyr1-net+file, adcp-net+file, eng1-net+file, svp1-net+file, twnc-net+file, mbdp-net+file, knud-net+file, grv1-net+file, mwx1-net+file, pco2-net+file, pguv-net+file, s330-net+file, tsg1-net+file, rtmp-net+file, hdas-net+file, tsg2-net+file, seap-net+file, parse_data-on+influx, true_winds_port-on+influx, true_winds_stbd-on+influx, snapshot-on+influx]

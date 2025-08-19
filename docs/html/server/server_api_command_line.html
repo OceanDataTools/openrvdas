@@ -60,7 +60,7 @@ import sys
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(realpath(__file__))))
-from logger.utils.read_config import read_config  # noqa: E402
+from logger.utils.read_config import read_config, expand_cruise_definition  # noqa: E402
 from server.server_api import ServerAPI  # noqa: E402
 
 LOGGING_FORMAT = &#39;%(asctime)-15s %(filename)s:%(lineno)d %(message)s&#39;
@@ -190,6 +190,8 @@ class ServerAPICommandLine:
                     # Load the file to memory and parse to a dict. Add the name
                     # of the file we&#39;ve just loaded to the dict.
                     config = read_config(filename)
+                    config = expand_cruise_definition(config)
+
                     if &#39;cruise&#39; in config:
                         config[&#39;cruise&#39;][&#39;config_filename&#39;] = filename
                     self.api.load_configuration(config)
@@ -572,6 +574,8 @@ InMemoryServerAPI or DjangoServerAPI as of this writing.</p></div>
                     # Load the file to memory and parse to a dict. Add the name
                     # of the file we&#39;ve just loaded to the dict.
                     config = read_config(filename)
+                    config = expand_cruise_definition(config)
+
                     if &#39;cruise&#39; in config:
                         config[&#39;cruise&#39;][&#39;config_filename&#39;] = filename
                     self.api.load_configuration(config)
@@ -785,6 +789,8 @@ InMemoryServerAPI or DjangoServerAPI as of this writing.</p></div>
                 # Load the file to memory and parse to a dict. Add the name
                 # of the file we&#39;ve just loaded to the dict.
                 config = read_config(filename)
+                config = expand_cruise_definition(config)
+
                 if &#39;cruise&#39; in config:
                     config[&#39;cruise&#39;][&#39;config_filename&#39;] = filename
                 self.api.load_configuration(config)

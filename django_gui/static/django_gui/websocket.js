@@ -28,6 +28,9 @@ var websocket_server = WEBSOCKET_SERVER;
 if (websocket_server.indexOf('//:') > 0) {
   websocket_server = websocket_server.replace('//:', '//' + location.hostname + ':');
 }
+const url = new URL(websocket_server);
+const port_spec = window.location.port ? ':' + window.location.port : '';
+websocket_server = url.protocol + '//' + window.location.hostname + port_spec + url.pathname;
 
 //////////////////////////////////////////////////////////////
 if (! "WebSocket" in window) {
@@ -47,7 +50,7 @@ connect_websocket();
 function connect_websocket() {
   console.log("Trying to connect to websocket at " + websocket_server);
   ws = new WebSocket(websocket_server);
-  
+
   ws.onopen = function() {
     // We've succeeded in opening - don't try anymore
     console.log("Connected - clearing retry interval");
@@ -57,7 +60,7 @@ function connect_websocket() {
     var initial_message = initial_send_message();
     send(initial_message);
   }
-  ws.onclose = function() { 
+  ws.onclose = function() {
     // websocket is closed.
     console.log("Connection is closed...");
 
@@ -67,7 +70,7 @@ function connect_websocket() {
                                             retry_interval);
   };
 
-  ws.onmessage = function (received_message) { 
+  ws.onmessage = function (received_message) {
     //console.log("Got status update message: " + received_message.data);
     process_message(received_message.data);
     //console.log('done processing message');
