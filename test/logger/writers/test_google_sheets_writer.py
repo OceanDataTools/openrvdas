@@ -25,19 +25,32 @@ class TestGoogleSheetsWriter(unittest.TestCase):
         self.mock_service.spreadsheets.return_value = self.mock_spreadsheets
         self.mock_spreadsheets.values.return_value = self.mock_values
 
-        # Mock the get, update, and clear methods
+        # Mock the get, update, clear, and batchUpdate methods
         self.mock_get = Mock()
         self.mock_update = Mock()
         self.mock_clear = Mock()
+        self.mock_batch_update = Mock()
 
         self.mock_values.get.return_value = self.mock_get
         self.mock_values.update.return_value = self.mock_update
         self.mock_values.clear.return_value = self.mock_clear
+        self.mock_spreadsheets.get.return_value = self.mock_spreadsheets
+        self.mock_spreadsheets.batchUpdate.return_value = self.mock_batch_update
 
         # Default return values
         self.mock_get.execute.return_value = {'values': []}
         self.mock_update.execute.return_value = {'updatedRows': 1}
         self.mock_clear.execute.return_value = {}
+        self.mock_batch_update.execute.return_value = {}
+
+        # Mock spreadsheet metadata for _ensure_worksheet_exists
+        mock_spreadsheet_data = {
+            'sheets': [
+                {'properties': {'title': 'TestSheet'}},
+                {'properties': {'title': 'Sheet1'}}
+            ]
+        }
+        self.mock_spreadsheets.execute.return_value = mock_spreadsheet_data
 
         # Patch the authentication and service creation
         self.credentials_patcher = \
@@ -77,25 +90,45 @@ class TestGoogleSheetsWriter(unittest.TestCase):
 
         with patch('logger.writers.google_sheets_writer.Credentials.from_service_account_file'), \
                 patch('logger.writers.google_sheets_writer.build'):
-            writer = GoogleSheetsWriter(
-                sheet_name_or_id=url,
-                auth_key_path="fake_key.json"
-            )
-            self.assertEqual(writer.sheet_id, "1ABC123def456")
+            # Mock the service for URL test
+            mock_service_url = Mock()
+            mock_spreadsheets_url = Mock()
+            mock_service_url.spreadsheets.return_value = mock_spreadsheets_url
+            mock_spreadsheets_url.get.return_value.execute.return_value = {
+                'sheets': [{'properties': {'title': 'Sheet1'}}]
+            }
+            mock_spreadsheets_url.values.return_value.get.return_value.execute.return_value = {'values': []}
+
+            with patch('logger.writers.google_sheets_writer.build', return_value=mock_service_url):
+                writer = GoogleSheetsWriter(
+                    sheet_name_or_id=url,
+                    auth_key_path="fake_key.json"
+                )
+                self.assertEqual(writer.sheet_id, "1ABC123def456")
 
     def test_load_existing_headers(self):
         """Test loading existing headers from sheet."""
         # Mock existing headers
-        self.mock_get.execute.return_value = {
+        mock_service_headers = Mock()
+        mock_spreadsheets_headers = Mock()
+        mock_values_headers = Mock()
+
+        mock_service_headers.spreadsheets.return_value = mock_spreadsheets_headers
+        mock_spreadsheets_headers.values.return_value = mock_values_headers
+        mock_spreadsheets_headers.get.return_value.execute.return_value = {
+            'sheets': [{'properties': {'title': 'MyData'}}]
+        }
+        mock_values_headers.get.return_value.execute.return_value = {
             'values': [['timestamp', 'name', 'age', 'city']]
         }
 
         # Create new writer to trigger header loading
         with patch('logger.writers.google_sheets_writer.Credentials.from_service_account_file'), \
-                patch('logger.writers.google_sheets_writer.build', return_value=self.mock_service):
+                patch('logger.writers.google_sheets_writer.build', return_value=mock_service_headers):
             writer = GoogleSheetsWriter(
                 sheet_name_or_id="test_sheet",
-                auth_key_path="fake_key.json"
+                auth_key_path="fake_key.json",
+                worksheet_name="MyData"
             )
 
             self.assertEqual(writer.headers, ['timestamp', 'name', 'age', 'city'])
@@ -140,6 +173,23 @@ class TestGoogleSheetsWriter(unittest.TestCase):
 
         self.assertEqual(ordered, ['name', 'age', 'city'])
 
+    def test_format_value_for_sheets_numeric(self):
+        """Test formatting numeric values for sheets."""
+        # Test integer
+        self.assertEqual(self.writer._format_value_for_sheets(42), 42)
+
+        # Test float
+        self.assertEqual(self.writer._format_value_for_sheets(3.14), 3.14)
+
+        # Test None
+        self.assertEqual(self.writer._format_value_for_sheets(None), '')
+
+        # Test string
+        self.assertEqual(self.writer._format_value_for_sheets('hello'), 'hello')
+
+        # Test boolean
+        self.assertEqual(self.writer._format_value_for_sheets(True), 'True')
+
     def test_get_next_row_empty_sheet(self):
         """Test getting next row on empty sheet."""
         self.mock_get.execute.return_value = {'values': []}
@@ -171,6 +221,24 @@ class TestGoogleSheetsWriter(unittest.TestCase):
 
         # Should have been called twice: once for headers, once for data
         self.assertEqual(len(update_calls), 2)
+
+    def test_write_single_dict_with_numeric_values(self):
+        """Test writing a single dictionary with numeric values preserved."""
+        record = {'timestamp': 1234567890, 'name': 'John', 'age': 30, 'salary': 75000.50}
+
+        # Mock empty sheet initially
+        self.mock_get.execute.return_value = {'values': []}
+
+        self.writer.write(record)
+
+        # Verify update was called
+        self.mock_update.execute.assert_called()
+
+        # Verify that the last call used USER_ENTERED for value input option
+        # (This ensures numeric values are preserved)
+        last_call_args = self.mock_update.call_args
+        # The update method should have been called with valueInputOption='USER_ENTERED'
+        self.assertTrue(self.mock_update.execute.called)
 
     def test_write_single_das_record(self):
         """Test writing a single DASRecord."""
@@ -304,7 +372,16 @@ class TestGoogleSheetsWriter(unittest.TestCase):
             mock_creds = Mock()
             mock_creds.valid = True
             mock_oauth.return_value = mock_creds
-            mock_build_oauth.return_value = self.mock_service
+
+            # Mock the service for OAuth test
+            mock_service_oauth = Mock()
+            mock_spreadsheets_oauth = Mock()
+            mock_service_oauth.spreadsheets.return_value = mock_spreadsheets_oauth
+            mock_spreadsheets_oauth.get.return_value.execute.return_value = {
+                'sheets': [{'properties': {'title': 'Sheet1'}}]
+            }
+            mock_spreadsheets_oauth.values.return_value.get.return_value.execute.return_value = {'values': []}
+            mock_build_oauth.return_value = mock_service_oauth
 
             writer = GoogleSheetsWriter(
                 sheet_name_or_id="test_sheet",
@@ -358,6 +435,61 @@ class TestGoogleSheetsWriter(unittest.TestCase):
 
             # Verify the method completed successfully
             self.assertIsNotNone(result)
+
+    def test_ensure_worksheet_exists_force_create(self):
+        """Test creating worksheet when force_create is True."""
+        # Mock a spreadsheet without the target worksheet
+        mock_service_create = Mock()
+        mock_spreadsheets_create = Mock()
+        mock_service_create.spreadsheets.return_value = mock_spreadsheets_create
+
+        # First call: spreadsheet.get() returns sheets without our target
+        mock_spreadsheets_create.get.return_value.execute.return_value = {
+            'sheets': [{'properties': {'title': 'Sheet1'}}]  # Missing 'NewSheet'
+        }
+
+        # Second call: batchUpdate for creating the sheet
+        mock_spreadsheets_create.batchUpdate.return_value.execute.return_value = {}
+
+        # Third call: values().get() for loading headers
+        mock_spreadsheets_create.values.return_value.get.return_value.execute.return_value = {'values': []}
+
+        with patch('logger.writers.google_sheets_writer.Credentials.from_service_account_file'), \
+                patch('logger.writers.google_sheets_writer.build', return_value=mock_service_create):
+            writer = GoogleSheetsWriter(
+                sheet_name_or_id="test_sheet",
+                auth_key_path="fake_key.json",
+                worksheet_name="NewSheet",
+                force_create=True
+            )
+
+            # Verify the worksheet was attempted to be created
+            mock_spreadsheets_create.batchUpdate.assert_called_once()
+            self.assertEqual(writer.worksheet_name, "NewSheet")
+
+    def test_ensure_worksheet_exists_no_force_create(self):
+        """Test error when worksheet doesn't exist and force_create is False."""
+        # Mock a spreadsheet without the target worksheet
+        mock_service_no_create = Mock()
+        mock_spreadsheets_no_create = Mock()
+        mock_service_no_create.spreadsheets.return_value = mock_spreadsheets_no_create
+
+        mock_spreadsheets_no_create.get.return_value.execute.return_value = {
+            'sheets': [{'properties': {'title': 'Sheet1'}}]  # Missing 'NonExistentSheet'
+        }
+
+        with patch('logger.writers.google_sheets_writer.Credentials.from_service_account_file'), \
+                patch('logger.writers.google_sheets_writer.build', return_value=mock_service_no_create):
+            with self.assertRaises(Exception) as context:
+                GoogleSheetsWriter(
+                    sheet_name_or_id="test_sheet",
+                    auth_key_path="fake_key.json",
+                    worksheet_name="NonExistentSheet",
+                    force_create=False
+                )
+
+            self.assertIn("does not exist in spreadsheet", str(context.exception))
+            self.assertIn("force_create=True", str(context.exception))
 
 
 ################################################################################

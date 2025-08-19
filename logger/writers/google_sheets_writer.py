@@ -31,6 +31,7 @@ class GoogleSheetsWriter(Writer):
     This class handles authentication, column creation, and data writing to Google Sheets.
     Each dictionary key becomes a column header, and each dictionary becomes a row.
     New columns are automatically created when new keys are encountered.
+    Numeric values are preserved as numbers in the spreadsheet.
 
     SETUP INSTRUCTIONS:
 
@@ -92,8 +93,8 @@ class GoogleSheetsWriter(Writer):
 
         # Write multiple records (mixed types)
         records = [
-            {'timestamp': 1234567892, 'name': 'Bob', 'city': 'NYC'},
-            DASRecord(timestamp=1234567893, fields={'name': 'Alice', 'department': 'Engineering'})
+            {'timestamp': 1234567892, 'name': 'Bob', 'city': 'NYC', 'salary': 75000.50},
+            DASRecord(timestamp=1234567893, fields={'name': 'Alice', 'department': 'Engineering', 'rating': 4.8})
         ]
         writer.write(records)
 
@@ -389,6 +390,32 @@ class GoogleSheetsWriter(Writer):
 
         return ordered_keys
 
+    def _format_value_for_sheets(self, value):
+        """
+        Format a value appropriately for Google Sheets while preserving numeric types.
+
+        Args:
+            value: The value to format
+
+        Returns:
+            The value formatted for Google Sheets:
+            - Numbers (int, float) are returned as-is to preserve numeric type
+            - None values are converted to empty string
+            - Booleans are converted to strings to avoid confusion
+            - Everything else is converted to string
+        """
+        if value is None:
+            return ''
+        elif isinstance(value, bool):
+            # Convert booleans to strings to avoid confusion with 1/0
+            return str(value)
+        elif isinstance(value, (int, float)):
+            # Preserve numeric types - don't convert to string
+            return value
+        else:
+            # Convert everything else to string
+            return str(value)
+
     def write_dict(self, record_dict):
         """
         Legacy method: Write a single dictionary as a new row.
@@ -426,7 +453,7 @@ class GoogleSheetsWriter(Writer):
         Accepts either a single record or a list of records. Each record can be either
         a dictionary or a DASRecord object. The 'timestamp' field is always placed in
         the first column. For DASRecord objects, the record's timestamp attribute is
-        automatically used.
+        automatically used. Numeric values are preserved as numbers in the spreadsheet.
 
         Args:
             records: Single record (dict or DASRecord) or list of records to write.
@@ -441,22 +468,23 @@ class GoogleSheetsWriter(Writer):
             ValueError: If record type is not supported
 
         Examples:
-            # Write single dictionary
-            writer.write({'timestamp': 1234567890, 'name': 'John', 'age': 30})
+            # Write single dictionary with numeric values preserved
+            writer.write({'timestamp': 1234567890, 'name': 'John', 'age': 30, 'salary': 75000.50})
 
             # Write single DASRecord
-            das_record = DASRecord(timestamp=1234567890, fields={'name': 'Jane', 'age': 25})
+            das_record = DASRecord(timestamp=1234567890, fields={'name': 'Jane', 'age': 25, 'rating': 4.8})
             writer.write(das_record)
 
             # Write multiple records (mixed types)
             records = [
-                {'timestamp': 1234567890, 'name': 'Bob', 'city': 'NYC'},
+                {'timestamp': 1234567890, 'name': 'Bob', 'city': 'NYC', 'salary': 75000},
                 DASRecord(timestamp=1234567891, fields={'name': 'Alice',
-                                                        'department': 'Engineering'})
+                                                        'department': 'Engineering', 'score': 95.5})
             ]
             writer.write(records)
 
             # Timestamp column is always first, other columns follow in order encountered
+            # Numeric values (int, float) are written as numbers, not text
         """
         if not records:
             return None
@@ -505,13 +533,14 @@ class GoogleSheetsWriter(Writer):
                     body=body
                 ).execute()
 
-            # Create rows data
+            # Create rows data with proper value formatting
             rows_data = []
             for record_dict in normalized_records:
                 row_data = []
                 for header in self.headers:
-                    value = record_dict.get(header, '')
-                    row_data.append(str(value) if value is not None else '')
+                    value = record_dict.get(header)
+                    formatted_value = self._format_value_for_sheets(value)
+                    row_data.append(formatted_value)
                 rows_data.append(row_data)
 
             # Find next available row
@@ -525,13 +554,13 @@ class GoogleSheetsWriter(Writer):
                 end_row = next_row + len(rows_data) - 1
                 range_name = f"{self.worksheet_name}!A{next_row}:{chr(65 + len(self.headers) - 1)}{end_row}"  # noqa E501
 
-            # Write the data
+            # Write the data using USER_ENTERED to allow Sheets to interpret numeric values
             body = {'values': rows_data}
 
             result = self.service.spreadsheets().values().update(
                 spreadsheetId=self.sheet_id,
                 range=range_name,
-                valueInputOption='RAW',
+                valueInputOption='USER_ENTERED',  # Changed from 'RAW' to preserve numeric types
                 body=body
             ).execute()
 
@@ -592,31 +621,41 @@ if __name__ == "__main__":
         worksheet_name="Sheet1"
     )
 
-    # Write single dictionary
+    # Write single dictionary with numeric values
     record1 = {
+        'timestamp': 1234567890,
         'name': 'John Doe',
         'age': 30,
-        'city': 'New York'
+        'city': 'New York',
+        'salary': 75000.50,
+        'rating': 4.8
     }
     writer.write(record1)
 
-    # Write another dict with new columns
+    # Write another dict with new columns including numeric ones
     record2 = {
+        'timestamp': 1234567891,
         'name': 'Jane Smith',
         'age': 25,
         'city': 'Los Angeles',
-        'occupation': 'Engineer'  # New column will be created
+        'occupation': 'Engineer',
+        'salary': 85000,
+        'bonus': 10000.25
     }
     writer.write(record2)
 
-    # Write multiple dictionaries at once
+    # Write multiple dictionaries at once with mixed numeric types
     records = [
-        {'name': 'Bob', 'age': 35, 'city': 'Chicago', 'salary': 75000},
-        {'name': 'Alice', 'age': 28, 'occupation': 'Designer', 'salary': 65000}
+        {'timestamp': 1234567892, 'name': 'Bob', 'age': 35, 'city': 'Chicago', 'salary': 75000, 'score': 89.5},
+        {'timestamp': 1234567893, 'name': 'Alice', 'age': 28, 'occupation': 'Designer', 'salary': 65000, 'score': 92.1}
     ]
     writer.write(records)
 
-    record = DASRecord(timestamp=3234234, fields={'name': 'Hal', 'favorite_color': 'green'})
+    # Write a DASRecord with numeric fields
+    record = DASRecord(
+        timestamp=1234567894,
+        fields={'name': 'Hal', 'favorite_color': 'green', 'years_experience': 5, 'rating': 4.2}
+    )
     writer.write(record)
 
     # Check current headers
