@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import sys
 import logging
 import pprint
 from typing import Union
@@ -107,7 +108,7 @@ class ToSealogTransform(Transform):
         # If we've got a list, hope it's a list of records. Recurse,
         # calling transform() on each of the list elements in order and
         # return the resulting list.
-        if type(record) is list:
+        if isinstance(record, list):
             results = []
             for single_record in record:
                 results.append(self.transform(single_record))
