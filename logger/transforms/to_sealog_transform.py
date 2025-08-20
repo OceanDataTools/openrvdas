@@ -8,8 +8,8 @@ from os.path import dirname, realpath
 
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.utils.read_config import read_config  # noqa:E402
-from logger.utils.timestamp import time_str  # noqa:E402
 from logger.utils.das_record import DASRecord  # noqa: E402
+from logger.utils.das_record import SealogEvent, to_event  # noqa: E402
 from logger.transforms.transform import Transform  # noqa: E402
 
 
@@ -63,41 +63,7 @@ class ToSealogTransform(Transform):
             pass
 
 
-    def record_to_event(self, record: DASRecord):
-
-        data_id = record.get("data_id", "_default")
-        config = self.configs.get(data_id, {})
-
-        event_value = config.get("event_value", 'FROM_OPENRVDAS')
-
-        ts_str = time_str(record["timestamp"]) if record.get("timestamp") else None
-
-        field_map = config.get("field_map")
-        if field_map is None:
-            event_options = [
-                {"event_option_name": k, "event_option_value": v}
-                for k, v in record["fields"].items()
-            ]
-        else:
-            event_options = [
-                {"event_option_name": dst_name, "event_option_value": record["fields"][src_field]}
-                for src_field, dst_name in field_map.items()
-                if src_field in record["fields"]
-            ]
-
-        event =  {
-            "event_value": event_value,
-            "ts": ts_str,
-            "event_author": config.get("event_author"),
-            "event_free_text": config.get("event_free_text", ""),
-            "event_options": event_options
-        }
-
-        # remove key/value pairs where value == None
-        return {k: v for k, v in event.items() if v is not None}
-
-
-    def transform(self, record: Union[DASRecord, list]):
+    def transform(self, record: Union[DASRecord, list]) -> SealogEvent:
         """Parse DASRecord and return Sealog event dict."""
         if record is None:
             return None
@@ -114,4 +80,4 @@ class ToSealogTransform(Transform):
                 results.append(self.transform(single_record))
             return results
 
-        return self.record_to_event(record)
+        return to_event(record, self.configs)
