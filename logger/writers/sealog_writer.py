@@ -98,13 +98,13 @@ class SealogWriter(Writer):
 
         if isinstance(record, list):
             for single_record in record:
-                self.transform(single_record)
+                self.write(single_record)
             return
 
         event = record if isinstance(record, SealogEvent) else to_event(record, self.configs) 
 
-        json_data = event.as_json()
-
+        json_data = event.as_json().encode("utf-8")
+        
         req = urllib.request.Request(self.url + '/api/v1/events', data=json_data, method="POST")
         req.add_header("Authorization", f"Bearer {self.token}")
         req.add_header("Content-Type", "application/json")

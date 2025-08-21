@@ -9,7 +9,7 @@ from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.utils.read_config import read_config  # noqa:E402
 from logger.utils.das_record import DASRecord  # noqa: E402
-from logger.utils.das_record import SealogEvent, to_event  # noqa: E402
+from logger.utils.sealog_event import SealogEvent, to_event  # noqa: E402
 from logger.transforms.transform import Transform  # noqa: E402
 
 
