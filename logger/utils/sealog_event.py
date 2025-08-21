@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import sys
 import logging
 from typing import Union
@@ -7,8 +9,8 @@ from logger.utils.timestamp import time_str  # noqa:E402
 from logger.utils.das_record import DASRecord  # noqa: E402
 
 class SealogEvent:
-    """DASRecord is a structured representation of the field names and
-    values (and metadata) contained in a sensor record.
+    """SealogEvent is a structured representation of a Sealog event object.
+    Class includes help methods like __str__, __eq__ and as_json
     """
     ############################
 
@@ -85,7 +87,12 @@ class SealogEvent:
                 self.event_options == other.event_options)
 
 
+############################
 def to_event(self, record: Union[DASRecord, str], configs: list) -> SealogEvent:
+    """
+    Uses an object of configs to translates a DASRecord object or json string to a SealogEvent
+    object.
+    """
 
     if isinstance(record, str):
         event = SealogEvent(json_str=record)
@@ -98,18 +105,24 @@ def to_event(self, record: Union[DASRecord, str], configs: list) -> SealogEvent:
 
     ts_str = time_str(record["timestamp"]) if record.get("timestamp") else None
 
-    field_map = config.get("field_map")
-    if field_map is None:
-        event_options = [
+    event_options = [
+        {"event_option_name": k, "event_option_value": v}
+        for k, v in config.get("event_options", {}).items()
+    ]
+
+    field_map = config.get("field_map", {})
+    
+    if not field_map:
+        event_options.extend([
             {"event_option_name": k, "event_option_value": v}
             for k, v in record["fields"].items()
-        ]
+        ])
     else:
-        event_options = [
+        event_options.extend([
             {"event_option_name": dst_name, "event_option_value": record["fields"][src_field]}
             for src_field, dst_name in field_map.items()
             if src_field in record["fields"]
-        ]
+        ])
 
     event =  SealogEvent(
         event_value=event_value,
@@ -120,3 +133,4 @@ def to_event(self, record: Union[DASRecord, str], configs: list) -> SealogEvent:
     )
 
     return event
+

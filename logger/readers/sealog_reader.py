@@ -39,7 +39,7 @@ class SealogReader():
         ```
         """
         self.uri = uri
-        self.client_wsid = client_wsid or 'OpenRVDAS_Sealog_Listener'
+        self.client_wsid = client_wsid or 'OpenRVDAS_Sealog_Reader'
         self.subs = subs or ['/ws/status/newEvents', '/ws/status/updateEvents']
         self.check_cert = check_cert
 
@@ -70,7 +70,7 @@ class SealogReader():
         call to read()."""
 
         ############################
-        def _event_to_das_record(event):
+        def _event_to_das_record(event) -> DASRecord:
 
             fields = {
                 'event_id': event.get('id'),
@@ -155,11 +155,13 @@ class SealogReader():
         websocket_event_loop.run_until_complete(_websocket_loop(self))
         websocket_event_loop.close()
 
+
     ############################
     def quit(self, seconds=0):
         """Sleep N seconds, then signal quit."""
         time.sleep(seconds)
         self.quit_flag = True
+
 
     ############################
     def read(self):

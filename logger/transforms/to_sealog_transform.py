@@ -42,6 +42,8 @@ class ToSealogTransform(Transform):
         event_value: LOGGING_STATUS
         event_author: "qinsy"
         event_free_text: ""
+        event_options:
+            system: EM124
         field_map:
             status: status
             filename: filename
