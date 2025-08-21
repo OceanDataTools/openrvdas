@@ -1,8 +1,0 @@
-readers:
-- class: SealogReader
-  module: logger.readers.sealog_reader
-  kwargs:
-    uri: 'wss://sealog-vessel.oceandatatools.org:8000/ws'
-writers:
-  class: TextFileWriter
-  # no kwargs; no filename provided, so will write to stdout
