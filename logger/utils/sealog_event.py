@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 
 import sys
+import json
+import pprint
 import logging
-from typing import Union
+from typing import Union, Optional
 
+from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.utils.timestamp import time_str  # noqa:E402
 from logger.utils.das_record import DASRecord  # noqa: E402
@@ -88,20 +91,35 @@ class SealogEvent:
 
 
 ############################
-def to_event(self, record: Union[DASRecord, str], configs: list) -> SealogEvent:
+def to_event(record: Union[SealogEvent, DASRecord, str], configs: Optional[dict] = None) -> SealogEvent:
     """
     Uses an object of configs to translates a DASRecord object or json string to a SealogEvent
     object.
     """
 
+    if not configs:
+        configs = {
+            '_default': {
+                'event_free_text': "",
+                'field_map': None
+            }
+        }
+
+    if isinstance(record, SealogEvent):
+        return record
+
     if isinstance(record, str):
         event = SealogEvent(json_str=record)
         return event
 
-    data_id = record.get("data_id", "_default")
-    config = configs.get(data_id, {})
+    record = json.loads(record.as_json())
 
-    event_value = config.get("event_value", 'FROM_OPENRVDAS')
+    data_id = record.get("data_id", "_default")
+    config = configs.get(data_id) or configs.get('_default', {})
+
+    event_value = record['fields'].get("event_value") or config.get("event_value", 'FROM_OPENRVDAS')
+    event_author = record['fields'].get("event_author") or config.get("event_author")
+    event_free_text = record['fields'].get("event_free_text") or config.get("event_free_text", "")
 
     ts_str = time_str(record["timestamp"]) if record.get("timestamp") else None
 
@@ -111,24 +129,27 @@ def to_event(self, record: Union[DASRecord, str], configs: list) -> SealogEvent:
     ]
 
     field_map = config.get("field_map", {})
+
+    record_fields = record.get("fields", {})
     
     if not field_map:
         event_options.extend([
-            {"event_option_name": k, "event_option_value": v}
-            for k, v in record["fields"].items()
+            {"event_option_name": k.lstrip("event_option_"), "event_option_value": v}
+            for k, v in record_fields.items()
+            if k.startswith("event_option_")
         ])
     else:
-        event_options.extend([
-            {"event_option_name": dst_name, "event_option_value": record["fields"][src_field]}
-            for src_field, dst_name in field_map.items()
-            if src_field in record["fields"]
-        ])
+        event_options.extend(
+            {"event_option_name": dst, "event_option_value": record_fields[f'event_option_{src}']}
+            for src, dst in field_map.items()
+            if f'event_option_{src}' in record_fields
+        )
 
     event =  SealogEvent(
         event_value=event_value,
         timestamp=ts_str,
-        event_author=config.get("event_author"),
-        event_free_text=config.get("event_free_text", ""),
+        event_author=event_author,
+        event_free_text=event_free_text,
         event_options=event_options
     )
 
