@@ -15,6 +15,7 @@ sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.utils.das_record import DASRecord  # noqa: E402
 from logger.utils.timestamp import timestamp  # noqa: E402
 
+
 ################################################################################
 class SealogReader():
     """Connect to a websocket served by a WebsocketWriter, and service read()
@@ -62,7 +63,6 @@ class SealogReader():
         self.websocket_thread = None
         self.queue = queue.Queue()
         self.quit_flag = False
-
 
     ############################
     def _start_websocket(self):
@@ -132,7 +132,9 @@ class SealogReader():
                             if msg_obj['type'] and msg_obj['type'] == 'pub':
 
                                 event = msg_obj['message']
-                                logging.debug(f'SealogReader got record {json.dumps(event, indent=2)}')
+                                logging.debug(
+                                    f'SealogReader got record {json.dumps(event, indent=2)}'
+                                )
                                 self.queue.put(_event_to_das_record(event))
 
                 except BrokenPipeError:
@@ -155,13 +157,11 @@ class SealogReader():
         websocket_event_loop.run_until_complete(_websocket_loop(self))
         websocket_event_loop.close()
 
-
     ############################
     def quit(self, seconds=0):
         """Sleep N seconds, then signal quit."""
         time.sleep(seconds)
         self.quit_flag = True
-
 
     ############################
     def read(self):

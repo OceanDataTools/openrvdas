@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import sys
-import json
 import pprint
 import logging
 import urllib
@@ -13,21 +12,25 @@ from logger.utils.read_config import read_config  # noqa:E402
 from logger.utils.sealog_event import SealogEvent, to_event  # noqa:E402
 from logger.writers.writer import Writer  # noqa: E402
 
+
+################################################################################
 class SealogWriter(Writer):
     """Submit Sealog event dicts to a Sealog Server API.
 
     url    - URL to Sealog Server, i.e. http://<ip_addr>:8000/sealog-server
 
     token  - Java Web Token (JWT) authorized to submit new events to the
-             Sealog Server API 
+             Sealog Server API
 
     config_file  - Path to a YAML configuration file specifying:
                    `data_id` to determine which set of rules to apply
                    `event_value` (optional): default event value for the record.
                    `event_author` (optional): author string to include in the event.
                    `event_free_text` (optional): free text string for the event.
-                   `field_map` (optional): mapping of input record field names to event option names.
-                   `_default` (optional): fallback configuration applied if the record's `data_id` is not found.
+                   `field_map` (optional): mapping of input record field names to event
+                                           option names.
+                   `_default` (optional): fallback configuration applied if the record's
+                                          `data_id` is not found.
 
     Sample configuration file:
     ---
@@ -51,7 +54,8 @@ class SealogWriter(Writer):
 
     """
 
-    def __init__(self, url: str, token: str, config_file: str, quiet: bool=False):
+    ############################
+    def __init__(self, url: str, token: str, config_file: str, quiet: bool = False):
         super().__init__(quiet=quiet)
 
         self.url = url
@@ -61,16 +65,18 @@ class SealogWriter(Writer):
             self.configs = read_config(config_file)
             logging.info('Loaded sealog config file: %s', pprint.pformat(self.configs))
         except Exception as err:
-            logging.error("Could not find or could not process config file.  All records will be ignored.")
+            logging.error("Could not find or could not process config file."
+                          " All records will be ignored.")
+            logging.info(str(err))
             pass
 
         self.test_api_connectivity()
 
-
+    ############################
     def test_api_connectivity(self) -> bool:
         """
         Test connectivity to a restricted API route using JWT authentication
-        
+
         Returns:
             bool: True if request succeeds (HTTP 200), False otherwise.
         """
@@ -92,7 +98,6 @@ class SealogWriter(Writer):
             logging.error(f"Connection error: {e.reason}")
             return False
 
-
     ############################
     def write(self, record: Union[DASRecord, SealogEvent, list]):
         """Submit dicts to Sealog Server
@@ -104,10 +109,10 @@ class SealogWriter(Writer):
                 self.write(single_record)
             return
 
-        event = record if isinstance(record, SealogEvent) else to_event(record, self.configs) 
+        event = record if isinstance(record, SealogEvent) else to_event(record, self.configs)
 
         json_data = event.as_json().encode("utf-8")
-        
+
         req = urllib.request.Request(self.url + '/api/v1/events', data=json_data, method="POST")
         req.add_header("Authorization", f"Bearer {self.token}")
         req.add_header("Content-Type", "application/json")

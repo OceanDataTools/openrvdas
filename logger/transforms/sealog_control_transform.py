@@ -47,6 +47,10 @@ from logger.transforms.transform import Transform  # noqa: E402
 ################################################################################
 class SealogControlTransform(Transform):
     """
+    OpenRVDAS transfor that processes SealogEvents, DASRecords and/or json
+    strings to determine if the event correlated to an OpenRVDAS mode change.
+    If the event does correlate to a mode change the transform returns the
+    appropiate logger_manager command str.
     """
     def __init__(self, event_value, event_option_name,
                  event_author=None):
@@ -64,7 +68,6 @@ class SealogControlTransform(Transform):
 
         self.command = "set_active_mode"
 
-
     ############################
     def transform(self, record: Union[DASRecord, SealogEvent, str]) -> str:
         """
@@ -74,18 +77,18 @@ class SealogControlTransform(Transform):
         """
 
         if not record:
-            return
+            return None
 
         try:
             event = to_event(record)
         except Exception as err:
             logging.warning("Unable to parse record to Sealog event")
-            logging.info("Record: %s", record)
-            return
+            logging.info("Error: %s", err)
+            return None
 
         # Optionally match event author
         if self.event_author and self.event_author != event.event_author:
-            return
+            return None
 
         # If the event value matches, look for the event_option
         if event.event_value == self.event_value:
@@ -96,3 +99,5 @@ class SealogControlTransform(Transform):
                     cmd_str = f'{self.command} {event_option.get("event_option_value")}'
                     logging.info('Submitting command to OpenRVDAS: "%s"', cmd_str)
                     return cmd_str
+
+        return None

@@ -3,7 +3,6 @@
 import sys
 import json
 import pprint
-import logging
 from typing import Union, Optional
 
 from os.path import dirname, realpath
@@ -11,12 +10,13 @@ sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.utils.timestamp import time_str  # noqa:E402
 from logger.utils.das_record import DASRecord  # noqa: E402
 
+
 class SealogEvent:
     """SealogEvent is a structured representation of a Sealog event object.
     Class includes help methods like __str__, __eq__ and as_json
     """
-    ############################
 
+    ############################
     def __init__(self, json_str=None, event_value=None, event_author=None,
                  timestamp=None, event_free_text=None, event_options=None):
         """
@@ -90,8 +90,8 @@ class SealogEvent:
                 self.event_options == other.event_options)
 
 
-############################
-def to_event(record: Union[SealogEvent, DASRecord, str], configs: Optional[dict] = None) -> SealogEvent:
+def to_event(record: Union[SealogEvent, DASRecord, str],
+             configs: Optional[dict] = None) -> SealogEvent:
     """
     Uses an object of configs to translates a DASRecord object or json string to a SealogEvent
     object.
@@ -131,7 +131,7 @@ def to_event(record: Union[SealogEvent, DASRecord, str], configs: Optional[dict]
     field_map = config.get("field_map", {})
 
     record_fields = record.get("fields", {})
-    
+
     if not field_map:
         event_options.extend([
             {"event_option_name": k.lstrip("event_option_"), "event_option_value": v}
@@ -145,7 +145,7 @@ def to_event(record: Union[SealogEvent, DASRecord, str], configs: Optional[dict]
             if f'event_option_{src}' in record_fields
         )
 
-    event =  SealogEvent(
+    event = SealogEvent(
         event_value=event_value,
         timestamp=ts_str,
         event_author=event_author,
@@ -154,4 +154,3 @@ def to_event(record: Union[SealogEvent, DASRecord, str], configs: Optional[dict]
     )
 
     return event
-
