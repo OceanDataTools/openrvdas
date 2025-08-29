@@ -73,9 +73,9 @@ class TestFileWriter(unittest.TestCase):
 
     ############################
     def test_split_day(self):
-        """Test the split_by_date parameter, changing the date with each write."""
+        """Test the split_interval parameter, changing the date with each write."""
         with tempfile.TemporaryDirectory() as tmpdirname:
-            writer = self._cleanup_writer(FileWriter(tmpdirname + '/g', split_by_time=True))
+            writer = self._cleanup_writer(FileWriter(tmpdirname + '/g', split_interval='24H'))
 
             writer.timestamp = 1597150898
             writer.write(SAMPLE_DATA[0])
@@ -97,8 +97,8 @@ class TestFileWriter(unittest.TestCase):
     def test_split_hour(self):
         """Test the split_by_date parameter, changing the date with each write."""
         with tempfile.TemporaryDirectory() as tmpdirname:
-            writer = self._cleanup_writer(FileWriter(tmpdirname + '/g', split_by_time=True,
-                                                     time_format='-%Y-%m-%d:%H'))
+            writer = self._cleanup_writer(FileWriter(tmpdirname + '/g', split_interval='1H',
+                                                     date_format='-%Y-%m-%d:%H'))
 
             writer.timestamp = 1597150898
             writer.write(SAMPLE_DATA[0])
@@ -126,7 +126,7 @@ class TestFileWriter(unittest.TestCase):
             # Verify proper configuration
             self.assertEqual(writer_h.split_interval, (2, 'H'))
             self.assertEqual(writer_h.split_interval_in_seconds, 2 * 3600)
-            self.assertIn('%H', writer_h.time_format)
+            self.assertIn('%H', writer_h.date_format)
 
             # Test minute split configuration
             writer_m = self._cleanup_writer(FileWriter(tmpdirname + '/m', split_interval='15M'))
@@ -134,8 +134,8 @@ class TestFileWriter(unittest.TestCase):
             # Verify proper configuration
             self.assertEqual(writer_m.split_interval, (15, 'M'))
             self.assertEqual(writer_m.split_interval_in_seconds, 15 * 60)
-            self.assertIn('%H', writer_m.time_format)
-            self.assertIn('%M', writer_m.time_format)
+            self.assertIn('%H', writer_m.date_format)
+            self.assertIn('%M', writer_m.date_format)
 
     ############################
     def test_split_interval_file_creation(self):
@@ -180,29 +180,29 @@ class TestFileWriter(unittest.TestCase):
 
             # Test that filename is required when using split_interval
             with self.assertRaises(ValueError) as context:
-                FileWriter(filename=None, split_interval='1H')
-            self.assertIn('filename must be specified', str(context.exception))
+                FileWriter(filebase=None, split_interval='1H')
+            self.assertIn('filebase must be specified', str(context.exception))
 
     ############################
     def test_split_interval_time_format_auto_update(self):
-        """Test that time_format is automatically updated for split_interval."""
+        """Test that date_format is automatically updated for split_interval."""
         with tempfile.TemporaryDirectory() as tmpdirname:
-            # Test that default time_format gets auto-updated for hourly splits
+            # Test that default date_format gets auto-updated for hourly splits
             writer_h = self._cleanup_writer(FileWriter(tmpdirname + '/test_h', split_interval='2H'))
-            self.assertIn('%H', writer_h.time_format)
-            self.assertIn('T', writer_h.time_format)
+            self.assertIn('%H', writer_h.date_format)
+            self.assertIn('T', writer_h.date_format)
 
-            # Test that default time_format gets auto-updated for minute splits
+            # Test that default date_format gets auto-updated for minute splits
             writer_m = self._cleanup_writer(FileWriter(tmpdirname + '/test_m', split_interval='15M'))
-            self.assertIn('%H', writer_m.time_format)
-            self.assertIn('%M', writer_m.time_format)
-            self.assertIn('T', writer_m.time_format)
+            self.assertIn('%H', writer_m.date_format)
+            self.assertIn('%M', writer_m.date_format)
+            self.assertIn('T', writer_m.date_format)
 
             # Test that valid custom formats work
             writer_custom = self._cleanup_writer(FileWriter(tmpdirname + '/test_custom',
                                                             split_interval='1H',
-                                                            time_format='-%Y-%m-%d_%H'))
-            self.assertEqual(writer_custom.time_format, '-%Y-%m-%d_%H')
+                                                            date_format='-%Y-%m-%d_%H'))
+            self.assertEqual(writer_custom.date_format, '-%Y-%m-%d_%H')
 
 
 ################################################################################

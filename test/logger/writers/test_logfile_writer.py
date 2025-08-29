@@ -350,13 +350,13 @@ class TestLogfileWriter(unittest.TestCase):
                 error = f'ERROR:root:LogfileWriter.write() - bad timestamp: "{bad_line}"'
                 self.assertEqual(cm.output, [error])
 
-            no_match = '2017-11-03T17:23:04.833188Z CCC this will not match a header file'
+            no_match = '2017-11-03T17:23:04.833188Z CCC this will not match a header'
             # writer.write(no_match)
             with self.assertLogs(logging.getLogger(), logging.WARNING) as cm:
-                no_match = '2017-11-03T17:23:04.833188Z CCC this will not match a header file'
+                no_match = '2017-11-03T17:23:04.833188Z CCC this will not match a header'
                 writer.write(no_match)
 
-                error = f'WARNING:root:LogfileWriter.fetch_header_file() - no header file match: "{no_match}"'
+                error = f'WARNING:root:LogfileWriter.fetch_header() - no header match: "{no_match}"'
                 self.assertEqual(cm.output, [error])
 
             lines = SAMPLE_DATA.split('\n')
