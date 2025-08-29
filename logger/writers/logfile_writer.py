@@ -192,7 +192,9 @@ class LogfileWriter(Writer):
         if self.split_interval[1] == "M":
             minutes = self.split_interval[0]  # strip trailing M
             even_hours = minutes % 60 == 0    # check multiple of 60
-            return DEFAULT_DATETIME_STR + "T%H00" if even_hours else DEFAULT_DATETIME_STR + "T%H%M"
+
+            if not date_format:
+                return DEFAULT_DATETIME_STR + "T%H00" if even_hours else DEFAULT_DATETIME_STR + "T%H%M"
 
             required = {"%Y", "%m", "%d", "%H"} if even_hours else {"%Y", "%m", "%d", "%H", "%M"}
             found = set(re.findall(r"%[a-zA-Z]", date_format))
