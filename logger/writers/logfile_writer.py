@@ -168,46 +168,51 @@ class LogfileWriter(Writer):
 
     ############################
     def _validate_date_format(self, date_format):
-        """
-        Helper function to validate date_format
-        """
-
         if not self.split_interval:
             return date_format or ""
 
-        if self.split_interval[1] == "H":
-            hours = self.split_interval[0]  # strip trailing H
-            even_days = hours % 24 == 0     # check multiple of 24
+        unit = self.split_interval[1]
+        value = self.split_interval[0]
 
-            if not date_format:
+        # --- Decide requirements based on interval ---
+        if unit == "H":
+            even_days = value % 24 == 0
+            needs_hour = not even_days
+            needs_minute = False
+        elif unit == "M":
+            even_hours = value % 60 == 0
+            needs_hour = True
+            needs_minute = not even_hours
+        else:
+            return DEFAULT_DATETIME_STR  # fallback
+
+        # --- Default formats if user didn’t supply one ---
+        if not date_format:
+            if unit == "H":
                 return DEFAULT_DATETIME_STR if even_days else DEFAULT_DATETIME_STR + "T%H00"
+            if unit == "M":
+                return DEFAULT_DATETIME_STR + "T%H00" if not needs_minute else DEFAULT_DATETIME_STR + "T%H%M"
 
-            required = {"%Y", "%m", "%d"} if even_days else {"%Y", "%m", "%d", "%H"}
-            found = set(re.findall(r"%[a-zA-Z]", date_format))
-            if not required.issubset(found):
-                reason = 'years, months and days' if even_days else 'years, months, days and hours'
-                raise ValueError(f"date_format must include provisions for {reason}")
-            return date_format
+        # --- Extract directives ---
+        found = set(re.findall(r"%[a-zA-Z]", date_format))
 
-        if self.split_interval[1] == "M":
-            minutes = self.split_interval[0]  # strip trailing M
-            even_hours = minutes % 60 == 0    # check multiple of 60
+        # Must always have year
+        if "%Y" not in found:
+            raise ValueError("date_format must include %Y (year).")
 
-            if not date_format:
-                return DEFAULT_DATETIME_STR + "T%H00" if even_hours else DEFAULT_DATETIME_STR + "T%H%M"
+        # Must have either month+day or julian day
+        if not ({"%m", "%d"} <= found or "%j" in found):
+            raise ValueError("date_format must include %m, %d (month, day) or %j (day-of-year).")
 
-            required = {"%Y", "%m", "%d", "%H"} if even_hours else {"%Y", "%m", "%d", "%H", "%M"}
-            found = set(re.findall(r"%[a-zA-Z]", date_format))
-            if not required.issubset(found):
-                reason = (
-                    "years, months, days and hours"
-                    if even_days
-                    else "years, months, days, hours and minutes"
-                )
-                raise ValueError(f"date_format must include provisions for {reason}")
-            return date_format
+        # Hours?
+        if needs_hour and "%H" not in found:
+            raise ValueError("date_format must include %H (hour).")
 
-        return DEFAULT_DATETIME_STR  # fallback
+        # Minutes?
+        if needs_minute and "%M" not in found:
+            raise ValueError("date_format must include %M (minute).")
+
+        return date_format
 
     ############################
     def _load_header(self, header, header_file):

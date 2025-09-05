@@ -54,7 +54,8 @@ class FileWriter(Writer):
                     or any other valid Python write file mode.
 
         delimiter   By default, append a newline after each record written. Set
-                    to None to disable appending any record delimiter.
+                    to None to disable appending any record delimiter. Ignored
+                    if mode is for binary.
 
         flush       If True (default), flush after every write() call
 
@@ -107,6 +108,48 @@ class FileWriter(Writer):
         encoding_errors 'ignore' by default. Other error strategies are
                         'strict', 'replace', and 'backslashreplace', described
                         here: https://docs.python.org/3/howto/unicode.html#encodings
+
+        Sample invocations (original vs proposed)
+        - Write to stdout:
+            Original: FileWriter(None)
+            Proposed: FileWriter(None)
+
+        - Write to file, no split:
+            Original: FileWriter(/data/sample_file)
+            Proposed: FileWriter(/data/sample_file)
+
+        - Write to file, no split, with header:
+            Original: FileWriter(/data/sample_file, header='This is a header')
+            Proposed: FileWriter(/data/sample_file, header='This is a header')
+
+        - Write to file, daily split: (filename = /data/sample_file-%Y-%m-%d)
+            Original: FileWriter(/data/sample_file, split_by_time=True)
+            Proposed: FileWriter(/data/sample_file, split_interval='24H')
+
+        - Write to file, daily split, with suffix: (filename = /data/sample_file-%Y-%m-%d.txt)
+            Original: FileWriter(/data/sample_file, split_by_time=True, time_format='-%Y-%m-%d.txt')
+            Proposed: FileWriter(/data/sample_file, split_interval='24H', suffix='.txt')
+
+        - Write to file, daily split: (filename = /data/sample_file-%Y-%j)
+            Original: FileWriter(/data/sample_file, split_by_time=True, time_format='-%Y-%j')
+            Proposed: FileWriter(/data/sample_file, split_interval='24H', date_format='-%Y-%j')
+
+        - Write to file, hourly split (filename = /data/sample_file-%Y-%m-%dT%H00):
+            Original: FileWriter(/data/sample_file, split_by_time=True, time_format='-%Y-%m-%d:%H00')
+            Proposed: FileWriter(/data/sample_file, split_interval='1H')
+
+        - Write to file, 15-minute split (filename = /data/sample_file-%Y-%m-%dT%H%M):
+            Original: FileWriter(/data/sample_file, split_interval='15M', time_format='-%Y-%m-%d:%H%M')
+            Proposed: FileWriter(/data/sample_file, split_interval='15M')
+
+        - Write to file, 15-minute split (filename = /data/%Y-%m-%dT%H%M-sample_file):
+            Original: FileWriter(/data/sample_file, split_interval='15M', time_format='%Y-%m-%d:%H%M-')
+            Proposed: FileWriter(/data/sample_file, split_interval='15M', date_format='^%Y-%m-%d:%H%M-')
+
+        - Write to file, 15-minute split, with suffix (filename = /data/%Y-%m-%dT%H%M-sample_file.txt):
+            Original: FileWriter(/data/sample_file.txt, split_interval='15M', time_format='%Y-%m-%d:%H%M-')
+            Proposed: FileWriter(/data/sample_file, split_interval='15M', date_format='^%Y-%m-%d:%H%M-', suffix='.txt')
+
         ```
         """
 
@@ -239,41 +282,51 @@ class FileWriter(Writer):
         return delimiter
 
     def _validate_date_format(self, date_format):
-
         if not self.split_interval:
             return date_format or ""
 
-        if self.split_interval[1] == "H":
-            hours = self.split_interval[0]    # strip trailing H
-            even_days = hours % 24 == 0  # check multiple of 24
+        unit = self.split_interval[1]
+        value = self.split_interval[0]
 
-            if not date_format:
+        # --- Decide requirements based on interval ---
+        if unit == "H":
+            even_days = value % 24 == 0
+            needs_hour = not even_days
+            needs_minute = False
+        elif unit == "M":
+            even_hours = value % 60 == 0
+            needs_hour = True
+            needs_minute = not even_hours
+        else:
+            return DEFAULT_DATETIME_STR  # fallback
+
+        # --- Default formats if user didn’t supply one ---
+        if not date_format:
+            if unit == "H":
                 return DEFAULT_DATETIME_STR if even_days else DEFAULT_DATETIME_STR + "T%H00"
+            if unit == "M":
+                return DEFAULT_DATETIME_STR + "T%H00" if not needs_minute else DEFAULT_DATETIME_STR + "T%H%M"
 
-            required = {"%Y", "%m", "%d"} if even_days else {"%Y", "%m", "%d", "%H"}
-            found = set(re.findall(r"%[a-zA-Z]", date_format))
-            if not required.issubset(found):
-                reason = 'years, months and days' if even_days else 'years, months, days and hours'
-                raise ValueError(f"date_format must include provisions for {reason}")
-            return date_format
+        # --- Extract directives ---
+        found = set(re.findall(r"%[a-zA-Z]", date_format))
 
-        if self.split_interval[1] == "M":
-            minutes = self.split_interval[0]     # strip trailing M
-            even_hours = minutes % 60 == 0  # check multiple of 60
-            return DEFAULT_DATETIME_STR + "T%H00" if even_hours else DEFAULT_DATETIME_STR + "T%H%M"
+        # Must always have year
+        if "%Y" not in found:
+            raise ValueError("date_format must include %Y (year).")
 
-            required = {"%Y", "%m", "%d", "%H"} if even_hours else {"%Y", "%m", "%d", "%H", "%M"}
-            found = set(re.findall(r"%[a-zA-Z]", date_format))
-            if not required.issubset(found):
-                reason = (
-                    'years, months, days and hours'
-                    if even_days
-                    else 'years, months, days, hours and minutes'
-                )
-                raise ValueError(f"date_format must include provisions for {reason}")
-            return date_format
+        # Must have either month+day or julian day
+        if not ({"%m", "%d"} <= found or "%j" in found):
+            raise ValueError("date_format must include %m, %d (month, day) or %j (day-of-year).")
 
-        return DEFAULT_DATETIME_STR  # fallback
+        # Hours?
+        if needs_hour and "%H" not in found:
+            raise ValueError("date_format must include %H (hour).")
+
+        # Minutes?
+        if needs_minute and "%M" not in found:
+            raise ValueError("date_format must include %M (minute).")
+
+        return date_format
 
     ############################
     def __del__(self):
