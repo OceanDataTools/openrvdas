@@ -219,6 +219,26 @@ class TestFileWriter(unittest.TestCase):
             self.assertEqual(writer_custom.date_format, '-%Y-%m-%d_%H')
 
 
+    ############################
+    def test_date_format_validation(self):
+        """Test that date_format is verified against what's required for the
+        split_interval."""
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            with self.assertRaises(ValueError) as context:
+                FileWriter(tmpdirname + '/invalid1', split_interval='24H', date_format='-%Y-%m')
+            self.assertIn('date_format must include %m, %d (month, day) or %j (day-of-year).', str(context.exception))
+
+            # Test invalid format - no %H in date_format
+            with self.assertRaises(ValueError) as context:
+                FileWriter(tmpdirname + '/invalid1', split_interval='2H', date_format='-%Y-%m-%d')
+            self.assertIn('date_format must include %H (hour).', str(context.exception))
+
+            # Test invalid format - no %H in date_format
+            with self.assertRaises(ValueError) as context:
+                FileWriter(tmpdirname + '/invalid1', split_interval='15M', date_format='-%Y-%m-%dT%H')
+            self.assertIn('date_format must include %M (minute).', str(context.exception))
+
+
 ################################################################################
 if __name__ == '__main__':
     import argparse

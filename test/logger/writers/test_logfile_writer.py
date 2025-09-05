@@ -473,6 +473,24 @@ class TestLogfileWriter(unittest.TestCase):
             self.assertTrue(exists(tmpdirname + '/logfile_A' + '-2017-11-03' + '.AAA'), f"File '{tmpdirname + '/logfile_A' + '-2017-11-03' + '.AAA'}' does not exist.")
             self.assertTrue(exists(tmpdirname + '/logfile_B' + '-2017-11-03' + '.BBB'), f"File '{tmpdirname + '/logfile_B' + '-2017-11-03' + '.BBB'}' does not exist.")
 
+    ############################
+    def test_date_format_validation(self):
+        """Test that date_format is verified against what's required for the
+        split_interval."""
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            with self.assertRaises(ValueError) as context:
+                LogfileWriter(tmpdirname + '/invalid1', split_interval='24H', date_format='-%Y-%m')
+            self.assertIn('date_format must include %m, %d (month, day) or %j (day-of-year).', str(context.exception))
+
+            # Test invalid format - no %H in date_format
+            with self.assertRaises(ValueError) as context:
+                LogfileWriter(tmpdirname + '/invalid1', split_interval='2H', date_format='-%Y-%m-%d')
+            self.assertIn('date_format must include %H (hour).', str(context.exception))
+
+            # Test invalid format - no %H in date_format
+            with self.assertRaises(ValueError) as context:
+                LogfileWriter(tmpdirname + '/invalid1', split_interval='15M', date_format='-%Y-%m-%dT%H')
+            self.assertIn('date_format must include %M (minute).', str(context.exception))
 
 if __name__ == '__main__':
     import argparse
