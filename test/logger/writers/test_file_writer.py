@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 
 import logging
+import io
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 from datetime import datetime, timezone
 
 sys.path.append('.')
@@ -37,6 +39,18 @@ class TestFileWriter(unittest.TestCase):
         """Helper method to register a writer for cleanup."""
         self.writers_to_cleanup.append(writer)
         return writer
+
+    ############################
+    def test_write_stdout(self):
+        buf = io.StringIO()
+        with patch("sys.stdout", new=buf):
+            writer = self._cleanup_writer(FileWriter(None))
+            for line in SAMPLE_DATA:
+                writer.write(line)
+
+        # Get what was written to stdout
+        output = buf.getvalue().splitlines()
+        self.assertEqual(output, SAMPLE_DATA)
 
     ############################
     def test_write(self):

@@ -67,7 +67,7 @@ class FileWriter(Writer):
         split_interval  If set the file will trucate at the specified interval.
                         The value must be a string containing an integer
                         followed by a 'H' (hours) or 'M' (minutes). Default
-                        value is '24H' (daily).
+                        is to not split.
 
         header          A string to add to the beginning of a new file.
 
@@ -112,32 +112,33 @@ class FileWriter(Writer):
 
         # --- Deprecated args ---
         if filename is not None:
-            warnings.warn(
-                "`filename` is deprecated, use `filebase` instead",
-                DeprecationWarning,
-                stacklevel=2,
-            )
+            filebase = filename
+            # warnings.warn(
+            #     "`filename` is deprecated, use `filebase` instead",
+            #     DeprecationWarning,
+            #     stacklevel=2,
+            # )
         if split_by_time:
-            warnings.warn(
-                "`split_by_time` is deprecated, use `split_interval` instead",
-                DeprecationWarning,
-                stacklevel=2,
-            )
             split_interval = '24H'
+            # warnings.warn(
+            #     "`split_by_time` is deprecated, use `split_interval` instead",
+            #     DeprecationWarning,
+            #     stacklevel=2,
+            # )
         if time_format is not None:
-            warnings.warn(
-                "`time_format` is deprecated, use `date_format` instead",
-                DeprecationWarning,
-                stacklevel=2,
-            )
+            # warnings.warn(
+            #     "`time_format` is deprecated, use `date_format` instead",
+            #     DeprecationWarning,
+            #     stacklevel=2,
+            # )
+            date_format = '^' + time_format[:-1] if time_format.endswith('-') else time_format
+
+        # Can't use split_interval or split_by_time if filebase and filename are None
+        if split_interval and filebase is None:
+            raise ValueError("filebase must be specified")
 
         # --- Base file name ---
-        if filename and filebase:
-            raise ValueError("cannot specify both `filename` and `filebase`")
-        self.filebase = filename or filebase
-
-        if self.filebase is None:
-            raise ValueError("filebase must be specified")
+        self.filebase = filebase
 
         encoding, encoding_errors = self._resolve_encoding(encoding, encoding_errors, mode)
 
@@ -165,7 +166,7 @@ class FileWriter(Writer):
         self.date_format = self._validate_date_format(date_format)
 
         # --- Ensure path exists ---
-        if create_path:
+        if self.filebase and create_path:
             os.makedirs(os.path.dirname(self.filebase), exist_ok=True)
 
         # --- File state ---
@@ -376,10 +377,13 @@ class FileWriter(Writer):
             self.digest_record(record)  # inherited from BaseModule()
             return
 
+        if not self.filebase:
+            self._set_file(None)
+
         # If we're splitting by some time interval, see if it's time to
         # roll over to a new file.
         # if self.split_by_time or self.split_interval is not None:
-        if self.split_interval and datetime.now(self.time_zone) > self.next_file_split:
+        elif self.split_interval and datetime.now(self.time_zone) > self.next_file_split:
             new_file_date_format = self._get_file_date_format()
             if new_file_date_format != self.file_date_format:
                 self.file_date_format = new_file_date_format
