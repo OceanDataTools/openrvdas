@@ -38,6 +38,7 @@ create a network listener on port 6224 in yet another window:
 """
 import logging
 import multiprocessing
+import os
 import pprint
 import signal
 import sys
@@ -254,11 +255,25 @@ class LoggerRunner:
 
     ############################
     def quit(self):
-        """Signal loop exit and send termination signal to process."""
+        """Signal loop exit and try to cleanly terminate the process."""
         self.quit_flag = True
         if self.process:
+            # First attempt: terminate gracefully
             self.process.terminate()
-            self.process.join()
+            self.process.join(timeout=5)
+
+            if self.process.is_alive():
+                # Escalation: send SIGKILL (Unix only)
+                try:
+                    os.kill(self.process.pid, signal.SIGKILL)
+                except OSError:
+                    pass  # process may have already exited
+                self.process.join(timeout=5)
+
+                if self.process.is_alive():
+                    # If it's *still* alive, warn, and just live with the undead process
+                    logging.error(f'Process {self.process.pid} could not be killed')
+
         self.process = None
         self.failed = False
 
