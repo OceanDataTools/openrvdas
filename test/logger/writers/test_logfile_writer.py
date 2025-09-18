@@ -350,13 +350,13 @@ class TestLogfileWriter(unittest.TestCase):
                 error = f'ERROR:root:LogfileWriter.write() - bad timestamp: "{bad_line}"'
                 self.assertEqual(cm.output, [error])
 
-            no_match = '2017-11-03T17:23:04.833188Z CCC this will not match a header file'
+            no_match = '2017-11-03T17:23:04.833188Z CCC this will not match a header'
             # writer.write(no_match)
             with self.assertLogs(logging.getLogger(), logging.WARNING) as cm:
-                no_match = '2017-11-03T17:23:04.833188Z CCC this will not match a header file'
+                no_match = '2017-11-03T17:23:04.833188Z CCC this will not match a header'
                 writer.write(no_match)
 
-                error = f'WARNING:root:LogfileWriter.fetch_header_file() - no header file match: "{no_match}"'
+                error = f'WARNING:root:LogfileWriter.fetch_header() - no header match: "{no_match}"'
                 self.assertEqual(cm.output, [error])
 
             lines = SAMPLE_DATA.split('\n')
@@ -473,6 +473,24 @@ class TestLogfileWriter(unittest.TestCase):
             self.assertTrue(exists(tmpdirname + '/logfile_A' + '-2017-11-03' + '.AAA'), f"File '{tmpdirname + '/logfile_A' + '-2017-11-03' + '.AAA'}' does not exist.")
             self.assertTrue(exists(tmpdirname + '/logfile_B' + '-2017-11-03' + '.BBB'), f"File '{tmpdirname + '/logfile_B' + '-2017-11-03' + '.BBB'}' does not exist.")
 
+    ############################
+    def test_date_format_validation(self):
+        """Test that date_format is verified against what's required for the
+        split_interval."""
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            with self.assertRaises(ValueError) as context:
+                LogfileWriter(tmpdirname + '/invalid1', split_interval='24H', date_format='-%Y-%m')
+            self.assertIn('date_format must include %m, %d (month, day) or %j (day-of-year).', str(context.exception))
+
+            # Test invalid format - no %H in date_format
+            with self.assertRaises(ValueError) as context:
+                LogfileWriter(tmpdirname + '/invalid1', split_interval='2H', date_format='-%Y-%m-%d')
+            self.assertIn('date_format must include %H (hour).', str(context.exception))
+
+            # Test invalid format - no %H in date_format
+            with self.assertRaises(ValueError) as context:
+                LogfileWriter(tmpdirname + '/invalid1', split_interval='15M', date_format='-%Y-%m-%dT%H')
+            self.assertIn('date_format must include %M (minute).', str(context.exception))
 
 if __name__ == '__main__':
     import argparse
