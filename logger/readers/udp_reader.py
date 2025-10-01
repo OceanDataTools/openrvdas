@@ -43,7 +43,7 @@ class UDPReader(Reader):
     def __init__(self, interface=None, port=None, mc_group=None,
                  reuseaddr=False, reuseport=False,
                  encoding='utf-8', encoding_errors='ignore', eol=None,
-                 this_is_a_test=False):
+                 allow_empty=False, this_is_a_test=False):
         """
         ```
         interface    IP (or resolvable name) of interface to listen on.  None or ''
@@ -73,6 +73,8 @@ class UDPReader(Reader):
                         https://docs.python.org/3/howto/unicode.html#encodings
 
         eol          split the record by the eol character if present.
+
+        allow_empty - If True, preserve and return empty records
 
         this_is_a_test - If True, recognize that this is being called in a unittest, so
                 don't output warnings about not using loopback addresses.
@@ -120,6 +122,7 @@ class UDPReader(Reader):
         self.reuseport = reuseport
 
         self.eol = eol
+        self.allow_empty = allow_empty
 
         self.this_is_a_test = this_is_a_test
 
@@ -220,10 +223,11 @@ class UDPReader(Reader):
 
         # if eol == None, return the record as is
         if not self.eol:
-            return self._decode_bytes(record_buffer)
+            return self._decode_bytes(record_buffer, self.allow_empty)
 
         # otherwise split the record by the eol
-        decoded_records = self._decode_bytes(record_buffer).rstrip(self.eol).split(self.eol)
+        decoded_records = self._decode_bytes(record_buffer,
+                                             self.allow_empty).rstrip(self.eol).split(self.eol)
 
         # if there was only one record, return just the first element in the
         # list, otherwise return the whole list.

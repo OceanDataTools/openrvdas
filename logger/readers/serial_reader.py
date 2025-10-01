@@ -25,7 +25,7 @@ class SerialReader(Reader):
     def __init__(self,  port, baudrate=9600, bytesize=8, parity='N',
                  stopbits=1, timeout=None, xonxoff=False, rtscts=False,
                  write_timeout=None, dsrdtr=False, inter_byte_timeout=None,
-                 exclusive=None, max_bytes=None, eol=None,
+                 exclusive=None, max_bytes=None, eol=None, allow_empty=False,
                  encoding='utf-8', encoding_errors='ignore'):
         """If max_bytes is specified on initialization, read up to that many
         bytes when read() is called. If eol is not specified, read() will
@@ -43,6 +43,8 @@ class SerialReader(Reader):
 
         By default, the SerialReader will assume that records are encoded in UTF-8, and will
         ignore non unicode characters it encounters. These defaults may be changed by specifying
+
+        allow_empty - If True, preserve and return empty records
 
         encoding - 'utf-8' by default. If empty or None, do not attempt any decoding
                 and return raw bytes. Other possible encodings are listed in online
@@ -87,6 +89,7 @@ class SerialReader(Reader):
 
         self.max_bytes = max_bytes
         self.encoding = encoding
+        self.allow_empty = allow_empty
         self.encoding_errors = encoding_errors
 
         # 'eol' comes in as a (probably escaped) string. We need to
@@ -118,9 +121,7 @@ class SerialReader(Reader):
                 # readline()'s record includes the trailing '\n', strip it off
                 record = self.serial.readline().rstrip()
 
-            if not record:
-                return None
-            return self._decode_bytes(record)
+            return self._decode_bytes(record, self.allow_empty)
 
         except KeyboardInterrupt as e:
             raise e
