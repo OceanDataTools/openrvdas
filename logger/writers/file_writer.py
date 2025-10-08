@@ -162,7 +162,7 @@ class FileWriter(Writer):
             #     stacklevel=2,
             # )
         if split_by_time:
-            split_interval = '24H'
+            split_interval = split_interval or '24H'
             # warnings.warn(
             #     "`split_by_time` is deprecated, use `split_interval` instead",
             #     DeprecationWarning,
