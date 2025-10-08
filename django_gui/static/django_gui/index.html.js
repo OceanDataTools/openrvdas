@@ -287,7 +287,7 @@ function update_cruise_definition(timestamp, cruise_definition) {
     var stderr_div = document.createElement('div');
 
     stderr_div.setAttribute('id', logger_name + '_stderr');
-    stderr_div.setAttribute('style', 'height:30px;width:450px;background-color:white;padding:0px;overflow-y:auto;');
+    stderr_div.setAttribute('style', 'height:30px;width:450px;background-color:white;padding:0px;overflow-y:auto;resize:both;');
     stderr_div.style.fontSize = 'x-small';
     stderr_td.appendChild(stderr_div);
     tr.appendChild(stderr_td);
