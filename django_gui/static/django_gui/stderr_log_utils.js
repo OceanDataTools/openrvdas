@@ -54,7 +54,7 @@ function process_stderr_message(target_div_id, log_line_list) {
 function color_log_line(message) {
   var color = '';
   if (message.indexOf(' 30 WARNING ') > 0) {
-    color = 'gold';
+    color = '#e09100';
   } else if (message.indexOf(' 40 ERROR ') > 0) {
     color = 'orange';
   } else if (message.indexOf(' 50 CRITICAL ') > 0) {
