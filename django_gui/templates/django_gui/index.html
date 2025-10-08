@@ -2,6 +2,9 @@
 {% load static %}
 {% block content %}
 <style>
+    #logger_table {
+      width:100%;
+    }
     .time_label {
         background-color:gray;
         border-style:solid;
@@ -21,16 +24,22 @@
     .button_td {
         height:30px;
         width:75px;
+        vertical-align: top;
         font-weight:bold;
+    }
+    .logger_button {
+      width: 100%;
+      white-space: nowrap;
+      background-color: lightgray;
     }
     .stderr_window {
         height:30px;
-        width:450px;
         background-color:white;
         padding:0px;
         overflow-y:auto;
         font-size:x-small;
-        resize:both;
+        resize:vertical;
+        white-space: normal;
     }
 </style>
 
@@ -94,7 +103,7 @@
       <tr><th>cruise mode</th><th> logger manager stderr</th></tr>
       <tr>
         <td class="button_td" id="logger_manager_mode_td">
-          <button id="logger_manager_mode_button" type="submit"
+          <button id="logger_manager_mode_button" class="logger_button" type="submit"
                   onclick="open_change_mode(event);"
                   {{ active_mode|default:"unknown" }}
           </button>
@@ -107,7 +116,7 @@
       {% for logger_name, logger_config in loggers.items %}
       <tr id="{{ logger_name }}_row">
         <td class="button_td" id="{{ logger_name }}_config_td">
-          <button id="{{ logger_name }}_config_button" type="submit"
+          <button id="{{ logger_name }}_config_button" class="logger_button" type="submit"
                   onclick="open_edit_config(event, '{{logger_name }}');"
                   >
             {{ logger_config.active }}

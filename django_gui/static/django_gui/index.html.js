@@ -271,11 +271,12 @@ function update_cruise_definition(timestamp, cruise_definition) {
 
     var config_td = document.createElement('td');
     config_td.setAttribute('id', logger_name + '_config_td');
-    config_td.setAttribute('style', 'height:30px;width:75px;');
+    config_td.setAttribute('class', 'button_td');
 
     var button = document.createElement('button');
     button.setAttribute('id', logger_name + '_config_button');
     button.setAttribute('type', 'submit');
+    button.setAttribute('class', 'logger_button')
     button.innerHTML = logger.active;
 
     button.setAttribute('onclick',
@@ -287,8 +288,8 @@ function update_cruise_definition(timestamp, cruise_definition) {
     var stderr_div = document.createElement('div');
 
     stderr_div.setAttribute('id', logger_name + '_stderr');
-    stderr_div.setAttribute('style', 'height:30px;width:450px;background-color:white;padding:0px;overflow-y:auto;resize:both;');
     stderr_div.style.fontSize = 'x-small';
+    stderr_div.setAttribute('class', 'stderr_window')
     stderr_td.appendChild(stderr_div);
     tr.appendChild(stderr_td);
     table.appendChild(tr);
