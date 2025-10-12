@@ -1538,14 +1538,14 @@ echo "Restarting services: supervisor"
         #sudo chown $RVDAS_USER /usr/local/var/run
         #sudo chgrp $RVDAS_GROUP /usr/local/var/run
 
-        #echo "NOTE: on MacOS, supervisord will not be started automatically."
-        #echo "To run it, try"
+        echo "NOTE: on MacOS, supervisord will not be started automatically."
+        echo "To run it, try"
+        echo "brew services run supervisor"
         #echo "    sudo /opt/openrvdas/venv/bin/supervisord \\"
         #echo "       -c /usr/local/etc/supervisord.conf"
         #echo
-        #read -p "Hit return to continue. " DUMMY_VAR
-        brew services start supervisor nginx 
-
+        read -p "Hit return to continue. " DUMMY_VAR
+        
     # Linux
     elif [ $OS_TYPE == 'CentOS' ] || [ $OS_TYPE == 'Ubuntu' ]; then
         sudo mkdir -p /var/run/supervisor/
