@@ -288,7 +288,6 @@ function update_cruise_definition(timestamp, cruise_definition) {
     var stderr_div = document.createElement('div');
 
     stderr_div.setAttribute('id', logger_name + '_stderr');
-    stderr_div.style.fontSize = 'x-small';
     stderr_div.setAttribute('class', 'stderr_window')
     stderr_td.appendChild(stderr_div);
     tr.appendChild(stderr_td);
@@ -353,18 +352,19 @@ function update_logger_status(timestamp, logger_status) {
       continue;
     }
     button.innerHTML = status.config;
+    button.className = "logger_button";
     if (status.status == 'RUNNING') {
-      button.style.backgroundColor = "lightgreen";
+      button.classList.add("btn-success");
     } else if (status.status == 'EXITED') {
-      button.style.backgroundColor = "lightgray";
+      button.classList.add("btn-secondary");
     } else if (status.status == "STARTING") {
-      button.style.backgroundColor = "khaki";
+      button.classList.add("btn-warning");
     } else if (status.status == "BACKOFF") {
-      button.style.backgroundColor = "gold";
+      button.classList.add("btn-danger");
     } else if (status.status == 'FATAL') {
-      button.style.backgroundColor = "red";
+      button.classList.add("btn-danger");
     } else {
-      button.style.backgroundColor = "white";
+      button.classList.add("btn-unknown");
     }
   }
 }
@@ -400,11 +400,11 @@ function flag_now_timeout() {
 // flag all loggers in yellow to show that we're not confident of
 // their state.
 function flag_status_timeout() {
-  document.getElementById('status_time_td').style.backgroundColor ='yellow';
+  document.getElementById('status_time_td').classList.add("text-danger");
   for (var logger in global_loggers) {
     var config_button = document.getElementById(logger + '_config_button');
     if (config_button) {
-      config_button.style.backgroundColor = 'yellow';
+      config_button.classList="logger_button btn-danger";
     } else {
       console.log('Couldnt find logger ' + logger);
     }
@@ -415,7 +415,7 @@ function reset_status_timeout() {
   document.getElementById('time_td').innerHTML = now;
   var status_time_td = document.getElementById('status_time_td');
   status_time_td.innerHTML = now;
-  status_time_td.style.backgroundColor = 'white';
+  status_time_td.classList.remove("text-danger")
   clearInterval(status_timeout_timer);
   status_timeout_timer = setInterval(flag_status_timeout,
                                      STATUS_TIMEOUT_INTERVAL);
@@ -426,14 +426,14 @@ function reset_status_timeout() {
 // from the data server. If no update in 5 seconds, change background
 // color to yellow
 function flag_server_timeout() {
-  document.getElementById('server_time_td').style.backgroundColor ='yellow';
+  document.getElementById('server_time_td').classList.add("text-danger");
 }
 function reset_server_timeout() {
   var now = date_str();
   document.getElementById('time_td').innerHTML = now;
   var status_time_td = document.getElementById('server_time_td');
   status_time_td.innerHTML = now;
-  status_time_td.style.backgroundColor = 'white';
+  status_time_td.classList.remove("text-danger")
   clearInterval(server_timeout_timer);
   server_timeout_timer = setInterval(flag_server_timeout,
                                      SERVER_TIMEOUT_INTERVAL);
