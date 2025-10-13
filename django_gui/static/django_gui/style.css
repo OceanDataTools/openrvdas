@@ -406,6 +406,11 @@ footer {
     color: var(--white) !important;
 }
 
+.btn-ghost {
+    font-size: 1rem;
+    padding: 0;
+    margin: 0;
+}
 
 .status-container {
   display: flex;

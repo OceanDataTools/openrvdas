@@ -43,7 +43,7 @@
         <form method="post" style="display:inline;" enctype="multipart/form-data">
           {% csrf_token %}
           <button name="reload_button" id="reload_button" type="submit"
-                  style="background-color:yellow">
+                  class="btn-warning">
             Definition is stale. Reload definition
           </button>
         </form>
@@ -66,99 +66,7 @@
       {% endif %}
     </div>
   </div>
-  
-  <!-- <div class="status-section" style="flex: 1; text-align: end"> -->
-    <!-- Auth info -->
-<!--     <div style="white-space: nowrap;">
-      {% if user.is_authenticated %}
-        Logged in as <b>{{ user }}</b>.
-        <a href="/accounts/logout">Log out</a>
-      {% else %}
-        <a href="/accounts/login"><b>Log in</b></a> to manage cruise mode or loggers
-      {% endif %}
-    </div>
- -->  
-    <!-- Display button -->
-<!--     <div>
-      <a class='btn btn-info' href="display/" target="_blank">Show display pages</a>
-    </div>
- -->
-  </div>
 </div>
-
-<!-- 
-{# ######################################################################## #}
-{# Show server status up top.                                               #}
-<table id='status_table'>
-  <tr>
-    <td class="time_label">Now</td>
-    <td id='time_td' class="time_str"></td>
-  </tr>
-  <tr>
-    <td class="time_label">Server</td>
-    <td id='server_time_td' class="time_str">--no updates--</td>
-  </tr>
-  <tr>
-    <td class="time_label">Status</td>
-    <td id='status_time_td' class="time_str">--no updates--</td>
-  </tr>
-</table>
-
-{# ######################################################################## #}
-
-<table>
-  <tr>
-    <td>
-      Current definition file:
-      <span id='filename'>{{ filename|default:"[none]" }}</span>
-    </td>
-  </tr>
-</table>
-
-{# Load new definition                                                      #}
-{% if user.is_authenticated %}
-<table>
-  <tr>
-    <td>
-      <span id='reload_span' style='display:none;'>
-        <form method='post' style='display:inline;'
-              enctype='multipart/form-data'>
-          {% csrf_token %}
-          <button name='reload_button' id='reload_button' type='submit'
-                   style='background-color:yellow'>
-          Definition is stale. Reload definition
-          </button>
-        </form>
-      </span>
-      <button id='load_definition_button' type='submit'
-              onclick='open_load_definition(event);'>
-        Load new definition
-      </button>
-    </td>
-  </tr>
-</table>
-{% endif %}
-
-<p>
-  {% if user.is_authenticated %}
-  Logged in as <b>{{ user }}.</b>
-  <a href='/accounts/logout'>Log out</a>
-  {% else %}
-  <a href='/accounts/login'><b>Log in</b></a> to manage cruise mode or loggers
-  {% endif %}
-</p>
-
-<table>
-  <tr>
-    <td>
-      <button id="display_window" type="submit"
-              onclick="window.open('display/', '_blank', 'location=yes,scrollbars=yes,status=yes');">
-        Show display pages
-      </button>
-    </td>
-  </tr>
-</table>
- -->
 
 {# Show this div if no cruise definition loaded #}
 <div id='empty_loggers'
@@ -168,9 +76,8 @@
     style='display:block;'
   {% endif %}
 >
-  <p>
-    <b>No cruise definition loaded</b>
-  </p>
+  <hr/>
+  <h3 style="margin-left: 0.5rem;">No cruise definition loaded</h3>
 </div>
 
 {# Show this div if a cruise definition has been loaded #}

@@ -4,8 +4,6 @@
 
 {% block content %}
 
-<script src="../static/django_gui/choose_file.html.js"></script>
-
 <title>Choose Cruise Definition File</title>
 <h1>Choose Cruise Definition File</h1>
 
@@ -57,7 +55,15 @@
     </h3>
     <div id="directory_listing">
       {% for selection, path in listing.items %}
-        <a href="#" onclick="selectFile('{{ path }}')">{{ selection }}</a><br/>
+        <button
+          id="load-target"
+          class="btn-ghost text-primary"
+          type="submit"
+          name="select_file"
+          value="{{ path }}"
+        >
+          {{ selection }}
+        </button><br/>
       {% endfor %}
     </div>
     <button class="logger_button btn-secondary" onclick="window.close();">Close</button>
