@@ -900,7 +900,7 @@ function setup_supervisor {
         SUPERVISOR_SUFFIX='ini'
         SUPERVISOR_SOCK=/opt/homebrew/var/run/supervisor.sock
         COMMENT_SOCK_OWNER=';'
-        mkdir ${SUPERVISOR_DIR}
+        mkdir -p ${SUPERVISOR_DIR}
 
     # CentOS/RHEL
     elif [ $OS_TYPE == 'CentOS' ]; then
