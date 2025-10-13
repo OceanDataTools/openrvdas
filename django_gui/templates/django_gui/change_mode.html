@@ -17,61 +17,58 @@
 
   var global_active_mode = "{{ active_mode }}";
 </script>
-<script src="../static/django_gui/edit_config.html.js"></script>
+<script src="../static/django_gui/change_mode.html.js"></script>
 <script src="../static/django_gui/stderr_log_utils.js"></script>
 <script src="../static/django_gui/websocket.js"></script>
 
-<title>logger manager</title>
-<h1>logger manager</h1>
-<hr>
- <table>
-    <tr>
-      <td>
-        {# ################################################################## #}
-        {# If user authenticated, allow to switch modes. Else just show mode  #}
-        <form method='post' style='display:inline;'
-              enctype='multipart/form-data'>
-          {% csrf_token %}
-          cruise mode:
-          <select name='select_mode' id='select_mode'
-                  onchange='highlight_select_mode()'
-                  {% if not user.is_authenticated %} disabled {% endif %} >
+<title>Logging Mode Manager</title>
+<h1>Logging Mode Manager</h1>
+<table>
+  <tr>
+    <td>
+      {# ################################################################## #}
+      {# If user authenticated, allow to switch modes. Else just show mode  #}
+      <form method='post' style='display:inline;'
+        enctype='multipart/form-data'>
+        {% csrf_token %}
+        Mode:
+        <select name='select_mode' id='select_mode'
+          onchange='highlight_select_mode()'
+          {% if not user.is_authenticated %} disabled {% endif %} >
 
-            {% for mode_option in modes %}
-            <option id="mode_{{ mode_option }}"
-                    {% if mode_option == active_mode %}
-                    selected
-                    {% endif %}>
-              {{ mode_option }}
-            </option>
-            {% endfor %}
-          </select>
-          {% if user.is_authenticated %}
-          <button type='submit'>Change mode</button>
-          {% endif %}
-          <button name="close" type="submit">Close</button>
-        </form>
-      </td>
-    </tr>
- </table>
-<hr>
-<div style="height:150px;background-color:white;min-width:0px;padding:0px;overflow-y:auto" id="logger_manager_stderr">
-</div>
+          {% for mode_option in modes %}
+          <option id="mode_{{ mode_option }}"
+                  {% if mode_option == active_mode %}
+                  selected
+                  {% endif %}>
+            {{ mode_option }}
+          </option>
+          {% endfor %}
+        </select>
+        {% if user.is_authenticated %}
+        <button class="btn-primary" type='submit'>Update</button>
+        {% endif %}
+        <button class="btn-secondary" onclick="window.close();">Close</button>
+      </form>
+    </td>
+  </tr>
+</table>
+<div class="stderr_window" style="height: 185px;" id="logger_manager_stderr"></div>
 
-<script>
-  ///////////////////////////////
-// Turn select pull-down's text background yellow when it's been changed
-var manually_selected_mode = null;
+  <script>
+    ///////////////////////////////
+  // Turn select pull-down's text background yellow when it's been changed
+  var manually_selected_mode = null;
 
-function highlight_select_mode() {
-  var mode_selector = document.getElementById('select_mode');
-  manually_selected_mode = mode_selector.options[mode_selector.selectedIndex].text;
-  var new_color = 'white';
-  if (manually_selected_mode != global_active_mode) {
-    var new_color = 'yellow';
+  function highlight_select_mode() {
+    var mode_selector = document.getElementById('select_mode');
+    manually_selected_mode = mode_selector.options[mode_selector.selectedIndex].text;
+    var new_color = 'white';
+    if (manually_selected_mode != global_active_mode) {
+      var new_color = 'yellow';
+    }
+    document.getElementById('select_mode').style.backgroundColor = new_color;
   }
-  document.getElementById('select_mode').style.backgroundColor = new_color;
-}
 
-</script>
+  </script>
 {% endblock %}

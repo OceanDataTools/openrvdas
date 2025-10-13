@@ -1,4 +1,4 @@
-from django.contrib.auth import authenticate, login
+from django.contrib import auth
 from .django_server_api import DjangoServerAPI
 from django_gui.settings import FILECHOOSER_DIRS
 from django_gui.settings import WEBSOCKET_DATA_SERVER
@@ -8,7 +8,7 @@ import sys
 
 from json import JSONDecodeError
 from os import listdir
-from os.path import dirname, realpath, isfile, isdir, abspath
+from os.path import dirname, realpath, isfile, isdir, abspath, relpath
 from yaml.scanner import ScannerError
 
 from django.shortcuts import render, redirect
@@ -25,24 +25,24 @@ from logger.utils.read_config import parse, read_config, expand_cruise_definitio
 api = None
 
 
-def login_user(request):
+def login(request):
     template_vars = {}
     if request.method == 'POST':
         username = request.POST['username']
         password = request.POST['password']
-        user = authenticate(request, username=username, password=password)
+        user = auth.authenticate(request, username=username, password=password)
         if user is not None:
-            login(request, user)
+            auth.login(request, user)
             return redirect('/')
         else:
             if not username:
-                template_vars['empty_username'] = 'Please enter username'
+                template_vars['errors'] = 'Please enter username'
             elif not password:
-                template_vars['empty_password'] = 'Please enter password'
+                template_vars['errors'] = 'Please enter password'
             elif user is None:
-                template_vars['invalid'] = 'Username and password do not match'
+                template_vars['errors'] = 'Username and password do not match'
 
-    return render(request, 'django_gui/login_user.html', template_vars)
+    return render(request, 'django_gui/login.html', template_vars)
 
 
 def log_request(request, cmd):
@@ -248,12 +248,18 @@ def choose_file(request, selection=None):
     # Internal function to create listing from dirname
     def get_dir_contents(dir_name):
         # If at root, set empty selection, otherwise, allow to pop back up a level
-        contents = {'..': '' if abspath(dir_name) in FILECHOOSER_DIRS
+        contents = {'↩️': '' if abspath(dir_name) in FILECHOOSER_DIRS
                     else abspath(dir_name + '/..')}
         for filename in listdir(dir_name):
             path = dir_name + '/' + filename
             if isdir(path):
-                filename += '/'
+                filename = '📂 ' + filename + '/'
+            elif filename.endswith(('.yaml', '.yml')):
+                # Include YAML files only
+                filename = '📄 ' + filename
+            else:
+                # Skip everything else
+                continue
             contents[filename] = abspath(path)
         return contents
 
@@ -321,8 +327,13 @@ def choose_file(request, selection=None):
 
         # If it's a directory, fetch/expand its contents into the listing
         else:
-            dir_name = selection[0]
-            listing = get_dir_contents(dir_name)
+            for base in FILECHOOSER_DIRS:
+                parent_dir = dirname(base)
+                if selection[0].startswith(parent_dir):
+                    dir_name = './' + relpath(selection[0], parent_dir)
+                    break
+            # dir_name = selection[0]
+            listing = get_dir_contents(selection[0])
 
     # If here, 'selection' is a list of files/dirs; use them as our listing
     else:
@@ -331,7 +342,7 @@ def choose_file(request, selection=None):
         if set(selection).intersection(FILECHOOSER_DIRS):
             dir_name = ''
             selection = FILECHOOSER_DIRS
-        listing = {f.split('/')[-1]: f for f in selection}
+        listing = {'📂 ' + f.split('/')[-1] + '/': f for f in selection}
 
     # Render the page
     return render(request, 'django_gui/choose_file.html',

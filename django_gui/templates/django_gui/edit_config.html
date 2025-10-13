@@ -20,42 +20,40 @@
 <script src="../static/django_gui/stderr_log_utils.js"></script>
 <script src="../static/django_gui/websocket.js"></script>
 
-<title>{{ logger_id }} configuration</title>
-<h1>{{ logger_id }} stderr</h1>
-<div style="height:150px;background-color:white;min-width:0px;padding:0px;overflow-y:auto" id="{{ logger_id }}_stderr">
-</div>
+<title>{{ logger_id }} Configuration</title>
+<h1>{{ logger_id }} Stderr</h1>
+<div class="stderr_window" style="height: 185px;" id="{{ logger_id }}_stderr"></div>
 
-<h1>configuration</h1>
-<hr>
-{% if user.is_authenticated %}
-<form method="post" enctype="multipart/form-data">
-  {% csrf_token %}
-  Select config: <select name="select_config" id="select_config"
-          onchange="update_select()">
-    </option>
-    {% for config_option in config_options %}
-    <option value="{{ config_option }}"
-    
-       {% if config_option == current_config %}
-       selected
-       {% endif %}>
-      {{ config_option }}
-      {% if config_option == default_config %}
-        [mode default]
-      {% endif %}
-      </option>
-    {% endfor %}
-    </select>
-    <button name="update" type="submit">Update</button>
-    <button name="close" type="submit">Close</button>
-  <hr>
-</form>
-{% else %}
-Current config: {{ current_config }} <br>
-  (<a href="../login"><b>Log in</b></a> to change.)
-{% endif %}
-Config definition: <div id="config_json"></div>
+<h1>Logger Configuration</h1>
+<table>
+  <tr>
+    <td>
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        Select config:
+        <select name="select_config" id="select_config"
+          onchange="update_select()"
+          {% if not user.is_authenticated %} disabled {% endif %} >
 
+          {% for config_option in config_options %}
+            <option value="{{ config_option }}"
+                    {% if config_option == current_config %}
+                    selected
+                    {% endif %}>
+              {{ config_option }}
+              {% if config_option == default_config %}
+                [mode default]
+              {% endif %}
+            </option>
+          {% endfor %}
+        </select>
+        <button class='btn-primary' name="update" type="submit">Update</button>
+        <button class='btn-secondary' name="close" type="submit">Close</button>
+      </form>
+      Config definition: <div id="config_json"></div>
+    </td>
+  </tr>
+</table>
 <link rel="stylesheet" href="../static/django_gui/json-viewer/json-viewer.css">
 <script src="../static/django_gui/json-viewer/json-viewer.js"></script>
 
@@ -89,7 +87,7 @@ function update_select() {
   if (selected_value == current_config) {
     sel.style.backgroundColor="white";
   } else {
-    sel.style.backgroundColor="yellow";
+    sel.style.backgroundColor="var(--orange)";
   }
   set_config_json(selected_value);
 }

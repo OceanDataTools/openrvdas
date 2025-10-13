@@ -28,7 +28,7 @@ urlpatterns = [
     path('api/', include('django_gui.api_views')),
 
     # Views.py
-    path('login/', views.login_user, name='login_user'),
+    path('login/', views.login, name='login'),
     path('change_mode/', views.change_mode, name='change_mode'),
     path('edit_config/<str:logger_id>', views.edit_config, name='edit_config'),
     path('choose_file/', views.choose_file, name='choose_file'),

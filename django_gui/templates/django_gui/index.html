@@ -1,37 +1,6 @@
 {% extends 'django_gui/base.html' %}
 {% load static %}
 {% block content %}
-<style>
-    .time_label {
-        background-color:gray;
-        border-style:solid;
-        border-width:1px;
-        border-color:gray;
-        text-align:right;
-        font-size:small;
-    }
-    .time_str {
-        background-color:white;
-        border-style:solid;
-        border-width:1px;
-        border-color:gray;
-        text-align:left;
-        font-size:small;
-    }
-    .button_td {
-        height:30px;
-        width:75px;
-        font-weight:bold;
-    }
-    .stderr_window {
-        height:30px;
-        width:450px;
-        background-color:white;
-        padding:0px;
-        overflow-y:auto;
-        font-size:x-small;
-    }
-</style>
 
 <script type="text/javascript">
   // Need to define for following JS scripts. For now, count on the
@@ -45,23 +14,59 @@
 <title>Cruise Management</title>
 <h1><span id='cruise_id'></span> Cruise Management</h1>
 
-{# ######################################################################## #}
-{# Show server status up top.                                               #}
-<table>
-  <tr>
-   <td class="time_label">now</td>
-    <td class="time_str"><span id='time_td'></span></td>
-  </tr>
-  <tr>
-    <td class="time_label">server</td>
-    <td class="time_str"><span id='server_time_td'>--no updates--</span>
-    </td>
-  </tr>
-  <tr>
-    <td  class="time_label">status</td>
-    <td class="time_str"><span id='status_time_td'>--no updates--</span></td>
-  </tr>
-</table>
+<div class="status-container">
+  <!-- Server Status -->
+   <div class="status-section">
+    <table id="status-table">
+      <tr>
+        <td class="time_label">Now</td>
+        <td id="time_td" class="time_str"></td>
+      </tr>
+      <tr>
+        <td class="time_label">Server</td>
+        <td id="server_time_td" class="time_str">--no updates--</td>
+      </tr>
+      <tr>
+        <td class="time_label">Status</td>
+        <td id="status_time_td" class="time_str">--no updates--</td>
+      </tr>
+    </table>
+  </div>
+  <div class="status-section" style="flex: 1;">
+    <!-- Current definition -->
+    <div><strong>Current definition file:</strong>
+      <span id="filename">{{ filename|default:"[none]" }}</span>
+      <br/>
+      <!-- Definition load buttons -->
+      {% if user.is_authenticated %}
+      <div id="reload_span" style="display:none;">
+        <form method="post" style="display:inline;" enctype="multipart/form-data">
+          {% csrf_token %}
+          <button name="reload_button" id="reload_button" type="submit"
+                  class="btn-warning">
+            Definition is stale. Reload definition
+          </button>
+        </form>
+      </div>
+      <button class="btn-info" id="load_definition_button" type="submit"
+              onclick="open_load_definition(event);">
+        Load new definition
+      </button>
+      {% endif %}
+    </div>
+    <!-- Auth info -->
+    <div style="white-space: nowrap; text-align: end;">
+      {% if user.is_authenticated %}
+        <form method="post" action="{% url 'logout' %}">
+          {% csrf_token %}
+          Logged in as <b>{{ user }}</b> <button type="submit">↗️</button>
+        </form>
+      {% else %}
+        <a href="/login"><b>Login</b></a>
+      {% endif %}
+    </div>
+  </div>
+</div>
 
 {# Show this div if no cruise definition loaded #}
 <div id='empty_loggers'
@@ -71,9 +76,8 @@
     style='display:block;'
   {% endif %}
 >
-  <p>
-    <b>No cruise definition loaded</b>
-  </p>
+  <hr/>
+  <h3 style="margin-left: 0.5rem;">No cruise definition loaded</h3>
 </div>
 
 {# Show this div if a cruise definition has been loaded #}
@@ -86,29 +90,35 @@
 >
   {# ######################################################################## #}
   {# Draw the logger manager current mode, and loggers.                       #}
-  <hr>
   <table id='logger_table'>
     <tbody id='logger_table_body'>
       {# Cruise mode and logger manager stderr here #}
-      <tr><th>cruise mode</th><th> logger manager stderr</th></tr>
+      <tr><th>Mode</th><th>Logger Manager Stderr</th></tr>
       <tr>
         <td class="button_td" id="logger_manager_mode_td">
-          <button id="logger_manager_mode_button" type="submit"
-                  onclick="open_change_mode(event);"
-                  {{ active_mode|default:"unknown" }}
+          <button
+            id="logger_manager_mode_button"
+            class="logger_button btn-primary"
+            type="submit"
+            onclick="open_change_mode(event);"
+          >
+          {{ active_mode|default:"unknown" }}
           </button>
         </td>
         <td ><div class="stderr_window" id="logger_manager_stderr"></div></td>
       </tr>
 
       {# Loggers and logger stderr here #}
-      <tr><th>logger</th><th>stderr</th></tr>
+      <tr><th>Loggers</th><th>Logger Stderr</th></tr>
       {% for logger_name, logger_config in loggers.items %}
       <tr id="{{ logger_name }}_row">
         <td class="button_td" id="{{ logger_name }}_config_td">
-          <button id="{{ logger_name }}_config_button" type="submit"
-                  onclick="open_edit_config(event, '{{logger_name }}');"
-                  >
+          <button
+            id="{{ logger_name }}_config_button"
+            class="logger_button"
+            type="submit"
+            onclick="open_edit_config(event, '{{logger_name }}');"
+          >
             {{ logger_config.active }}
           </button>
         </td>
@@ -117,61 +127,6 @@
       {% endfor %}
     </tbody>
   </table>
-
-  <hr>
-  <table>
-    <tr>
-      <td>
-        Current definition file:
-        <span id='filename'>{{ filename|default:"[none]" }}</span>
-      </td>
-    </tr>
-  </table>
 </div>
 {# End of 'we have a cruise definition' div #}
-
-{# ######################################################################## #}
-{# Load new definition                                                      #}
-{% if user.is_authenticated %}
-<table>
-  <tr>
-    <td>
-      <span id='reload_span' style='display:none;'>
-        <form method='post' style='display:inline;'
-              enctype='multipart/form-data'>
-          {% csrf_token %}
-          <button name='reload_button' id='reload_button' type='submit'
-                   style='background-color:yellow'>
-          Definition is stale. Reload definition
-          </button>
-        </form>
-      </span>
-      <button id='load_definition_button' type='submit'
-              onclick='open_load_definition(event);'>
-        Load new definition
-      </button>
-    </td>
-  </tr>
-</table>
-{% endif %}
-
-<p>
-  {% if user.is_authenticated %}
-  Logged in as <b>{{ user }}.</b>
-  <a href='/accounts/logout'>Log out</a>
-  {% else %}
-  <a href='/accounts/login'><b>Log in</b></a> to manage cruise mode or loggers
-  {% endif %}
-</p>
-
-<table>
-  <tr>
-    <td>
-      <button id="display_window" type="submit"
-              onclick="window.open('display/', '_blank', 'location=yes,scrollbars=yes,status=yes');">
-        Show display pages
-      </button>
-    </td>
-  </tr>
-</table>
 {% endblock content %}
