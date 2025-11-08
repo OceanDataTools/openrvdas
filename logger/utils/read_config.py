@@ -440,8 +440,7 @@ def substitute_variables(config: ConfigValue,
 
     if isinstance(config, dict):
         return {
-            substitute_variables(k, variables):
-            substitute_variables(v, variables)
+            substitute_variables(k, variables): substitute_variables(v, variables)
             for k, v in config.items()
         }
 
@@ -459,11 +458,8 @@ def substitute_variables(config: ConfigValue,
                 return variables[var_name]
             elif default_value is not None:
                 # Recursively resolve nested default
-                resolved_default = substitute_variables(default_value,
-                                                        variables)
-                return (_convert_type(resolved_default)
-                        if isinstance(resolved_default, str)
-                        else resolved_default)
+                resolved_default = substitute_variables(default_value, variables)
+                return _convert_type(resolved_default) if isinstance(resolved_default, str) else resolved_default
             else:
                 # Pass through unresolved variable
                 return f"<<{var_name}>>"
@@ -474,11 +470,8 @@ def substitute_variables(config: ConfigValue,
             if var_name in variables:
                 return str(variables[var_name])
             elif default_value is not None:
-                resolved_default = substitute_variables(default_value,
-                                                        variables)
-                return str(_convert_type(resolved_default)
-                           if isinstance(resolved_default, str)
-                           else resolved_default)
+                resolved_default = substitute_variables(default_value, variables)
+                return str(_convert_type(resolved_default) if isinstance(resolved_default, str) else resolved_default)
             else:
                 return f"<<{var_name}>>"
 
