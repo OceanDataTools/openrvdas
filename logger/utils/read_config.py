@@ -6,6 +6,7 @@ import os
 import glob
 import logging
 import re
+import json
 from typing import Dict, List, Any, Union
 
 try:
@@ -383,45 +384,79 @@ def substitute_variables(config: ConfigValue, variables: Dict[str, Any]) -> Conf
 
     Returns:
         Configuration with all variables substituted
+
+    Recursively substitute template variables in a configuration structure.
+
+    Supports:
+      - <<var>>                → replaces with variable value
+      - <<var|default>>        → uses default if var missing
+      - nested defaults        → <<var|<<fallback|default>>>>
+      - type conversion        → <<timeout|10>> → int(10)
+      - pass-through unresolved placeholders
     """
+
+    def _convert_type(value: str) -> Any:
+        """
+        Convert a string default value to a native Python type when possible.
+        """
+        value = value.strip()
+
+        # Try to parse JSON literals (true/false/null/numbers)
+        try:
+            return json.loads(value)
+        except json.JSONDecodeError:
+            pass
+
+        # Try numeric conversion if JSON parsing failed
+        if value.isdigit():
+            return int(value)
+        try:
+            return float(value)
+        except ValueError:
+            pass
+
+        # Fallback to plain string
+        return value
+
     if isinstance(config, dict):
-        # Create a new dict to hold the result with substituted keys and values
-        result = {}
-        for k, v in config.items():
-            # Substitute variables in keys if they are strings
-            if isinstance(k, str):
-                new_key = substitute_variables(k, variables)
-            else:
-                new_key = k
-            # Substitute variables in values
-            new_value = substitute_variables(v, variables)
-            result[new_key] = new_value
-        return result
+        return {
+            substitute_variables(k, variables): substitute_variables(v, variables)
+            for k, v in config.items()
+        }
+
     elif isinstance(config, list):
         return [substitute_variables(item, variables) for item in config]
-    elif isinstance(config, str):
-        # Use regex to find and replace all <<variable>> patterns
-        pattern = r'<<([^>]+)>>'
 
-        # Check if the string is ONLY a variable pattern
+    elif isinstance(config, str):
+        pattern = r'<<([^>|]+)(?:\|([^>]+))?>>'
+
+        # Full-variable pattern match
         match = re.fullmatch(pattern, config)
         if match:
-            # It's a standalone variable, preserve its type
-            var_name = match.group(1)
+            var_name, default_value = match.groups()
             if var_name in variables:
-                return variables[var_name]  # Return the original value with its type
+                return variables[var_name]
+            elif default_value is not None:
+                # Recursively resolve nested default
+                resolved_default = substitute_variables(default_value, variables)
+                return _convert_type(resolved_default) if isinstance(resolved_default, str) else resolved_default
             else:
-                raise ValueError(f"Variable '{var_name}' not found in provided variables")
-        else:
-            # It's a string with embedded variables, do string substitution
-            def replace_match(match):
-                var_name = match.group(1)
-                if var_name in variables:
-                    return str(variables[var_name])
-                else:
-                    raise ValueError(f"Variable '{var_name}' not found in provided variables")
+                # Pass through unresolved variable
+                return f"<<{var_name}>>"
 
-            return re.sub(pattern, replace_match, config)
+        # Embedded substitution within a larger string
+        def replace_match(m):
+            var_name, default_value = m.groups()
+            if var_name in variables:
+                return str(variables[var_name])
+            elif default_value is not None:
+                resolved_default = substitute_variables(default_value, variables)
+                return str(_convert_type(resolved_default) if isinstance(resolved_default, str) else resolved_default)
+            else:
+                return f"<<{var_name}>>"
+
+        return re.sub(pattern, replace_match, config)
+
     else:
         return config
 
