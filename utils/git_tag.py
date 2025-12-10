@@ -1,37 +1,85 @@
 import os
 import logging
-
-try:
-    from git import Repo, InvalidGitRepositoryError, GitCommandError
-    GIT_PYTHON_ENABLED = True
-except ModuleNotFoundError:
-    GIT_PYTHON_ENABLED = False
+import subprocess
 
 
-def get_current_git_tag(path="."):
+def get_git_info(path="."):
+    """
+    Returns a dict:
+        tag:         exact tag or `git describe --tags --always`
+        remote_url:  URL of 'origin' or first remote
+        branch:      current branch (None if detached)
+        commit:      HEAD commit hash
+    """
 
-    if not GIT_PYTHON_ENABLED:
-        raise ModuleNotFoundError('get_current_git_tag(): GitPython is not installed. Please '
-                                  'try "pip install GitPython" prior to use.')
+    def _run_git(args, cwd):
+        """Run `git <args>` and return stripped stdout, or raise CalledProcessError."""
+        return subprocess.check_output(
+            ["git"] + args,
+            cwd=cwd,
+            stderr=subprocess.STDOUT,
+            text=True
+        ).strip()
 
+    info = {"tag": None, "remote_url": None, "branch": None, "commit": None}
+
+    abs_path = os.path.abspath(path)
+
+    # --- Ensure inside a git repo ---
     try:
-        repo = Repo(os.path.abspath(path), search_parent_directories=True)
-        commit = repo.commit("HEAD")
+        _run_git(["rev-parse", "--is-inside-work-tree"], abs_path)
+    except Exception:
+        logging.error("Not a git repository: %s", abs_path)
+        return info
 
-        # Try exact tag first
-        tags = [tag for tag in repo.tags if tag.commit == commit]
-        if tags:
-            return tags[0].name
+    # --- Commit hash ---
+    try:
+        info["commit"] = _run_git(["rev-parse", "HEAD"], abs_path)
+    except Exception as e:
+        logging.error("Error getting commit hash: %s", e)
 
-        # Otherwise mimic: git describe --tags --always
-        try:
-            return repo.git.describe('--tags', '--always').strip()
-        except GitCommandError:
-            return None
+    # --- Branch name (safe) ---
+    try:
+        branch = _run_git(["rev-parse", "--abbrev-ref", "HEAD"], abs_path)
+        info["branch"] = branch if branch != "HEAD" else None  # detached HEAD
+    except Exception:
+        info["branch"] = None
 
-    except InvalidGitRepositoryError:
-        logging.error("%s is Not a git repository", path)
-        return None
-    except Exception as err:
-        logging.error("Error: %s", err)
-        return None
+    # --- Exact tag (`git tag --points-at HEAD`) ---
+    try:
+        tag_output = _run_git(["tag", "--points-at", "HEAD"], abs_path)
+        if tag_output:
+            info["tag"] = tag_output.splitlines()[0].strip()
+        else:
+            # Fallback: git describe
+            try:
+                info["tag"] = _run_git(["describe", "--tags", "--always"], abs_path)
+            except Exception:
+                info["tag"] = None
+    except Exception:
+        info["tag"] = None
+
+    # --- Remote URL (origin preferred) ---
+    try:
+        remotes = _run_git(["remote"], abs_path).splitlines()
+        if remotes:
+            if "origin" in remotes:
+                info["remote_url"] = _run_git(
+                    ["remote", "get-url", "origin"], abs_path
+                )
+            else:
+                # Use first remote
+                info["remote_url"] = _run_git(
+                    ["remote", "get-url", remotes[0]], abs_path
+                )
+    except Exception:
+        info["remote_url"] = None
+
+    return info
+
+
+# -------------------------------------------------------------------------------------
+# Stand-alone execution
+# -------------------------------------------------------------------------------------
+if __name__ == "__main__":
+    print(get_git_info())
