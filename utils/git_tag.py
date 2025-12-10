@@ -1,36 +1,37 @@
-import subprocess
-import sys
+import os
+import logging
+
+try:
+    from git import Repo, InvalidGitRepositoryError, GitCommandError
+    GIT_PYTHON_ENABLED = True
+except ModuleNotFoundError:
+    GIT_PYTHON_ENABLED = False
 
 
-def get_current_git_tag():
-    """
-    Get the current git tag. Returns the exact tag if HEAD is on a tag,
-    otherwise returns a descriptive string like 'v1.2.3-5-gabcdef'.
-    """
+def get_current_git_tag(path="."):
+
+    if not GIT_PYTHON_ENABLED:
+        raise ModuleNotFoundError('get_current_git_tag(): GitPython is not installed. Please '
+                                  'try "pip install GitPython" prior to use.')
+
     try:
-        # Try to get exact tag at current commit
-        result = subprocess.run(
-            ['git', 'describe', '--exact-match', '--tags'],
-            capture_output=True,
-            text=True,
-            check=False
-        )
+        repo = Repo(os.path.abspath(path), search_parent_directories=True)
+        commit = repo.commit("HEAD")
 
-        if result.returncode == 0:
-            return result.stdout.strip()
+        # Try exact tag first
+        tags = [tag for tag in repo.tags if tag.commit == commit]
+        if tags:
+            return tags[0].name
 
-        # If no exact tag, get descriptive tag
-        result = subprocess.run(
-            ['git', 'describe', '--tags', '--always'],
-            capture_output=True,
-            text=True,
-            check=True
-        )
-        return result.stdout.strip()
+        # Otherwise mimic: git describe --tags --always
+        try:
+            return repo.git.describe('--tags', '--always').strip()
+        except GitCommandError:
+            return None
 
-    except subprocess.CalledProcessError as e:
-        print(f"Error getting git tag: {e}", file=sys.stderr)
+    except InvalidGitRepositoryError:
+        logging.error("%s is Not a git repository", path)
         return None
-    except FileNotFoundError:
-        print("Git command not found. Is git installed?", file=sys.stderr)
+    except Exception as err:
+        logging.error("Error: %s", err)
         return None

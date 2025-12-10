@@ -16,6 +16,7 @@ psutil
 setproctitle
 influxdb_client
 pyModbusTCP
+GitPython
 
 # For Geofencing
 geopandas
