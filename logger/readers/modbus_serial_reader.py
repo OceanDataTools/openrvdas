@@ -7,7 +7,6 @@ import os
 
 try:
     from pymodbus.client import ModbusSerialClient
-    from pymodbus.exceptions import ModbusIOException
     MODBUS_MODULE_FOUND = True
 except ModuleNotFoundError:
     MODBUS_MODULE_FOUND = False
@@ -48,10 +47,10 @@ class ModBusSerialReader(Reader):
                 '   pip install "pymodbus[serial]"'
             )
 
-        # If registers is None, create a default 10-register block
         if registers is None:
+            # Default: 10-register block starting at 0
             self.registers = [(0, 10)]
-        # If registers is a string, parse as before
+
         elif isinstance(registers, str):
             self.registers = []
             for reg in registers.split(","):
@@ -62,17 +61,24 @@ class ModBusSerialReader(Reader):
                         start = 0
                     if end == "":
                         raise ValueError(f'Invalid range "{reg}": open-ended upper bound not allowed.')
+
                     start = int(start)
                     end = int(end)
+
                     if end < start:
                         raise ValueError(f"Bad register range {reg}: end < start")
+
                     length = end - start + 1
                     self.registers.append((start, length))
+
                 else:
-                    self.registers.append((int(reg), 1))
-        # If registers is already a list of tuples/blocks (for testing)
+                    start = int(reg)
+                    self.registers.append((start, 1))
+
         elif isinstance(registers, list):
+            # Already parsed (used by unit tests)
             self.registers = registers
+
         else:
             raise TypeError("registers must be None, a string, or a list of blocks")
 
@@ -80,7 +86,6 @@ class ModBusSerialReader(Reader):
         self.unit = unit
         self.interval = interval
 
-        # Create RTU client
         self.client = ModbusSerialClient(
             port=port,
             baudrate=baudrate,
@@ -88,16 +93,16 @@ class ModBusSerialReader(Reader):
             stopbits=stopbits,
             bytesize=bytesize,
             timeout=timeout or 2,
-            # framer='rtu'
         )
 
     ###############################################################################
     def read(self):
         """Read registers and return a text record."""
+
+        total_regs = sum(count for _, count in self.registers)
         if not self.client.connect():
             logging.error("ModBusSerialReader: unable to open serial port")
-            # Return a record of "nan" for all registers
-            return self.sep.join(["nan"] * sum(count for _, count in self.registers))
+            return self.sep.join(["nan"] * total_regs)
 
         results = []
 
@@ -110,30 +115,30 @@ class ModBusSerialReader(Reader):
                         unit=self.unit
                     )
 
-                    if response is None or getattr(response, 'isError', lambda: False)():
-                        # simulate timeout: fill block with "nan"
+                    if response is None or getattr(response, "isError", lambda: False)():
+                        results.extend(["nan"] * count)
+                        continue
+
+                    values = getattr(response, "registers", None)
+
+                    if not values:
                         results.extend(["nan"] * count)
                     else:
-                        values = getattr(response, 'registers', [])
-                        # If values missing, fill with "nan"
-                        if not values:
-                            results.extend(["nan"] * count)
-                        else:
-                            results.extend(str(v) for v in values)
+                        results.extend(str(v) for v in values)
+
                 except Exception as err:
-                    logging.error(f"ModBusSerialReader read error for registers {start}-{start+count-1}: {err}")
+                    logging.error(
+                        f"ModBusSerialReader read error for registers {start}-{start + count - 1}: {err}"
+                    )
                     results.extend(["nan"] * count)
 
         finally:
             self.client.close()
 
-        # Combine results and apply encoding
         record = self.sep.join(results)
         if isinstance(record, bytes):
             record = self._decode_bytes(record)
 
-        # Wait for next poll
         sleep(self.interval)
 
         return record
-
