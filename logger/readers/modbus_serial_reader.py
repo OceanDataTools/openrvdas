@@ -2,8 +2,7 @@
 
 import logging
 import sys
-from time import sleep
-import os
+from threading import Lock
 
 try:
     from pymodbus.client import ModbusSerialClient
@@ -21,6 +20,7 @@ from logger.utils.formats import Text  # noqa
 class ModBusSerialReader(Reader):
     """
     Read holding registers from a ModBus RTU serial device.
+    Keeps the port open between reads and auto-reconnects if needed.
     """
 
     def __init__(self,
@@ -44,47 +44,45 @@ class ModBusSerialReader(Reader):
         if not MODBUS_MODULE_FOUND:
             raise RuntimeError(
                 "Modbus functionality not available. Install pymodbus: "
-                '   pip install "pymodbus[serial]"'
+                'pip install "pymodbus[serial]"'
             )
 
         if registers is None:
-            # Default: 10-register block starting at 0
             self.registers = [(0, 10)]
 
         elif isinstance(registers, str):
             self.registers = []
             for reg in registers.split(","):
                 reg = reg.strip()
+
                 if ":" in reg:
                     start, end = reg.split(":")
-                    if start == "":
-                        start = 0
+                    start = int(start) if start else 0
                     if end == "":
-                        raise ValueError(f'Invalid range "{reg}": open-ended upper bound not allowed.')
+                        raise ValueError(f"Invalid range '{reg}': missing upper bound")
 
-                    start = int(start)
                     end = int(end)
-
                     if end < start:
                         raise ValueError(f"Bad register range {reg}: end < start")
 
-                    length = end - start + 1
-                    self.registers.append((start, length))
+                    self.registers.append((start, end - start + 1))
 
                 else:
-                    start = int(reg)
-                    self.registers.append((start, 1))
+                    self.registers.append((int(reg), 1))
 
         elif isinstance(registers, list):
-            # Already parsed (used by unit tests)
             self.registers = registers
 
         else:
-            raise TypeError("registers must be None, a string, or a list of blocks")
+            raise TypeError("registers must be None, a string, or a list")
 
         self.sep = sep
         self.unit = unit
         self.interval = interval
+        self._connected = False
+
+        # Thread-safe access
+        self._lock = Lock()
 
         self.client = ModbusSerialClient(
             port=port,
@@ -95,50 +93,82 @@ class ModBusSerialReader(Reader):
             timeout=timeout or 2,
         )
 
-    ###############################################################################
+    ############################
+    def _client_connected(self):
+        """Connect if not already connected. Returns True if OK."""
+        if self._connected:
+            return True
+
+        try:
+            self._connected = self.client.connect()
+        except Exception as exc:
+            logging.error(f"ModBusSerialReader: connect() failed: {exc}")
+            self._connected = False
+
+        if not self._connected:
+            logging.error("ModBusSerialReader: unable to open serial port")
+
+        return self._connected
+
+    ############################
     def read(self):
         """Read registers and return a text record."""
 
         total_regs = sum(count for _, count in self.registers)
-        if not self.client.connect():
-            logging.error("ModBusSerialReader: unable to open serial port")
-            return self.sep.join(["nan"] * total_regs)
+        nan_record = self.sep.join(["nan"] * total_regs)
 
-        results = []
+        with self._lock:
+            if not self._client_connected():
+                return nan_record
 
-        try:
+            results = []
+
             for start, count in self.registers:
                 try:
-                    response = self.client.read_holding_registers(
+                    resp = self.client.read_holding_registers(
                         address=start,
                         count=count,
                         unit=self.unit
                     )
 
-                    if response is None or getattr(response, "isError", lambda: False)():
+                    if resp is None or getattr(resp, "isError", lambda: True)():
                         results.extend(["nan"] * count)
                         continue
 
-                    values = getattr(response, "registers", None)
-
+                    values = getattr(resp, "registers", None)
                     if not values:
                         results.extend(["nan"] * count)
                     else:
                         results.extend(str(v) for v in values)
 
-                except Exception as err:
+                except Exception as exc:
                     logging.error(
-                        f"ModBusSerialReader read error for registers {start}-{start + count - 1}: {err}"
+                        f"ModBusSerialReader: error reading registers {start}-{start+count-1}: {exc}"
                     )
                     results.extend(["nan"] * count)
+                    self._connected = False
 
-        finally:
-            self.client.close()
+            record = self.sep.join(results)
 
-        record = self.sep.join(results)
-        if isinstance(record, bytes):
-            record = self._decode_bytes(record)
+            if isinstance(record, bytes):
+                record = self._decode_bytes(record)
 
-        sleep(self.interval)
+            return record
 
-        return record
+    ############################
+    def stop(self):
+        """Explicitly close the serial port."""
+        with self._lock:
+            try:
+                self.client.close()
+            except Exception:
+                pass
+            self._connected = False
+
+    ############################
+    def __del__(self):
+        """Destructor — ensures port is closed safely."""
+        try:
+            self.stop()
+        except Exception:
+            pass
