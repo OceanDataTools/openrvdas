@@ -6,6 +6,7 @@ from threading import Lock
 
 try:
     from pymodbus.client import ModbusSerialClient
+    from pymodbus import ModbusException
     MODBUS_MODULE_FOUND = True
 except ModuleNotFoundError:
     MODBUS_MODULE_FOUND = False
@@ -30,7 +31,7 @@ class ModBusSerialReader(Reader):
                  parity="N",
                  stopbits=1,
                  bytesize=8,
-                 unit=1,
+                 slave=1,
                  interval=10,
                  sep=" ",
                  encoding="utf-8",
@@ -77,7 +78,7 @@ class ModBusSerialReader(Reader):
             raise TypeError("registers must be None, a string, or a list")
 
         self.sep = sep
-        self.unit = unit
+        self.slave = slave
         self.interval = interval
         self._connected = False
 
@@ -101,8 +102,11 @@ class ModBusSerialReader(Reader):
 
         try:
             self._connected = self.client.connect()
+        except ModbusException as exc:
+            logging.error(f"ModbusException: connect() failed: {exc}")
+            self._connected = False
         except Exception as exc:
-            logging.error(f"ModBusSerialReader: connect() failed: {exc}")
+            logging.error(f"Exception: connect() failed: {exc}")
             self._connected = False
 
         if not self._connected:
@@ -128,7 +132,7 @@ class ModBusSerialReader(Reader):
                     resp = self.client.read_holding_registers(
                         address=start,
                         count=count,
-                        unit=self.unit
+                        slave=self.slave
                     )
 
                     if resp is None or getattr(resp, "isError", lambda: True)():
@@ -141,12 +145,18 @@ class ModBusSerialReader(Reader):
                     else:
                         results.extend(str(v) for v in values)
 
-                except Exception as exc:
+                except ModbusException as exc:
                     logging.error(
-                        f"ModBusSerialReader: error reading registers {start}-{start+count-1}: {exc}"
+                        f"ModbusException: error reading registers {start}-{start+count-1}: {exc}"
                     )
                     results.extend(["nan"] * count)
-                    self._connected = False
+                    self.stop()
+                except Exception as exc:
+                    logging.error(
+                        f"Exception: error reading registers {start}-{start+count-1}: {exc}"
+                    )
+                    results.extend(["nan"] * count)
+                    self.stop()
 
             record = self.sep.join(results)
 
