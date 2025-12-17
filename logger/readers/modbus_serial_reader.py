@@ -2,7 +2,6 @@
 
 import logging
 import sys
-import json
 import yaml
 from threading import Lock
 
@@ -17,6 +16,7 @@ from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.readers.reader import Reader  # noqa
 from logger.utils.formats import Text  # noqa
+
 
 ###############################################################################
 class ModBusSerialReader(Reader):
@@ -285,7 +285,10 @@ class ModBusSerialReader(Reader):
 
                 results.append(record)
 
-            return self.eol.join([f"slave {record['id']}:{self.sep}{self.sep.join(record['values'])}" for record in results])
+            return self.eol.join([
+                                f"slave {record['id']}:{self.sep}{self.sep.join(record['values'])}"
+                                for record in results
+                            ])
 
     ############################
     def stop(self):

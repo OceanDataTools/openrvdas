@@ -5,7 +5,6 @@ import sys
 import unittest
 import tempfile
 import yaml
-import json
 from unittest.mock import MagicMock, patch
 
 sys.path.append('.')  # ensure modules are importable
@@ -18,6 +17,7 @@ SAMPLE_REGISTERS = [
     [400, 500, 600],
     [700, 800, 900]
 ]
+
 
 SAMPLE_TIMEOUT_REGISTERS = [
     [10, 20, 30],
@@ -86,7 +86,7 @@ class TestModBusSerialReader(unittest.TestCase):
     @patch("logger.readers.modbus_serial_reader.ModbusSerialClient")
     def test_read_register_blocks(self, mock_client_cls):
 
-        responses = [ self.make_response(1, x) for x in SAMPLE_REGISTERS ]
+        responses = [self.make_response(1, x) for x in SAMPLE_REGISTERS]
 
         mock_client_cls.return_value = self.make_mock_client({
             "read_holding_registers": responses
@@ -94,22 +94,28 @@ class TestModBusSerialReader(unittest.TestCase):
 
         reader = ModBusSerialReader(registers="0:2,3:5,6:8", port="/dev/ttyUSB0", interval=0.01)
         result = reader.read()
-        expected = f"slave 1: {' '.join([str(x) if x != 'nan' else x for x in self.flatten_blocks(SAMPLE_REGISTERS)])}"
+        value_str = [str(x) if x is not None else 'nan'
+                     for x in self.flatten_blocks(SAMPLE_REGISTERS)]
+        expected = f"slave 1: {' '.join([str(x) if x != 'nan' else x for x in value_str])}"
         self.assertEqual(expected, result)
 
     ###########################################################################
     @patch("logger.readers.modbus_serial_reader.ModbusSerialClient")
     def test_read_with_timeout(self, mock_client_cls):
 
-        responses = [ self.make_response(1, x) for x in SAMPLE_TIMEOUT_REGISTERS ]
+        responses = [self.make_response(1, x) for x in SAMPLE_TIMEOUT_REGISTERS]
 
         mock_client_cls.return_value = self.make_mock_client({
             "read_holding_registers": responses
         })
 
-        reader = ModBusSerialReader(registers="0:2,3:5,6:8,9:11", port="/dev/ttyUSB0", interval=0.01)
+        reader = ModBusSerialReader(registers="0:2,3:5,6:8,9:11",
+                                    port="/dev/ttyUSB0",
+                                    interval=0.01)
         result = reader.read()
-        expected = f"slave 1: {' '.join([str(x) if x != None else 'nan' for x in self.flatten_blocks(SAMPLE_TIMEOUT_REGISTERS)])}"
+        value_str = [str(x) if x is not None else 'nan'
+                     for x in self.flatten_blocks(SAMPLE_TIMEOUT_REGISTERS)]
+        expected = f"slave 1: {' '.join(value_str)}"
         self.assertEqual(expected, result)
 
     ###########################################################################
@@ -178,7 +184,7 @@ class TestModBusSerialReader(unittest.TestCase):
         }
 
         responses = [
-            self.make_response(1,[1, 2]),
+            self.make_response(1, [1, 2]),
             self.make_response(2, [100, 200])
         ]
 
