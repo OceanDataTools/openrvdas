@@ -119,6 +119,7 @@ class ModBusSerialReader(Reader):
                  bytesize=8,
                  scan_file=None,
                  slave=1,
+                 function='holding_registers',
                  interval=10,
                  sep=" ",
                  eol="\n",
@@ -151,7 +152,7 @@ class ModBusSerialReader(Reader):
             # Legacy single-slave behavior
             self.polls = [{
                 "slave": slave,
-                "function": "holding_registers",
+                "function": function,
                 "registers": self._parse_registers(registers)
             }]
 
@@ -258,6 +259,7 @@ class ModBusSerialReader(Reader):
                 }
 
                 if not func_name:
+                    logging.error(f"Invalid function slave={slave} function={poll["function"]}")
                     total = sum(c for _, c in poll["registers"])
                     record["values"].extend(["nan"] * total)
                     results.append(record)
