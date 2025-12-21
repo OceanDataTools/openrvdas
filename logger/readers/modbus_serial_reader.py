@@ -24,95 +24,17 @@ class ModBusSerialReader(Reader):
     """
     Read data from Modbus RTU devices over a serial connection.
 
-    This reader polls one or more Modbus slaves at a fixed interval, reading
-    registers, coils, or inputs and returning the results as formatted text
-    records. The serial port is kept open between reads and automatically
-    reconnected if communication fails.
-
-    The reader supports two operating modes:
-
-    1. Legacy single-slave mode
-       -------------------------
-       If ``scan_file`` is not provided, the reader polls a single Modbus slave
-       using the ``slave`` and ``registers`` arguments.
-
-       Example:
-           ModBusSerialReader(
-               port="/dev/ttyUSB0",
-               slave=1,
-               registers="0:9,20:21",
-               interval=5
-           )
-
-       This will read:
-           - registers 0–9 (10 registers)
-           - registers 20–21 (2 registers)
-       from slave ID 1 every 5 seconds.
-
-    2. Scan file (multi-slave) mode
-       ------------------------------
-       If ``scan_file`` is provided, polling behavior is defined by a YAML file
-       describing one or more poll groups. Each poll group specifies:
-           - slave ID
-           - Modbus function
-           - register ranges
-
-       Example scan file:
-           polls:
-             - slave: 1
-               function: holding_registers
-               registers: "0:9,20:21"
-
-             - slave: 2
-               function: input_registers
-               registers:
-                 - [0, 4]
-                 - [10, 2]
-
-       Each call to ``read()`` iterates through all poll groups in order and
-       returns one output record per slave.
-
-    Supported Modbus functions:
-        - "holding_registers"
-        - "input_registers"
-        - "coils"
-        - "discrete_inputs"
-
-    Register specification:
-        Registers may be defined as:
-            - A comma-separated string (e.g. "0:9,20")
-            - A list of (start, count) tuples
-
-    Output format:
-        Each call to ``read()`` returns a string containing one or more
-        lines, one per slave, formatted as:
-
-            slave <id>: <value1> <value2> <value3> ...
-
-        Example:
-            slave 1: 100 101 102
-            slave 2: 55 56 57
-
-        If a read fails or times out, the corresponding values are returned
-        as "nan" placeholders.
-
-    Thread safety:
-        Access to the serial port is protected by an internal lock, making
-        this reader safe to use in threaded environments.
-
-    Lifecycle behavior:
-        - The serial port is opened lazily on the first read
-        - The connection is reused between reads
-        - Automatic reconnection occurs on failure
-        - The port may be explicitly closed by calling ``stop()``
-        - The destructor ensures the port is closed on cleanup
-
-    Raises:
-        RuntimeError:
-            If pymodbus is not installed or Modbus functionality is unavailable.
+    Supports:
+      - single-slave (legacy) mode
+      - multi-slave / multi-function scan files
+      - holding/input registers, coils, discrete inputs
+      - text or raw-bytes output
+      - partial failure tolerance
     """
+
+    ############################
     def __init__(self,
-                 registers,
+                 registers=None,
                  port="/dev/ttyUSB0",
                  baudrate=9600,
                  parity="N",
@@ -147,9 +69,9 @@ class ModBusSerialReader(Reader):
         self.polls = []
         if scan_file:
             self._load_scan_file(scan_file)
-
         else:
-            # Legacy single-slave behavior
+            if registers is None:
+                raise ValueError("registers required when scan_file not provided")
             self.polls = [{
                 "slave": slave,
                 "function": function,
@@ -236,7 +158,7 @@ class ModBusSerialReader(Reader):
             self._connected = False
 
         if not self._connected:
-            logging.error("ModBusSerialReader: unable to open serial port")
+            logging.warning("ModBusSerialReader: unable to open serial port")
 
         return self._connected
 
@@ -263,13 +185,13 @@ class ModBusSerialReader(Reader):
     def _format_record(self, readings: list[list[int | bool]]) -> bytes | str:
         """
         Flatten nested register/coil values into a single record.
-        - If encoding=None:
+
+        - encoding=None:
             - Registers → 16-bit unsigned big-endian
             - Coils/discrete_inputs → packed bits
             - None values → 0
         - Otherwise: convert to text and encode with _encode_str, using self.sep
         """
-        # Flatten all readings
         flat_values = [val for block in readings if block for val in block]
 
         if self.encoding is None:
@@ -278,7 +200,6 @@ class ModBusSerialReader(Reader):
 
             first_val = next((v for v in flat_values if v is not None), 0)
 
-            # Coils/discrete inputs: bool or 0/1
             if isinstance(first_val, (bool, int)) and all(v in (0, 1, None, True, False) for v in flat_values):
                 byte_vals = []
                 current_byte = 0
@@ -292,22 +213,17 @@ class ModBusSerialReader(Reader):
                     byte_vals.append(current_byte)
                 return bytes(byte_vals)
             else:
-                # Registers
                 return b"".join(int(val or 0).to_bytes(2, byteorder="big", signed=False) for val in flat_values)
 
-        # Text output (use self.sep, guaranteed not None)
         text_values = [str(val) if val is not None else "nan" for val in flat_values]
-        text_record = self.sep.join(text_values)
-        return self._encode_str(text_record)
+        return self._encode_str(self.sep.join(text_values))
 
     ############################
     def read(self):
         """Read all configured polls and return a list of formatted records per slave.
 
         Returns:
-            list[bytes|str] | None:
-                - None if the connection could not be established
-                - List of raw bytes (encoding=None) or encoded strings per slave otherwise
+            list[bytes|str|None]: None for polls that cannot be read; otherwise formatted output.
         """
         with self._lock:
             now = time.monotonic()
@@ -316,7 +232,9 @@ class ModBusSerialReader(Reader):
             start_time = time.monotonic()
 
             if not self._client_connected():
-                return None
+                records = [None for _ in self.polls]
+                self._next_read_time = start_time + self.interval
+                return records
 
             records = []
 
@@ -334,18 +252,17 @@ class ModBusSerialReader(Reader):
                     for start, count in poll["registers"]:
                         try:
                             resp = func(address=start, count=count, unit=slave)
-                            if resp is None or resp.isError():
+                            if resp is None or getattr(resp, "isError", lambda: False)():
                                 logging.warning("Failed to read slave=%d addr=%d:%d", slave, start, count)
                                 readings.append([None] * count)
                             else:
                                 values = getattr(resp, "registers", getattr(resp, "bits", None))
                                 readings.append(values or [None] * count)
                         except (ModbusException, OSError, ConnectionError, ValueError, AttributeError) as exc:
-                            logging.error("Modbus read error slave=%d addr=%d:%d: %s", slave, start, count, exc)
+                            logging.warning("Modbus read error slave=%d addr=%d:%d: %s", slave, start, count, exc)
                             readings.append([None] * count)
                             self._connected = False
 
-                # Flatten and format readings for this poll
                 record = self._format_record(readings)
                 if self.encoding is not None and isinstance(record, bytes):
                     record = record.decode(self.encoding, errors=self.encoding_errors)
