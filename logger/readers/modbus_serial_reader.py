@@ -271,7 +271,7 @@ class ModBusSerialReader(Reader):
                 }
 
                 if not func_name:
-                    logging.error(f"Invalid function slave={slave} function={poll['function']}")
+                    logging.warning(f"Invalid function slave={slave} function={poll['function']}")
                     total = sum(c for _, c in poll["registers"])
                     record["values"].extend(["nan"] * total)
                     results.append(record)

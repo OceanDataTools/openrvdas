@@ -269,8 +269,9 @@ if __name__ == "__main__":
 
     LOGGING_FORMAT = '%(asctime)-15s %(filename)s:%(lineno)d %(message)s'
     logging.basicConfig(format=LOGGING_FORMAT)
+
     LOG_LEVELS = {0: logging.WARNING, 1: logging.INFO, 2: logging.DEBUG}
     args.verbosity = min(args.verbosity, max(LOG_LEVELS))
     logging.getLogger().setLevel(LOG_LEVELS[args.verbosity])
 
-    unittest.main()
+    unittest.main(warnings='ignore')
