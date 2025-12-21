@@ -112,7 +112,7 @@ class ModBusSerialReader(Reader):
             If pymodbus is not installed or Modbus functionality is unavailable.
     """
     def __init__(self,
-                 registers=None,
+                 registers,
                  port="/dev/ttyUSB0",
                  baudrate=9600,
                  parity="N",
@@ -123,7 +123,6 @@ class ModBusSerialReader(Reader):
                  function='holding_registers',
                  interval=10,
                  sep=" ",
-                 eol="\n",
                  encoding="utf-8",
                  encoding_errors="ignore",
                  timeout=None):
@@ -157,14 +156,10 @@ class ModBusSerialReader(Reader):
                 "registers": self._parse_registers(registers)
             }]
 
-        self.sep = sep
-        self.eol = eol
+        self.sep = sep if encoding is not None else None
         self.interval = interval
         self._next_read_time = 0.0
-
         self._connected = False
-
-        # Thread-safe access
         self._lock = Lock()
 
         self.client = ModbusSerialClient(
@@ -175,6 +170,55 @@ class ModBusSerialReader(Reader):
             bytesize=bytesize,
             timeout=timeout or 2,
         )
+
+    ############################
+    def _parse_register_spec(self, spec):
+        """Parse a single register spec into (start, count)."""
+        if ":" in spec:
+            start, end = spec.split(":", 1)
+            if end == "":
+                raise ValueError(f"Ambiguous register range: '{spec}'")
+            start = int(start) if start else 0
+            end = int(end)
+            if start < 0 or end < start:
+                raise ValueError(f"Invalid register range: '{spec}'")
+            return (start, end - start + 1)
+        addr = int(spec)
+        if addr < 0:
+            raise ValueError(f"Invalid register address: '{spec}'")
+        return (addr, 1)
+
+    ############################
+    def _validate_blocks(self, blocks):
+        validated = []
+        for block in blocks:
+            if not (
+                isinstance(block, tuple)
+                and len(block) == 2
+                and all(isinstance(x, int) and x >= 0 for x in block)
+            ):
+                raise ValueError(f"Invalid register block: {block}")
+            validated.append(block)
+        return validated
+
+    ############################
+    def _parse_registers(self, registers):
+        """Parse comma-separated string or list into [(start, count), ...] blocks."""
+        if registers is None:
+            return [(0, 10)]
+        if isinstance(registers, list):
+            return self._validate_blocks(registers)
+        if not isinstance(registers, str):
+            raise TypeError("registers must be str, list, or None")
+
+        blocks = []
+        for spec in registers.split(","):
+            spec = spec.strip()
+            if spec:
+                blocks.append(self._parse_register_spec(spec))
+        if not blocks:
+            raise ValueError("No valid registers specified")
+        return blocks
 
     ############################
     def _client_connected(self):
@@ -215,96 +259,101 @@ class ModBusSerialReader(Reader):
                 "registers": self._parse_registers(registers)
             })
 
-    def _parse_registers(self, registers):
-        if registers is None:
-            return [(0, 10)]
+    ############################
+    def _format_record(self, readings: list[list[int | bool]]) -> bytes | str:
+        """
+        Flatten nested register/coil values into a single record.
+        - If encoding=None:
+            - Registers → 16-bit unsigned big-endian
+            - Coils/discrete_inputs → packed bits
+            - None values → 0
+        - Otherwise: convert to text and encode with _encode_str, using self.sep
+        """
+        # Flatten all readings
+        flat_values = [val for block in readings if block for val in block]
 
-        if isinstance(registers, list):
-            return registers
+        if self.encoding is None:
+            if not flat_values:
+                return b""
 
-        blocks = []
-        for reg in registers.split(","):
-            reg = reg.strip()
-            if ":" in reg:
-                start, end = reg.split(":")
-                start = int(start) if start else 0
-                end = int(end)
-                if end < start:
-                    raise ValueError(f"Bad register range {reg}")
-                blocks.append((start, end - start + 1))
+            first_val = next((v for v in flat_values if v is not None), 0)
+
+            # Coils/discrete inputs: bool or 0/1
+            if isinstance(first_val, (bool, int)) and all(v in (0, 1, None, True, False) for v in flat_values):
+                byte_vals = []
+                current_byte = 0
+                for i, bit in enumerate(flat_values):
+                    bit_val = 1 if bit else 0
+                    current_byte |= bit_val << (i % 8)
+                    if (i % 8) == 7:
+                        byte_vals.append(current_byte)
+                        current_byte = 0
+                if len(flat_values) % 8 != 0:
+                    byte_vals.append(current_byte)
+                return bytes(byte_vals)
             else:
-                blocks.append((int(reg), 1))
-        return blocks
+                # Registers
+                return b"".join(int(val or 0).to_bytes(2, byteorder="big", signed=False) for val in flat_values)
+
+        # Text output (use self.sep, guaranteed not None)
+        text_values = [str(val) if val is not None else "nan" for val in flat_values]
+        text_record = self.sep.join(text_values)
+        return self._encode_str(text_record)
 
     ############################
     def read(self):
-        total_regs = sum(
-            count
-            for poll in self.polls
-            for _, count in poll["registers"]
-        )
+        """Read all configured polls and return a list of formatted records per slave.
 
-        nan_record = self.sep.join(["nan"] * total_regs)
-
+        Returns:
+            list[bytes|str] | None:
+                - None if the connection could not be established
+                - List of raw bytes (encoding=None) or encoded strings per slave otherwise
+        """
         with self._lock:
-
             now = time.monotonic()
-
-            # Enforce polling interval BEFORE the request
             if now < self._next_read_time:
                 time.sleep(self._next_read_time - now)
-
-            start = time.monotonic()
+            start_time = time.monotonic()
 
             if not self._client_connected():
-                return nan_record
+                return None
 
-            results = []
+            records = []
 
             for poll in self.polls:
                 slave = poll["slave"]
                 func_name = self._FUNCTION_MAP.get(poll["function"])
 
-                record = {
-                    "id": slave,
-                    "values": []
-                }
-
                 if not func_name:
-                    logging.warning(f"Invalid function slave={slave} function={poll['function']}")
-                    total = sum(c for _, c in poll["registers"])
-                    record["values"].extend(["nan"] * total)
-                    results.append(record)
-                    continue
-
-                func = getattr(self.client, func_name)
-
-                for start, count in poll["registers"]:
-                    try:
-                        resp = func(address=start, count=count, slave=slave)
-
-                        if resp is None or resp.isError():
-                            record["values"].extend(["nan"] * count)
-                        else:
-                            values = getattr(resp, "registers", None)
-                            if not values:
-                                record["values"].extend(["nan"] * count)
+                    logging.warning("Invalid function for slave=%s: %s", slave, poll["function"])
+                    total_count = sum(count for _, count in poll["registers"])
+                    readings = [[None] * total_count]
+                else:
+                    func = getattr(self.client, func_name)
+                    readings = []
+                    for start, count in poll["registers"]:
+                        try:
+                            resp = func(address=start, count=count, unit=slave)
+                            if resp is None or resp.isError():
+                                logging.warning("Failed to read slave=%d addr=%d:%d", slave, start, count)
+                                readings.append([None] * count)
                             else:
-                                record["values"].extend(str(v) for v in values)
+                                values = getattr(resp, "registers", getattr(resp, "bits", None))
+                                readings.append(values or [None] * count)
+                        except (ModbusException, OSError, ConnectionError, ValueError, AttributeError) as exc:
+                            logging.error("Modbus read error slave=%d addr=%d:%d: %s", slave, start, count, exc)
+                            readings.append([None] * count)
+                            self._connected = False
 
-                    except Exception as exc:
-                        logging.error(f"Modbus error slave={slave} addr={start}: {exc}")
-                        record.values.extend(["nan"] * count)
-                        self._connected = False
+                # Flatten and format readings for this poll
+                record = self._format_record(readings)
+                if self.encoding is not None and isinstance(record, bytes):
+                    record = record.decode(self.encoding, errors=self.encoding_errors)
+                    record = self._encode_str(f"slave {slave}:{self.sep}{record}")
+                records.append(record)
 
-                results.append(record)
-
-            self._next_read_time = start + self.interval
-
-            return self.eol.join([
-                                f"slave {record['id']}:{self.sep}{self.sep.join(record['values'])}"
-                                for record in results
-                            ])
+            self._next_read_time = start_time + self.interval
+            return records
 
     ############################
     def stop(self):
