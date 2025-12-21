@@ -25,47 +25,48 @@ class HTTPReader(Reader):  # noqa: R0913
 
     ############################
     def __init__(self, url: str, method: str = 'get',  # noqa: R0902
-                 headers: dict | None = None,payload: dict | None = None,
-                 polling_rate: float = 5.0, timeout: float = 2.0,
+                 headers: dict | None = None, payload: dict | None = None,
+                 interval: float = 5.0, timeout: float = 2.0,
                  encoding='utf-8', encoding_errors='ignore'):
         """
         ```
-        url      Network url to read, in protocol://host:port format (e.g.
-                     'https://example.com' 'http://example.com:8000').
+        url - Network url to read, in protocol://host:port format (e.g.
+              'https://example.com' 'http://example.com:8000').
 
-        method  type of http request
+        method - type of http request
 
-        headers  Headers to set for the request
+        headers - Headers to set for the request
 
-        payload  Payload to set for the request. Only applicable for POST/PATCH requests
+        payload - Payload to set for the request. Only applicable for
+                  POST/PATCH requests
 
-        polling_rate Seconds between update requests to MOXA Device
+        interval - Seconds between update requests to MOXA Device
 
-        timeout      Max time to wait for device to respond.
+        timeout - Max time to wait for device to respond.
 
-        encoding - 'utf-8' by default. If empty or None, do not attempt any decoding
-                and return raw bytes. Other possible encodings are listed in online
-                documentation here:
+        encoding - 'utf-8' by default. If empty or None, do not attempt any
+                decoding and return raw bytes. Other possible encodings are
+                listed in online documentation here:
                 https://docs.python.org/3/library/codecs.html#standard-encodings
 
-        encoding_errors - 'ignore' by default. Other error strategies are 'strict',
-                'replace', and 'backslashreplace', described here:
+        encoding_errors - 'ignore' by default. Other error strategies are
+                'strict', 'replace', and 'backslashreplace', described here:
                 https://docs.python.org/3/howto/unicode.html#encodings
         ```
         """
-        super().__init__(output_format=Text,
-                         encoding=encoding,
+        super().__init__(output_format=Text, encoding=encoding,
                          encoding_errors=encoding_errors)
 
         self.url = self._validate_url(url)
         self.method = self._validate_method(method)
         self.headers = headers or {}
         self.payload = payload
-        self.polling_rate = polling_rate
+        self.interval = interval
         self.timeout = timeout
 
         self._read_lock = threading.Lock()
         self._verified = False
+        self._next_read_time = 0.0
 
     ############################
     def _verify_url(self):
@@ -145,25 +146,29 @@ class HTTPReader(Reader):  # noqa: R0913
     ############################
     def read(self) -> str | bytes:
         """
-        Poll the HTTP endpoint and return one reading.
-        This method blocks until the next polling interval.
+        Read from the HTTP endpoint. Returns immediately after the HTTP request
+        completes, while enforcing a minimum interval between requests.
         """
 
-        start = time.monotonic()
+        with self._read_lock:
+            now = time.monotonic()
 
-        try:
-            with self._read_lock:
+            # Enforce polling interval BEFORE the request
+            if now < self._next_read_time:
+                time.sleep(self._next_read_time - now)
+
+            start = time.monotonic()
+
+            try:
                 self._verify_url()
                 res = self._make_request()
                 record = self._parse_response(res)
-        except requests.RequestException as exc:
-            self._verified = False
-            logging.warning("HTTP read failed: %s %s", self.method, self.url)
-            raise RuntimeError(f"HTTP read failed: {exc}") from exc
+            except requests.RequestException as exc:
+                self._verified = False
+                logging.warning("HTTP read failed: %s %s", self.method, self.url)
+                raise RuntimeError(f"HTTP read failed: {exc}") from exc
+            finally:
+                # Schedule the next allowed read time
+                self._next_read_time = start + self.interval
 
-        elapsed = time.monotonic() - start
-        sleep_time = self.polling_rate - elapsed
-        if sleep_time > 0:
-            time.sleep(sleep_time)
-
-        return record
+            return record

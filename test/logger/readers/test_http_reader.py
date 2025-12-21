@@ -35,7 +35,7 @@ class TestHTTPReader(unittest.TestCase):
 
     def test_get_request_returns_text(self):
         reader = HTTPReader(url='http://example.com', method='get',
-                            encoding='utf-8', polling_rate=0.1)
+                            encoding='utf-8', interval=0.1)
         result = reader.read()
         self.assertEqual(result, 'Hello, HTTP!')
         self.mock_get.assert_called_once_with(
@@ -48,7 +48,7 @@ class TestHTTPReader(unittest.TestCase):
     def test_post_request_with_payload(self):
         payload = {'key': 'value'}
         reader = HTTPReader(url='http://example.com', method='post',
-                            payload=payload, encoding='utf-8', polling_rate=0.1)
+                            payload=payload, encoding='utf-8', interval=0.1)
         result = reader.read()
         self.assertEqual(result, 'POST OK')
         self.mock_post.assert_called_once_with(
@@ -60,7 +60,7 @@ class TestHTTPReader(unittest.TestCase):
         )
 
     def test_read_returns_bytes_when_encoding_none(self):
-        reader = HTTPReader(url='http://example.com', method='get', encoding=None, polling_rate=0.1)
+        reader = HTTPReader(url='http://example.com', method='get', encoding=None, interval=0.1)
         result = reader.read()
         self.assertEqual(result, b'Hello, HTTP!')
         self.mock_get.assert_called_once()
@@ -68,7 +68,7 @@ class TestHTTPReader(unittest.TestCase):
     def test_headers_are_passed_through(self):
         headers = {'Authorization': 'Bearer token'}
         reader = HTTPReader(url='http://example.com', method='get',
-                            headers=headers, polling_rate=0.1)
+                            headers=headers, interval=0.1)
         result = reader.read()
         self.assertEqual(result, 'Hello, HTTP!')
         self.mock_get.assert_called_once_with(
@@ -78,13 +78,14 @@ class TestHTTPReader(unittest.TestCase):
             allow_redirects=True
         )
 
-    def test_read_respects_polling_rate(self):
+    def test_read_respects_interval(self):
         reader = HTTPReader(url='http://example.com', method='get', encoding='utf-8',
-                            polling_rate=0.2)
+                            interval=0.2)
         start = time.monotonic()
         reader.read()
+        reader.read()
         elapsed = time.monotonic() - start
-        self.assertTrue(elapsed >= 0.2)
+        self.assertGreaterEqual(elapsed, 0.2)
 
     def test_invalid_method_raises_value_error(self):
         with self.assertRaises(ValueError):
