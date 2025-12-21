@@ -3,6 +3,7 @@
 import logging
 import sys
 import yaml
+import time
 from threading import Lock
 
 try:
@@ -159,6 +160,8 @@ class ModBusSerialReader(Reader):
         self.sep = sep
         self.eol = eol
         self.interval = interval
+        self._next_read_time = 0.0
+
         self._connected = False
 
         # Thread-safe access
@@ -244,6 +247,15 @@ class ModBusSerialReader(Reader):
         nan_record = self.sep.join(["nan"] * total_regs)
 
         with self._lock:
+
+            now = time.monotonic()
+
+            # Enforce polling interval BEFORE the request
+            if now < self._next_read_time:
+                time.sleep(self._next_read_time - now)
+
+            start = time.monotonic()
+
             if not self._client_connected():
                 return nan_record
 
@@ -259,7 +271,7 @@ class ModBusSerialReader(Reader):
                 }
 
                 if not func_name:
-                    logging.error(f"Invalid function slave={slave} function={poll["function"]}")
+                    logging.error(f"Invalid function slave={slave} function={poll['function']}")
                     total = sum(c for _, c in poll["registers"])
                     record["values"].extend(["nan"] * total)
                     results.append(record)
@@ -286,6 +298,8 @@ class ModBusSerialReader(Reader):
                         self._connected = False
 
                 results.append(record)
+
+            self._next_read_time = start + self.interval
 
             return self.eol.join([
                                 f"slave {record['id']}:{self.sep}{self.sep.join(record['values'])}"
