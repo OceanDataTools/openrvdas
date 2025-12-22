@@ -1,4 +1,81 @@
 #!/usr/bin/env python3
+"""
+```
+HTTPReader
+==========
+
+This module defines the :class:`HTTPReader`, a polling reader for retrieving
+data from HTTP or HTTPS endpoints at a fixed interval.
+
+The reader performs periodic HTTP GET or POST requests to a configured URL,
+optionally including headers and a JSON payload. Responses are returned either
+as decoded text or raw bytes, depending on the encoding configuration.
+
+Key features
+------------
+- Supports HTTP GET and POST methods
+- Configurable request headers and JSON payloads
+- Enforces a minimum polling interval between requests
+- Thread-safe access using an internal lock
+- Optional URL verification on first read
+- Supports decoded text output or raw byte output
+- Integrates with the OpenRVDAS Reader framework
+
+Typical usage
+-------------
+Example usage with a GET request:
+
+    reader = HTTPReader(
+        url="https://example.com/data",
+        interval=10
+    )
+
+    record = reader.read()
+
+Example usage with a POST request and JSON payload:
+
+    reader = HTTPReader(
+        url="https://example.com/api",
+        method="post",
+        headers={"Authorization": "Bearer TOKEN"},
+        payload={"sensor": "temp"},
+        interval=5
+    )
+
+    record = reader.read()
+
+Output behavior
+---------------
+- If ``encoding`` is set (default: ``'utf-8'``), responses are decoded into
+  strings using the specified encoding and error-handling strategy.
+- If ``encoding`` is ``None`` or empty, raw response bytes are returned.
+- On failure, ``read()`` returns ``None``.
+
+Error handling
+--------------
+- On the first read, the reader verifies that the configured URL is reachable.
+  URL verification fails if:
+  - The server returns HTTP 404 (resource not found), or
+  - The server returns any HTTP status code >= 500, or
+  - A network or request error occurs (e.g., timeout, DNS failure).
+- HTTP 401, 403, and 405 responses are treated as valid during verification,
+  since they indicate a reachable endpoint.
+- If URL verification fails, ``read()`` returns ``None``.
+- During normal operation, HTTP 4xx or 5xx responses and network errors are
+  treated as read failures, reset URL verification, and cause ``read()``
+  to return ``None``.
+
+Thread safety
+-------------
+All calls to ``read()`` are protected by an internal lock, making this reader
+safe for use in multi-threaded environments.
+
+Dependencies
+------------
+- requests
+```
+"""
+
 import threading
 import sys
 import time
@@ -8,11 +85,8 @@ import requests
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(dirname(realpath(__file__))))))
 from logger.readers.reader import Reader  # noqa: E402
-from logger.utils.formats import Text  # noqa: E402
-
 
 ################################################################################
-# Read to the specified file. If filename is empty, read to stdout.
 class HTTPReader(Reader):  # noqa: R0913
     """
     Read data from a URL at a set interval.
@@ -38,9 +112,9 @@ class HTTPReader(Reader):  # noqa: R0913
         headers - Headers to set for the request
 
         payload - Payload to set for the request. Only applicable for
-                  POST/PATCH requests
+                  POST requests
 
-        interval - Seconds between update requests to MOXA Device
+        interval - Seconds between update requests, must be >=0
 
         timeout - Max time to wait for device to respond.
 
@@ -54,8 +128,11 @@ class HTTPReader(Reader):  # noqa: R0913
                 https://docs.python.org/3/howto/unicode.html#encodings
         ```
         """
-        super().__init__(output_format=Text, encoding=encoding,
+        super().__init__(encoding=encoding,
                          encoding_errors=encoding_errors)
+
+        if interval < 0:
+            raise ValueError('Interval must be greater or equal to zero')
 
         self.url = self._validate_url(url)
         self.method = self._validate_method(method)
@@ -74,6 +151,12 @@ class HTTPReader(Reader):  # noqa: R0913
         if self._verified:
             return
 
+        def _check_response(res):
+        if res.status_code == 404 or res.status_code >= 500:
+            raise ValueError(
+                f"invalid url: {self.url}; return code: {res.status_code}"
+            )
+
         try:
             res = requests.head(
                 self.url,
@@ -81,26 +164,25 @@ class HTTPReader(Reader):  # noqa: R0913
                 timeout=self.timeout
             )
 
-            if res.status_code < 400:
-                self._verified = True
-                return
+            _check_response(res)
+            self._verified = True
+            return
 
+        except requests.RequestException as exc:
             # Some servers block or mishandle HEAD
-            if res.status_code in (401, 403, 405):
+            try:
                 res = requests.get(
                     self.url,
                     allow_redirects=True,
                     stream=True,   # do not download body
                     timeout=self.timeout
                 )
-                if res.status_code < 400:
-                    self._verified = True
-                    return
-
-            raise ValueError(f"invalid url={self.url}")
-
-        except requests.RequestException:
-            raise ValueError(f"invalid url={self.url}")
+                _check_response(res)
+                self._verified = True
+                return
+   
+            except requests.RequestException as exc:
+                raise ValueError(f"invalid url: {self.url}, {exc}")
 
     ############################
     def _validate_url(self, url: str) -> str:
@@ -144,7 +226,7 @@ class HTTPReader(Reader):  # noqa: R0913
         return response.content
 
     ############################
-    def read(self) -> str | bytes:
+    def read(self) -> str | bytes | None:
         """
         Read from the HTTP endpoint. Returns immediately after the HTTP request
         completes, while enforcing a minimum interval between requests.
@@ -163,10 +245,10 @@ class HTTPReader(Reader):  # noqa: R0913
                 self._verify_url()
                 res = self._make_request()
                 record = self._parse_response(res)
-            except requests.RequestException as exc:
+            except (requests.RequestException, ValueError) as exc:
                 self._verified = False
-                logging.warning("HTTP read failed: %s %s", self.method, self.url)
-                raise RuntimeError(f"HTTP read failed: {exc}") from exc
+                logging.warning("HTTP read failed: %s %s: %s", self.method, self.url, exc)
+                record = None
             finally:
                 # Schedule the next allowed read time
                 self._next_read_time = start + self.interval
