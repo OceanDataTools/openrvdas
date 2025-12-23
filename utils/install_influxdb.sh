@@ -1,5 +1,4 @@
 #!/bin/bash -e
-
 ################################################################################
 #
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -1050,6 +1049,21 @@ EOF
 }
 
 ###########################################################################
+print_hdr() {
+  ## Universal header function, script reads itself up to the first
+  ## blank line, stripping out the shabang at the top and the first
+  ## comment symbol on each line.
+  ## Entire header should be commented out.
+  echo
+  ## Want to preserve whitespace so set IFS to ""
+  while IFS='' read -r LINE; do
+    case ${LINE} in
+      \#!*) continue                    ;; ## Strip out shebang
+        "") echo "" ; break             ;; ## Stop if blank line
+         *) printf '%s\n' "${LINE/\#/}" ;; ## Print everything else
+    esac
+  done < "$0"
+  }
 
 ###########################################################################
 ###########################################################################
@@ -1060,26 +1074,8 @@ EOF
 ################################################################################
 # Display deprecation warning and prompt user
 ################################################################################
-echo ""
-echo "================================================================================"
-echo "                           DEPRECATION WARNING"
-echo "================================================================================"
-echo ""
-echo "This script is DEPRECATED and may not work correctly with current versions"
-echo "of InfluxDB, Grafana, and Telegraf."
-echo ""
-echo "We strongly recommend manual installation using official documentation:"
-echo ""
-echo "  - InfluxDB: https://www.influxdata.com/products/influxdb/"
-echo "  - Grafana:  https://grafana.com/grafana/download"
-echo "  - Telegraf: https://www.influxdata.com/time-series-platform/telegraf/"
-echo ""
-echo "For detailed guidance on manual installation and configuration with OpenRVDAS:"
-echo ""
-echo "  https://www.oceandatatools.org/openrvdas-docs/grafana_displays/"
-echo ""
-echo "================================================================================"
-echo ""
+print_hdr
+
 read -p "Do you still want to proceed with this deprecated script? (yes/no) " PROCEED
 PROCEED=${PROCEED:-no}
 
