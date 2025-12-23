@@ -16,7 +16,6 @@ except ModuleNotFoundError:
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.readers.reader import Reader  # noqa
-from logger.utils.formats import Text  # noqa
 
 
 ################################################################################
@@ -53,8 +52,7 @@ class ModBusTCPReader(Reader):
                  encoding="utf-8",
                  encoding_errors="ignore"):
 
-        super().__init__(output_format=Text,
-                         encoding=encoding,
+        super().__init__(encoding=encoding,
                          encoding_errors=encoding_errors)
 
         if not MODBUS_MODULE_FOUND:
