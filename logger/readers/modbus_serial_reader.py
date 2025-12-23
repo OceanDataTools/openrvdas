@@ -82,6 +82,9 @@ class ModBusSerialReader(Reader):
         self.interval = interval
         self._next_read_time = 0.0
         self._connected = False
+        self._reconnect_delay = 1.0
+        self._reconnect_delay_max = 30.0
+        self._next_connect_time = 0.0
         self._lock = Lock()
 
         self.client = ModbusSerialClient(
@@ -91,6 +94,27 @@ class ModBusSerialReader(Reader):
             stopbits=stopbits,
             bytesize=bytesize,
             timeout=timeout or 2,
+        )
+
+    ############################
+    def _reset_client(self):
+        """Hard-reset of the serial client."""
+        try:
+            self.client.close()
+        except Exception:
+            pass
+
+        self._connected = False
+
+        now = time.monotonic()
+        self._next_connect_time = now + self._reconnect_delay
+        self._reconnect_delay = min(
+            self._reconnect_delay * 2,
+            self._reconnect_delay_max
+        )
+        logging.info(
+            "Next Modbus reconnect attempt in %.1f seconds",
+            self._reconnect_delay
         )
 
     ############################
@@ -143,22 +167,33 @@ class ModBusSerialReader(Reader):
         return blocks
 
     ############################
-    def _client_connected(self):
+    def _client_connected(self) -> bool:
         """Connect if not already connected. Returns True if OK."""
         if self._connected:
             return True
+
+        now = time.monotonic()
+        if now < self._next_connect_time:
+            return False
 
         try:
             self._connected = self.client.connect()
         except ModbusException as exc:
             logging.error(f"ModbusException: connect() failed: {exc}")
-            self._connected = False
+            self._reset_client()
+            return False
         except Exception as exc:
             logging.error(f"Exception: connect() failed: {exc}")
-            self._connected = False
+            self._reset_client()
+            return False
 
         if not self._connected:
-            logging.warning("ModBusSerialReader: unable to open serial port")
+            logging.error("ModBusSerialReader: unable to open serial port")
+            self._reset_client()
+            return False
+
+        self._reconnect_delay = 1.0
+        self._next_connect_time = 0.0
 
         return self._connected
 
@@ -182,41 +217,85 @@ class ModBusSerialReader(Reader):
             })
 
     ############################
-    def _format_record(self, readings: list[list[int | bool]]) -> bytes | str:
+    def _format_record(self, readings: list[list[int | bool | None]], function: str) -> bytes | str:
         """
         Flatten nested register/coil values into a single record.
 
-        - encoding=None:
-            - Registers → 16-bit unsigned big-endian
-            - Coils/discrete_inputs → packed bits
-            - None values → 0
-        - Otherwise: convert to text and encode with _encode_str, using self.sep
-        """
-        flat_values = [val for block in readings if block for val in block]
+        Parameters
+        ----------
+        readings : list[list[int | bool | None]]
+            Nested lists of values returned from Modbus reads.
 
+        function : str
+            Modbus function type. Determines formatting behavior.
+            Expected values:
+              - "holding_registers"
+              - "input_registers"
+              - "coils"
+              - "discrete_inputs"
+
+        Behavior
+        --------
+        - encoding is None:
+            - Registers → 16-bit unsigned big-endian
+            - Coils/discrete_inputs → packed bits (LSB-first)
+            - None values → 0
+        - Otherwise convert to text and encode with _encode_str, using self.sep
+        """
+
+        # ------------------------------------------------------------------
+        # Flatten readings
+        # ------------------------------------------------------------------
+        flat_values: list[int | bool | None] = []
+        for block in readings:
+            if block:
+                flat_values.extend(block)
+
+        is_coils = function in ("coils", "discrete_inputs")
+
+        # ------------------------------------------------------------------
+        # RAW (binary) MODE
+        # ------------------------------------------------------------------
         if self.encoding is None:
             if not flat_values:
                 return b""
 
-            first_val = next((v for v in flat_values if v is not None), 0)
-
-            if isinstance(first_val, (bool, int)) and all(v in (0, 1, None, True, False) for v in flat_values):
+            if is_coils:
+                # Pack bits LSB-first, per Modbus spec
                 byte_vals = []
                 current_byte = 0
-                for i, bit in enumerate(flat_values):
+                bit_index = 0
+
+                for bit in flat_values:
                     bit_val = 1 if bit else 0
-                    current_byte |= bit_val << (i % 8)
-                    if (i % 8) == 7:
+                    current_byte |= bit_val << bit_index
+                    bit_index += 1
+
+                    if bit_index == 8:
                         byte_vals.append(current_byte)
                         current_byte = 0
-                if len(flat_values) % 8 != 0:
-                    byte_vals.append(current_byte)
-                return bytes(byte_vals)
-            else:
-                return b"".join(int(val or 0).to_bytes(2, byteorder="big", signed=False) for val in flat_values)
+                        bit_index = 0
 
-        text_values = [str(val) if val is not None else "nan" for val in flat_values]
+                if bit_index:
+                    byte_vals.append(current_byte)
+
+                return bytes(byte_vals)
+
+            # Registers: 16-bit unsigned big-endian
+            return b"".join(
+                int(val or 0).to_bytes(2, byteorder="big", signed=False)
+                for val in flat_values
+            )
+
+        # ------------------------------------------------------------------
+        # TEXT MODE
+        # ------------------------------------------------------------------
+        text_values = [
+            str(val) if val is not None else "nan"
+            for val in flat_values
+        ]
         return self._encode_str(self.sep.join(text_values))
+
 
     ############################
     def read(self):
@@ -232,9 +311,7 @@ class ModBusSerialReader(Reader):
             start_time = time.monotonic()
 
             if not self._client_connected():
-                records = [None for _ in self.polls]
-                self._next_read_time = start_time + self.interval
-                return records
+                return None
 
             records = []
 
@@ -261,9 +338,10 @@ class ModBusSerialReader(Reader):
                         except (ModbusException, OSError, ConnectionError, ValueError, AttributeError) as exc:
                             logging.warning("Modbus read error slave=%d addr=%d:%d: %s", slave, start, count, exc)
                             readings.append([None] * count)
-                            self._connected = False
+                            self._reset_client()
+                            break
 
-                record = self._format_record(readings)
+                record = self._format_record(readings, poll["function"])
                 if self.encoding is not None and isinstance(record, bytes):
                     record = record.decode(self.encoding, errors=self.encoding_errors)
                     record = self._encode_str(f"slave {slave}:{self.sep}{record}")
