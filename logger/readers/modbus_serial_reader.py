@@ -76,7 +76,7 @@ class ModBusSerialReader(Reader):
                  scan_file=None,
                  slave=1,
                  function='holding_registers',
-                 interval=10,
+                 interval=1.0,
                  sep=" ",
                  encoding="utf-8",
                  encoding_errors="ignore",
@@ -107,7 +107,7 @@ class ModBusSerialReader(Reader):
                    'input_registers', 'coils', or 'discrete_inputs'.
                    Ignored if scan_file is provided.
 
-        interval - Seconds between consecutive reads. Must be >= 0.
+        interval - Seconds between consecutive reads. Must be >= 0.1.
 
         sep - Separator string used when encoding output as text. Ignored
               if encoding is None.
@@ -120,7 +120,7 @@ class ModBusSerialReader(Reader):
                           'backslashreplace'.
 
         timeout - Max time in seconds to wait for serial response. Defaults
-                  to 2 seconds if None.
+                  to 2 seconds if None. Minimum timeout is 1s.
         ```
         """
 
@@ -141,6 +141,13 @@ class ModBusSerialReader(Reader):
             "discrete_inputs": "read_discrete_inputs",
         }
 
+        if interval < 0.1:
+            raise ValueError('Interval must be greater or equal to 0.1 seconds (10Hz)')
+
+        timeout = timeout or 2.0
+        if timeout < 1.0:
+            raise ValueError('Timeout must be greater or equal to 1 seconds')
+
         self.polls = []
         if scan_file:
             self._load_scan_file(scan_file)
@@ -157,7 +164,7 @@ class ModBusSerialReader(Reader):
         self.interval = interval
         self._next_read_time = 0.0
         self._connected = False
-        self._reconnect_delay = 1.0
+        self._reconnect_delay = timeout
         self._reconnect_delay_max = 30.0
         self._next_connect_time = 0.0
         self._lock = Lock()
@@ -168,7 +175,7 @@ class ModBusSerialReader(Reader):
             parity=parity,
             stopbits=stopbits,
             bytesize=bytesize,
-            timeout=timeout or 2,
+            timeout=timeout,
         )
 
     ############################
