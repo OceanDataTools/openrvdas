@@ -1,4 +1,44 @@
 #!/usr/bin/env python3
+"""
+''
+ModBusSerialReader
+==================
+
+This module provides a thread-safe reader for polling Modbus RTU devices
+over a serial connection. It supports single-slave and multi-slave setups,
+multiple Modbus function types, and flexible output formats (binary or text).
+
+Key Features
+------------
+- Reads holding registers, input registers, coils, and discrete inputs.
+- Supports configuration via direct register specification or YAML scan file.
+- Partial failure tolerance: failed polls return placeholder values without
+  stopping other reads.
+- Exponential backoff for serial connection retries (1s → 30s max).
+- Thread-safe access via internal Lock.
+- Output can be raw bytes (binary) or encoded text with customizable separator.
+- Automatic cleanup of the serial port on `stop()` or object deletion.
+
+Typical Usage
+-------------
+    reader = ModBusSerialReader(
+        registers="0:5,10:15",
+        port="/dev/ttyUSB0",
+        baudrate=19200,
+        interval=5,
+        encoding="utf-8"
+    )
+    data = reader.read()
+    print(data)
+    reader.stop()
+
+Dependencies
+------------
+- pymodbus (optional; raises RuntimeError if missing)
+- PyYAML
+- Standard Python libraries: logging, time, threading, sys, os.path
+'''
+"""
 
 import logging
 import sys
@@ -23,13 +63,6 @@ from logger.utils.formats import Text  # noqa
 class ModBusSerialReader(Reader):
     """
     Read data from Modbus RTU devices over a serial connection.
-
-    Supports:
-      - single-slave (legacy) mode
-      - multi-slave / multi-function scan files
-      - holding/input registers, coils, discrete inputs
-      - text or raw-bytes output
-      - partial failure tolerance
     """
 
     ############################
@@ -48,6 +81,48 @@ class ModBusSerialReader(Reader):
                  encoding="utf-8",
                  encoding_errors="ignore",
                  timeout=None):
+        """
+        ```
+        registers - Comma-separated string (e.g. '0:5,10:15') or list of
+                    tuples [(start,count), ...] specifying which registers
+                    to poll. Required if scan_file is not provided.
+
+        port - Serial port device (e.g. '/dev/ttyUSB0').
+
+        baudrate - Serial connection baud rate (default 9600).
+
+        parity - Serial parity, one of 'N', 'E', 'O' (default 'N').
+
+        stopbits - Number of stop bits (default 1).
+
+        bytesize - Number of data bits (default 8).
+
+        scan_file - Optional YAML file specifying multiple slaves, functions,
+                    and register blocks. Overrides registers/slave/function
+                    parameters if provided.
+
+        slave - Modbus slave ID (default 1). Ignored if scan_file is provided.
+
+        function - Modbus function type to read: 'holding_registers',
+                   'input_registers', 'coils', or 'discrete_inputs'.
+                   Ignored if scan_file is provided.
+
+        interval - Seconds between consecutive reads. Must be >= 0.
+
+        sep - Separator string used when encoding output as text. Ignored
+              if encoding is None.
+
+        encoding - Character encoding for text output (default 'utf-8').
+                   If None, raw bytes are returned.
+
+        encoding_errors - Strategy for handling encoding errors ('ignore'
+                          by default). Other options: 'strict', 'replace',
+                          'backslashreplace'.
+
+        timeout - Max time in seconds to wait for serial response. Defaults
+                  to 2 seconds if None.
+        ```
+        """
 
         super().__init__(output_format=Text,
                          encoding=encoding,
@@ -136,6 +211,7 @@ class ModBusSerialReader(Reader):
 
     ############################
     def _validate_blocks(self, blocks):
+        """Validate and individual register block"""
         validated = []
         for block in blocks:
             if not (
@@ -199,6 +275,7 @@ class ModBusSerialReader(Reader):
 
     ############################
     def _load_scan_file(self, path):
+        """Load the YAML-formatted scan file"""
         with open(path, "r") as f:
             cfg = yaml.safe_load(f)
 
@@ -243,9 +320,6 @@ class ModBusSerialReader(Reader):
         - Otherwise convert to text and encode with _encode_str, using self.sep
         """
 
-        # ------------------------------------------------------------------
-        # Flatten readings
-        # ------------------------------------------------------------------
         flat_values: list[int | bool | None] = []
         for block in readings:
             if block:
@@ -254,7 +328,7 @@ class ModBusSerialReader(Reader):
         is_coils = function in ("coils", "discrete_inputs")
 
         # ------------------------------------------------------------------
-        # RAW (binary) MODE
+        # Binary
         # ------------------------------------------------------------------
         if self.encoding is None:
             if not flat_values:
@@ -288,7 +362,7 @@ class ModBusSerialReader(Reader):
             )
 
         # ------------------------------------------------------------------
-        # TEXT MODE
+        # Encoded text
         # ------------------------------------------------------------------
         text_values = [
             str(val) if val is not None else "nan"
