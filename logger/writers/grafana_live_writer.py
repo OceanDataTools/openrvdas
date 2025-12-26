@@ -319,7 +319,7 @@ class GrafanaLiveWriter(Writer):
 
         return f'{measurement}{tag_str} {field_str} {ts_ns}'
 
-    def write(self, record: Union[DASRecord, dict]):
+    def write(self, record: Union[DASRecord, dict, str]):
         """
         Write a record to Grafana Live.
 
