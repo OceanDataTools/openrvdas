@@ -1,18 +1,22 @@
 #!/usr/bin/env python3
 """
-Improved GrafanaLiveWriter using InfluxDB Line Protocol.
-
 This writer pushes data to Grafana Live using the /api/live/push endpoint
 with InfluxDB Line Protocol format. This is a supported, stable API.
 
-Changes from original:
-1. Added graceful shutdown
-2. Added queue metrics/monitoring
-3. Better error recovery
-4. Configurable batch size
-5. Optional tags support
-6. Better documentation
-7. Proper Line Protocol escaping
+SECURITY - AUTHENTICATION TOKEN:
+The Grafana Service Account Token can be provided in three ways, checked in
+the following order of priority:
+
+1. token_file (BEST):
+   Path to a file containing the token (e.g., /etc/secrets/grafana_token).
+   Set file permissions to 600 so only the process owner can read it.
+
+2. GRAFANA_API_TOKEN (GOOD):
+   Environment variable. Better than hardcoding, but visible to root.
+
+3. api_token (LEAST SECURE):
+   Passed directly as a string argument. Discouraged for production use
+   as it may appear in version control or process lists.
 """
 
 import logging
@@ -23,6 +27,7 @@ import threading
 import queue
 import urllib.request
 import urllib.error
+import os
 from urllib.parse import quote
 from os.path import dirname, realpath
 
@@ -35,8 +40,6 @@ class GrafanaLiveWriter(Writer):
     """
     Write data records to Grafana Live via HTTP Push using InfluxDB Line Protocol.
 
-    DEPENDENCIES: None (uses standard python urllib).
-
     Grafana Live supports ingesting data via InfluxDB Line Protocol at:
         POST /api/live/push/{stream_id}
 
@@ -47,22 +50,21 @@ class GrafanaLiveWriter(Writer):
         writer = GrafanaLiveWriter(
             host='localhost:3000',
             stream_id='openrvdas/gnss',
-            api_token='glsa_...'
+            token_file='/etc/secrets/grafana_token'
         )
-
-        writer.write(das_record)
     """
 
-    def __init__(self, host, stream_id, api_token, secure=False,
-                 measurement_name=None, batch_size=1, queue_size=1000,
-                 quiet=False):
+    def __init__(self, host, stream_id, api_token=None, token_file=None,
+                 secure=False, measurement_name=None, batch_size=1,
+                 queue_size=1000, quiet=False):
         """
         Initialize GrafanaLiveWriter.
 
         Args:
             host (str): Grafana host (e.g., 'localhost:3000')
             stream_id (str): Stream ID (e.g., 'openrvdas/gnss_cnav')
-            api_token (str): Grafana Service Account Token
+            api_token (str): Direct token string (Low priority security).
+            token_file (str): Path to file containing token (High priority security).
             secure (bool): Use HTTPS instead of HTTP
             measurement_name (str): Override measurement name (uses message_type if None)
             batch_size (int): Number of records to batch (1 = no batching)
@@ -71,10 +73,41 @@ class GrafanaLiveWriter(Writer):
         """
         super().__init__(quiet=quiet)
 
-        if not host or not stream_id or not api_token:
-            raise RuntimeError('GrafanaLiveWriter requires host, stream_id, and api_token.')
+        # -----------------------------------------------------------
+        # SECURITY LOGIC: File > Env > Argument
+        # -----------------------------------------------------------
+        self.api_token = None
 
-        # 1. Sanitize Host
+        # 1. Try reading from a secure file (Best)
+        if token_file:
+            try:
+                # Expand ~ to user home if necessary
+                expanded_path = os.path.expanduser(token_file)
+                if os.path.exists(expanded_path):
+                    with open(expanded_path, 'r') as f:
+                        self.api_token = f.read().strip()
+                else:
+                    logging.warning(f"Grafana token_file not found: {token_file}")
+            except IOError as e:
+                logging.error(f"Could not read Grafana token file: {e}")
+
+        # 2. Try Environment Variable (Good)
+        if not self.api_token:
+            self.api_token = os.environ.get('GRAFANA_API_TOKEN')
+
+        # 3. Try direct argument (Development only)
+        if not self.api_token:
+            self.api_token = api_token
+
+        # -----------------------------------------------------------
+
+        if not host or not stream_id or not self.api_token:
+            raise RuntimeError(
+                'GrafanaLiveWriter requires host, stream_id, and a valid api_token '
+                '(provided via token_file, GRAFANA_API_TOKEN env var, or api_token arg).'
+            )
+
+        # Sanitize Host
         self.host = host.strip()
         for prefix in ['http://', 'https://', 'ws://', 'wss://']:
             if self.host.startswith(prefix):
@@ -82,18 +115,18 @@ class GrafanaLiveWriter(Writer):
         if self.host.endswith('/'):
             self.host = self.host[:-1]
 
-        # 2. Store Base Stream ID & Encode it once
+        # Store Base Stream ID & Encode it once
         raw_id = str(stream_id).strip()
         if raw_id.endswith('/'):
             raw_id = raw_id[:-1]
 
         self.encoded_stream_id = quote(raw_id, safe='')
-        self.api_token = api_token.strip()
+        self.api_token = self.api_token.strip()
         self.measurement_name = measurement_name
         self.batch_size = max(1, batch_size)
         self.protocol = 'https' if secure else 'http'
 
-        # 3. Construct URL
+        # Construct URL
         self.url = f'{self.protocol}://{self.host}/api/live/push/{self.encoded_stream_id}'
 
         logging.info(f'GrafanaLiveWriter initialized. Target: {self.url}')
@@ -240,15 +273,6 @@ class GrafanaLiveWriter(Writer):
         Format data in InfluxDB Line Protocol.
 
         Format: measurement[,tag=value...] field=value[,field=value...] [timestamp]
-
-        Args:
-            measurement (str): Measurement name
-            fields (dict): Field key-value pairs
-            timestamp (float): Unix timestamp in seconds
-            tags (dict): Optional tag key-value pairs
-
-        Returns:
-            str: Line protocol formatted string, or None if no valid fields
         """
         if not fields:
             return None
@@ -260,18 +284,15 @@ class GrafanaLiveWriter(Writer):
 
             # Format value based on type
             if isinstance(v, str):
-                # Escape quotes in string values
                 v_escaped = v.replace('"', '\\"')
                 field_parts.append(f'{k_escaped}="{v_escaped}"')
             elif isinstance(v, bool):
-                # Boolean must come before int check (bool is subclass of int)
                 field_parts.append(f'{k_escaped}={str(v).upper()}')
             elif isinstance(v, int):
                 field_parts.append(f'{k_escaped}={v}i')
             elif isinstance(v, float):
                 field_parts.append(f'{k_escaped}={v}')
             else:
-                # Convert other types to string
                 v_escaped = str(v).replace('"', '\\"')
                 field_parts.append(f'{k_escaped}="{v_escaped}"')
 
