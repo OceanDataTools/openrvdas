@@ -28,6 +28,7 @@ import queue
 import urllib.request
 import urllib.error
 import os
+from typing import Union
 from urllib.parse import quote
 from os.path import dirname, realpath
 
@@ -318,14 +319,16 @@ class GrafanaLiveWriter(Writer):
 
         return f'{measurement}{tag_str} {field_str} {ts_ns}'
 
-    def write(self, record):
+    def write(self, record: Union[DASRecord, dict]):
         """
         Write a record to Grafana Live.
 
         Args:
             record: DASRecord, dict, or JSON string
         """
-        if not self.can_process_record(record):
+        # See if it's something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from BaseModule()
+            self.digest_record(record)  # inherited from BaseModule()
             return
 
         data_id, message_type, timestamp, fields = self._normalize_record(record)
