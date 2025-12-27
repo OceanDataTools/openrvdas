@@ -245,9 +245,7 @@ For detailed instructions on using the `ParseTransform`, please read the ["Recor
 
 ### Writing to databases
 #### InfluxDB
-OpenRVDAS includes an `InfluxDBWriter` that, as one would expect, writes to the open source time-series database InfluxDB. InfluxDB and its associated graphing package Grafana can be installed and configured by running the script in `utils/install_influx.sh`.
-
-More information on using InfluxDB and Grafana with OpenRVDAS can be found on the [OpenRVDAS Grafana Displays](./grafana_displays.md) page, and on the [InfluxDB](https://www.influxdata.com/) and [Grafana](https://grafana.com/oss/grafana/) project pages.
+OpenRVDAS includes an `InfluxDBWriter` that, as one would expect, writes to the open source time-series database InfluxDB. Information on using InfluxDB and Grafana with OpenRVDAS can be found on the [OpenRVDAS Grafana Displays](./grafana_displays.md) page, and on the [InfluxDB](https://www.influxdata.com/) and [Grafana](https://grafana.com/oss/grafana/) project pages.
 
 #### Other databases
 OpenRVDAS includes a `DatabaseWriter` that can be configured to run with PostgreSQL, MySQL, MariaDB or MongoDB via a "database connector".
