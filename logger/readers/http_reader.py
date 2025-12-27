@@ -70,9 +70,6 @@ Thread safety
 All calls to ``read()`` are protected by an internal lock, making this reader
 safe for use in multi-threaded environments.
 
-Dependencies
-------------
-- requests
 ```
 """
 
@@ -80,7 +77,10 @@ import threading
 import sys
 import time
 import logging
-import requests
+import json
+
+from urllib.request import Request, urlopen
+from urllib.error import HTTPError, URLError
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(dirname(realpath(__file__))))))
@@ -92,16 +92,15 @@ class HTTPReader(Reader):  # noqa: R0913
     Read data from a URL at a set interval.
     """
 
-    _ALLOWED_METHODS = {
-        "get": "get",
-        "post": "post"
-    }
+    _ALLOWED_METHODS = {"get", "post"}
 
     ############################
     def __init__(self, url: str, method: str = 'get',  # noqa: R0902
                  headers: dict | None = None, payload: dict | None = None,
                  interval: float = 5.0, timeout: float = 2.0,
-                 encoding='utf-8', encoding_errors='ignore'):
+                 encoding: str | None = 'utf-8',
+                 encoding_errors: str = 'ignore',
+    ):
         """
         ```
         url - Network url to read, in protocol://host:port format (e.g.
@@ -116,7 +115,7 @@ class HTTPReader(Reader):  # noqa: R0913
 
         interval - Seconds between update requests, must be >=0
 
-        timeout - Max time to wait for device to respond.
+        timeout - Max time to wait for device to respond AND read the response.
 
         encoding - 'utf-8' by default. If empty or None, do not attempt any
                 decoding and return raw bytes. Other possible encodings are
@@ -151,38 +150,38 @@ class HTTPReader(Reader):  # noqa: R0913
         if self._verified:
             return
 
-        def _check_response(res):
-        if res.status_code == 404 or res.status_code >= 500:
-            raise ValueError(
-                f"invalid url: {self.url}; return code: {res.status_code}"
-            )
+        def _check_status(code: int):
+            if code == 404 or code >= 500:
+                raise ValueError(
+                    f"invalid url: {self.url}; return code: {code}"
+                )
 
         try:
-            res = requests.head(
-                self.url,
-                allow_redirects=True,
-                timeout=self.timeout
-            )
+            req = Request(self.url, method="HEAD", headers=self.headers)
+            with urlopen(req, timeout=self.timeout) as resp:
+                _check_status(resp.status)
+                self._verified = True
+                return
 
-            _check_response(res)
+        except HTTPError as exc:
+            # Some servers block or mishandle HEAD
+            _check_status(exc.code)
             self._verified = True
             return
 
-        except requests.RequestException as exc:
-            # Some servers block or mishandle HEAD
-            try:
-                res = requests.get(
-                    self.url,
-                    allow_redirects=True,
-                    stream=True,   # do not download body
-                    timeout=self.timeout
-                )
-                _check_response(res)
+        except URLError:
+            pass
+
+        # Fallback to GET (do not explicitly read body)
+        try:
+            req = Request(self.url, method="GET", headers=self.headers)
+            with urlopen(req, timeout=self.timeout) as resp:
+                _check_status(resp.status)
                 self._verified = True
                 return
-   
-            except requests.RequestException as exc:
-                raise ValueError(f"invalid url: {self.url}, {exc}")
+
+        except (HTTPError, URLError) as exc:
+            raise ValueError(f"invalid url: {self.url}, {exc}")
 
     ############################
     def _validate_url(self, url: str) -> str:
@@ -200,30 +199,30 @@ class HTTPReader(Reader):  # noqa: R0913
         return method
 
     ############################
-    def _make_request(self) -> requests.Response:
-        """Perform a single HTTP request with proper method and payload."""
-        func = getattr(requests, self.method)
+    def _make_request(self):
+        """Perform a single HTTP request."""
         headers = dict(self.headers)
-        kwargs = {
-            "url": self.url,
-            "headers": headers,
-            "timeout": self.timeout,
-            "allow_redirects": True,
-        }
+        data = None
 
         if self.method == "post" and self.payload is not None:
-            kwargs["json"] = self.payload
+            data = json.dumps(self.payload).encode("utf-8")
+            headers.setdefault("Content-Type", "application/json")
 
-        return func(**kwargs)
+        req = Request(
+            self.url,
+            method=self.method.upper(),
+            headers=headers,
+            data=data,
+        )
 
-    def _parse_response(self, response: requests.Response) -> str | bytes:
-        """Decode response according to encoding settings."""
-        response.raise_for_status()  # raises for HTTP 4xx/5xx
+        return urlopen(req, timeout=self.timeout)
+
+    ############################
+    def _parse_response(self, response) -> str | bytes:
+        data = response.read()
         if self.encoding:
-            return response.content.decode(
-                self.encoding, errors=self.encoding_errors
-            )
-        return response.content
+            return data.decode(self.encoding, errors=self.encoding_errors)
+        return data
 
     ############################
     def read(self) -> str | bytes | None:
@@ -243,14 +242,20 @@ class HTTPReader(Reader):  # noqa: R0913
 
             try:
                 self._verify_url()
-                res = self._make_request()
-                record = self._parse_response(res)
-            except (requests.RequestException, ValueError) as exc:
+                with self._make_request() as resp:
+                    record = self._parse_response(resp)
+
+            except (HTTPError, URLError, ValueError) as exc:
                 self._verified = False
-                logging.warning("HTTP read failed: %s %s: %s", self.method, self.url, exc)
+                logging.warning(
+                    "HTTP read failed: %s %s: %s",
+                    self.method,
+                    self.url,
+                    exc,
+                )
                 record = None
+
             finally:
-                # Schedule the next allowed read time
                 self._next_read_time = start + self.interval
 
             return record
