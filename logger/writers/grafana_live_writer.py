@@ -3,6 +3,9 @@
 This writer pushes data to Grafana Live using the /api/live/push endpoint
 with InfluxDB Line Protocol format. This is a supported, stable API.
 
+NOTE: This code was created substantially via Google Gemini. The usual
+AI code disclaimers apply - watch your topknot...
+
 SECURITY - AUTHENTICATION TOKEN:
 The Grafana Service Account Token can be provided in three ways, checked in
 the following order of priority:
@@ -44,15 +47,21 @@ class GrafanaLiveWriter(Writer):
     Grafana Live supports ingesting data via InfluxDB Line Protocol at:
         POST /api/live/push/{stream_id}
 
-    This is more reliable than WebSocket-based approaches and works with
-    all modern Grafana versions (8.0+).
+    The 'stream_id' passed during initialization is treated as the 'base_stream'.
+    Records are written to dynamic streams constructed as:
+        {base_stream}/{data_id}/{message_type}
+
+    This allows a single Writer to populate multiple Grafana Live channels
+    based on the content of the records.
 
     Example:
         writer = GrafanaLiveWriter(
             host='localhost:3000',
-            stream_id='openrvdas/gnss',
+            stream_id='openrvdas',  # Base stream ID
             token_file='/etc/secrets/grafana_token'
         )
+        # A record with data_id='mru' and message_type='rotation' will be pushed to:
+        # /api/live/push/openrvdas/mru/rotation
     """
 
     def __init__(self, host, stream_id, api_token=None, token_file=None,
@@ -63,7 +72,7 @@ class GrafanaLiveWriter(Writer):
 
         Args:
             host (str): Grafana host (e.g., 'localhost:3000')
-            stream_id (str): Stream ID (e.g., 'openrvdas/gnss_cnav')
+            stream_id (str): Base Stream ID (e.g., 'openrvdas')
             api_token (str): Direct token string (Low priority security).
             token_file (str): Path to file containing token (High priority security).
             secure (bool): Use HTTPS instead of HTTP
@@ -116,24 +125,26 @@ class GrafanaLiveWriter(Writer):
         if self.host.endswith('/'):
             self.host = self.host[:-1]
 
-        # Store Base Stream ID & Encode it once
+        # Store Base Stream ID
         raw_id = str(stream_id).strip()
         if raw_id.endswith('/'):
             raw_id = raw_id[:-1]
 
-        self.encoded_stream_id = quote(raw_id, safe='')
+        # We store the raw base ID here. Construction happens in write()
+        self.base_stream_id = raw_id
+
         self.api_token = self.api_token.strip()
         self.measurement_name = measurement_name
         self.batch_size = max(1, batch_size)
         self.protocol = 'https' if secure else 'http'
 
-        # Construct URL
-        self.url = f'{self.protocol}://{self.host}/api/live/push/{self.encoded_stream_id}'
+        # Base API URL
+        self.base_api_url = f'{self.protocol}://{self.host}/api/live/push'
 
-        logging.info(f'GrafanaLiveWriter initialized. Target: {self.url}')
+        logging.info(f'GrafanaLiveWriter initialized. Host: {self.host}, Base Stream: {self.base_stream_id}')
         logging.info(f'  Batch size: {batch_size}')
 
-        # Queue holds payload strings
+        # Queue holds tuples: (target_stream_id, payload_string)
         self.queue = queue.Queue(maxsize=queue_size)
 
         # Statistics
@@ -152,46 +163,65 @@ class GrafanaLiveWriter(Writer):
 
     def _http_worker(self):
         """Background worker that sends batched data to Grafana."""
-        batch = []
+        # Batches is a dict mapping stream_id -> list of payload strings
+        # Example: { 'openrvdas/mru/rot': ['line1', 'line2'], 'openrvdas/pos/loc': ['line3'] }
+        batches = {}
+        pending_count = 0
         last_send = time.time()
 
         while not self.stop_event.is_set():
             try:
                 # Get item with timeout to allow checking stop_event
                 try:
-                    payload_str = self.queue.get(timeout=1.0)
-                    batch.append(payload_str)
+                    # Queue items are (stream_id, payload_str)
+                    stream_id, payload_str = self.queue.get(timeout=1.0)
+
+                    if stream_id not in batches:
+                        batches[stream_id] = []
+
+                    batches[stream_id].append(payload_str)
+                    pending_count += 1
                     self.queue.task_done()
                 except queue.Empty:
                     pass
 
-                # Send batch if full or timeout reached
-                should_send = (
-                        len(batch) >= self.batch_size or
-                        (batch and time.time() - last_send > 1.0)
-                )
+                # Send batches if threshold reached or timeout elapsed
+                time_since_last = time.time() - last_send
+                should_send = (pending_count >= self.batch_size) or (pending_count > 0 and time_since_last > 1.0)
 
-                if should_send and batch:
-                    self._send_batch(batch)
-                    batch = []
+                if should_send:
+                    # Send each stream's batch separately
+                    for target_stream, batch_list in batches.items():
+                        if batch_list:
+                            self._send_batch(target_stream, batch_list)
+
+                    # Reset state
+                    batches = {}
+                    pending_count = 0
                     last_send = time.time()
 
             except Exception as e:
                 logging.error(f'Unexpected error in GrafanaLiveWriter worker: {e}')
+                # Don't tight loop on error
                 time.sleep(1)
 
-        # Send any remaining batch on shutdown
-        if batch:
-            self._send_batch(batch)
+        # Send any remaining batches on shutdown
+        for target_stream, batch_list in batches.items():
+            if batch_list:
+                self._send_batch(target_stream, batch_list)
 
-    def _send_batch(self, batch):
-        """Send a batch of line protocol records to Grafana."""
+    def _send_batch(self, stream_id, batch):
+        """Send a batch of line protocol records to a specific Grafana stream."""
+        # Fix: URL-encode the stream ID to handle slashes correctly in the URL path
+        safe_stream_id = quote(stream_id, safe='')
+        url = f"{self.base_api_url}/{safe_stream_id}"
+
         try:
             # Join batch with newlines
             payload = '\n'.join(batch)
             data_bytes = payload.encode('utf-8')
 
-            req = urllib.request.Request(self.url, data=data_bytes, method='POST')
+            req = urllib.request.Request(url, data=data_bytes, method='POST')
             req.add_header('Authorization', f'Bearer {self.api_token}')
             req.add_header('Content-Type', 'text/plain')
 
@@ -199,7 +229,7 @@ class GrafanaLiveWriter(Writer):
                 if response.status == 204 or response.status == 200:
                     with self.stats_lock:
                         self.stats['sent'] += len(batch)
-                    logging.debug(f'Sent {len(batch)} records to Grafana')
+                    logging.debug(f'Sent {len(batch)} records to Grafana stream {stream_id}')
 
         except urllib.error.HTTPError as e:
             error_msg = f'HTTP {e.code}: {e.reason}'
@@ -207,7 +237,7 @@ class GrafanaLiveWriter(Writer):
                 self.stats['errors'] += 1
                 self.stats['last_error'] = error_msg
 
-            logging.error(f'Grafana Push Error {error_msg} | URL: {self.url}')
+            logging.error(f'Grafana Push Error {error_msg} | URL: {url}')
 
             # Read error body for details
             try:
@@ -323,6 +353,9 @@ class GrafanaLiveWriter(Writer):
         """
         Write a record to Grafana Live.
 
+        The stream ID for the record is constructed as:
+            {base_stream}/{data_id}/{message_type}
+
         Args:
             record: DASRecord, dict, or JSON string
         """
@@ -336,7 +369,7 @@ class GrafanaLiveWriter(Writer):
         if not fields:
             return
 
-        # Determine measurement name
+        # Determine measurement name (keep existing logic for Line Protocol)
         measurement = message_type if message_type else (self.measurement_name or data_id or 'default')
 
         # Optional: Add data_id as a tag for better querying
@@ -346,8 +379,18 @@ class GrafanaLiveWriter(Writer):
         payload = self._format_line_protocol(measurement, fields, timestamp, tags)
 
         if payload:
+            # Construct dynamic Stream ID
+            # Safe quoting of components to ensure valid URL structure
+            # Default to 'unknown' if parts are missing to avoid malformed URLs
+            safe_data_id = quote(str(data_id or 'unknown'), safe='')
+            safe_msg_type = quote(str(message_type or 'unknown'), safe='')
+
+            # Note: We rely on self.base_stream_id being set in __init__
+            target_stream_id = f"{self.base_stream_id}/{safe_data_id}/{safe_msg_type}"
+
             try:
-                self.queue.put_nowait(payload)
+                # Put tuple (stream_id, payload) into queue
+                self.queue.put_nowait((target_stream_id, payload))
             except queue.Full:
                 with self.stats_lock:
                     self.stats['dropped'] += 1
