@@ -32,7 +32,7 @@ class ConvertFieldsTransform(Transform):
                            Example: {'heave': 'float', 'pitch': 'float'}
 
             lat_lon_fields (dict): A dictionary mapping a new target field name to a tuple
-                                   of (value_field, direction_field).
+                                   or list of (value_field, direction_field).
                                    Example:
                                    {'latitude': ('raw_lat', 'lat_dir'),
                                     'longitude': ('raw_lon', 'lon_dir')}
@@ -46,19 +46,6 @@ class ConvertFieldsTransform(Transform):
                                               NOT involved in a conversion (either as a
                                               source or a destination) will be removed.
                                               Defaults to False.
-
-        Sample invocation:
-            - class: ConvertFieldsTransform
-              kwargs:
-                delete_source_fields: true
-                delete_unconverted_fields: true
-                fields:
-                  heave: float
-                  pitch: float
-                  roll: float
-                lat_lon_fields:
-                  latitude: (latitude, latitude_dir)
-                  longitude: (longitude, longitude_dir)
         """
         self.fields = fields or {}
         self.lat_lon_fields = lat_lon_fields or {}
@@ -159,15 +146,15 @@ class ConvertFieldsTransform(Transform):
 
                     # If we are successfully converting, we mark sources for potential deletion
                     if self.delete_source_fields:
-                        # We don't delete immediately to allow a source to be used multiple times
-                        # if the config requires it, though rare.
+                        # Mark them processed so they don't get deleted by unconverted check
                         processed_fields.add(val_field)
                         processed_fields.add(dir_field)
 
-                        # Actually delete them now if configured
-                        if val_field in fields:
+                        # Actually delete them now if configured, BUT...
+                        # Do NOT delete if the source field is the same as the target field!
+                        if val_field in fields and val_field != target_field:
                             del fields[val_field]
-                        if dir_field in fields:
+                        if dir_field in fields and dir_field != target_field:
                             del fields[dir_field]
 
         # 3. Clean up unconverted fields
