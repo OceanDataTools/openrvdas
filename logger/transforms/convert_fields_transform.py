@@ -64,8 +64,9 @@ class ConvertFieldsTransform(Transform):
     def _convert_lat_lon(self, value, direction):
         """
         Helper to convert NMEA style lat/lon (DDMM.MMMM) and direction (N/S/E/W)
-        to decimal degrees.
+        to decimal degrees, rounded to fixed number of decimal places.
         """
+        ROUNDING_DECIMALS = 6
         try:
             val = float(value)
             # NMEA format is roughly DDMM.MMMM
@@ -76,7 +77,9 @@ class ConvertFieldsTransform(Transform):
 
             if direction.upper() in ['S', 'W']:
                 decimal = -decimal
-            return decimal
+
+            # Truncate/Round
+            return round(decimal, ROUNDING_DECIMALS)
         except (ValueError, TypeError, AttributeError) as e:
             logging.warning(f'Failed to convert lat/lon: value=\'{value}\', '
                             f'direction=\'{direction}\' - {e}')
