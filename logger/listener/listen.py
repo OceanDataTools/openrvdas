@@ -252,6 +252,11 @@ if __name__ == '__main__':
                         'If specified, no other command line arguments (except '
                         '-v) are allowed.')
 
+    # New positional argument for config file
+    parser.add_argument('config_file_positional', nargs='?', default=None,
+                        help='Read Listener configuration from YAML/JSON file '
+                        '(Alternative to --config_file).')
+
     ############################
     # Readers
     parser.add_argument('--network', dest='network', default=None,
@@ -490,6 +495,11 @@ if __name__ == '__main__':
                         help='Redis pubsub channel[@host[:port]] to write to. '
                         'Defaults to localhost:6379.')
 
+    parser.add_argument('--write_record_screen', dest='write_record_screen',
+                        action='store_true', default=False,
+                        help='Display the most current DASRecord field values '
+                        'on the terminal.')
+
     parser.add_argument('--write_database', dest='write_database', default=None,
                         help='user@host:database to write to. Should be '
                         'accompanied by the --database_password flag.')
@@ -503,13 +513,6 @@ if __name__ == '__main__':
                         help='Write to a CachedDataServer at the specified '
                         'host:port')
 
-    parser.add_argument('--write_record_screen', dest='write_record_screen',
-                        action='store_true', default=False,
-                        help='Display the most current DASRecord field values '
-                        'on the terminal.')
-
-    ############################
-    # Miscellaneous args
     parser.add_argument('--check_format', dest='check_format',
                         action='store_true', default=False, help='Deprecated ')
 
@@ -535,6 +538,13 @@ if __name__ == '__main__':
     # If --config_file/--config_string present, create Listener from
     # config file/string. If not, manually parse and create from all
     # other arguments on command line.
+
+    # 1. Resolve positional argument if present
+    if parsed_args.config_file_positional:
+        if parsed_args.config_file:
+            parser.error('You may not specify both a positional config file and --config_file')
+        parsed_args.config_file = parsed_args.config_file_positional
+
     if parsed_args.config_file and parsed_args.config_string:
         parser.error('You may not specify both --config_file and --config_string')
 
@@ -548,6 +558,9 @@ if __name__ == '__main__':
                 i += 2
             elif '--config_string'.find(sys.argv[i]) == 0:
                 i += 2
+            elif sys.argv[i] == parsed_args.config_file:
+                # If the positional argument matches the config file, skip it
+                i += 1
             else:
                 parser.error('When --config_file or --config_string are '
                              'specified, no other command line args except -v, '
