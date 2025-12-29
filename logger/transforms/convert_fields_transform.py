@@ -55,9 +55,20 @@ class ConvertFieldsTransform(Transform):
         # Map string type names to actual python types/conversion functions
         self.type_map = {
             'float': float,
+            'double': float,
             'int': int,
+            'short': int,
+            'ushort': int,
+            'uint': int,
+            'long': int,
+            'ubyte': int,
+            'byte': int,
             'str': str,
-            'bool': bool
+            'char': str,
+            'string': str,
+            'text': str,
+            'bool': bool,
+            'boolean': bool
         }
 
     ############################
@@ -66,7 +77,7 @@ class ConvertFieldsTransform(Transform):
         Helper to convert NMEA style lat/lon (DDMM.MMMM) and direction (N/S/E/W)
         to decimal degrees, rounded to fixed number of decimal places.
         """
-        ROUNDING_DECIMALS = 6
+        ROUNDING_DECIMALS = 5
         try:
             val = float(value)
             # NMEA format is roughly DDMM.MMMM
