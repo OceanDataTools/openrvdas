@@ -80,7 +80,8 @@ class ModBusSerialReader(Reader):
                  sep=" ",
                  encoding="utf-8",
                  encoding_errors="ignore",
-                 timeout=None):
+                 timeout=None,
+                 **kwargs):
         """
         ```
         registers - Comma-separated string (e.g. '0:5,10:15') or list of
@@ -123,10 +124,7 @@ class ModBusSerialReader(Reader):
                   to 2 seconds if None. Minimum timeout is 1s.
         ```
         """
-
-        super().__init__(output_format=Text,
-                         encoding=encoding,
-                         encoding_errors=encoding_errors)
+        super().__init__(encoding=encoding, encoding_errors=encoding_errors, **kwargs)
 
         if not MODBUS_MODULE_FOUND:
             raise RuntimeError(

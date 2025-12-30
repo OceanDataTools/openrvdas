@@ -54,12 +54,15 @@ There is also a special case 'Unknown' format that can't accept
 anything, and has no common elements with any other format.
 
 """
+import logging
+
+logging.warning('Coding error: Module "formats" is deprecated. Please use type hints, as '
+                'described in logging/utils/base_module.py.')
+
 
 ########################################
 # Test whether the passed object is actually a valid format, as
 # defined in this file.
-
-
 def is_format(format):
     # Is format even a class?
     if not isinstance(format, type(Bytes)):
@@ -74,8 +77,6 @@ def is_format(format):
 ########################################
 # 'Unknown' is a special case format - it can't accept anything, and
 # has no other common formats
-
-
 class Unknown:
     @classmethod
     def can_accept(self, other_format):
@@ -88,8 +89,6 @@ class Unknown:
 ########################################
 # 'Bytes' is the highest, most general format in the hierarchy. All
 # more-specific formats inherit from it.
-
-
 class Bytes:
     @classmethod
     def can_accept(self, other_format):

@@ -17,7 +17,7 @@ class WebsocketReader():
     requests from it.
     """
 
-    def __init__(self, uri, check_cert=False):
+    def __init__(self, uri, check_cert=False, **kwargs):
         """
         ```
         uri -      Hostname, port and protocol, (e.g. wss://localhost:8080) at which
@@ -28,6 +28,8 @@ class WebsocketReader():
                       file to check against.
         ```
         """
+        super().__init__(**kwargs)
+
         self.uri = uri
         self.check_cert = check_cert
 

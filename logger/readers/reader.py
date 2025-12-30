@@ -4,18 +4,11 @@ Abstract base class for data Readers.
 """
 
 import logging
-import sys
-
-from os.path import dirname, realpath
-sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
-from logger.utils import formats  # noqa: E402
-
 
 ################################################################################
 class Reader:
     """
-    Base class Reader about which we know nothing else. By default the
-    output format is Unknown unless overridden.
+    Base class Reader about which we know nothing else.
 
     Two additional arguments govern how records will be encoded/decoded from
     bytes, if desired by the Reader subclass when it calls _encode_str() or
@@ -31,13 +24,10 @@ class Reader:
             https://docs.python.org/3/howto/unicode.html#encodings
     """
 
-    def __init__(self, output_format=formats.Unknown,
-                 encoding='utf-8', encoding_errors='ignore'):
-        self.output_format(output_format)
-        # make sure '' behaves the same as None, which is what all the
-        # docstrings say, and would be logical... but then certain things treat
-        # them differently (e.g., file.open(mode='ab', encoding='') throws
-        # ValueError: binary mode doesn't take an encoding argument)
+    ############################
+    def __init__(self, encoding='utf-8', encoding_errors='ignore', **kwargs):
+        super().__init__(**kwargs)
+
         if encoding == '':
             encoding = None
         self.encoding = encoding
@@ -96,17 +86,6 @@ class Reader:
             return None
 
     ############################
-    def output_format(self, new_format=None):
-        """
-        Return our output format or set a new output format
-        """
-        if new_format is not None:
-            if not formats.is_format(new_format):
-                raise TypeError('Argument "%s" is not a known format type' % new_format)
-            self.out_format = new_format
-        return self.out_format
-
-    ############################
     def read(self):
         """
         read() should return None when there are no more records.
@@ -124,10 +103,11 @@ class StorageReader(Reader):
     seek and rewind, or retrieve a range of records.
     """
 
-    def __init__(self, output_format=formats.Unknown):
-        super().__init__(output_format=output_format)
-        pass
+    ############################
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
+    ############################
     # Behavior is intended to mimic file seek() behavior but with
     # respect to records: 'offset' means number of records, and origin
     # is either 'start', 'current' or 'end'.
@@ -154,10 +134,11 @@ class TimestampedReader(StorageReader):
     can seek and retrieve a range specified by timestamps.
     """
 
-    def __init__(self, output_format=formats.Unknown):
-        super().__init__(output_format=output_format)
-        pass
+    ############################
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
+    ############################
     # Behavior is intended to mimic file seek() behavior but with
     # respect to timestamps: 'offset' means number of milliseconds, and
     # origin is either 'start', 'current' or 'end'.
@@ -166,6 +147,7 @@ class TimestampedReader(StorageReader):
                                   'implementation of seek_time() method.'
                                   % self.__class__.__name__)
 
+    ############################
     # Read a range of records beginning with timestamp start
     # milliseconds, and ending *before* timestamp stop milliseconds.
     def read_time_range(self, start=None, stop=None):

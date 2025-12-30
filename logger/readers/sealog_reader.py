@@ -22,7 +22,7 @@ class SealogReader():
     requests from it.
     """
 
-    def __init__(self, uri, client_wsid=None, subs=None, check_cert=False):
+    def __init__(self, uri, client_wsid=None, subs=None, check_cert=False, **kwargs):
         """
         ```
         uri - Hostname, port and protocol, (e.g. wss://localhost:8080) of the
@@ -39,6 +39,8 @@ class SealogReader():
                      location of .pem file to check against.
         ```
         """
+        super().__init__(**kwargs)
+
         self.uri = uri
         self.client_wsid = client_wsid or 'OpenRVDAS_Sealog_Reader'
         self.subs = subs or ['/ws/status/newEvents', '/ws/status/updateEvents']

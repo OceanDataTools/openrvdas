@@ -43,7 +43,7 @@ class UDPReader(Reader):
     def __init__(self, interface=None, port=None, mc_group=None,
                  reuseaddr=False, reuseport=False,
                  encoding='utf-8', encoding_errors='ignore', eol=None,
-                 allow_empty=False, this_is_a_test=False):
+                 allow_empty=False, this_is_a_test=False, **kwargs):
         """
         ```
         interface    IP (or resolvable name) of interface to listen on.  None or ''
@@ -81,7 +81,7 @@ class UDPReader(Reader):
         ```
         """
         super().__init__(encoding=encoding,
-                         encoding_errors=encoding_errors)
+                         encoding_errors=encoding_errors, **kwargs)
 
         if interface:
             # resolve once in constructor

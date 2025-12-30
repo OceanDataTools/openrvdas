@@ -76,13 +76,17 @@ class BaseModule:
     list of records into its elements and calling subclass transform() on them.
     """
     ############################
-    def __init__(self, quiet=False, input_format=None, output_format=None):
+    def __init__(self, quiet=False, **kwargs):
         self._initialize_type_hints(quiet=quiet)
 
-        if input_format or output_format:
-            logging.warning(f'Code warning: {self.__class__.__name__} use of '
-                            f'"input_format" or "output_format" is deprecated. '
-                            f'Please see Transform code documentation.')
+        if kwargs.get('input_format'):
+            logging.warning(f'Code warning: {self.__class__.__name__} use of "input_format"'
+                            'is deprecated in favor of type hints. Please see documentation'
+                            'in logger/utils/base_module.py.')
+        if kwargs.get('output_format'):
+            logging.warning(f'Code warning: {self.__class__.__name__} use of "output_format"'
+                            'is deprecated in favor of type hints. Please see documentation'
+                            'in logger/utils/base_module.py.')
 
     ############################
     def _initialize_type_hints(self, module_type, module_method, quiet=False):
