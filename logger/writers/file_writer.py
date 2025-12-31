@@ -152,6 +152,9 @@ class FileWriter(Writer):
 
         ```
         """
+        encoding, encoding_errors = self._resolve_encoding(encoding, encoding_errors, mode)
+
+        super().__init__(quiet=quiet, encoding=encoding, encoding_errors=encoding_errors)
 
         # --- Deprecated args ---
         if filename is not None:
@@ -182,11 +185,6 @@ class FileWriter(Writer):
 
         # --- Base file name ---
         self.filebase = filebase
-
-        encoding, encoding_errors = self._resolve_encoding(encoding, encoding_errors, mode)
-
-        super().__init__(quiet=quiet, encoding=encoding,
-                         encoding_errors=encoding_errors)
 
         # --- File settings ---
         self.mode = mode

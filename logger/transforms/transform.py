@@ -22,7 +22,7 @@ records *except* those of type "None" or "list". The logic is that digest_record
 will return a None when given a None, and when given a list, will iteratively
 apply the transform to every element of the list and return the resulting list.
 
-Note that the child class can explicitly call super().__init__(quiet=True) or such
+Note that the child class can explicitly call super().__init__() or such
 to initialize the type checking and set its debugging level. If it is not explicitly
 initialized, it will be done implicitly the first time can_process_record() or
 digest_record() are called, but with the default of quiet=False.
@@ -40,24 +40,17 @@ class Transform(BaseModule):
     """
     Base class Transform about which we know nothing else.
 
-    Inherits methods for checking whether a received record is in a format
-    that the derived class can process, and for splitting a list of input
-    records into its elements and calling subclass method() on them.
+    Passes arguments quiet, encoding and encoding_errors up to BaseModule
     """
     ############################
-    def __init__(self, quiet=False, input_format=None, output_format=None):
-        self._initialize_type_hints(quiet=quiet)
-
-        if input_format or output_format:
-            logging.warning(f'Code warning: {self.__class__.__name__} use of '
-                            f'"input_format" or "output_format" is deprecated. '
-                            f'Please see Transform code documentation.')
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._initialize_type_hints()
 
     ############################
-    def _initialize_type_hints(self, quiet=False):
+    def _initialize_type_hints(self):
         """ Retrieve any type hints for child transform() method so we can
         check whether the type of record we've received can be parsed
         natively or not."""
         super()._initialize_type_hints(module_type='transform',
-                                       module_method=self.__class__.transform,
-                                       quiet=quiet)
+                                       module_method=self.__class__.transform)

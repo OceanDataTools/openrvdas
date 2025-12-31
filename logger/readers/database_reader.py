@@ -7,7 +7,6 @@ import time
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.readers.reader import TimestampedReader  # noqa: E402
-from logger.utils.formats import Python_Record  # noqa: E402
 
 # Don't freak out if we can't find database settings - unless they actually
 # try to instantiate a DatabaseReader.

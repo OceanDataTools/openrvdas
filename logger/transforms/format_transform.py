@@ -38,7 +38,9 @@ Sample config:
 """
 
 import sys
+from typing import Union
 from os.path import dirname, realpath
+
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.utils.das_record import DASRecord  # noqa: E402
 from logger.utils.timestamp import time_str  # noqa: E402
@@ -47,7 +49,7 @@ from logger.transforms.transform import Transform  # noqa: E402
 
 ################################################################################
 class FormatTransform(Transform):
-    def __init__(self, format_str, defaults=None, use_iso_timestamp=False):
+    def __init__(self, format_str, defaults=None, use_iso_timestamp=False, **kwargs):
         """
         Output a formatted string in which field values from a DASRecord or field
         dict have been substituted. An optional default_dict may be provided to
@@ -78,24 +80,16 @@ class FormatTransform(Transform):
         use_iso_timestamp - If True, ISO 8601 format timestamps when the {timestamp}
                        tag is present. Otherwise use Unix numerical timestamps.
         """
+        super().__init__(**kwargs)  # processes 'quiet' and type hints
 
         self.format_str = format_str
         self.defaults = defaults or {}
         self.use_uso_timestamp = use_iso_timestamp
 
-    def transform(self, record):
-        # Make sure record is right format - DASRecord or dict
-        if not record:
-            return None
-
-        # If we've got a list, hope it's a list of records. Recurse,
-        # calling transform() on each of the list elements in order and
-        # return the resulting list.
-        if type(record) is list:
-            results = []
-            for single_record in record:
-                results.append(self.transform(single_record))
-            return results
+    def transform(self, record: Union[DASRecord, dict]) -> str:
+        # See if it's something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # BaseModule
+            return self.digest_record(record)  # BaseModule
 
         if type(record) is DASRecord:
             record_fields = record.fields

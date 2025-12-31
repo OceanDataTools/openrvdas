@@ -19,7 +19,7 @@ class TextFileReader(StorageReader):
     ############################
 
     def __init__(self, file_spec=None, tail=False, refresh_file_spec=False,
-                 retry_interval=0.1, interval=0, eol=None, **kwargs):
+                 retry_interval=0.1, interval=0, eol=None, *args, **kwargs):
         """
         ```
         file_spec    Possibly wildcarded string speficying files to be opened.
@@ -50,7 +50,7 @@ class TextFileReader(StorageReader):
         depends on how glob returns them.
         """
 
-        super().__init__(**kwargs)
+        super().__init__(*args, **kwargs)
 
         self.file_spec = file_spec
         self.tail = tail

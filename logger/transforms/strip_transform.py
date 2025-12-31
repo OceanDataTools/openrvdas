@@ -12,7 +12,7 @@ from logger.transforms.transform import Transform  # noqa: E402
 ################################################################################
 class StripTransform(Transform):
     def __init__(self, chars=None, unprintable=False,
-                 strip_prefix=False, strip_suffix=False):
+                 strip_prefix=False, strip_suffix=False, **kwargs):
         """
         ```
         chars     A string of characters that are to be stripped out of the
@@ -30,6 +30,8 @@ class StripTransform(Transform):
                   rather than everywhere (compatible with strip_prefix).
         ```
         """
+        super().__init__(**kwargs)  # processes 'quiet' and type hints
+
         if chars and unprintable:
             raise ValueError('Can not specify both "chars" and "unprintable".')
         self.chars = chars or ' \t\v\r\n\f'
@@ -38,19 +40,12 @@ class StripTransform(Transform):
         self.strip_suffix = strip_suffix
 
     ############################
-    def transform(self, record):
+    def transform(self, record: str) -> str:
         """Strip and return only the requested fields."""
-        if record is None:
-            return None
 
-        # If we've got a list, hope it's a list of records. Recurse,
-        # calling transform() on each of the list elements in order and
-        # return the resulting list.
-        if type(record) is list:
-            results = []
-            for single_record in record:
-                results.append(self.transform(single_record))
-            return results
+        # See if it's something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from BaseModule()
+            return self.digest_record(record)  # inherited from BaseModule()
 
         if not type(record) is str:
             logging.warning('SplitTransform received non-string input: %s', record)

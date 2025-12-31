@@ -89,11 +89,15 @@ class DatabaseWriter(Writer):
         return self.db.table_exists(table_name)
 
     ############################
-    def _write_record(self, record):
+    def _write_record(self, record: Union[DASRecord, dict]):
         """Write record to table. Connectors assume we've got a DASRecord, but
         check; if we don't see if it's a suitably-formatted dict that we can
         convert into a DASRecord.
         """
+        if not self.can_process_record(record):  # inherited from BaseModule()
+            self.digest_record(record)  # inherited from BaseModule()
+            return
+
         if isinstance(record, dict):
             try:
                 data_id = record.get('data_id', 'no_data_id')

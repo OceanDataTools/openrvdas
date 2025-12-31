@@ -76,9 +76,25 @@ class BaseModule:
     list of records into its elements and calling subclass transform() on them.
     """
     ############################
-    def __init__(self, quiet=False, **kwargs):
-        self._initialize_type_hints(quiet=quiet)
+    def __init__(self, quiet=False, encoding='utf-8', encoding_errors='ignore', *args, **kwargs):
+        """
+        ```
+        quiet - if type checking should log type errors or operate silently.
 
+        Two additional arguments govern how records will be encoded/decoded
+        from bytes, if desired by the Writer subclass when it calls
+        _encode_str() or _decode_bytes:
+
+        encoding - 'utf-8' by default. If empty or None, do not attempt any
+                decoding and return raw bytes. Other possible encodings are
+                listed in online documentation here:
+                https://docs.python.org/3/library/codecs.html#standard-encodings
+
+        encoding_errors - 'ignore' by default. Other error strategies are
+                'strict', 'replace', and 'backslashreplace', described here:
+                https://docs.python.org/3/howto/unicode.html#encodings
+        ```
+        """
         if kwargs.get('input_format'):
             logging.warning(f'Code warning: {self.__class__.__name__} use of "input_format"'
                             'is deprecated in favor of type hints. Please see documentation'
@@ -87,9 +103,19 @@ class BaseModule:
             logging.warning(f'Code warning: {self.__class__.__name__} use of "output_format"'
                             'is deprecated in favor of type hints. Please see documentation'
                             'in logger/utils/base_module.py.')
+        self.quiet = quiet
+
+        # Make sure '' behaves the same as None, which is what all the
+        # docstrings say, and would be logical... but then certain things treat
+        # them differently (e.g., file.open(mode='ab', encoding='') throws
+        # ValueError: binary mode doesn't take an encoding argument)
+        if encoding == '':
+            encoding = None
+        self.encoding = encoding
+        self.encoding_errors = encoding_errors
 
     ############################
-    def _initialize_type_hints(self, module_type, module_method, quiet=False):
+    def _initialize_type_hints(self, module_type, module_method):
         """We should only get called from the _initialize_type_hints method of
         Reader/Transform/Writer subclasses, which should fill in all parameters.
 
@@ -98,7 +124,6 @@ class BaseModule:
         natively or not."""
         self.module_type = module_type
         self.module_method = module_method
-        self.quiet = quiet
 
         # We make stupid assumption that the input variable is called 'record'
         method_type_hints = get_method_type_hints(self.module_method)
@@ -191,3 +216,55 @@ class BaseModule:
             logging.warning(f'Must be instance or list of {self.input_types}')
             logging.warning(f'Received {type(record)}: {record}')
         return None
+
+    ############################
+    def _unescape_str(self, the_str):
+        """Unescape a string by encoding it to bytes, then unescaping when we
+        decode it. Ugly.
+        """
+        if not self.encoding:
+            return the_str
+
+        encoded = the_str.encode(encoding=self.encoding, errors=self.encoding_errors)
+        return encoded.decode('unicode_escape')
+
+    ############################
+    def _encode_str(self, the_str, unescape=False):
+        """Encode a string to bytes, optionally unescaping things like \n and \r.
+        Unescaping requires ugly convolutions of encoding, then decoding while we
+        escape things, then encoding a second time.
+        """
+        if not self.encoding:
+            return the_str
+        if unescape:
+            the_str = self._unescape_str(the_str)
+        return the_str.encode(encoding=self.encoding, errors=self.encoding_errors)
+
+    ############################
+    def _decode_bytes(self, record, allow_empty: bool = False):
+        """Decode a record from bytes to str, if we have an encoding specified."""
+        if record is None:
+            return None
+
+        if not record and not allow_empty:  # if it's an empty record but not None
+            return None
+
+        if not self.encoding:
+            return record
+
+        if self.encoding == 'hex':
+            try:
+                r = record.hex()
+                return r
+            except Exception as e:
+                logging.warning('Error decoding string "%s" from encoding "%s": %s',
+                                record, self.encoding, str(e))
+                return None
+
+        try:
+            return record.decode(encoding=self.encoding,
+                                 errors=self.encoding_errors)
+        except UnicodeDecodeError as e:
+            logging.warning('Error decoding string "%s" from encoding "%s": %s',
+                            record, self.encoding, str(e))
+            return None
