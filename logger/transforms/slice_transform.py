@@ -3,7 +3,6 @@
 
 import logging
 import sys
-from typing import Union
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))

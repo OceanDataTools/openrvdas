@@ -258,8 +258,8 @@ class InterpolationTransform(DerivedDataTransform):
         if not self.can_process_record(record):  # inherited from BaseModule()
             return self.digest_record(record)  # inherited from BaseModule()
 
-        # Add the record and remember its timestamp.
-        record_timestamp = self._add_record(record)
+        # Add the record
+        self._add_record(record)
 
         # First time through, our 'next_timestamp' will be zero. Set it to
         # a good starting place.

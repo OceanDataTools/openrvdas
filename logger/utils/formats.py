@@ -74,6 +74,7 @@ def is_format(format):
 
     return False
 
+
 ########################################
 # 'Unknown' is a special case format - it can't accept anything, and
 # has no other common formats
@@ -85,6 +86,7 @@ class Unknown:
     @classmethod
     def common(self, other_format):
         return None
+
 
 ########################################
 # 'Bytes' is the highest, most general format in the hierarchy. All

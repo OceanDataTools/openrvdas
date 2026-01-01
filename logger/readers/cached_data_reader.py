@@ -18,7 +18,7 @@ except ModuleNotFoundError:
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.readers.reader import Reader  # noqa: E402
-from logger.utils.das_record import to_das_record_list
+from logger.utils.das_record import to_das_record_list  # noqa: E402
 
 DEFAULT_SERVER_WEBSOCKET = 'localhost:8766'
 

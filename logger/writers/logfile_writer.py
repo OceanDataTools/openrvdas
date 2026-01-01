@@ -191,8 +191,7 @@ class LogfileWriter(Writer):
             if unit == "H":
                 return DEFAULT_DATETIME_STR if even_days else DEFAULT_DATETIME_STR + "T%H00"
             if unit == "M":
-                return DEFAULT_DATETIME_STR + "T%H00" if not needs_minute else DEFAULT_DATETIME_STR + "T%H%M"
-
+                return f"{DEFAULT_DATETIME_STR}T%H{'%M' if needs_minute else '00'}"
         # --- Extract directives ---
         found = set(re.findall(r"%[a-zA-Z]", date_format))
 
