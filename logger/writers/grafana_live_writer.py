@@ -214,9 +214,7 @@ class GrafanaLiveWriter(Writer):
 
     def _send_batch(self, stream_id, batch):
         """Send a batch of line protocol records to a specific Grafana stream."""
-        # FIX: Allow slashes in the stream ID so that the URL path matches the hierarchy
-        # e.g. openrvdas/gnss/GPGGA -> openrvdas/gnss/GPGGA (not openrvdas%2Fgnss%2FGPGGA)
-        safe_stream_id = quote(stream_id, safe='/')
+        safe_stream_id = quote(stream_id, safe='')
         url = f"{self.base_api_url}/{safe_stream_id}"
 
         try:
@@ -389,8 +387,9 @@ class GrafanaLiveWriter(Writer):
             safe_msg_type = quote(str(message_type or 'unknown'), safe='')
 
             # Note: We rely on self.base_stream_id being set in __init__
-            target_stream_id = (f"{self.base_stream_id}/{safe_data_id}/"
-                                f"{safe_msg_type}")
+            #target_stream_id = (f"{self.base_stream_id}/{safe_data_id}/"
+            #                    f"{safe_msg_type}")
+            target_stream_id = f"{self.base_stream_id}/{safe_data_id}"
 
             try:
                 # Put tuple (stream_id, payload) into queue
