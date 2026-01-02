@@ -214,8 +214,9 @@ class GrafanaLiveWriter(Writer):
 
     def _send_batch(self, stream_id, batch):
         """Send a batch of line protocol records to a specific Grafana stream."""
-        # Fix: URL-encode the stream ID to handle slashes correctly in the URL path
-        safe_stream_id = quote(stream_id, safe='')
+        # FIX: Allow slashes in the stream ID so that the URL path matches the hierarchy
+        # e.g. openrvdas/gnss/GPGGA -> openrvdas/gnss/GPGGA (not openrvdas%2Fgnss%2FGPGGA)
+        safe_stream_id = quote(stream_id, safe='/')
         url = f"{self.base_api_url}/{safe_stream_id}"
 
         try:
