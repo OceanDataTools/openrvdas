@@ -387,8 +387,9 @@ class GrafanaLiveWriter(Writer):
             safe_msg_type = quote(str(message_type or 'unknown'), safe='')
 
             # Note: We rely on self.base_stream_id being set in __init__
-            target_stream_id = (f"{self.base_stream_id}/{safe_data_id}/"
-                                f"{safe_msg_type}")
+            #target_stream_id = (f"{self.base_stream_id}/{safe_data_id}/"
+            #                    f"{safe_msg_type}")
+            target_stream_id = f"{self.base_stream_id}/{safe_data_id}"
 
             try:
                 # Put tuple (stream_id, payload) into queue
