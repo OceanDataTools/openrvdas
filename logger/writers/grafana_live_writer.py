@@ -409,4 +409,4 @@ class GrafanaLiveWriter(Writer):
         logging.info('Stopping GrafanaLiveWriter...')
         self.stop_event.set()
         self.thread.join(timeout=5)
-```        logging.info(f'GrafanaLiveWriter stopped. Stats: {self.get_stats()}')
+        logging.info(f'GrafanaLiveWriter stopped. Stats: {self.get_stats()}')
