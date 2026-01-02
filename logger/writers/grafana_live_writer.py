@@ -141,7 +141,8 @@ class GrafanaLiveWriter(Writer):
         # Base API URL
         self.base_api_url = f'{self.protocol}://{self.host}/api/live/push'
 
-        logging.info(f'GrafanaLiveWriter initialized. Host: {self.host}, Base Stream: {self.base_stream_id}')
+        logging.info(f'GrafanaLiveWriter initialized. Host: {self.host}, '
+                     f'Base Stream: {self.base_stream_id}')
         logging.info(f'  Batch size: {batch_size}')
 
         # Queue holds tuples: (target_stream_id, payload_string)
@@ -187,7 +188,8 @@ class GrafanaLiveWriter(Writer):
 
                 # Send batches if threshold reached or timeout elapsed
                 time_since_last = time.time() - last_send
-                should_send = (pending_count >= self.batch_size) or (pending_count > 0 and time_since_last > 1.0)
+                should_send = (pending_count >= self.batch_size or
+                               (pending_count > 0 and time_since_last > 1.0))
 
                 if should_send:
                     # Send each stream's batch separately
@@ -243,7 +245,7 @@ class GrafanaLiveWriter(Writer):
             try:
                 error_body = e.read().decode('utf-8')
                 logging.error(f'Error details: {error_body}')
-            except:
+            except Exception:
                 pass
 
             if e.code in (401, 403):
@@ -370,7 +372,7 @@ class GrafanaLiveWriter(Writer):
             return
 
         # Determine measurement name (keep existing logic for Line Protocol)
-        measurement = message_type if message_type else (self.measurement_name or data_id or 'default')
+        measurement = message_type or self.measurement_name or data_id or 'default'
 
         # Optional: Add data_id as a tag for better querying
         tags = {'data_id': data_id} if data_id else None
@@ -386,7 +388,8 @@ class GrafanaLiveWriter(Writer):
             safe_msg_type = quote(str(message_type or 'unknown'), safe='')
 
             # Note: We rely on self.base_stream_id being set in __init__
-            target_stream_id = f"{self.base_stream_id}/{safe_data_id}/{safe_msg_type}"
+            target_stream_id = (f"{self.base_stream_id}/{safe_data_id}/"
+                                f"{safe_msg_type}")
 
             try:
                 # Put tuple (stream_id, payload) into queue
@@ -406,4 +409,4 @@ class GrafanaLiveWriter(Writer):
         logging.info('Stopping GrafanaLiveWriter...')
         self.stop_event.set()
         self.thread.join(timeout=5)
-        logging.info(f'GrafanaLiveWriter stopped. Stats: {self.get_stats()}')
+```        logging.info(f'GrafanaLiveWriter stopped. Stats: {self.get_stats()}')
