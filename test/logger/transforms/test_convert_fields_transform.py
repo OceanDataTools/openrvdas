@@ -40,6 +40,21 @@ class TestConvertFieldsTransform(unittest.TestCase):
             self.assertTrue(any("Failed to convert field 'heave'" in log for log in cm.output))
 
     ############################
+    def test_float_string_to_int(self):
+        """Test converting a string float ('123.0') to an int."""
+        t = ConvertFieldsTransform(fields={'val': 'int'})
+
+        # Case 1: Clean float string
+        input_record = {'val': '123.0'}
+        expected = {'val': 123}
+        self.assertDictEqual(t.transform(input_record), expected)
+
+        # Case 2: Float string with decimals (truncation expected)
+        input_trunc = {'val': '123.9'}
+        expected_trunc = {'val': 123}
+        self.assertDictEqual(t.transform(input_trunc), expected_trunc)
+
+    ############################
     def test_lat_lon_conversion(self):
         """Test NMEA lat/lon conversion logic."""
         t = ConvertFieldsTransform(lat_lon_fields={
@@ -92,7 +107,7 @@ class TestConvertFieldsTransform(unittest.TestCase):
         )
         input_both = {
             'raw_lat': '3000.00', 'lat_dir': 'N',  # Should be converted then deleted
-            'extra_field': 'delete_me'             # Should be deleted (unconverted)
+            'extra_field': 'delete_me'  # Should be deleted (unconverted)
         }
         res_both = t_both.transform(input_both)
         self.assertAlmostEqual(res_both['lat'], 30.0)
@@ -147,6 +162,7 @@ class TestConvertFieldsTransform(unittest.TestCase):
 ################################################################################
 if __name__ == '__main__':
     import argparse
+
     parser = argparse.ArgumentParser()
     parser.add_argument('-v', '--verbosity', dest='verbosity',
                         default=0, action='count',
