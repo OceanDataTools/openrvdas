@@ -36,9 +36,7 @@ class FileWriter(Writer):
                  suffix=None,
                  time_zone=timezone.utc,
                  create_path=True,
-                 quiet=False,
-                 encoding='utf-8',
-                 encoding_errors='ignore'):
+                 **kwargs):
         """Write text records to a file. If no filename is specified, write to
         stdout.
         ```
@@ -169,18 +167,34 @@ class FileWriter(Writer):
 
         ```
         """
-        encoding, encoding_errors = self._resolve_encoding(
-            encoding, encoding_errors, mode)
+        super().__init__(**kwargs)  # processes 'quiet', encoding and hints
 
-        super().__init__(quiet=quiet, encoding=encoding,
-                         encoding_errors=encoding_errors)
+        if 'b' in mode and (self.encoding or self.encoding_errors) is not None:
+            logging.warning("Ignoring encoding and encoding_errors because"
+                            " file mode is binary")
+            self.encoding = self.encoding_errors = None
 
         # --- Deprecated args ---
         if filename is not None:
             filebase = filename
+            # warnings.warn(
+            #     "`filename` is deprecated, use `filebase` instead",
+            #     DeprecationWarning,
+            #     stacklevel=2,
+            # )
         if split_by_time:
             split_interval = split_interval or '24H'
+            # warnings.warn(
+            #     "`split_by_time` is deprecated, use `split_interval` instead",
+            #     DeprecationWarning,
+            #     stacklevel=2,
+            # )
         if time_format is not None:
+            # warnings.warn(
+            #     "`time_format` is deprecated, use `date_format` instead",
+            #     DeprecationWarning,
+            #     stacklevel=2,
+            # )
             date_format = ('^' + time_format[:-1]
                            if time_format.endswith('-') else time_format)
 
@@ -268,13 +282,6 @@ class FileWriter(Writer):
         except ValueError:
             raise ValueError("must be an integer followed by 'H' or 'M'")
         return None
-
-    def _resolve_encoding(self, encoding, encoding_errors, mode):
-        if 'b' in mode and (encoding or encoding_errors) is not None:
-            logging.warning("Ignoring encoding and encoding_errors because"
-                            " file mode is binary")
-            return None, None
-        return encoding, encoding_errors
 
     def _resolve_delimiter(self, delimiter):
         if 'b' in self.mode and delimiter is not None:

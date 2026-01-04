@@ -11,9 +11,11 @@ import websockets
 # Compatibility for websockets library versions < 10.0 and >= 10.0
 # InvalidStatusCode was renamed to InvalidStatus in version 10.0
 try:
-    WS_InvalidStatus = websockets.exceptions.InvalidStatus
-except AttributeError:
-    WS_InvalidStatus = websockets.exceptions.InvalidStatusCode
+    from websockets import InvalidStatus
+except ImportError:
+    from websockets.exceptions import InvalidStatus
+
+WS_InvalidStatus = InvalidStatus
 
 DEFAULT_SERVER_WEBSOCKET = 'localhost:8766'
 

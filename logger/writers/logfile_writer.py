@@ -36,7 +36,7 @@ class LogfileWriter(Writer):
                  time_zone=timezone.utc,
                  suffix=None,
                  split_char=' ',
-                 quiet=False):
+                 **kwargs):
         """Write timestamped records to a filebase. The filebase will
         have the current date appended, in keeping with R2R format
         recommendations (http://www.rvdata.us/operators/directory). When the
@@ -100,8 +100,7 @@ class LogfileWriter(Writer):
                         any mapped prefix
         ```
         """
-
-        super().__init__(quiet=quiet)
+        super().__init__(**kwargs)  # processes 'quiet' and type hints
 
         self.filebase = filebase
         self.flush = flush

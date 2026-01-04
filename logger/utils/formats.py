@@ -2,9 +2,8 @@
 
 """
 ###############################################################################
-DEPRECATED!  Please see logger/utils/type_checking.py and
-logger/transforms/transform.py for the now-preferred way to validate
-component inputs.
+DEPRECATED!  Please see logger/utils/base_module.py for the now-preferred way to
+validate component inputs.
 ###############################################################################
 
 Set of hierarchical utility classes used to check for input/output

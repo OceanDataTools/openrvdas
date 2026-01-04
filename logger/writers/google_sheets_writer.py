@@ -121,7 +121,7 @@ class GoogleSheetsWriter(Writer):
 
     def __init__(self, sheet_name_or_id, auth_key_path=None,
                  use_service_account=True, worksheet_name="Sheet1",
-                 force_create=False):
+                 force_create=False, **kwargs):
         """
         Initialize GoogleSheetsWriter with spreadsheet name/ID and auth.
 
@@ -143,6 +143,8 @@ class GoogleSheetsWriter(Writer):
             ValueError: If authentication parameters are invalid
             Exception: If unable to authenticate or access the spreadsheet
         """
+        super().__init__(**kwargs)  # processes 'quiet', encoding and hints
+
         self.sheet_name_or_id = sheet_name_or_id
         self.auth_key_path = auth_key_path
         self.use_service_account = use_service_account

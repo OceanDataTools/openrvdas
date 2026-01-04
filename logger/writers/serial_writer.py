@@ -26,8 +26,7 @@ class SerialWriter(Writer):
     def __init__(self,  port, baudrate=9600, bytesize=8, parity='N',
                  stopbits=1, timeout=None, xonxoff=False, rtscts=False,
                  write_timeout=None, dsrdtr=False, inter_byte_timeout=None,
-                 exclusive=None, eol='\n', quiet=False,
-                 encoding='utf-8', encoding_errors='ignore'):
+                 exclusive=None, eol='\n', *kwargs):
         """
         By default, the SerialWriter write records to the specified serial port encoded by UTF-8
         and will ignore non unicode characters it encounters. These defaults may be changed by
@@ -46,8 +45,8 @@ class SerialWriter(Writer):
         quiet - allows for the logger to silence warnings if not all the bits were succesfully
                 written to the serial port.
         """
-        super().__init__(quiet=quiet, encoding=encoding,
-                         encoding_errors=encoding_errors)
+        super().__init__(**kwargs)  # processes 'quiet', encodings and type hints
+
 
         if not SERIAL_MODULE_FOUND:
             raise RuntimeError('Serial port functionality not available. Please '

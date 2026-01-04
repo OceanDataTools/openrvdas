@@ -28,7 +28,7 @@ except ImportError:
 class WebsocketWriter(Writer):
     ############################
 
-    def __init__(self, uri, cert_file=None, key_file=None, quiet=False):
+    def __init__(self, uri, cert_file=None, key_file=None, **kwargs):
         """
         ```
         uri         Protocol, hostname and port to serve as. E.g. 'wss://openrvdas:8081'
@@ -38,6 +38,9 @@ class WebsocketWriter(Writer):
         key_file
         ```
         """
+        # Initialize type checking
+        super().__init__(**kwargs)  # processes 'quiet' and type hints
+
         if not WEBSOCKETS_INSTALLED:
             raise ImportError('WebsocketWriter requires Python "websockets" module; '
                               'please run "pip install websockets"')
@@ -46,9 +49,6 @@ class WebsocketWriter(Writer):
         self.host = parsed_uri.hostname
         self.port = parsed_uri.port
         self.protocol = parsed_uri.scheme
-
-        # Initialize record type checking.
-        super().__init__(quiet=quiet)
 
         if self.protocol == 'wss':
             self.ssl = True
