@@ -214,7 +214,6 @@ class GrafanaLiveWriter(Writer):
 
     def _send_batch(self, stream_id, batch):
         """Send a batch of line protocol records to a specific Grafana stream."""
-        # Fix: URL-encode the stream ID to handle slashes correctly in the URL path
         safe_stream_id = quote(stream_id, safe='')
         url = f"{self.base_api_url}/{safe_stream_id}"
 
@@ -381,15 +380,27 @@ class GrafanaLiveWriter(Writer):
         payload = self._format_line_protocol(measurement, fields, timestamp, tags)
 
         if payload:
+            # Honestly, this section is a bit voodoo. The current setup works
+            # both when there is a message_id and when there isn't, and I'm not
+            # sure why.
+
             # Construct dynamic Stream ID
             # Safe quoting of components to ensure valid URL structure
             # Default to 'unknown' if parts are missing to avoid malformed URLs
             safe_data_id = quote(str(data_id or 'unknown'), safe='')
-            safe_msg_type = quote(str(message_type or 'unknown'), safe='')
 
-            # Note: We rely on self.base_stream_id being set in __init__
-            target_stream_id = (f"{self.base_stream_id}/{safe_data_id}/"
-                                f"{safe_msg_type}")
+            # The message_id gets folded in by _format_line_protocol(), so
+            # don't need to duplicate (Gemini-written) code below
+            #safe_msg_type = quote(str(message_type or 'unknown'), safe='')
+            #target_stream_id = (f"{self.base_stream_id}/{safe_data_id}/"
+            #                    f"{safe_msg_type}")
+
+            # Without the logic below, we get duplicate data_ids when there's
+            # no message_id. I...don't understand, but I'm going with it.
+            if message_type:
+                target_stream_id = f"{self.base_stream_id}/{safe_data_id}"
+            else:
+                target_stream_id = f"{self.base_stream_id}"
 
             try:
                 # Put tuple (stream_id, payload) into queue

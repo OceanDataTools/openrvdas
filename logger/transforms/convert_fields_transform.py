@@ -143,6 +143,14 @@ class ConvertFieldsTransform(Transform):
                 try:
                     converter = self.type_map.get(target_type_str)
                     if converter:
+                        # Special case to head off ValueError of int("123.0")
+                        if isinstance(val, str) and converter is int:
+                            try:
+                                val = float(val)
+                            except ValueError:
+                                # Not a float string, let int() call below handle/fail it naturally
+                                pass
+
                         fields[field_name] = converter(val)
                         processed_fields.add(field_name)
                     else:
