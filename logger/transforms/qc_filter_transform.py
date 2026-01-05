@@ -31,7 +31,7 @@ class QCFilterTransform(Transform):
 
     https://github.com/OceanDataTools/openrvdas/issues/406
     """
-    def __init__(self, bounds, message=None):
+    def __init__(self, bounds, message=None, **kwargs):
         """
         ```
         bounds   A comma-separated list of conditions of the format
@@ -44,6 +44,8 @@ class QCFilterTransform(Transform):
                  are violated
         ```
         """
+        super().__init__(**kwargs)  # processes 'quiet' and type hints
+
         self.message = message
         self.bounds = {}
         for condition in bounds.split(','):
@@ -58,12 +60,12 @@ class QCFilterTransform(Transform):
                                  'Found "%s" instead.' % condition)
 
     ############################
-    def transform(self, record: Union[DASRecord, dict]):
+    def transform(self, record: Union[DASRecord, dict]) -> str:
         """Does record violate any bounds?"""
 
         # See if it's something we can process, and if not, try digesting
-        if not self.can_process_record(record):  # inherited from Transform()
-            return self.digest_record(record)  # inherited from Transform()
+        if not self.can_process_record(record):  # inherited from BaseModule()
+            return self.digest_record(record)  # inherited from BaseModule()
 
         # If here, we must be either a DASRecord or dict
         if type(record) is DASRecord:

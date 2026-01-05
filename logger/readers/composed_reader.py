@@ -6,7 +6,6 @@ import threading
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
-from logger.utils import formats  # noqa: E402
 from logger.readers.reader import Reader  # noqa: E402
 
 # How long to a reader thread should lie dormant before shutting down
@@ -50,7 +49,7 @@ class ComposedReader(Reader):
     """
     ############################
 
-    def __init__(self, readers, transforms=[], check_format=False):
+    def __init__(self, readers, transforms=[], **kwargs):
         """
         Instantiation:
         ```
@@ -59,11 +58,6 @@ class ComposedReader(Reader):
         readers        A single Reader or a list of Readers.
 
         transforms     A single Transform or list of zero or more Transforms.
-
-        check_format   If True, attempt to check that Reader/Transform formats
-                       are compatible, and throw a ValueError if they are not.
-                       If check_format is False (the default) the output_format()
-                       of the whole reader will be formats.Unknown.
         ```
         Use:
         ```
@@ -71,11 +65,13 @@ class ComposedReader(Reader):
         ```
         Sample:
         ```
-        reader = ComposedReader(readers=[NetworkReader(':6221'),
-                                         NetworkReader(':6223')],
+        reader = ComposedReader(readers=[UDPReader(port=6221),
+                                         UDPReader(port=6223)],
                                 transforms=[TimestampTransform()])
         ```
         """
+        super().__init__(**kwargs)
+
         # Make readers a list, even if it's only a single reader.
         self.readers = readers if type(readers) is list else [readers]
         self.num_readers = len(self.readers)
@@ -86,17 +82,6 @@ class ComposedReader(Reader):
             self.transforms = [transforms]
         else:
             self.transforms = transforms
-
-        # If they want, check that our readers and transforms have
-        # compatible input/output formats.
-        output_format = formats.Unknown
-        if check_format:
-            output_format = self._check_reader_formats()
-            if not output_format:
-                raise ValueError('ComposedReader: No common output format found '
-                                 'for passed readers: %s' % [r.output_format()
-                                                             for r in self.readers])
-        super().__init__(output_format=output_format)
 
         # List where we're going to store reader threads
         self.reader_threads = [None] * self.num_readers
@@ -257,32 +242,3 @@ class ComposedReader(Reader):
                 if not record:
                     break
         return record
-
-    ############################
-    def _check_reader_formats(self):
-        """
-        Check that Reader outputs are compatible with each other and with
-        Transform inputs. Return None if not.
-        """
-        # Find the lowest common format among readers
-        lowest_common = self.readers[0].output_format()
-        for reader in self.readers:
-            lowest_common = reader.output_format().common(lowest_common)
-            if not lowest_common:
-                return None
-
-        logging.debug('Lowest common format for readers is "%s"', lowest_common)
-        if not self.transforms:
-            return lowest_common
-
-        # Now check the transforms in series - output of each is input of
-        # next one.
-        for transform in self.transforms:
-            if not transform.input_format().can_accept(lowest_common):
-                logging.error('Transform %s can not accept input format %s',
-                              transform, lowest_common)
-                return None
-            lowest_common = transform.output_format()
-
-        # Our final format is the lowest common format from last transform
-        return lowest_common

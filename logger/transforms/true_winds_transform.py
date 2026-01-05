@@ -28,6 +28,7 @@ import sys
 import time
 
 from pprint import pformat
+from typing import Union
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
@@ -54,7 +55,8 @@ class TrueWindsTransform(DerivedDataTransform):
                  convert_wind_factor=1,
                  convert_speed_factor=1,
                  data_id=None,
-                 metadata_interval=None):
+                 metadata_interval=None,
+                 **kwargs):
         """
         ```
         course_field
@@ -100,6 +102,8 @@ class TrueWindsTransform(DerivedDataTransform):
         data_id  Optional name that will be attached to the resulting DASRecord
         ```
         """
+        super().__init__(**kwargs)  # processes 'quiet' and type hints
+
         self.course_field = course_field
         self.speed_field = speed_field
         self.heading_field = heading_field
@@ -184,21 +188,13 @@ class TrueWindsTransform(DerivedDataTransform):
         return metadata_fields
 
     ############################
-    def transform(self, record):
+    def transform(self, record: Union[dict, DASRecord]):
         """Incorporate any useable fields in this record, and if it gives
         us a new true wind value, return the results."""
 
-        if record is None:
-            return None
-
-        # If we've got a list, hope it's a list of records. Recurse,
-        # calling transform() on each of the list elements in order and
-        # return the resulting list.
-        if type(record) is list:
-            results = []
-            for single_record in record:
-                results.append(self.transform(single_record))
-            return results
+        # See if it's something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from BaseModule()
+            return self.digest_record(record)  # inherited from BaseModule()
 
         results = []
         for das_record in to_das_record_list(record):

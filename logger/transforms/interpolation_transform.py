@@ -22,7 +22,8 @@ class InterpolationTransform(DerivedDataTransform):
     """Transform that computes interpolations of the specified variables.
     """
 
-    def __init__(self, field_spec, interval, window, data_id=None, metadata_interval=None):
+    def __init__(self, field_spec, interval, window,
+                 data_id=None, metadata_interval=None, **kwargs):
         """
         ```
         field_spec - a dict of interpolated variables that are to be created,
@@ -74,6 +75,8 @@ class InterpolationTransform(DerivedDataTransform):
         ```
 
         """
+        super().__init__(**kwargs)  # processes 'quiet' and type hints
+
         self.field_spec = {}
         self.source_fields = set()
         if isinstance(field_spec, dict):
@@ -252,11 +255,11 @@ class InterpolationTransform(DerivedDataTransform):
         interpolation, return an empty list.
         """
         # See if it's something we can process, and if not, try digesting
-        if not self.can_process_record(record):  # inherited from Transform()
-            return self.digest_record(record)  # inherited from Transform()
+        if not self.can_process_record(record):  # inherited from BaseModule()
+            return self.digest_record(record)  # inherited from BaseModule()
 
-        # Add the record and remember its timestamp.
-        record_timestamp = self._add_record(record)
+        # Add the record
+        self._add_record(record)
 
         # First time through, our 'next_timestamp' will be zero. Set it to
         # a good starting place.

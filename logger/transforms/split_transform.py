@@ -11,29 +11,24 @@ from logger.transforms.transform import Transform  # noqa: E402
 
 ################################################################################
 class SplitTransform(Transform):
-    def __init__(self, sep='\n'):
+    def __init__(self, sep='\n', **kwargs):
         """
         ```
         sep       Field separator string; if omitted, split along newlines.
         ```
         """
+        super().__init__(**kwargs)  # processes 'quiet' and type hints
         self.sep = sep
 
     ############################
-    def transform(self, record):
+    def transform(self, record: str) -> list:
         """Split record into array of records along separator."""
-        if record is None:
-            return None
 
-        # If we've got a list, hope it's a list of records. Recurse,
-        # calling transform() on each of the list elements in order and
-        # return the resulting list.
-        if type(record) is list:
-            results = []
-            for single_record in record:
-                results += self.transform(single_record)
+        # See if it's something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from BaseModule()
+            return self.digest_record(record)  # inherited from BaseModule()
 
-        elif not type(record) is str:
+        if not type(record) is str:
             logging.warning('SplitTransform received non-string input: %s', record)
             results = None
 

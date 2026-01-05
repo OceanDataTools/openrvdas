@@ -7,7 +7,6 @@ import time
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
-from logger.utils.formats import Text  # noqa: E402
 from logger.readers.reader import StorageReader  # noqa: E402
 
 
@@ -20,7 +19,7 @@ class TextFileReader(StorageReader):
     ############################
 
     def __init__(self, file_spec=None, tail=False, refresh_file_spec=False,
-                 retry_interval=0.1, interval=0, eol=None):
+                 retry_interval=0.1, interval=0, eol=None, *args, **kwargs):
         """
         ```
         file_spec    Possibly wildcarded string speficying files to be opened.
@@ -51,7 +50,7 @@ class TextFileReader(StorageReader):
         depends on how glob returns them.
         """
 
-        super().__init__(output_format=Text)
+        super().__init__(*args, **kwargs)
 
         self.file_spec = file_spec
         self.tail = tail
