@@ -16,7 +16,7 @@ class TextFileWriter(Writer):
 
     def __init__(self, filename=None, flush=True, truncate=False,
                  split_by_date=False, create_path=True, header=None,
-                 header_file=None, quiet=False):
+                 header_file=None, **kwargs):
         """Write text records to a file. If no filename is specified, write to
         stdout.
         ```
@@ -36,14 +36,14 @@ class TextFileWriter(Writer):
         header_file  Add the content of the specified file to each file.
       ```
         """
+        # Initialize type checking
+        super().__init__(**kwargs)  # processes 'quiet' and type hints
+
         self.filename = filename
         self.flush = flush
         self.truncate = truncate
         self.split_by_date = split_by_date
         self.header = None
-
-        # Initialize type checking
-        super().__init__(quiet=quiet)
 
         if split_by_date and not filename:
             raise ValueError('TextFileWriter: filename must be specified if '

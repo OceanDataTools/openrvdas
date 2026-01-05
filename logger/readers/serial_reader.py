@@ -26,7 +26,7 @@ class SerialReader(Reader):
                  stopbits=1, timeout=None, xonxoff=False, rtscts=False,
                  write_timeout=None, dsrdtr=False, inter_byte_timeout=None,
                  exclusive=None, max_bytes=None, eol=None, allow_empty=False,
-                 encoding='utf-8', encoding_errors='ignore'):
+                 encoding='utf-8', encoding_errors='ignore', **kwargs):
         """If max_bytes is specified on initialization, read up to that many
         bytes when read() is called. If eol is not specified, read() will
         read up to the first newline it receives. In both cases, if
@@ -69,8 +69,7 @@ class SerialReader(Reader):
             eol: \r
         ```
         """
-        super().__init__(encoding=encoding,
-                         encoding_errors=encoding_errors)
+        super().__init__(encoding=encoding, encoding_errors=encoding_errors, **kwargs)
 
         if not SERIAL_MODULE_FOUND:
             raise RuntimeError('Serial port functionality not available. Please '

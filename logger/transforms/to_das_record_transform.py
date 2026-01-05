@@ -21,17 +21,19 @@ class ToDASRecordTransform(Transform):
     and use those strings as the corresponding field values.
     """
 
-    def __init__(self, data_id=None, field_name=None):
+    def __init__(self, data_id=None, field_name=None, **kwargs):
+        super().__init__(**kwargs)  # processes 'quiet' and type hints
+
         self.data_id = data_id
         self.field_name = field_name
 
     ############################
-    def transform(self, record: Union[str, dict]):
+    def transform(self, record: Union[str, dict]) -> DASRecord:
         """Convert record to DASRecord."""
 
         # See if it's something we can process, and if not, try digesting
-        if not self.can_process_record(record):  # inherited from Transform()
-            return self.digest_record(record)  # inherited from Transform()
+        if not self.can_process_record(record):  # inherited from BaseModule()
+            return self.digest_record(record)  # inherited from BaseModule()
 
         if isinstance(record, str):
             # If str, assume it's JSON unless field_name is set

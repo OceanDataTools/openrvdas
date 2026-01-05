@@ -210,7 +210,7 @@ class RecordParser:
                 logging.warning('Record: %s', record)
             return None
 
-        data_id = parsed_record.get('data_id','no_data_id')
+        data_id = parsed_record.get('data_id', 'no_data_id')
 
         # Convert timestamp to numeric, if it's there
         timestamp = parsed_record.get('timestamp')

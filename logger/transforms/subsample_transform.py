@@ -19,7 +19,7 @@ class SubsampleTransform(DerivedDataTransform):
     """
 
     def __init__(self, field_spec, back_seconds=60*60,
-                 metadata_interval=None):
+                 metadata_interval=None, **kwargs):
         """
         ```
         field_spec - a dict that contains the fields to be subsampled,
@@ -47,6 +47,10 @@ class SubsampleTransform(DerivedDataTransform):
                      to a record we send out.
         ```
         """
+        super().__init__(**kwargs)  # processes 'quiet' and type hints
+
+        logging.warning('SubsampleTransform is deprecated in favor of InterpolationTransform')
+
         self.field_spec = field_spec
         self.back_seconds = back_seconds
         self.field_list = list(field_spec.keys())
