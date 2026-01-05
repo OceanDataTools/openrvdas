@@ -13,7 +13,7 @@ class TestConvertFieldsTransform(unittest.TestCase):
 
     ############################
     def test_simple_conversion(self):
-        """Test basic type conversions (float, int, str)."""
+        """Test basic type conversions using the simple string format (float, int, str)."""
         t = ConvertFieldsTransform(fields={
             'heave': 'float',
             'count': 'int',
@@ -38,6 +38,30 @@ class TestConvertFieldsTransform(unittest.TestCase):
 
             # Verify the correct warning was logged
             self.assertTrue(any("Failed to convert field 'heave'" in log for log in cm.output))
+
+    ############################
+    def test_dict_configuration(self):
+        """Test configuration where fields are defined as dicts with metadata."""
+        # This setup includes extra keys like 'units' and 'description'
+        # to ensure the transform ignores them and only uses 'data_type'.
+        t = ConvertFieldsTransform(fields={
+            'heave': {'data_type': 'float', 'units': 'm'},
+            'count': {'data_type': 'int', 'description': 'Number of events'},
+            'flag': {'data_type': 'str'}
+        })
+
+        input_dict = {'heave': '1.23', 'count': '10', 'flag': 123}
+        expected = {'heave': 1.23, 'count': 10, 'flag': '123'}
+        self.assertDictEqual(t.transform(input_dict), expected)
+
+        # Ensure that if 'data_type' is missing from the dict, it is ignored gracefully
+        t_broken = ConvertFieldsTransform(fields={
+            'heave': {'units': 'm'}  # No data_type provided
+        })
+        input_broken = {'heave': '1.23'}
+        # Should remain string because no valid conversion type was found
+        expected_broken = {'heave': '1.23'}
+        self.assertDictEqual(t_broken.transform(input_broken), expected_broken)
 
     ############################
     def test_float_string_to_int(self):
