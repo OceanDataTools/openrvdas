@@ -23,8 +23,8 @@ class ConvertFieldsTransform(Transform):
     conversions (e.g., combining a value and a cardinal direction field).
     """
 
-    def __init__(self, fields=None, lat_lon_fields=None,
-                 delete_source_fields=False, delete_unconverted_fields=False):
+    def __init__(self, fields=None, lat_lon_fields=None, delete_source_fields=False,
+                 delete_unconverted_fields=False, **kwargs):
         """
         Args:
             fields (dict): A dictionary mapping field names to their target types.
@@ -47,6 +47,8 @@ class ConvertFieldsTransform(Transform):
                                               source or a destination) will be removed.
                                               Defaults to False.
         """
+        super().__init__(**kwargs)  # processes 'quiet' and type hints
+
         self.fields = fields or {}
         self.lat_lon_fields = lat_lon_fields or {}
         self.delete_source_fields = delete_source_fields
@@ -97,10 +99,15 @@ class ConvertFieldsTransform(Transform):
             return None
 
     ############################
-    def transform(self, record: Union[str, dict]):
+    def transform(self, record: Union[str, dict, DASRecord])\
+            -> Union[str, dict, DASRecord]:
         """
         Return a copy of the passed record with fields converted.
         """
+        # See if it's something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # BaseModule
+            return self.digest_record(record)  # BaseModule
+
         # We need to make a deep copy because we modify the record in place
         new_record = copy.deepcopy(record)
 
@@ -136,6 +143,14 @@ class ConvertFieldsTransform(Transform):
                 try:
                     converter = self.type_map.get(target_type_str)
                     if converter:
+                        # Special case to head off ValueError of int("123.0")
+                        if isinstance(val, str) and converter is int:
+                            try:
+                                val = float(val)
+                            except ValueError:
+                                # Not a float string, let int() call below handle/fail it naturally
+                                pass
+
                         fields[field_name] = converter(val)
                         processed_fields.add(field_name)
                     else:

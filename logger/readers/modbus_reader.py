@@ -50,10 +50,10 @@ class ModBusTCPReader(Reader):
                  interval=10,
                  sep=" ",
                  encoding="utf-8",
-                 encoding_errors="ignore"):
+                 encoding_errors="ignore",
+                 **kwargs):
 
-        super().__init__(encoding=encoding,
-                         encoding_errors=encoding_errors)
+        super().__init__(encoding=encoding, encoding_errors=encoding_errors, **kwargs)
 
         if not MODBUS_MODULE_FOUND:
             raise RuntimeError(

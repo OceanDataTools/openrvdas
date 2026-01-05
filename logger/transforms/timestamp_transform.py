@@ -12,14 +12,16 @@ from logger.transforms.transform import Transform  # noqa: E402
 class TimestampTransform(Transform):
     """Prepend a timestamp to a text record."""
     def __init__(self, time_format=timestamp.TIME_FORMAT,
-                 time_zone=timestamp.timezone.utc, sep=' '):
+                 time_zone=timestamp.timezone.utc, sep=' ', **kwargs):
         """If timestamp_format is not specified, use default format"""
+        super().__init__(**kwargs)  # processes 'quiet' and type hints
+
         self.time_format = time_format
         self.time_zone = time_zone
         self.sep = sep
 
     ############################
-    def transform(self, record: str, ts=None):
+    def transform(self, record: str, ts=None) -> str:
         """Prepend a timestamp"""
 
         # First off, grab a current timestamp
@@ -27,7 +29,7 @@ class TimestampTransform(Transform):
                                       time_zone=self.time_zone)
 
         # See if it's something we can process, and if not, try digesting
-        if not self.can_process_record(record):  # inherited from Transform()
+        if not self.can_process_record(record):  # inherited from BaseModule()
             # Special case: if we can't process it, but it's a list, pass
             # along the same initial timestamp so all elements in the list
             # share the same timestamp.
@@ -36,7 +38,7 @@ class TimestampTransform(Transform):
             # If not str and not list, pass it along to digest_record()
             # to let it try and/or complain.
             else:
-                return self.digest_record(record)  # inherited from Transform()
+                return self.digest_record(record)  # inherited from BaseModule()
 
         # If it is something we can process, put a timestamp on it.
         return ts + self.sep + record

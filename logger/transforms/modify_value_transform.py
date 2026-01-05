@@ -11,16 +11,15 @@ from typing import Union
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.utils.das_record import DASRecord  # noqa: E402
-from logger.transforms.derived_data_transform import DerivedDataTransform  # noqa: E402
+from logger.transforms.transform import Transform  # noqa: E402
 
 
 ################################################################################
-class ModifyValueTransform(DerivedDataTransform):
+class ModifyValueTransform(Transform):
     """Modify the value of specified fields according to simple formulae.
     """
-
     def __init__(self, fields, data_id=None, delete_unmatched=False, quiet=False,
-                 metadata_interval=None):
+                 metadata_interval=None, **kwargs):
         """
         fields
            A dict of fields to match. Key of each is the field to match. Values are
@@ -66,7 +65,7 @@ class ModifyValueTransform(DerivedDataTransform):
           (NOTE: need to address which fields' metadata is sent along - all specified,
           or only fields that have appeared since last send, or...?)
         """
-        super().__init__(quiet=quiet)
+        super().__init__(**kwargs)  # processes 'quiet' and type hints
 
         self.fields = fields
         self.data_id = data_id
@@ -107,10 +106,9 @@ class ModifyValueTransform(DerivedDataTransform):
         Returns:
             Transformed record(s) or None if the input is invalid.
         """
-
         # See if it's something we can process, and if not, try digesting
-        if not self.can_process_record(record):  # inherited from Transform()
-            return self.digest_record(record)  # inherited from Transform()
+        if not self.can_process_record(record):  # inherited from BaseModule()
+            return self.digest_record(record)  # inherited from BaseModule()
 
         # If we've got a dict, convert it to a DASRecord for uniform handling
         if isinstance(record, dict):
