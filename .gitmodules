@@ -1,6 +1,8 @@
 [submodule "web_backend"]
 	path = web_backend
 	url = https://github.com/OceanDataTools/fastapi-template.git
+        branch = openrvdas
 [submodule "web_frontend"]
 	path = web_frontend
 	url = https://github.com/OceanDataTools/vite-react-template.git
+        branch = openrvdas
