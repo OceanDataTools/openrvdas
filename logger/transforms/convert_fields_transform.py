@@ -39,7 +39,7 @@ class ConvertFieldsTransform(Transform):
 
                            Supported types include:
                              - float, double
-                             - int, short, ushort, uint, long, ubyte, byte
+                             - int, short, ushort, uint, long, ubyte, byte, hex
                              - str, char, string, text
                              - bool, boolean
 
@@ -69,7 +69,7 @@ class ConvertFieldsTransform(Transform):
         # Map string type names to actual python types/conversion functions.
         # Recognized types include:
         #   float, double -> float
-        #   int, short, ushort, uint, long, ubyte, byte -> int
+        #   int, short, ushort, uint, long, ubyte, byte, hex -> int
         #   str, char, string, text -> str
         #   bool, boolean -> bool
         self.type_map = {
@@ -87,7 +87,8 @@ class ConvertFieldsTransform(Transform):
             'string': str,
             'text': str,
             'bool': bool,
-            'boolean': bool
+            'boolean': bool,
+            'hex': lambda x: int(str(x), 16),  # Handles "1A", "0x1A", etc.
         }
 
     ############################

@@ -79,6 +79,27 @@ class TestConvertFieldsTransform(unittest.TestCase):
         self.assertDictEqual(t.transform(input_trunc), expected_trunc)
 
     ############################
+    def test_hex_conversion(self):
+        """Test converting hex strings to integers."""
+        t = ConvertFieldsTransform(fields={
+            'flag_a': 'hex',
+            'flag_b': 'hex',
+            'prefixed': 'hex'
+        })
+
+        input_dict = {
+            'flag_a': '1A',       # 26
+            'flag_b': 'FF',       # 255
+            'prefixed': '0x10'    # 16
+        }
+        expected = {
+            'flag_a': 26,
+            'flag_b': 255,
+            'prefixed': 16
+        }
+        self.assertDictEqual(t.transform(input_dict), expected)
+
+    ############################
     def test_lat_lon_conversion(self):
         """Test NMEA lat/lon conversion logic."""
         t = ConvertFieldsTransform(lat_lon_fields={
