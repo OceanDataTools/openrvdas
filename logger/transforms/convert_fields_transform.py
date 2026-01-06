@@ -27,9 +27,21 @@ class ConvertFieldsTransform(Transform):
                  delete_unconverted_fields=False, **kwargs):
         """
         Args:
-            fields (dict): A dictionary mapping field names to their target types.
-                           Supported types are 'float', 'int', 'str'.
-                           Example: {'heave': 'float', 'pitch': 'float'}
+            fields (dict): A dictionary mapping field names to their target configuration.
+                           This accepts two formats for the value:
+                           1. A dictionary containing metadata (preferred). The key
+                              'data_type' is used for conversion; others are ignored.
+                              Example:
+                                  {'heave': {'data_type': 'float', 'units': 'm'}}
+                           2. A simple string specifying the data type (backward compatibility).
+                              Example:
+                                  {'heave': 'float'}
+
+                           Supported types include:
+                             - float, double
+                             - int, short, ushort, uint, long, ubyte, byte, hex
+                             - str, char, string, text
+                             - bool, boolean
 
             lat_lon_fields (dict): A dictionary mapping a new target field name to a tuple
                                    or list of (value_field, direction_field).
@@ -54,7 +66,12 @@ class ConvertFieldsTransform(Transform):
         self.delete_source_fields = delete_source_fields
         self.delete_unconverted_fields = delete_unconverted_fields
 
-        # Map string type names to actual python types/conversion functions
+        # Map string type names to actual python types/conversion functions.
+        # Recognized types include:
+        #   float, double -> float
+        #   int, short, ushort, uint, long, ubyte, byte, hex -> int
+        #   str, char, string, text -> str
+        #   bool, boolean -> bool
         self.type_map = {
             'float': float,
             'double': float,
@@ -70,7 +87,8 @@ class ConvertFieldsTransform(Transform):
             'string': str,
             'text': str,
             'bool': bool,
-            'boolean': bool
+            'boolean': bool,
+            'hex': lambda x: int(str(x), 16),  # Handles "1A", "0x1A", etc.
         }
 
     ############################
@@ -137,8 +155,18 @@ class ConvertFieldsTransform(Transform):
         processed_fields = set()
 
         # 1. Handle simple Type Conversions
-        for field_name, target_type_str in self.fields.items():
+        for field_name, field_def in self.fields.items():
             if field_name in fields:
+                # Extract target type from dict, or fallback if string
+                target_type_str = None
+                if isinstance(field_def, dict):
+                    target_type_str = field_def.get('data_type')
+                elif isinstance(field_def, str):
+                    target_type_str = field_def
+
+                if not target_type_str:
+                    continue
+
                 val = fields[field_name]
                 try:
                     converter = self.type_map.get(target_type_str)
