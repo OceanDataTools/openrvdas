@@ -427,58 +427,82 @@ def substitute_variables(config: ConfigValue,
         except json.JSONDecodeError:
             pass
 
-        # Try numeric conversion if JSON parsing failed
-        if value.isdigit():
-            return int(value)
         try:
-            return float(value)
+            return int(value)
         except ValueError:
-            pass
+            try:
+                return float(value)
+            except ValueError:
+                return value
 
-        # Fallback to plain string
-        return value
+    def _split_placeholder(expr: str):
+        depth = 0
+        buf, parts = [], []
+        i = 0
+
+        while i < len(expr):
+            if expr[i:i+2] == '<<':
+                depth += 1
+                buf.append('<<')
+                i += 2
+            elif expr[i:i+2] == '>>':
+                depth -= 1
+                buf.append('>>')
+                i += 2
+            elif expr[i] == '|' and depth == 0:
+                parts.append(''.join(buf))
+                buf = []
+                i += 1
+            else:
+                buf.append(expr[i])
+                i += 1
+
+        parts.append(''.join(buf))
+        return parts[0], parts[1] if len(parts) > 1 else None
+
+    def _resolve_variable(expr: str):
+        name, default = _split_placeholder(expr)
+        if name in variables:
+            return variables[name]
+        if default is not None:
+            val = substitute_variables(default, variables)
+            return _convert_type(val) if isinstance(val, str) else val
+        return f"<<{name}>>"
+
+    def _walk_string(s: str) -> str:
+        out, i = [], 0
+        while i < len(s):
+            if s[i:i+2] == '<<':
+                depth, j = 1, i + 2
+                while j < len(s) and depth:
+                    if s[j:j+2] == '<<':
+                        depth += 1
+                        j += 2
+                    elif s[j:j+2] == '>>':
+                        depth -= 1
+                        j += 2
+                    else:
+                        j += 1
+                out.append(str(_resolve_variable(s[i+2:j-2])))
+                i = j
+            else:
+                out.append(s[i])
+                i += 1
+        return ''.join(out)
 
     if isinstance(config, dict):
-        return {
-            substitute_variables(k, variables): substitute_variables(v, variables)
-            for k, v in config.items()
-        }
+        return {substitute_variables(k, variables): substitute_variables(v, variables)
+                for k, v in config.items()}
 
-    elif isinstance(config, list):
-        return [substitute_variables(item, variables) for item in config]
+    if isinstance(config, list):
+        return [substitute_variables(v, variables) for v in config]
 
-    elif isinstance(config, str):
-        pattern = r'<<([^>|]+)(?:\|([^>]+))?>>'
+    if isinstance(config, str):
+        if config.startswith("<<") and config.endswith(">>"):
+            return _resolve_variable(config[2:-2])
+        return _walk_string(config)
 
-        # Full-variable pattern match
-        match = re.fullmatch(pattern, config)
-        if match:
-            var_name, default_value = match.groups()
-            if var_name in variables:
-                return variables[var_name]
-            elif default_value is not None:
-                # Recursively resolve nested default
-                resolved_default = substitute_variables(default_value, variables)
-                return _convert_type(resolved_default) if isinstance(resolved_default, str) else resolved_default
-            else:
-                # Pass through unresolved variable
-                return f"<<{var_name}>>"
-
-        # Embedded substitution within a larger string
-        def replace_match(m):
-            var_name, default_value = m.groups()
-            if var_name in variables:
-                return str(variables[var_name])
-            elif default_value is not None:
-                resolved_default = substitute_variables(default_value, variables)
-                return str(_convert_type(resolved_default) if isinstance(resolved_default, str) else resolved_default)
-            else:
-                return f"<<{var_name}>>"
-
-        return re.sub(pattern, replace_match, config)
-
-    else:
-        return config
+    return config
 
 
 ###################

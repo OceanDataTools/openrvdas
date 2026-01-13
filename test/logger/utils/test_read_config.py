@@ -658,9 +658,72 @@ loggers:
             "test": "<<missing_variable>>"
         }
 
-        # Test that substitute_variables raises ValueError
-        with self.assertRaises(ValueError):
-            read_config.substitute_variables(test_config, {})
+        result = read_config.substitute_variables(test_config, {})
+
+        # Should return the unexpanded placeholder
+        self.assertEqual(result, {"test": "<<missing_variable>>"})
+
+    def test_variable_with_default(self) -> None:
+        """Test the new <<var|default>> syntax."""
+
+        test_config = {
+            "test": "<<var_1|default_string>>"
+        }
+
+        # Test 1: Variable does not exists, use default
+        result = read_config.substitute_variables(test_config, {})
+        self.assertEqual(result, {"test": "default_string"})
+
+        # Test 2: Variable exists
+        result = read_config.substitute_variables(test_config, {"var_1": "string_1"})
+        self.assertEqual(result, {"test": "string_1"})
+
+    def test_variable_with_nested_default(self) -> None:
+        """Test the new <<var|default>> syntax."""
+
+        test_config = {
+            "test": "<<var_1|<<var_2|default_string>>>>"
+        }
+
+        # Test 1: Neither var exists, use default
+        result = read_config.substitute_variables(test_config, {})
+        self.assertEqual(result, {"test": "default_string"})
+
+        # Test 2: Primary variable exists
+        result = read_config.substitute_variables(test_config, {"var_1": "string_1"})
+        self.assertEqual(result, {"test": "string_1"})
+
+        # # Test 3: Primary variable does NOT exists, secondary var does
+        result = read_config.substitute_variables(test_config, {"var_2": "string_2"})
+        self.assertEqual(result, {"test": "string_2"})
+
+    def test_variable_type_conversion(self) -> None:
+        """Test type casting of default varibles."""
+
+        result = read_config.substitute_variables({"int_var": "<<var_1>>"}, {'var_1': 100})
+        self.assertEqual(result["int_var"], 100)
+        self.assertIsInstance(result["int_var"], int)
+
+        result = read_config.substitute_variables({"int_var": "<<var_1|100>>"}, {})
+        self.assertEqual(result["int_var"], 100)
+        self.assertIsInstance(result["int_var"], int)
+
+        result = read_config.substitute_variables({"float_var": "<<var_1>>"}, {'var_1': 100.0})
+        self.assertEqual(result["float_var"], 100.0)
+        self.assertIsInstance(result["float_var"], float)
+
+        result = read_config.substitute_variables({"float_var": "<<var_1|100.0>>"}, {})
+        self.assertEqual(result["float_var"], 100.0)
+        self.assertIsInstance(result["float_var"], float)
+
+        result = read_config.substitute_variables({"bool_var": "<<var_1>>"}, {'var_1': True})
+        self.assertEqual(result["bool_var"], True)
+        self.assertIsInstance(result["bool_var"], bool)
+
+        result = read_config.substitute_variables({"bool_var": "<<var_1|true>>"}, {})
+        self.assertEqual(result["bool_var"], True)
+        self.assertIsInstance(result["bool_var"], bool)
+
 
     def test_template_not_found(self) -> None:
         """Test that a ValueError is raised when a template is not found."""
