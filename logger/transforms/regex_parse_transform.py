@@ -2,11 +2,15 @@
 """
 Unified RegexParseTransform.
 
-This class unifies the functionality of RegexTransform and RegexParseTransform
-into a single, robust regex-based transformer.
+This class unifies the functionality of the CORIOLIX RegexTransform and
+CSIRO's RegexParseTransform into a single, robust regex-based transformer.
 
 It uses the pure-regex parsing engine (logger.utils.regex_parser) rather than
 the format-string parser, and allows for optional type conversion of fields.
+
+It also allows use of dicts of {message_type: regex} in field_patterns to capture
+message_type, and allows specifying a data_id, either if the data string doesn't
+have one, or to override the one that is there.
 """
 
 import sys
