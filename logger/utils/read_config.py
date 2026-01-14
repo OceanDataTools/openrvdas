@@ -436,57 +436,121 @@ def substitute_variables(config: ConfigValue,
                 return value
 
     def _split_placeholder(expr: str):
-        depth = 0
-        buf, parts = [], []
-        i = 0
+        """
+        Split a placeholder expression into its variable name and optional
+        default.
 
+        Example expr values:
+            "var"
+            "var|default"
+            "var|<<fallback|default>>"
+
+        Returns a tuple containing the variable name and default value (or
+        None):
+            (var_name, default_expr_or_None)
+
+        The split on the '|' character only occurs at the top level (depth == 0).
+        Any '|' characters inside nested placeholders delimited by '<<' and '>>'
+        are ignored. Nesting depth is tracked by counting occurrences of '<<' and
+        '>>' while scanning the string from left to right.
+
+        Examples:
+            _split_placeholder("timeout|10")
+                -> ("timeout", "10")
+
+            _split_placeholder("a|<<b|c>>")
+                -> ("a", "<<b|c>>")
+
+            _split_placeholder("a")
+                -> ("a", None)
+        """
+        depth, i = 0, 0
         while i < len(expr):
             if expr[i:i+2] == '<<':
                 depth += 1
-                buf.append('<<')
                 i += 2
-            elif expr[i:i+2] == '>>':
+                continue
+            if expr[i:i+2] == '>>':
                 depth -= 1
-                buf.append('>>')
                 i += 2
-            elif expr[i] == '|' and depth == 0:
-                parts.append(''.join(buf))
-                buf = []
-                i += 1
-            else:
-                buf.append(expr[i])
-                i += 1
+                continue
+            if expr[i] == '|' and depth == 0:
+                return expr[:i], expr[i+1:]
+            i += 1
 
-        parts.append(''.join(buf))
-        return parts[0], parts[1] if len(parts) > 1 else None
+        return expr, None
 
     def _resolve_variable(expr: str):
-        name, default = _split_placeholder(expr)
+        """
+        Resolve a single placeholder expression to its final value.
+
+        Given the inner contents of a placeholder (the text between << and >>),
+        this function:
+
+          1. Splits the expression into a variable name and optional default
+             using `_split_placeholder`, supporting nested defaults.
+          2. If the variable name exists in `variables`, returns its value.
+          3. If the variable does not exists and a default expression is
+             present, recursively resolves the default expr via
+             `substitute_variables`, allowing chains such as: <<a|<<b|10>>>>
+          4. Applies type conversion to string defaults
+             (e.g. "10" → 10, "true" → True).
+          5. If variable does not exist and no a default can be resolved,
+             returns the original placeholder in pass-through form
+             (e.g. "<<a>>").
+
+        Args:
+            expr: The inner contents of a placeholder (without the outer << >>).
+
+        Returns:
+            The resolved value in its native Python type (int, float, bool,
+            None, str, etc.) or the original placeholder string.
+        """
+
+        name, default_expr = _split_placeholder(expr)
         if name in variables:
             return variables[name]
-        if default is not None:
-            val = substitute_variables(default, variables)
-            return _convert_type(val) if isinstance(val, str) else val
+
+        if default_expr is not None:
+            resolved = substitute_variables(default_expr, variables)
+            return _convert_type(resolved) if isinstance(resolved, str) else resolved
+
         return f"<<{name}>>"
 
-    def _walk_string(s: str) -> str:
+    def _walk_string(expr: str) -> str:
+        """
+        Scan the expression and replace variable syntax with actual variable
+        values.
+
+        For each complete variable syntax found, the inner expression is
+        resolved via `_resolve_variable`, and the resolved value is inserted
+        into the output.
+
+        Args:
+            expr: Input string possibly containing one or more <<...>> placeholders.
+
+        Returns:
+            A new string with all placeholders expanded and substituted.
+        """
         out, i = [], 0
-        while i < len(s):
-            if s[i:i+2] == '<<':
+        while i < len(expr):
+            if expr[i:i+2] == '<<':
                 depth, j = 1, i + 2
-                while j < len(s) and depth:
-                    if s[j:j+2] == '<<':
+                while j < len(expr) and depth:
+                    if expr[j:j+2] == '<<':
                         depth += 1
                         j += 2
-                    elif s[j:j+2] == '>>':
+                    elif expr[j:j+2] == '>>':
                         depth -= 1
                         j += 2
                     else:
                         j += 1
-                out.append(str(_resolve_variable(s[i+2:j-2])))
+                if depth != 0: # verify there was a closing >>
+                    raise ValueError(f"Malformed variable syntax '{expr[i:]}'")
+                out.append(str(_resolve_variable(expr[i+2:j-2])))
                 i = j
             else:
-                out.append(s[i])
+                out.append(expr[i])
                 i += 1
         return ''.join(out)
 

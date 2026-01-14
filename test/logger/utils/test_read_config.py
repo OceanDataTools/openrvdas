@@ -652,8 +652,8 @@ loggers:
         )
 
     def test_variable_not_found(self) -> None:
-        """Test that a ValueError is raised when a variable is not found."""
-        # Create a test config with a missing variable
+        """Test that a original syntax passed through when a variable is not found."""
+
         test_config = {
             "test": "<<missing_variable>>"
         }
@@ -663,11 +663,27 @@ loggers:
         # Should return the unexpanded placeholder
         self.assertEqual(result, {"test": "<<missing_variable>>"})
 
+    def test_variable_bad_syntax(self) -> None:
+        """Test that a ValueError is raised when a variable syntax is
+        incorrect.
+        """
+
+        test_config = {
+            "test": "<<missing_variable"
+        }
+
+        with self.assertRaises(ValueError):
+            read_config.substitute_variables(test_config, {})
+
     def test_variable_with_default(self) -> None:
         """Test the new <<var|default>> syntax."""
 
         test_config = {
             "test": "<<var_1|default_string>>"
+        }
+
+        test_config_2 = {
+            "test": '<<date_format|"%Y-%m-%d|%H:%M">>'
         }
 
         # Test 1: Variable does not exists, use default
@@ -678,8 +694,12 @@ loggers:
         result = read_config.substitute_variables(test_config, {"var_1": "string_1"})
         self.assertEqual(result, {"test": "string_1"})
 
+        # Test 3: Variable does not exists, default contains a pipe char
+        result = read_config.substitute_variables(test_config_2, {})
+        self.assertEqual(result, {"test": "%Y-%m-%d|%H:%M"})
+
     def test_variable_with_nested_default(self) -> None:
-        """Test the new <<var|default>> syntax."""
+        """Test the new <<var_1|<<var_2|default>>>> syntax."""
 
         test_config = {
             "test": "<<var_1|<<var_2|default_string>>>>"
