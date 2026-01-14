@@ -686,6 +686,10 @@ loggers:
             "test": '<<date_format|"%Y-%m-%d|%H:%M">>'
         }
 
+        test_config_3 = {
+            "test": '<<date_format|%Y-%m-%d|%H:%M>>'
+        }
+
         # Test 1: Variable does not exists, use default
         result = read_config.substitute_variables(test_config, {})
         self.assertEqual(result, {"test": "default_string"})
@@ -696,6 +700,10 @@ loggers:
 
         # Test 3: Variable does not exists, default contains a pipe char
         result = read_config.substitute_variables(test_config_2, {})
+        self.assertEqual(result, {"test": "%Y-%m-%d|%H:%M"})
+
+        # Test 4: Variable does not exists, default contains a pipe char, no quotes
+        result = read_config.substitute_variables(test_config_3, {})
         self.assertEqual(result, {"test": "%Y-%m-%d|%H:%M"})
 
     def test_variable_with_nested_default(self) -> None:
