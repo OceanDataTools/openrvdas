@@ -76,6 +76,12 @@ class BaseModule:
     Implements method for checking whether a received record is in a format
     that the derived class can process, and also a method for splitting a
     list of records into its elements and calling subclass transform() on them.
+
+    Starting with v0.6, BaseModule also implements "mirroring" functionality.
+    If the optional 'mirror_to' argument is passed to the constructor (and
+    the subclass is valid for mirroring, i.e. not a Writer), BaseModule
+    will spin up a thread and a queue to asynchronously write a copy of
+    every record it processes to the specified Writer.
     """
     ############################
     def __init__(self, quiet=False, encoding='utf-8', encoding_errors='ignore',
