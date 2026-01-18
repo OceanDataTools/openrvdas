@@ -42,6 +42,14 @@ class TestRegexParseTransform(unittest.TestCase):
         self.assertEqual(result.fields['temp'], 23.5)
         self.assertIsInstance(result.fields['temp'], float)
 
+    def test_conflict_error(self):
+        """Test that defining both field_patterns and definition_path raises ValueError."""
+        with self.assertRaises(ValueError):
+            RegexParseTransform(
+                field_patterns=[self.field_pattern],
+                definition_path='some/path.yaml'
+            )
+
 
 if __name__ == '__main__':
     unittest.main()
