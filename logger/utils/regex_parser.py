@@ -3,7 +3,6 @@
 """Tools for parsing NMEA and other text records using regex.
 """
 import datetime
-import json
 import logging
 import re
 import pprint
@@ -33,12 +32,9 @@ class RegexParser:
                  record_format=None,
                  field_patterns=None,
                  data_id=None,
-                 return_das_record=False,
-                 return_json=False,
                  quiet=False):
         r"""Create a parser that will parse field values out of a text record
-        and return either a Python dict of data_id, timestamp and fields,
-        a JSON encoding of that dict, or a binary DASRecord.
+        and return a DASRecord object.
         ```
         record_format - string for re.match() to use to break out data_id
             and timestamp from the rest of the message. By default this will
@@ -55,46 +51,14 @@ class RegexParser:
             If specified, this string is used as the data_id for all records,
             overriding any data_id extracted from the source record.
 
-        return_json - return the parsed fields as a JSON encoded dict
-
-        return_das_record - return the parsed fields as a DASRecord object
-
         quiet - if not False, don't complain when unable to parse a record.
         ```
-
-        **Example:**
-
-        .. code-block:: python
-
-            parser = RegexParser(
-                data_id='s330',
-                field_patterns={
-                    'GPGGA': r'^\$GPGGA,(?P<utc>\d+\.\d+),(?P<lat>\d+\.\d+),'
-                             r'(?P<lat_dir>[NS]),(?P<lon>\d+\.\d+),'
-                             r'(?P<lon_dir>[EW]).*',
-                    'GPHDT': r'^\$GPHDT,(?P<heading>\d+\.\d+),T.*'
-                }
-            )
-
-            # Record with implicit timestamp/data_id handling (or overrides)
-            record = '$GPGGA,123519,4807.038,N,01131.000,E,1,08,0.9,545.4,M,46.9,M,,*47'
-            result = parser.parse_record(record)
-
-            # result['fields'] will contain:
-            # {'utc': '123519', 'lat': '4807.038', 'lat_dir': 'N',
-            #  'lon': '01131.000', 'lon_dir': 'E'}
         """
         self.quiet = quiet
         self.field_patterns = field_patterns
         self.record_format = record_format or DEFAULT_RECORD_FORMAT
         self.compiled_record_format = re.compile(self.record_format)
-        self.return_das_record = return_das_record
-        self.return_json = return_json
         self.data_id = data_id  # Store the data_id override
-
-        if return_das_record and return_json:
-            raise ValueError('Only one of return_json and return_das_record '
-                             'may be true.')
 
         # If we've been explicitly given the field_patterns we're to use for
         # parsing, compile them now.
@@ -116,8 +80,7 @@ class RegexParser:
 
     ############################
     def parse_record(self, record):
-        """Parse an id-prefixed text record into a Python dict of
-        data_id, timestamp and fields.
+        """Parse an id-prefixed text record into a DASRecord.
         """
         if not record:
             return None
@@ -154,10 +117,8 @@ class RegexParser:
 
         if timestamp_text is not None:
             timestamp = self.convert_timestamp(timestamp_text)
-            if timestamp is not None:
-                parsed_record['timestamp'] = timestamp
 
-        # If no timestamp found, DASRecord will usually default to time.time()
+        # If no timestamp found, DASRecord will default to time.time()
         # if passed None.
         if timestamp is None:
             timestamp = time.time()
@@ -167,7 +128,6 @@ class RegexParser:
         field_string = parsed_record.get('field_string', None)
         if field_string is not None:
             field_string = field_string.rstrip()
-            del parsed_record['field_string']
 
         message_type = None
         fields = {}
@@ -192,36 +152,14 @@ class RegexParser:
                     except Exception as e:
                         logging.error(e)
 
-        if fields:
-            parsed_record['fields'] = fields
+        logging.debug('Created parsed fields: %s', pprint.pformat(fields))
 
-        logging.debug('Created parsed record: %s', pprint.pformat(parsed_record))
-
-        metadata = None
-
-        # What are we going to do with the result we've created?
-        if self.return_das_record:
-            try:
-                return DASRecord(data_id=data_id, timestamp=timestamp,
-                                 message_type=message_type,
-                                 fields=fields, metadata=metadata)
-            except KeyError:
-                return None
-
-        elif self.return_json:
-            # Note: We must ensure the 'data_id' key is updated in the dict
-            # if we are returning JSON, as parsed_record still contains the
-            # original regex match dict (minus field_string).
-            parsed_record['data_id'] = data_id
-            if 'timestamp' not in parsed_record:
-                parsed_record['timestamp'] = timestamp
-            return json.dumps(parsed_record)
-        else:
-            # Same as JSON case, update the dict before returning
-            parsed_record['data_id'] = data_id
-            if 'timestamp' not in parsed_record:
-                parsed_record['timestamp'] = timestamp
-            return parsed_record
+        try:
+            return DASRecord(data_id=data_id, timestamp=timestamp,
+                             message_type=message_type,
+                             fields=fields)
+        except KeyError:
+            return None
 
     ############################
     def convert_timestamp(self, datetime_text):

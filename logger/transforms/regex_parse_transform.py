@@ -14,7 +14,6 @@ have one, or to override the one that is there.
 """
 
 import sys
-import json
 from typing import Union, Dict, List
 
 # Adjust paths as per your project structure
@@ -76,10 +75,6 @@ class RegexParseTransform(Transform):
                  field_patterns: Union[List, Dict] = None,
                  data_id: str = None,
 
-                 # --- Output Format Arguments ---
-                 return_json: bool = False,
-                 return_das_record: bool = False,
-
                  # --- Type Conversion Arguments (ConvertFieldsTransform) ---
                  fields: Dict = None,
                  lat_lon_fields: Dict = None,
@@ -98,10 +93,6 @@ class RegexParseTransform(Transform):
             data_id (str): If specified, this string is used as the data_id for all records,
                            overriding any data_id extracted from the source record.
 
-            return_json (bool): Return a JSON string representation of the record.
-
-            return_das_record (bool): Return a DASRecord object (default is dict).
-
             fields (dict): Mapping of field names to target types (e.g., {'temp': 'float'}).
                            If provided, ConvertFieldsTransform is instantiated internally.
 
@@ -113,21 +104,11 @@ class RegexParseTransform(Transform):
         """
         super().__init__(**kwargs)  # processes 'quiet' and type hints
 
-        self.return_json = return_json
-        self.return_das_record = return_das_record
-        # self.quiet = quiet  # is taken care of in BaseModule init from **kwargs
-
         # 1. Initialize the Parser (RegexParser)
-        # We configure it to return a dict or DASRecord initially so we can process
-        # fields. We handle the final JSON serialization ourselves if requested.
-        use_das_record = True if (return_das_record or fields or lat_lon_fields) else False
-
         self.parser = regex_parser.RegexParser(
             record_format=record_format,
             field_patterns=field_patterns,
             data_id=data_id,
-            return_json=False,  # Handle JSON manually after conversion
-            return_das_record=use_das_record,
             quiet=self.quiet
         )
 
@@ -142,7 +123,7 @@ class RegexParseTransform(Transform):
                 quiet=self.quiet
             )
 
-    def transform(self, record: str) -> Union[Dict, str, DASRecord, List]:
+    def transform(self, record: str) -> Union[DASRecord, List[DASRecord], None]:
         """
         Parse the record, optionally convert fields, and return the result.
         """
@@ -151,7 +132,7 @@ class RegexParseTransform(Transform):
             return self.digest_record(record)  # BaseModule
 
         # 1. Parse
-        # Returns a DASRecord (if we asked for it) or a dict
+        # Returns a DASRecord
         parsed_record = self.parser.parse_record(record)
 
         if not parsed_record:
@@ -160,52 +141,12 @@ class RegexParseTransform(Transform):
         # 2. Convert Fields
         if self.converter:
             # ConvertFieldsTransform modifies in place or returns a copy
+            # It expects DASRecord (or list) and returns DASRecord (or list)
             parsed_record = self.converter.transform(parsed_record)
             if not parsed_record:
                 return None
 
-        # 3. Format Output
-        # At this point 'parsed_record' is likely a DASRecord (if we used converter)
-        # or a dict (if we didn't use converter and didn't ask for DASRecord).
-
-        if self.return_json:
-            if isinstance(parsed_record, DASRecord):
-                # Construct dict for serialization
-                rec_dict = {
-                    'data_id': parsed_record.data_id,
-                    'timestamp': parsed_record.timestamp,
-                    'fields': parsed_record.fields
-                }
-                if parsed_record.metadata:
-                    rec_dict['metadata'] = parsed_record.metadata
-                return json.dumps(rec_dict)
-            else:
-                return json.dumps(parsed_record)
-
-        elif self.return_das_record:
-            # User specifically asked for DASRecord
-            if isinstance(parsed_record, dict):
-                # Upgrade dict to DASRecord if parser returned dict
-                return DASRecord(
-                    data_id=parsed_record.get('data_id'),
-                    timestamp=parsed_record.get('timestamp'),
-                    fields=parsed_record.get('fields'),
-                    metadata=parsed_record.get('metadata')
-                )
-            return parsed_record
-
-        else:
-            # User wants a plain dictionary
-            if isinstance(parsed_record, DASRecord):
-                rec_dict = {
-                    'data_id': parsed_record.data_id,
-                    'timestamp': parsed_record.timestamp,
-                    'fields': parsed_record.fields
-                }
-                if parsed_record.metadata:
-                    rec_dict['metadata'] = parsed_record.metadata
-                return rec_dict
-            return parsed_record
+        return parsed_record
 
 
 # Alias for backward compatibility
