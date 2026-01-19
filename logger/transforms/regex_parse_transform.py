@@ -78,10 +78,7 @@ class RegexParseTransform(Transform):
                  field_patterns: Union[List, Dict] = None,
                  data_id: str = None,
                  definition_path: str = None,
-
-                 # --- Type Conversion Arguments (ConvertFieldsTransform) ---
                  fields: Dict = None,
-                 lat_lon_fields: Dict = None,
                  delete_source_fields: bool = False,
                  delete_unconverted_fields: bool = False,
                  **kwargs):
@@ -104,8 +101,6 @@ class RegexParseTransform(Transform):
             fields (dict): Mapping of field names to target types (e.g., {'temp': 'float'}).
                            If provided, ConvertFieldsTransform is instantiated internally.
 
-            lat_lon_fields (dict): Mapping for NMEA lat/lon conversion.
-
             delete_source_fields (bool): Remove original fields after conversion.
 
             delete_unconverted_fields (bool): Remove fields that were not converted.
@@ -117,18 +112,19 @@ class RegexParseTransform(Transform):
             raise ValueError('RegexParseTransform: Both field_patterns and definition_path '
                              'specified. Please specify only one.')
 
+        self.devices = {}
+        self.device_types = {}
+        self.type_converters = {}
+
         # If field patterns not provided, look them up in definitions
         if field_patterns is None:
             definition_path = definition_path or DEFAULT_DEFINITION_PATH
-            field_patterns, loaded_fields = self._load_definitions(definition_path)
-            # Merge loaded fields (types) with passed fields argument
-            if loaded_fields:
-                if fields is None:
-                    fields = {}
-                loaded_fields.update(fields)
-                fields = loaded_fields
+            # Load definitions populate self.devices and self.device_types
+            # And returns the aggregated patterns for the parser
+            field_patterns = self._load_definitions(definition_path)
 
         # 1. Initialize the Parser (RegexParser)
+        # We pass the aggregated patterns. RegexParser extracts fields based on regex names.
         self.parser = regex_parser.RegexParser(
             record_format=record_format,
             field_patterns=field_patterns,
@@ -136,57 +132,63 @@ class RegexParseTransform(Transform):
             quiet=self.quiet
         )
 
-        # 2. Initialize the Converter (if requested)
+        # 3. Converter for generic fields (passed in args)
         self.converter = None
-        if (fields or lat_lon_fields) and ConvertFieldsTransform:
+        if fields and ConvertFieldsTransform:
             self.converter = ConvertFieldsTransform(
                 fields=fields,
-                lat_lon_fields=lat_lon_fields,
                 delete_source_fields=delete_source_fields,
                 delete_unconverted_fields=delete_unconverted_fields,
                 quiet=self.quiet
             )
 
     def _load_definitions(self, definition_path):
-        """Load device definitions from YAML files and extract regex patterns and field types.
+        """Load device definitions and return aggregated field patterns.
+        Populates self.devices and self.device_types.
         """
         field_patterns = {}
-        fields = {}
 
         if not definition_path:
-            return field_patterns, fields
+            return field_patterns
 
-        # We can implement a simplified version of RecordParser._read_definitions
-        # tailored to what we need (regexes and types)
         def_files = []
         for path_glob in definition_path.split(','):
             def_files.extend(glob.glob(path_glob.strip()))
 
         if not def_files:
-            return field_patterns, fields
+            return field_patterns
 
         for filename in def_files:
+            # read_config handles includes recursively? No, we must call it.
             new_defs = read_config.read_config(filename)
-            # We are interested mainly in 'device_types'
-            # (which contain 'format' and 'fields')
+            new_defs = read_config.expand_includes(new_defs)
+
+            # Store device_types
             if 'device_types' in new_defs:
                 for dt_name, dt_def in new_defs['device_types'].items():
-                    # Extract formats (regexes)
-                    # format is typically dict {MsgType: regex}
+                    self.device_types[dt_name] = dt_def
+                    # Aggregate formats (regexes)
                     dt_formats = dt_def.get('format', {})
                     if isinstance(dt_formats, dict):
                         field_patterns.update(dt_formats)
 
-                    # Extract field types
+                    # Create cached component converter for this type
+                    # CSIRO format: fields: {name: {data_type: type}}
+                    # ConvertFieldsTransform format: {name: {data_type: type}} or {name: type}
+                    # It matches perfectly.
                     dt_fields = dt_def.get('fields', {})
-                    for field_name, field_def in dt_fields.items():
-                        # field_def might be a dict with 'data_type'
-                        if isinstance(field_def, dict):
-                            dtype = field_def.get('data_type')
-                            if dtype:
-                                fields[field_name] = dtype
+                    if dt_fields and ConvertFieldsTransform:
+                        self.type_converters[dt_name] = ConvertFieldsTransform(
+                            fields=dt_fields,
+                            quiet=self.quiet
+                        )
 
-        return field_patterns, fields
+            # Store devices
+            if 'devices' in new_defs:
+                for d_name, d_def in new_defs['devices'].items():
+                    self.devices[d_name] = d_def
+
+        return field_patterns
 
     def transform(self, record: str) -> Union[DASRecord, List[DASRecord], None]:
         """
@@ -196,17 +198,41 @@ class RegexParseTransform(Transform):
         if not self.can_process_record(record):  # BaseModule
             return self.digest_record(record)  # BaseModule
 
-        # 1. Parse
-        # Returns a DASRecord
+        # 1. Parse (Regex)
         parsed_record = self.parser.parse_record(record)
 
         if not parsed_record:
             return None
 
-        # 2. Convert Fields
+        # 2. Device-Specific Logic
+        # Try to match data_id to a known device
+        data_id = parsed_record.data_id
+        if data_id in self.devices:
+            device_def = self.devices[data_id]
+            device_type = device_def.get('device_type')
+
+            # A. Type Conversion (delegated to cached ConvertFieldsTransform)
+            if device_type in self.type_converters:
+                converter = self.type_converters[device_type]
+                parsed_record = converter.transform(parsed_record)
+                if not parsed_record:
+                    return None
+
+            # B. Field Renaming / Filtering
+            # Only retain fields that are in the device's 'fields' map
+            device_fields_map = device_def.get('fields', {})
+            if device_fields_map:
+                new_fields = {}
+                for original_name, mapped_name in device_fields_map.items():
+                    if original_name in parsed_record.fields:
+                        # Use the mapped name (value)
+                        new_fields[mapped_name] = parsed_record.fields[original_name]
+
+                parsed_record.fields = new_fields
+
+        # 3. Generic Converter (ConvertFieldsTransform)
+        # Apply this AFTER device logic if configured (e.g. explicit 'fields' arg)
         if self.converter:
-            # ConvertFieldsTransform modifies in place or returns a copy
-            # It expects DASRecord (or list) and returns DASRecord (or list)
             parsed_record = self.converter.transform(parsed_record)
             if not parsed_record:
                 return None

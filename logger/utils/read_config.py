@@ -163,6 +163,8 @@ def expand_includes(input_dict: dict) -> Dict[str, Any]:
         # Process each included file or pattern
         for include_pattern in input_dict['includes']:
             # Expand wildcards to get list of matching files
+            if isinstance(include_pattern, str):
+                include_pattern = include_pattern.strip()
             matching_files = expand_wildcards(include_pattern, base_dir)
 
             # Process each matching file

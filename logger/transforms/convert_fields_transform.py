@@ -23,48 +23,65 @@ class ConvertFieldsTransform(Transform):
     conversions (e.g., combining a value and a cardinal direction field).
     """
 
-    def __init__(self, fields=None, lat_lon_fields=None, delete_source_fields=False,
+    def __init__(self, fields=None, delete_source_fields=False,
                  delete_unconverted_fields=False, **kwargs):
         """
         Args:
             fields (dict): A dictionary mapping field names to their target configuration.
                            This accepts two formats for the value:
-                           1. A dictionary containing metadata (preferred). The key
-                              'data_type' is used for conversion; others are ignored.
+                           1. A dictionary containing metadata (preferred).
+                              keys:
+                                'data_type': target type (float, int, str, bool, hex,
+                                             nmea_lat, nmea_lon)
+                                'direction_field': (for nmea_*) name of direction field
                               Example:
-                                  {'heave': {'data_type': 'float', 'units': 'm'}}
+                                  {'Latitude': {'data_type': 'nmea_lat',
+                                                'direction_field': 'NorS'}}
                            2. A simple string specifying the data type (backward compatibility).
                               Example:
                                   {'heave': 'float'}
 
-                           Supported types include:
-                             - float, double
-                             - int, short, ushort, uint, long, ubyte, byte, hex
-                             - str, char, string, text
-                             - bool, boolean
-
-            lat_lon_fields (dict): A dictionary mapping a new target field name to a tuple
-                                   or list of (value_field, direction_field).
-                                   Example:
-                                   {'latitude': ('raw_lat', 'lat_dir'),
-                                    'longitude': ('raw_lon', 'lon_dir')}
-
-            delete_source_fields (bool): If True, the original source fields used for
-                                         conversion (like 'raw_lat' and 'lat_dir')
+            delete_source_fields (bool): If True, source fields (e.g. 'raw_lat', 'lat_dir')
                                          are removed after successful conversion.
                                          Defaults to False.
 
-            delete_unconverted_fields (bool): If True, any field in the record that was
-                                              NOT involved in a conversion (either as a
-                                              source or a destination) will be removed.
-                                              Defaults to False.
+            delete_unconverted_fields (bool): If True, fields NOT involved in conversion
+                                              are removed. Defaults to False.
         """
         super().__init__(**kwargs)  # processes 'quiet' and type hints
 
-        self.fields = fields or {}
-        self.lat_lon_fields = lat_lon_fields or {}
+        self.fields = {}
+        self.lat_lon_fields = {}
         self.delete_source_fields = delete_source_fields
         self.delete_unconverted_fields = delete_unconverted_fields
+
+        if fields:
+            # Process fields to separate standard conversions from special NMEA ones
+            for f_name, f_def in fields.items():
+                # Normalize definition
+                if isinstance(f_def, str):
+                    f_def = {'data_type': f_def}
+
+                dtype = f_def.get('data_type')
+
+                # Check for declarative NMEA configuration
+                if dtype in ['nmea_lat', 'nmea_lon']:
+                    dir_field = f_def.get('direction_field')
+                    if dir_field:
+                        # Add to lat_lon_fields
+                        # Format: target_field -> (value_field, direction_field)
+                        # Here target_field is f_name.
+                        # value_field is ALSO f_name (it's the raw string value before conversion).
+                        # This works because transform() pulls the record value using key.
+                        self.lat_lon_fields[f_name] = (f_name, dir_field)
+                    else:
+                        logging.warning(f"Field '{f_name}' has type '{dtype}' but "
+                                        "missing 'direction_field'. Ignoring.")
+                else:
+                    # Standard field
+                    self.fields[f_name] = f_def
+
+        # Map string type names to actual python types/conversion functions.
 
         # Map string type names to actual python types/conversion functions.
         # Recognized types include:
