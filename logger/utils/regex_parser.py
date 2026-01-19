@@ -107,6 +107,9 @@ class RegexParser:
         else:
             data_id = parsed_record.get('data_id', None)
             if not data_id:
+                if not self.quiet:
+                    logging.warning('No data_id found in record and none specified. '
+                                    'Defaulting to "unknown".')
                 data_id = 'unknown'
 
         # Convert timestamp to numeric, if it's there.
