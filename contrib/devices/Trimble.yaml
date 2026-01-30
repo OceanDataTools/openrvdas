@@ -16,11 +16,17 @@ TrimbleGPS:
     - "$GPGGA,{GPSTime:og},{Latitude:nlat},{NorS:w},{Longitude:nlat},{EorW:w},{FixQuality:d},{NumSats:d},{HDOP:of},{AntennaHeight:of},{:ow},{GeoidHeight:of},{:ow},{:ow}*{CheckSum:x}"
     - "$GPGGA,{GPSTime:og},{Latitude:nlat},{NorS:w},{Longitude:nlat},{EorW:w},{FixQuality:d},{NumSats:d},{HDOP:of},{AntennaHeight:of},{:ow},{GeoidHeight:of},{:ow},{:ow},{:ow}*{CheckSum:x}"
     - "$GPGGA,{GPSTime:og},{Latitude:nlat},{NorS:w},{Longitude:nlat},{EorW:w},{FixQuality:d},{NumSats:d},{HDOP:of},{AntennaHeight:of},{:ow},{GeoidHeight:of},{:ow},{LastDGPSUpdate:of},{DGPSStationID:od}*{CheckSum:x}"
-    - "$GPGGA,{GPSTime:og},{Latitude:nlat},{NorS:w},{Longitude:nlat},{EorW:w},{FixQuality:d},{NumSats:d},{HDOP:of},{AntennaHeight:of},{:ow},{GeoidHeight:of},{:ow},{LastDGPSUpdate:of},{DGPSStationID:od}*{CheckSum:x}"
     - "$GPGGA,{GPSTime:og},{Latitude:nlat},{NorS:w},{Longitude:nlat},{EorW:w},{FixQuality:d},{NumSats:d},{HDOP:of},{AntennaHeight:of},{:ow},{GeoidHeight:of},{:ow},{LastDGPSUpdate:of},{DGPSStationID:od},{Unknown:og}*{CheckSum:x}"
     GLL:
     - "$GPGLL,{Latitude:nlat},{NorS:w},{Longitude:nlat},{EorW:w},{FixTime:g},{DataValid:w},{Mode:w}*{CheckSum:x}"
     - "$GPGLL,{Latitude:nlat},{NorS:w},{Longitude:nlat},{EorW:w},{FixTime:g},{Mode:w}*{CheckSum:x}"
+    GSA:
+    - "$GPGSA,{ManualAutoMode:w},{DimensionMode:d},{Sat1ID:od},{Sat2ID:od},{Sat3ID:od},{Sat4ID:od},{Sat5ID:od},{Sat6ID:od},{Sat7ID:od},{Sat8ID:od},{Sat9ID:od},{Sat10ID:od},{Sat11ID:od},{Sat12ID:od},{PDOP:f},{HDOP:f},{VDOP:f}*{CheckSum:x}"
+    GSV:
+    - "$GPGSV,{TotalNumMesg:d},{MesgNum:d},{NumSats:d},{Sat1PRN:d},{Sat1Elevation:d},{Sat1Azimuth:d},{Sat1SignalToNoise:d},{Sat2PRN:d},{Sat2Elevation:d},{Sat2Azimuth:d},{Sat2SignalToNoise:d},{Sat3PRN:d},{Sat3Elevation:d},{Sat3Azimuth:d},{Sat3SignalToNoise:d},{Sat4PRN:d},{Sat4Elevation:d},{Sat4Azimuth:d},{Sat4SignalToNoise:d}*{CheckSum:x}"
+    - "$GPGSV,{TotalNumMesg:d},{MesgNum:d},{NumSats:d},{Sat1PRN:d},{Sat1Elevation:d},{Sat1Azimuth:d},{Sat1SignalToNoise:d},{Sat2PRN:d},{Sat2Elevation:d},{Sat2Azimuth:d},{Sat2SignalToNoise:d},{Sat3PRN:d},{Sat3Elevation:d},{Sat3Azimuth:d},{Sat3SignalToNoise:d}*{CheckSum:x}"
+    - "$GPGSV,{TotalNumMesg:d},{MesgNum:d},{NumSats:d},{Sat1PRN:d},{Sat1Elevation:d},{Sat1Azimuth:d},{Sat1SignalToNoise:d},{Sat2PRN:d},{Sat2Elevation:d},{Sat2Azimuth:d},{Sat2SignalToNoise:d}*{CheckSum:x}"
+    - "$GPGSV,{TotalNumMesg:d},{MesgNum:d},{NumSats:d},{Sat1PRN:d},{Sat1Elevation:d},{Sat1Azimuth:d},{Sat1SignalToNoise:d}*{CheckSum:x}"
     HDT: "$GPHDT,{HeadingTrue:f},T*{CheckSum:x}"
 
     #  $GPRMC,131208,     A,            5310.2626,   S,       07054.3592,   W,       0.1,        171.9,         020819,     14.2,           E                  ,A       *2B
