@@ -17,7 +17,6 @@ import sys
 import glob
 from typing import Union, Dict, List
 
-# Adjust paths as per your project structure
 from os.path import dirname, realpath
 
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
@@ -81,6 +80,8 @@ class RegexParseTransform(Transform):
                  fields: Dict = None,
                  delete_source_fields: bool = False,
                  delete_unconverted_fields: bool = False,
+                 metadata: Dict = None,
+                 metadata_interval: float = None,
                  **kwargs):
         """
         Args:
@@ -104,6 +105,14 @@ class RegexParseTransform(Transform):
             delete_source_fields (bool): Remove original fields after conversion.
 
             delete_unconverted_fields (bool): Remove fields that were not converted.
+
+            metadata (dict): If field_patterns is not None, the metadata to send along with
+                             data records.
+
+            metadata_interval (float): If not None, include the description, units and
+                                       other metadata pertaining to each field in the
+                                       returned record if those data haven't been returned
+                                       in the last metadata_interval seconds.
         """
         super().__init__(**kwargs)  # processes 'quiet' and type hints
 
@@ -116,12 +125,20 @@ class RegexParseTransform(Transform):
         self.device_types = {}
         self.type_converters = {}
 
+        self.metadata = metadata or {}
+        self.metadata_interval = metadata_interval
+        self.metadata_last_sent = {}
+
         # If field patterns not provided, look them up in definitions
         if field_patterns is None:
             definition_path = definition_path or DEFAULT_DEFINITION_PATH
             # Load definitions populate self.devices and self.device_types
             # And returns the aggregated patterns for the parser
             field_patterns = self._load_definitions(definition_path)
+
+            # If metadata not explicitly provided, try to compile it from definitions
+            if not self.metadata and self.metadata_interval:
+                self._compile_metadata()
 
         # 1. Initialize the Parser (RegexParser)
         # We pass the aggregated patterns. RegexParser extracts fields based on regex names.
@@ -190,6 +207,50 @@ class RegexParseTransform(Transform):
 
         return field_patterns
 
+    def _compile_metadata(self):
+        """
+        Compile metadata from device definitions if available.
+        Logic adapted from RecordParser.
+        """
+        # It's a map from variable name to the device and device type it
+        # came from, along with device type variable and its units and
+        # description, if provided in the device type definition.
+        for device, device_def in self.devices.items():
+            device_type_name = device_def.get('device_type')
+            if not device_type_name:
+                continue
+
+            device_type_def = self.device_types.get(device_type_name)
+            if not device_type_def:
+                continue
+
+            device_type_fields = device_type_def.get('fields')
+            if not device_type_fields:
+                continue
+
+            fields = device_def.get('fields')
+            if not fields:
+                continue
+
+            # e.g. device_type_field = GPSTime, device_field = S330GPSTime
+            for device_type_field, device_field in fields.items():
+                # e.g. GPSTime: {'units':..., 'description':...}
+                field_desc = device_type_fields.get(device_type_field)
+
+                # field_desc might be a string (type) or dict (metadata) or None
+                if not field_desc or not isinstance(field_desc, dict):
+                    continue
+
+                self.metadata[device_field] = {
+                    'device': device,
+                    'device_type': device_type_name,
+                    'device_type_field': device_type_field,
+                }
+                # Copy relevant keys like units, description
+                for k in ['units', 'description']:
+                    if k in field_desc:
+                        self.metadata[device_field][k] = field_desc[k]
+
     def transform(self, record: str) -> Union[DASRecord, List[DASRecord], None]:
         """
         Parse the record, optionally convert fields, and return the result.
@@ -236,6 +297,31 @@ class RegexParseTransform(Transform):
             parsed_record = self.converter.transform(parsed_record)
             if not parsed_record:
                 return None
+
+        # 4. Metadata Injection
+        # If we have parsed fields, see if we also have metadata. Are we
+        # supposed to occasionally send it for our variables? Is it time
+        # to send it again?
+        if self.metadata and self.metadata_interval:
+            metadata_fields = {}
+            timestamp = parsed_record.timestamp or 0
+
+            for field_name in parsed_record.fields:
+                last_metadata_sent = self.metadata_last_sent.get(field_name, 0)
+                time_since_send = timestamp - last_metadata_sent
+
+                # Check if it's time to send
+                if time_since_send > self.metadata_interval:
+                    field_metadata = self.metadata.get(field_name)
+                    if field_metadata:
+                        metadata_fields[field_name] = field_metadata
+                        self.metadata_last_sent[field_name] = timestamp
+
+            # If we collected any metadata to send, attach it
+            if metadata_fields:
+                if parsed_record.metadata is None:
+                    parsed_record.metadata = {}
+                parsed_record.metadata['fields'] = metadata_fields
 
         return parsed_record
 

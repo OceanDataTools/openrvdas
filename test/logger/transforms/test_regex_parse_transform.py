@@ -118,6 +118,75 @@ class TestRegexParseTransform(unittest.TestCase):
         self.assertEqual(result_unk.fields['Val'], '99')  # String!
         self.assertIn('Rem', result_unk.fields)  # Present!
 
+    def test_metadata_injection(self):
+        """Test that metadata is injected based on interval."""
+        metadata = {'temp': {'units': 'C', 'description': 'Temperature'}}
+        # Use a small interval
+        transform = RegexParseTransform(
+            field_patterns=[self.field_pattern],
+            metadata=metadata,
+            metadata_interval=10
+        )
+
+        # 1. First record (T=100) -> 2023-01-01T00:00:00.000Z
+        record_1 = "sensor1 2023-01-01T00:00:00.000Z temp=23.5 humidity=60"
+        result_1 = transform.transform(record_1)
+        self.assertIsNotNone(result_1.metadata)
+        self.assertIn('fields', result_1.metadata)
+        self.assertEqual(result_1.metadata['fields']['temp']['units'], 'C')
+
+        # 2. Second record (T+5s) -> 2023-01-01T00:00:05.000Z
+        record_2 = "sensor1 2023-01-01T00:00:05.000Z temp=24.0 humidity=61"
+        result_2 = transform.transform(record_2)
+        # Should NOT have metadata (only 5s elapsed)
+        if result_2.metadata:
+            self.assertNotIn('fields', result_2.metadata)
+
+        # 3. Third record (T+15s) -> 2023-01-01T00:00:15.000Z
+        record_3 = "sensor1 2023-01-01T00:00:15.000Z temp=24.5 humidity=62"
+        result_3 = transform.transform(record_3)
+        # Should have metadata again (>10s elapsed)
+        self.assertIsNotNone(result_3.metadata)
+        self.assertIn('fields', result_3.metadata)
+        self.assertEqual(result_3.metadata['fields']['temp']['units'], 'C')
+
+    @mock.patch('logger.transforms.regex_parse_transform.glob.glob')
+    @mock.patch('logger.transforms.regex_parse_transform.read_config.read_config')
+    @mock.patch('logger.transforms.regex_parse_transform.read_config.expand_includes')
+    def test_metadata_compilation(self, mock_expand, mock_read, mock_glob):
+        """Test that metadata is correctly compiled from device definitions."""
+        mock_glob.return_value = ['/defs.yaml']
+        mock_config = {
+            'device_types': {
+                'TypeA': {
+                    'fields': {
+                        'RawTemp': {'units': 'C', 'description': 'Raw Temp'}
+                    }
+                }
+            },
+            'devices': {
+                'sensorA': {
+                    'device_type': 'TypeA',
+                    'fields': {
+                        'RawTemp': 'Temperature'
+                    }
+                }
+            }
+        }
+        mock_read.return_value = mock_config
+        mock_expand.return_value = mock_config
+
+        transform = RegexParseTransform(
+            definition_path='defs.yaml',
+            metadata_interval=10
+        )
+
+        # Check if internal metadata structure was built correctly
+        # Mapped field 'Temperature' should have metadata from 'RawTemp'
+        self.assertIn('Temperature', transform.metadata)
+        self.assertEqual(transform.metadata['Temperature']['units'], 'C')
+        self.assertEqual(transform.metadata['Temperature']['description'], 'Raw Temp')
+
 
 if __name__ == '__main__':
     unittest.main()
