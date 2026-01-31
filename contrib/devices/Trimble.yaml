@@ -168,3 +168,89 @@ TrimbleGPS:
       description: unknown
     Datum:
       description: unknown
+    ManualAutoMode:
+      description: "M = Manual, A = Automatic 2D/3D"
+    DimensionMode:
+      description: "1 = Fix, 2 = 2D fix, 3 = 3D fix"
+    PDOP:
+      description: "Dilution of precision"
+    VDOP:
+      description: "Vertical dilution of precision"
+    TDOP:
+      description: "Time dilution of precision"
+    TotalNumMesg:
+      description: "Total number of GSV messages"
+    MesgNum:
+      description: "Message number"
+    Sat1PRN:
+      description: "Satellite PRN number"
+    Sat1Elevation:
+      units: "degrees"
+      description: "Satellite elevation"
+    Sat1Azimuth:
+      units: "degrees"
+      description: "Satellite azimuth"
+    Sat1SignalToNoise:
+      units: "dB"
+      description: "Signal to noise ratio"
+    Sat2PRN:
+      description: "Satellite PRN number"
+    Sat2Elevation:
+      units: "degrees"
+      description: "Satellite elevation"
+    Sat2Azimuth:
+      units: "degrees"
+      description: "Satellite azimuth"
+    Sat2SignalToNoise:
+      units: "dB"
+      description: "Signal to noise ratio"
+    Sat3PRN:
+      description: "Satellite PRN number"
+    Sat3Elevation:
+      units: "degrees"
+      description: "Satellite elevation"
+    Sat3Azimuth:
+      units: "degrees"
+      description: "Satellite azimuth"
+    Sat3SignalToNoise:
+      units: "dB"
+      description: "Signal to noise ratio"
+    Sat4PRN:
+      description: "Satellite PRN number"
+    Sat4Elevation:
+      units: "degrees"
+      description: "Satellite elevation"
+    Sat4Azimuth:
+      units: "degrees"
+      description: "Satellite azimuth"
+    Sat4SignalToNoise:
+      units: "dB"
+      description: "Signal to noise ratio"
+    Sat1ID:
+      description: "Satellite ID 1"
+    Sat2ID:
+      description: "Satellite ID 2"
+    Sat3ID:
+      description: "Satellite ID 3"
+    Sat4ID:
+      description: "Satellite ID 4"
+    Sat5ID:
+      description: "Satellite ID 5"
+    Sat6ID:
+      description: "Satellite ID 6"
+    Sat7ID:
+      description: "Satellite ID 7"
+    Sat8ID:
+      description: "Satellite ID 8"
+    Sat9ID:
+      description: "Satellite ID 9"
+    Sat10ID:
+      description: "Satellite ID 10"
+    Sat11ID:
+      description: "Satellite ID 11"
+    Sat12ID:
+      description: "Satellite ID 12"
+    WeekNum:
+      description: "GPS Week Number"
+    SecondsInWeek:
+      description: "Seconds in GPS Week"
