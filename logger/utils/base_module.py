@@ -30,6 +30,8 @@ digest_record() are called, but with the default of quiet=False.
 import inspect
 import logging
 import sys
+import threading
+import queue
 from typing import get_args
 
 from os.path import dirname, realpath
@@ -74,9 +76,16 @@ class BaseModule:
     Implements method for checking whether a received record is in a format
     that the derived class can process, and also a method for splitting a
     list of records into its elements and calling subclass transform() on them.
+
+    Starting with v0.6, BaseModule also implements "mirroring" functionality.
+    If the optional 'mirror_to' argument is passed to the constructor (and
+    the subclass is valid for mirroring, i.e. not a Writer), BaseModule
+    will spin up a thread and a queue to asynchronously write a copy of
+    every record it processes to the specified Writer.
     """
     ############################
-    def __init__(self, quiet=False, encoding='utf-8', encoding_errors='ignore', *args, **kwargs):
+    def __init__(self, quiet=False, encoding='utf-8', encoding_errors='ignore',
+                 mirror_to=None, *args, **kwargs):
         """
         ```
         quiet - if type checking should log type errors or operate silently.
@@ -93,6 +102,12 @@ class BaseModule:
         encoding_errors - 'ignore' by default. Other error strategies are
                 'strict', 'replace', and 'backslashreplace', described here:
                 https://docs.python.org/3/howto/unicode.html#encodings
+
+        mirror_to - Optional Writer to which all records read or transformed
+                by this module (if it is a Reader or Transform) will be
+                "mirrored" (copied). Mirroring happens asynchronously via
+                a queue and background thread to minimize impact on the
+                primary data flow. Writers cannot be mirrored.
         ```
         """
         if kwargs.get('input_format'):
@@ -113,6 +128,56 @@ class BaseModule:
             encoding = None
         self.encoding = encoding
         self.encoding_errors = encoding_errors
+
+        # Handle mirroring
+        self.mirror_to = mirror_to
+        if self.mirror_to:
+            from logger.writers.writer import Writer
+            if isinstance(self, Writer):
+                logging.warning(f'Writer {self.__class__.__name__} passed "mirror_to" argument. '
+                                'Writers cannot be mirrored.')
+                self.mirror_to = None
+            elif not isinstance(self.mirror_to, Writer):
+                raise TypeError(f'mirror_to must be a Writer, not {type(self.mirror_to)}')
+            else:
+                self.mirror_queue = queue.Queue()
+                self.mirror_thread = threading.Thread(target=self._mirror_output_thread,
+                                                      daemon=True)
+                self.mirror_thread.start()
+
+                # Dynamically wrap the read() or transform() method
+                if hasattr(self, 'read'):
+                    self._original_read = self.read
+                    self.read = self._wrapped_read
+                elif hasattr(self, 'transform'):
+                    self._original_transform = self.transform
+                    self.transform = self._wrapped_transform
+
+    def _mirror_output_thread(self):
+        """Thread to pull records from the queue and write them to the
+        mirror_to writer."""
+        while True:
+            record = self.mirror_queue.get()
+            try:
+                self.mirror_to.write(record)
+            except Exception as e:
+                logging.warning(f'Error writing to mirror_to: {e}')
+
+    def _wrapped_read(self):
+        """Wrapped version of read() that intercepts records and sends
+        them to the mirror_to writer."""
+        record = self._original_read()
+        if record is not None:
+            self.mirror_queue.put(record)
+        return record
+
+    def _wrapped_transform(self, record):
+        """Wrapped version of transform() that intercepts records and sends
+        them to the mirror_to writer."""
+        result = self._original_transform(record)
+        if result is not None:
+            self.mirror_queue.put(result)
+        return result
 
     ############################
     def _initialize_type_hints(self, module_type, module_method):
