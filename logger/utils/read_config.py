@@ -429,65 +429,146 @@ def substitute_variables(config: ConfigValue,
         except json.JSONDecodeError:
             pass
 
-        # Try numeric conversion if JSON parsing failed
-        if value.isdigit():
-            return int(value)
         try:
-            return float(value)
+            return int(value)
         except ValueError:
-            pass
+            try:
+                return float(value)
+            except ValueError:
+                return value
 
-        # Fallback to plain string
-        return value
+    def _split_placeholder(expr: str):
+        """
+        Split a placeholder expression into its variable name and optional
+        default.
+
+        Example expr values:
+            "var"
+            "var|default"
+            "var|<<fallback|default>>"
+
+        Returns a tuple containing the variable name and default value (or
+        None):
+            (var_name, default_expr_or_None)
+
+        The split on the '|' character only occurs at the top level (depth == 0).
+        Any '|' characters inside nested placeholders delimited by '<<' and '>>'
+        are ignored. Nesting depth is tracked by counting occurrences of '<<' and
+        '>>' while scanning the string from left to right.
+
+        Examples:
+            _split_placeholder("timeout|10")
+                -> ("timeout", "10")
+
+            _split_placeholder("a|<<b|c>>")
+                -> ("a", "<<b|c>>")
+
+            _split_placeholder("a")
+                -> ("a", None)
+        """
+        depth, i = 0, 0
+        while i < len(expr):
+            if expr[i:i+2] == '<<':
+                depth += 1
+                i += 2
+                continue
+            if expr[i:i+2] == '>>':
+                depth -= 1
+                i += 2
+                continue
+            if expr[i] == '|' and depth == 0:
+                return expr[:i], expr[i+1:]
+            i += 1
+
+        return expr, None
+
+    def _resolve_variable(expr: str):
+        """
+        Resolve a single placeholder expression to its final value.
+
+        Given the inner contents of a placeholder (the text between << and >>),
+        this function:
+
+          1. Splits the expression into a variable name and optional default
+             using `_split_placeholder`, supporting nested defaults.
+          2. If the variable name exists in `variables`, returns its value.
+          3. If the variable does not exists and a default expression is
+             present, recursively resolves the default expr via
+             `substitute_variables`, allowing chains such as: <<a|<<b|10>>>>
+          4. Applies type conversion to string defaults
+             (e.g. "10" → 10, "true" → True).
+          5. If variable does not exist and no a default can be resolved,
+             returns the original placeholder in pass-through form
+             (e.g. "<<a>>").
+
+        Args:
+            expr: The inner contents of a placeholder (without the outer << >>).
+
+        Returns:
+            The resolved value in its native Python type (int, float, bool,
+            None, str, etc.) or the original placeholder string.
+        """
+
+        name, default_expr = _split_placeholder(expr)
+        if name in variables:
+            return variables[name]
+
+        if default_expr is not None:
+            resolved = substitute_variables(default_expr, variables)
+            return _convert_type(resolved) if isinstance(resolved, str) else resolved
+
+        return f"<<{name}>>"
+
+    def _walk_string(expr: str) -> str:
+        """
+        Scan the expression and replace variable syntax with actual variable
+        values.
+
+        For each complete variable syntax found, the inner expression is
+        resolved via `_resolve_variable`, and the resolved value is inserted
+        into the output.
+
+        Args:
+            expr: Input string possibly containing one or more <<...>> placeholders.
+
+        Returns:
+            A new string with all placeholders expanded and substituted.
+        """
+        out, i = [], 0
+        while i < len(expr):
+            if expr[i:i+2] == '<<':
+                depth, j = 1, i + 2
+                while j < len(expr) and depth:
+                    if expr[j:j+2] == '<<':
+                        depth += 1
+                        j += 2
+                    elif expr[j:j+2] == '>>':
+                        depth -= 1
+                        j += 2
+                    else:
+                        j += 1
+                if depth != 0: # verify there was a closing >>
+                    raise ValueError(f"Malformed variable syntax '{expr[i:]}'")
+                out.append(str(_resolve_variable(expr[i+2:j-2])))
+                i = j
+            else:
+                out.append(expr[i])
+                i += 1
+        return ''.join(out)
 
     if isinstance(config, dict):
-        return {
-            substitute_variables(k, variables):
-            substitute_variables(v, variables)
-            for k, v in config.items()
-        }
+        return {substitute_variables(k, variables): substitute_variables(v, variables)
+                for k, v in config.items()}
 
-    elif isinstance(config, list):
-        return [substitute_variables(item, variables) for item in config]
+    if isinstance(config, list):
+        return [substitute_variables(v, variables) for v in config]
 
-    elif isinstance(config, str):
-        pattern = r'<<([^>|]+)(?:\|([^>]+))?>>'
+    if isinstance(config, str):
+        if config.startswith("<<") and config.endswith(">>"):
+            return _resolve_variable(config[2:-2])
+        return _walk_string(config)
 
-        # Full-variable pattern match
-        match = re.fullmatch(pattern, config)
-        if match:
-            var_name, default_value = match.groups()
-            if var_name in variables:
-                return variables[var_name]
-            elif default_value is not None:
-                # Recursively resolve nested default
-                resolved_default = substitute_variables(default_value,
-                                                        variables)
-                return (_convert_type(resolved_default)
-                        if isinstance(resolved_default, str)
-                        else resolved_default)
-            else:
-                # Pass through unresolved variable
-                return f"<<{var_name}>>"
-
-        # Embedded substitution within a larger string
-        def replace_match(m):
-            var_name, default_value = m.groups()
-            if var_name in variables:
-                return str(variables[var_name])
-            elif default_value is not None:
-                resolved_default = substitute_variables(default_value,
-                                                        variables)
-                return str(_convert_type(resolved_default)
-                           if isinstance(resolved_default, str)
-                           else resolved_default)
-            else:
-                return f"<<{var_name}>>"
-
-        return re.sub(pattern, replace_match, config)
-
-    else:
-        return config
+    return config
 
 
 ###################
