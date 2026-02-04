@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Convert fields in a DASRecord to specified types.
+"""Transform to convert fields in a DASRecord to specified types.
+
+This is a thin wrapper around the convert_fields utility function,
+providing the Transform interface for use in listener pipelines.
 """
 
 import copy
@@ -7,11 +10,11 @@ import logging
 import sys
 from typing import Union
 
-# Ensure we can import the necessary classes
 from os.path import dirname, realpath
 
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.utils.das_record import DASRecord  # noqa: E402
+from logger.utils.convert_fields import convert_fields  # noqa: E402
 from logger.transforms.transform import Transform  # noqa: E402
 
 
@@ -50,8 +53,8 @@ class ConvertFieldsTransform(Transform):
         """
         super().__init__(**kwargs)  # processes 'quiet' and type hints
 
-        self.fields = {}
-        self.lat_lon_fields = {}
+        self.field_specs = {}
+        self.lat_lon_specs = {}
         self.delete_source_fields = delete_source_fields
         self.delete_unconverted_fields = delete_unconverted_fields
 
@@ -68,70 +71,14 @@ class ConvertFieldsTransform(Transform):
                 if dtype in ['nmea_lat', 'nmea_lon']:
                     dir_field = f_def.get('direction_field')
                     if dir_field:
-                        # Add to lat_lon_fields
                         # Format: target_field -> (value_field, direction_field)
-                        # Here target_field is f_name.
-                        # value_field is ALSO f_name (it's the raw string value before conversion).
-                        # This works because transform() pulls the record value using key.
-                        self.lat_lon_fields[f_name] = (f_name, dir_field)
+                        self.lat_lon_specs[f_name] = (f_name, dir_field)
                     else:
                         logging.warning(f"Field '{f_name}' has type '{dtype}' but "
                                         "missing 'direction_field'. Ignoring.")
                 else:
                     # Standard field
-                    self.fields[f_name] = f_def
-
-        # Map string type names to actual python types/conversion functions.
-
-        # Map string type names to actual python types/conversion functions.
-        # Recognized types include:
-        #   float, double -> float
-        #   int, short, ushort, uint, long, ubyte, byte, hex -> int
-        #   str, char, string, text -> str
-        #   bool, boolean -> bool
-        self.type_map = {
-            'float': float,
-            'double': float,
-            'int': int,
-            'short': int,
-            'ushort': int,
-            'uint': int,
-            'long': int,
-            'ubyte': int,
-            'byte': int,
-            'str': str,
-            'char': str,
-            'string': str,
-            'text': str,
-            'bool': bool,
-            'boolean': bool,
-            'hex': lambda x: int(str(x), 16),  # Handles "1A", "0x1A", etc.
-        }
-
-    ############################
-    def _convert_lat_lon(self, value, direction):
-        """
-        Helper to convert NMEA style lat/lon (DDMM.MMMM) and direction (N/S/E/W)
-        to decimal degrees, rounded to fixed number of decimal places.
-        """
-        ROUNDING_DECIMALS = 5
-        try:
-            val = float(value)
-            # NMEA format is roughly DDMM.MMMM
-            # Degrees is the integer part of val / 100
-            degrees = int(val / 100)
-            minutes = val - (degrees * 100)
-            decimal = degrees + (minutes / 60)
-
-            if direction.upper() in ['S', 'W']:
-                decimal = -decimal
-
-            # Truncate/Round
-            return round(decimal, ROUNDING_DECIMALS)
-        except (ValueError, TypeError, AttributeError) as e:
-            logging.warning(f'Failed to convert lat/lon: value=\'{value}\', '
-                            f'direction=\'{direction}\' - {e}')
-            return None
+                    self.field_specs[f_name] = f_def
 
     ############################
     def transform(self, record: Union[str, dict, DASRecord])\
@@ -168,80 +115,18 @@ class ConvertFieldsTransform(Transform):
                             type(new_record))
             return None
 
-        # Track which fields were successfully converted or used
-        processed_fields = set()
+        # Delegate to the utility function
+        result = convert_fields(
+            fields,
+            self.field_specs,
+            self.lat_lon_specs,
+            delete_source_fields=self.delete_source_fields,
+            delete_unconverted_fields=self.delete_unconverted_fields,
+            quiet=self.quiet
+        )
 
-        # 1. Handle simple Type Conversions
-        for field_name, field_def in self.fields.items():
-            if field_name in fields:
-                # Extract target type from dict, or fallback if string
-                target_type_str = None
-                if isinstance(field_def, dict):
-                    target_type_str = field_def.get('data_type')
-                elif isinstance(field_def, str):
-                    target_type_str = field_def
-
-                if not target_type_str:
-                    continue
-
-                val = fields[field_name]
-                try:
-                    converter = self.type_map.get(target_type_str)
-                    if converter:
-                        # Special case to head off ValueError of int("123.0")
-                        if isinstance(val, str) and converter is int:
-                            try:
-                                val = float(val)
-                            except ValueError:
-                                # Not a float string, let int() call below handle/fail it naturally
-                                pass
-
-                        fields[field_name] = converter(val)
-                        processed_fields.add(field_name)
-                    else:
-                        logging.warning(f'Unknown type \'{target_type_str}\' '
-                                        f'requested for field \'{field_name}\'')
-                except ValueError:
-                    logging.warning(f'Failed to convert field \'{field_name}\': '
-                                    f'value=\'{val}\' (type={type(val).__name__}) '
-                                    f'to target_type=\'{target_type_str}\'')
-
-        # 2. Handle Lat/Lon Conversions
-        for target_field, (val_field, dir_field) in self.lat_lon_fields.items():
-            if val_field in fields and dir_field in fields:
-                val = fields[val_field]
-                direction = fields[dir_field]
-
-                decimal_degrees = self._convert_lat_lon(val, direction)
-
-                if decimal_degrees is not None:
-                    fields[target_field] = decimal_degrees
-                    processed_fields.add(target_field)
-
-                    # If we are successfully converting, we mark sources for potential deletion
-                    if self.delete_source_fields:
-                        # Mark them processed so they don't get deleted by unconverted check
-                        processed_fields.add(val_field)
-                        processed_fields.add(dir_field)
-
-                        # Actually delete them now if configured, BUT...
-                        # Do NOT delete if the source field is the same as the target field!
-                        if val_field in fields and val_field != target_field:
-                            del fields[val_field]
-                        if dir_field in fields and dir_field != target_field:
-                            del fields[dir_field]
-
-        # 3. Clean up unconverted fields
-        if self.delete_unconverted_fields:
-            # We must create a list of keys since we are modifying the dict
-            all_fields = list(fields.keys())
-            for f in all_fields:
-                if f not in processed_fields:
-                    del fields[f]
-
-        # If no fields remain, return None? Or empty record?
-        # SelectFieldsTransform returns None if no fields left.
-        if not fields:
+        # If no fields remain, return None
+        if result is None:
             return None
 
         return new_record

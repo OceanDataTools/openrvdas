@@ -16,6 +16,14 @@ from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
 from logger.utils.das_record import DASRecord  # noqa: E402
+from logger.utils.read_config import load_definitions  # noqa: E402
+from logger.utils.das_record import collect_metadata_for_fields  # noqa: E402
+
+# Import ConvertFieldsTransform, but handle gracefully if unavailable
+try:
+    from logger.transforms.convert_fields_transform import ConvertFieldsTransform
+except ImportError:
+    ConvertFieldsTransform = None
 
 # Note: this is a "permissive" regex. It looks for data_id and timestamp prior to field_string,
 # But still parses field_string if they are absent
@@ -23,6 +31,8 @@ from logger.utils.das_record import DASRecord  # noqa: E402
 # data_id or timestamp are missing
 
 DEFAULT_RECORD_FORMAT = r"^(?:(?P<data_id>\w+)\s+(?P<timestamp>[0-9TZ:\-\.]*)\s+)?(?P<field_string>(.|\r|\n)*)"  # noqa: E501
+
+DEFAULT_DEFINITION_PATH = 'local/devices/*.yaml,contrib/devices/*.yaml'
 
 
 ################################################################################
@@ -32,6 +42,9 @@ class RegexParser:
                  record_format=None,
                  field_patterns=None,
                  data_id=None,
+                 definition_path=None,
+                 metadata=None,
+                 metadata_interval=None,
                  quiet=False):
         r"""Create a parser that will parse field values out of a text record
         and return a DASRecord object.
@@ -46,19 +59,60 @@ class RegexParser:
             - a list of regex patterns to be tried
             - a dict of message_type:regex patterns to be tried. When one
               matches, the record's message_type is set accordingly.
+            If None and definition_path is provided, patterns are loaded from
+            device definition files.
 
         data_id
             If specified, this string is used as the data_id for all records,
             overriding any data_id extracted from the source record.
 
+        definition_path
+            Wildcarded path matching YAML definitions for devices. Used only
+            if 'field_patterns' is None. Defaults to DEFAULT_DEFINITION_PATH.
+            Comma-separated globs are supported.
+
+        metadata
+            If provided, a dict mapping field names to their metadata dicts.
+            If None and definition_path is used, metadata is compiled from
+            device definitions.
+
+        metadata_interval
+            If not None, include the description, units and other metadata
+            pertaining to each field in the returned record if those data
+            haven't been returned in the last metadata_interval seconds.
+
         quiet - if not False, don't complain when unable to parse a record.
         ```
         """
         self.quiet = quiet
-        self.field_patterns = field_patterns
         self.record_format = record_format or DEFAULT_RECORD_FORMAT
         self.compiled_record_format = re.compile(self.record_format)
         self.data_id = data_id  # Store the data_id override
+
+        # Check for conflict
+        if field_patterns and definition_path:
+            raise ValueError('RegexParser: Both field_patterns and definition_path '
+                             'specified. Please specify only one.')
+
+        # Device-aware parsing state
+        self.devices = {}
+        self.device_types = {}
+        self.type_converters = {}
+
+        # Metadata state
+        self.metadata = metadata or {}
+        self.metadata_interval = metadata_interval
+        self.metadata_last_sent = {}
+
+        # If field patterns not provided, look them up in definitions
+        if field_patterns is None and definition_path is not None:
+            field_patterns = self._load_definitions(definition_path)
+
+            # If metadata not explicitly provided, compile it from definitions
+            if not metadata and metadata_interval:
+                self._compile_metadata()
+
+        self.field_patterns = field_patterns
 
         # If we've been explicitly given the field_patterns we're to use for
         # parsing, compile them now.
@@ -77,6 +131,85 @@ class RegexParser:
                 raise ValueError('field_patterns must either be a list of patterns or '
                                  'dict of message_type:pattern pairs. Found type '
                                  f'{type(field_patterns)}')
+        else:
+            self.compiled_field_patterns = None
+
+    ############################
+    def _load_definitions(self, definition_path):
+        """Load device definitions and return aggregated field patterns.
+        Populates self.devices and self.device_types.
+        """
+        field_patterns = {}
+
+        # Use shared utility to load definitions
+        definitions = load_definitions(definition_path)
+
+        # Store devices
+        self.devices = definitions.get('devices', {})
+
+        # Process device_types: store them, extract patterns, create converters
+        for dt_name, dt_def in definitions.get('device_types', {}).items():
+            self.device_types[dt_name] = dt_def
+
+            # Aggregate formats (regexes)
+            dt_formats = dt_def.get('format', {})
+            if isinstance(dt_formats, dict):
+                field_patterns.update(dt_formats)
+
+            # Create cached component converter for this type
+            dt_fields = dt_def.get('fields', {})
+            if dt_fields and ConvertFieldsTransform:
+                self.type_converters[dt_name] = ConvertFieldsTransform(
+                    fields=dt_fields,
+                    quiet=self.quiet
+                )
+
+        return field_patterns
+
+    ############################
+    def _compile_metadata(self):
+        """
+        Compile metadata from device definitions if available.
+        Logic adapted from RecordParser.
+        """
+        # It's a map from variable name to the device and device type it
+        # came from, along with device type variable and its units and
+        # description, if provided in the device type definition.
+        for device, device_def in self.devices.items():
+            device_type_name = device_def.get('device_type')
+            if not device_type_name:
+                continue
+
+            device_type_def = self.device_types.get(device_type_name)
+            if not device_type_def:
+                continue
+
+            device_type_fields = device_type_def.get('fields')
+            if not device_type_fields:
+                continue
+
+            fields = device_def.get('fields')
+            if not fields:
+                continue
+
+            # e.g. device_type_field = GPSTime, device_field = S330GPSTime
+            for device_type_field, device_field in fields.items():
+                # e.g. GPSTime: {'units':..., 'description':...}
+                field_desc = device_type_fields.get(device_type_field)
+
+                # field_desc might be a string (type) or dict (metadata) or None
+                if not field_desc or not isinstance(field_desc, dict):
+                    continue
+
+                self.metadata[device_field] = {
+                    'device': device,
+                    'device_type': device_type_name,
+                    'device_type_field': device_type_field,
+                }
+                # Copy relevant keys like units, description
+                for k in ['units', 'description']:
+                    if k in field_desc:
+                        self.metadata[device_field][k] = field_desc[k]
 
     ############################
     def parse_record(self, record):
@@ -157,12 +290,56 @@ class RegexParser:
 
         logging.debug('Created parsed fields: %s', pprint.pformat(fields))
 
+        # Create the initial DASRecord
         try:
-            return DASRecord(data_id=data_id, timestamp=timestamp,
-                             message_type=message_type,
-                             fields=fields)
+            das_record = DASRecord(data_id=data_id, timestamp=timestamp,
+                                   message_type=message_type,
+                                   fields=fields)
         except KeyError:
             return None
+
+        # Device-Specific Processing
+        # Try to match data_id to a known device
+        if data_id in self.devices:
+            device_def = self.devices[data_id]
+            device_type = device_def.get('device_type')
+
+            # A. Type Conversion (delegated to cached ConvertFieldsTransform)
+            if device_type in self.type_converters:
+                converter = self.type_converters[device_type]
+                das_record = converter.transform(das_record)
+                if not das_record:
+                    return None
+
+            # B. Field Renaming / Filtering
+            # Only retain fields that are in the device's 'fields' map
+            device_fields_map = device_def.get('fields', {})
+            if device_fields_map:
+                new_fields = {}
+                for original_name, mapped_name in device_fields_map.items():
+                    if original_name in das_record.fields:
+                        # Use the mapped name (value)
+                        new_fields[mapped_name] = das_record.fields[original_name]
+
+                das_record.fields = new_fields
+
+        # Metadata Injection
+        # If we have parsed fields, see if we also have metadata. Are we
+        # supposed to occasionally send it for our variables? Is it time
+        # to send it again?
+        metadata_to_inject = collect_metadata_for_fields(
+            das_record.fields,
+            das_record.timestamp or 0,
+            self.metadata,
+            self.metadata_interval,
+            self.metadata_last_sent
+        )
+        if metadata_to_inject:
+            if das_record.metadata is None:
+                das_record.metadata = {}
+            das_record.metadata['fields'] = metadata_to_inject['fields']
+
+        return das_record
 
     ############################
     def convert_timestamp(self, datetime_text):

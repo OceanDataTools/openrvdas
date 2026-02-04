@@ -819,6 +819,118 @@ def _extract_from_string(text: str) -> List[str]:
 
 
 ##############################################################################
+def load_definitions(definition_path):
+    """
+    Load and merge device definitions from YAML files.
+
+    This is a shared utility used by RegexParser and RecordParser to load
+    device and device_type definitions from YAML configuration files.
+
+    Supports both the new structured format and the legacy format:
+
+    New format:
+        devices:
+          device_name:
+            device_type: SomeType
+        device_types:
+          SomeType:
+            format: ...
+
+    Legacy format (deprecated):
+        device_name:
+          category: device
+          device_type: SomeType
+        SomeType:
+          category: device_type
+          format: ...
+
+    Args:
+        definition_path: Comma-separated glob patterns for definition files.
+                        Example: 'local/devices/*.yaml,contrib/devices/*.yaml'
+
+    Returns:
+        Dict with structure:
+        {
+            'devices': {device_name: device_def, ...},
+            'device_types': {type_name: type_def, ...}
+        }
+
+        Returns empty structure if definition_path is None or no files found.
+    """
+    definitions = {'devices': {}, 'device_types': {}}
+
+    if not definition_path:
+        return definitions
+
+    def_files = []
+    for path_glob in definition_path.split(','):
+        matched = glob.glob(path_glob.strip())
+        if not matched:
+            logging.debug('No files match definition path "%s"', path_glob.strip())
+        def_files.extend(matched)
+
+    if not def_files:
+        return definitions
+
+    for filename in def_files:
+        file_defs = read_config(filename)
+        file_defs = expand_includes(file_defs)
+
+        for key, val in file_defs.items():
+            # New format: 'devices' key contains dict of device definitions
+            if key == 'devices':
+                if not isinstance(val, dict):
+                    logging.error('"devices" value in file %s must be dict. '
+                                  'Found type "%s"', filename, type(val))
+                    continue
+                for name, defn in val.items():
+                    if name in definitions['devices']:
+                        logging.warning('Duplicate device definition "%s" in %s',
+                                        name, filename)
+                    definitions['devices'][name] = defn
+
+            # New format: 'device_types' key contains dict of device type definitions
+            elif key == 'device_types':
+                if not isinstance(val, dict):
+                    logging.error('"device_types" value in file %s must be dict. '
+                                  'Found type "%s"', filename, type(val))
+                    continue
+                for name, defn in val.items():
+                    if name in definitions['device_types']:
+                        logging.warning('Duplicate device_type definition "%s" in %s',
+                                        name, filename)
+                    definitions['device_types'][name] = defn
+
+            # Skip 'includes' - already handled by expand_includes
+            elif key == 'includes':
+                pass
+
+            # Legacy format: top-level key with 'category' field
+            elif isinstance(val, dict) and 'category' in val:
+                category = val.get('category')
+                if category == 'device':
+                    if key in definitions['devices']:
+                        logging.warning('Duplicate device definition "%s" in %s',
+                                        key, filename)
+                    definitions['devices'][key] = val
+                elif category == 'device_type':
+                    if key in definitions['device_types']:
+                        logging.warning('Duplicate device_type definition "%s" in %s',
+                                        key, filename)
+                    definitions['device_types'][key] = val
+                else:
+                    logging.warning('Top-level definition "%s" in file %s has '
+                                    'unrecognized category "%s" - ignoring',
+                                    key, filename, category)
+
+            # Unknown top-level key
+            else:
+                logging.debug('Ignoring unknown top-level key "%s" in %s', key, filename)
+
+    return definitions
+
+
+##############################################################################
 ##############################################################################
 if __name__ == "__main__":
     import argparse

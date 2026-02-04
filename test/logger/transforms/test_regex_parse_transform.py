@@ -50,9 +50,9 @@ class TestRegexParseTransform(unittest.TestCase):
                 definition_path='some/path.yaml'
             )
 
-    @mock.patch('logger.transforms.regex_parse_transform.glob.glob')
-    @mock.patch('logger.transforms.regex_parse_transform.read_config.read_config')
-    @mock.patch('logger.transforms.regex_parse_transform.read_config.expand_includes')
+    @mock.patch('logger.utils.read_config.glob.glob')
+    @mock.patch('logger.utils.read_config.read_config')
+    @mock.patch('logger.utils.read_config.expand_includes')
     def test_definition_path(self, mock_expand, mock_read, mock_glob):
         """Test loading definitions from path with device mapping."""
         # Setup mocks
@@ -150,9 +150,9 @@ class TestRegexParseTransform(unittest.TestCase):
         self.assertIn('fields', result_3.metadata)
         self.assertEqual(result_3.metadata['fields']['temp']['units'], 'C')
 
-    @mock.patch('logger.transforms.regex_parse_transform.glob.glob')
-    @mock.patch('logger.transforms.regex_parse_transform.read_config.read_config')
-    @mock.patch('logger.transforms.regex_parse_transform.read_config.expand_includes')
+    @mock.patch('logger.utils.read_config.glob.glob')
+    @mock.patch('logger.utils.read_config.read_config')
+    @mock.patch('logger.utils.read_config.expand_includes')
     def test_metadata_compilation(self, mock_expand, mock_read, mock_glob):
         """Test that metadata is correctly compiled from device definitions."""
         mock_glob.return_value = ['/defs.yaml']
@@ -183,9 +183,10 @@ class TestRegexParseTransform(unittest.TestCase):
 
         # Check if internal metadata structure was built correctly
         # Mapped field 'Temperature' should have metadata from 'RawTemp'
-        self.assertIn('Temperature', transform.metadata)
-        self.assertEqual(transform.metadata['Temperature']['units'], 'C')
-        self.assertEqual(transform.metadata['Temperature']['description'], 'Raw Temp')
+        # Note: metadata is now in the parser, not the transform
+        self.assertIn('Temperature', transform.parser.metadata)
+        self.assertEqual(transform.parser.metadata['Temperature']['units'], 'C')
+        self.assertEqual(transform.parser.metadata['Temperature']['description'], 'Raw Temp')
 
 
 if __name__ == '__main__':
