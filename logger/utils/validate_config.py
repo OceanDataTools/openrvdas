@@ -310,22 +310,35 @@ class ConfigValidator:
                 if isinstance(config, dict):
                     self._validate_single_logger_config(config, config_name)
 
-    def _validate_single_logger_config(self, config: Dict, path: str):
+    def _validate_single_logger_config(self, config: Dict, path: str,
+                                        allow_empty: bool = True):
         """Validate a single logger configuration."""
         # Empty config is valid (represents "off" state)
         if not config:
             return
 
-        # Should have at least readers or writers
+        # Should have readers and writers
         has_readers = 'readers' in config
         has_writers = 'writers' in config
 
         if not has_readers and not has_writers:
             self.errors.append(ValidationError(
-                "Logger config should have 'readers' and/or 'writers'",
+                "Config should have 'readers' and/or 'writers'",
                 path=path,
                 severity="warning"))
             return
+
+        if not has_readers:
+            self.errors.append(ValidationError(
+                "Config is missing 'readers'",
+                path=path,
+                severity="warning"))
+
+        if not has_writers:
+            self.errors.append(ValidationError(
+                "Config is missing 'writers'",
+                path=path,
+                severity="warning"))
 
         # Validate readers
         if has_readers:
@@ -423,6 +436,22 @@ class ConfigValidator:
                 path="loggers"))
             return
 
+        # Collect all config names declared by loggers and defined in configs
+        declared_configs = set()  # configs referenced by loggers
+        defined_configs = set()   # configs defined in top-level 'configs'
+        template_configs = set()  # configs that will be generated from templates
+        logger_names = set(loggers.keys())
+        uses_templates = False
+        uses_includes = 'includes' in data
+
+        # Get top-level configs if present
+        top_level_configs = data.get('configs', {})
+        if isinstance(top_level_configs, dict):
+            defined_configs = set(top_level_configs.keys())
+
+        # Get logger templates if present (for inferring generated config names)
+        logger_templates = data.get('logger_templates', {})
+
         # Validate each logger
         for logger_name, logger_def in loggers.items():
             if not isinstance(logger_def, dict):
@@ -439,6 +468,59 @@ class ConfigValidator:
                 self.errors.append(ValidationError(
                     "Logger must have 'configs' or 'logger_template'",
                     path=f"loggers.{logger_name}"))
+                continue
+
+            # If using template, infer config names from template
+            if has_template:
+                uses_templates = True
+                template_name = logger_def['logger_template']
+                template = logger_templates.get(template_name, {})
+                template_config_keys = template.get('configs', {})
+                if isinstance(template_config_keys, dict):
+                    for config_key in template_config_keys.keys():
+                        # Template configs get named as logger-configkey
+                        template_configs.add(f"{logger_name}-{config_key}")
+
+            # Track declared configs
+            if has_configs:
+                logger_configs = logger_def['configs']
+                if isinstance(logger_configs, list):
+                    # List of config names (references)
+                    for config_name in logger_configs:
+                        declared_configs.add(config_name)
+                elif isinstance(logger_configs, dict):
+                    # Dict of inline config definitions
+                    for config_key, config_def in logger_configs.items():
+                        full_name = f"{logger_name}-{config_key}"
+                        declared_configs.add(full_name)
+                        defined_configs.add(full_name)
+                        # Validate inline config
+                        if isinstance(config_def, dict):
+                            self._validate_single_logger_config(
+                                config_def, f"loggers.{logger_name}.configs.{config_key}")
+
+        # Check for configs declared but not defined (skip if using templates)
+        if not uses_templates:
+            undefined_configs = declared_configs - defined_configs
+            for config_name in sorted(undefined_configs):
+                self.errors.append(ValidationError(
+                    f"Config '{config_name}' is referenced but not defined",
+                    path="configs",
+                    severity="warning"))
+
+            # Check for extraneous configs not used by any logger
+            unused_configs = defined_configs - declared_configs
+            for config_name in sorted(unused_configs):
+                self.errors.append(ValidationError(
+                    f"Config '{config_name}' is defined but not used by any logger",
+                    path="configs",
+                    severity="warning"))
+
+        # Validate top-level config definitions
+        for config_name, config_def in top_level_configs.items():
+            if isinstance(config_def, dict):
+                self._validate_single_logger_config(
+                    config_def, f"configs.{config_name}")
 
         # Check modes if present
         if 'modes' in data:
@@ -452,6 +534,45 @@ class ConfigValidator:
                     "'modes' is empty",
                     path="modes",
                     severity="warning"))
+            else:
+                # Validate each mode
+                # Include template-generated configs as valid
+                all_valid_configs = declared_configs | defined_configs | template_configs
+
+                # Skip detailed mode validation if using includes with templates
+                # (configs will be generated at runtime from included templates)
+                skip_config_check = uses_includes and uses_templates
+
+                for mode_name, mode_def in modes.items():
+                    if isinstance(mode_def, dict):
+                        # Dict mapping logger -> config
+                        for logger, config in mode_def.items():
+                            if logger not in logger_names:
+                                self.errors.append(ValidationError(
+                                    f"Unknown logger '{logger}'",
+                                    path=f"modes.{mode_name}",
+                                    severity="warning"))
+                            if not skip_config_check and config not in all_valid_configs:
+                                self.errors.append(ValidationError(
+                                    f"Unknown config '{config}' for logger '{logger}'",
+                                    path=f"modes.{mode_name}",
+                                    severity="warning"))
+                        # Check if all loggers are covered
+                        missing_loggers = logger_names - set(mode_def.keys())
+                        for logger in sorted(missing_loggers):
+                            self.errors.append(ValidationError(
+                                f"Logger '{logger}' has no config in this mode",
+                                path=f"modes.{mode_name}",
+                                severity="warning"))
+                    elif isinstance(mode_def, list):
+                        # List of config names
+                        if not skip_config_check:
+                            for config in mode_def:
+                                if config not in all_valid_configs:
+                                    self.errors.append(ValidationError(
+                                        f"Unknown config '{config}'",
+                                        path=f"modes.{mode_name}",
+                                        severity="warning"))
 
         # Check for default_mode if modes exist
         if 'modes' in data and 'default_mode' not in data:
