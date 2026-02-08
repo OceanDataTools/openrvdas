@@ -1,11 +1,17 @@
 # Device definitions
 
-By default, definitions in this directory with the .yaml extension
-will be read by any instantiated
+By default, definitions in this directory and in
+[logger/devices](../../logger/devices/) with the .yaml extension will
+be read by any instantiated
 [RecordParser](../../logger/utils/record_parser.py) and used to try to
-parse named fields out of text records passed to the
-parser. (Locations for additional/alternative definition files may be
-passed to the RecordParser when it is instantiated.)
+parse named fields out of text records passed to the parser.
+
+Standard device type definitions (such as NMEA 0183 sentences) are in
+[logger/devices](../../logger/devices/). This directory (contrib/devices)
+is for site-specific devices and contributed definitions.
+
+Locations for additional/alternative definition files may be passed to
+the RecordParser when it is instantiated.
 
 Definitions in the files here should be YAML format, defining one of
 two things: specific instances of devices that emit records ('device')
@@ -24,12 +30,12 @@ Seapath200:
   description: "Kongsberg Seapath200"
 
   format:
-    - "$GPGGA,{GPSTime:f},{Latitude:f},{NorS:w},{Longitude:f},{EorW:w},{FixQuality:d},{NumSats:d},{HDOP:f},{AntennaHeight:f},M,{GeoidHeight:f},M,{LastDGPSUpdate:f},{DGPSStationID:d}*{CheckSum:x}"
-    - "$GPHDT,{HeadingTrue:f},T*{CheckSum:x}"
-    - "$GPVTG,{CourseTrue:f},T,{CourseMag:f},M,{SpeedKt:f},N,{SpeedKm:f},K,{Mode:w}*{CheckSum:x}"
-    - "$PSXN,20,{HorizQual:d},{HeightQual:d},{HeadingQual:d},{RollPitchQual:d}*{CheckSum:x}"
-    - "$PSXN,22,{GyroCal:f},{GyroOffset:f}*{CheckSum:x}"
-    - "$PSXN,23,{Roll:f},{Pitch:f},{HeadingTrue:f},{Heave:f}*{CheckSum:x}"
+    GGA: "$GPGGA,{GPSTime:f},{Latitude:f},{NorS:w},{Longitude:f},{EorW:w},{FixQuality:d},{NumSats:d},{HDOP:f},{AntennaHeight:f},M,{GeoidHeight:f},M,{LastDGPSUpdate:f},{DGPSStationID:d}*{CheckSum:x}"
+    HDT: "$GPHDT,{HeadingTrue:f},T*{CheckSum:x}"
+    VTG: "$GPVTG,{CourseTrue:f},T,{CourseMag:f},M,{SpeedKt:f},N,{SpeedKm:f},K,{Mode:w}*{CheckSum:x}"
+    PSXN20: "$PSXN,20,{HorizQual:d},{HeightQual:d},{HeadingQual:d},{RollPitchQual:d}*{CheckSum:x}"
+    PSXN22: "$PSXN,22,{GyroCal:f},{GyroOffset:f}*{CheckSum:x}"
+    PSXN23: "$PSXN,23,{Roll:f},{Pitch:f},{HeadingTrue:f},{Heave:f}*{CheckSum:x}"
 
   # Optional metadata to help make sense of the parsed values.
   fields:
@@ -60,10 +66,11 @@ Seapath200:
 
 The device\_type definition may contain other elements as well; the
 only required elements are the name, the category (declaring the
-definition as a device\_type), and a format string or list of format
-strings. Note that if the device type only emits a single format, it
-may be specified as a standalone string, rather than as part of a list
-of strings:
+definition as a device\_type), and a format specification. The format
+can be a single string, a list of format strings, or a dict mapping
+message type names to format strings (recommended for clarity). If
+the device type only emits a single format, it may be specified as a
+standalone string:
 
 ```
 ADCP_OS75:
@@ -110,9 +117,10 @@ some discussion. We use the syntax described on the [PyPi parse()
 documentation](https://pypi.org/project/parse/), but with some
 additional options.
 
-Recall that the format for a device_type may either be a string or a
-list of strings. If it is a list of strings, they are tried in order,
-and the result from the first matching string is returned.
+Recall that the format for a device_type may be a string, a list of
+strings, or a dict mapping message type names to format strings. If it
+is a list or dict, the formats are tried in order, and the result from
+the first matching format is returned.
 
 Each of the format strings will typically be a mix of literals and
 ```{FieldName:type}``` field definitions. Common types are **d**
