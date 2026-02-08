@@ -82,7 +82,7 @@ class ApiRoot(APIView):
     http://127.0.0.1:8000/api/cruise-configuration/?format=json
 
     There are also the drf-spectacular endpoints for swagger files and integration at
-    /api/scheam/ < to fetch the yaml schema
+    /api/schema/ < to fetch the yaml schema
     /api/schema/docs to use the openai version of this interface.
 
     """
@@ -205,7 +205,7 @@ class CruiseSelectModeAPIView(APIView):
                     location="form",
                     schema=coreschema.String(
                         title="select_mode",
-                        description="Valid mode_id for configuartion.",
+                        description="Valid mode_id for configuration.",
                     ),
                 ),
             ],
@@ -249,7 +249,7 @@ class CruiseSelectModeAPIView(APIView):
         return Response({"status": "ok", "data": data}, 200)
 
 
-class CruiseReloadCurrentConfiguartionSerializer(serializers.Serializer):
+class CruiseReloadCurrentConfigurationSerializer(serializers.Serializer):
     # The presence of the value implies true, as the implementation in the the main views.py at
     # line: ~93 switches on the presence of a form element. For consistency, the input object is
     # expecting json {"reload": "true"} but the reload key is really the switch.
@@ -289,7 +289,7 @@ class CruiseReloadCurrentConfigurationAPIView(APIView):
             encoding="application/json",
         )
 
-    serializer_class = CruiseReloadCurrentConfiguartionSerializer
+    serializer_class = CruiseReloadCurrentConfigurationSerializer
     authentication_classes = [authentication.BasicAuthentication, TokenAuthentication]
     permission_classes = [IsAuthenticated]
 
@@ -297,7 +297,7 @@ class CruiseReloadCurrentConfigurationAPIView(APIView):
 
         api = _get_api()
         log_request(request, "reload current cruise configuration")
-        serializer = CruiseReloadCurrentConfiguartionSerializer(data=request.data)
+        serializer = CruiseReloadCurrentConfigurationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         if serializer.validated_data.get("reload"):
@@ -307,6 +307,7 @@ class CruiseReloadCurrentConfigurationAPIView(APIView):
                 filename = cruise["config_filename"]
                 # Load the file to memory and parse to a dict. Add the name
                 # of the file we've just loaded to the dict.
+                config = read_config(filename)
                 config = expand_cruise_definition(config)
 
                 if "cruise" in config:
@@ -431,7 +432,7 @@ class EditLoggerConfigAPIView(APIView):
                     required=True,
                     location="form",
                     schema=coreschema.String(
-                        title="realod",
+                        title="reload",
                         description="true / false",
                     ),
                 ),
@@ -440,7 +441,7 @@ class EditLoggerConfigAPIView(APIView):
                     required=True,
                     location="form",
                     schema=coreschema.String(
-                        title="realod",
+                        title="reload",
                         description="The logger id to update",
                     ),
                 ),
@@ -449,7 +450,7 @@ class EditLoggerConfigAPIView(APIView):
                     required=True,
                     location="form",
                     schema=coreschema.String(
-                        title="realod",
+                        title="reload",
                         description="The logger id to update",
                     ),
                 ),
@@ -584,7 +585,7 @@ class LoadConfigurationFileAPIView(APIView):
                 config = read_config(target_file)
                 config = expand_cruise_definition(config)
 
-                if "cruise" in configuration:
+                if "cruise" in config:
                     config["cruise"]["config_filename"] = target_file
                 # Load the config and set to the default mode
                 api.load_configuration(config)
