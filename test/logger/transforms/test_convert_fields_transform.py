@@ -82,9 +82,9 @@ class TestConvertFieldsTransform(unittest.TestCase):
     def test_hex_conversion(self):
         """Test converting hex strings to integers."""
         t = ConvertFieldsTransform(fields={
-            'flag_a': 'hex',
-            'flag_b': 'hex',
-            'prefixed': 'hex'
+            'flag_a': 'hex_int',
+            'flag_b': 'hex_int',
+            'prefixed': 'hex_int'
         })
 
         input_dict = {

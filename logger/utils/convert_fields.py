@@ -6,7 +6,7 @@ import logging
 # Map string type names to actual python types/conversion functions.
 # Recognized types include:
 #   float, double -> float
-#   int, short, ushort, uint, long, ubyte, byte, hex -> int
+#   int, short, ushort, uint, long, ubyte, byte, hex_int -> int
 #   str, char, string, text -> str
 #   bool, boolean -> bool
 TYPE_MAP = {
@@ -25,7 +25,7 @@ TYPE_MAP = {
     'text': str,
     'bool': bool,
     'boolean': bool,
-    'hex': lambda x: int(str(x), 16),  # Handles "1A", "0x1A", etc.
+    'hex_int': lambda x: int(str(x), 16),  # Handles "1A", "0x1A", etc.
 }
 
 
