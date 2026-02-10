@@ -167,3 +167,37 @@ def to_das_record_list(record, data_id=None):
         logging.error('Badly-structured field dictionary: %s: %s',
                       field, pprint.pformat(ts_value_list))
         return []
+
+
+def collect_metadata_for_fields(field_names, timestamp, metadata,
+                                metadata_interval, metadata_last_sent):
+    """
+    Collect metadata for fields that are due to be sent based on the interval.
+
+    This function is shared between RecordParser and RegexParser to avoid
+    code duplication.
+
+    Args:
+        field_names: Iterable of field names to check for metadata.
+        timestamp: Current record timestamp (numeric).
+        metadata: Dict mapping field names to their metadata dicts.
+        metadata_interval: Minimum seconds between metadata sends per field.
+        metadata_last_sent: Dict tracking last send time per field (modified in place).
+
+    Returns:
+        Dict with 'fields' key containing metadata to inject, or None if no
+        metadata is due to be sent.
+    """
+    if not metadata or not metadata_interval:
+        return None
+
+    metadata_fields = {}
+    for field_name in field_names:
+        last_sent = metadata_last_sent.get(field_name, 0)
+        if timestamp - last_sent > metadata_interval:
+            field_metadata = metadata.get(field_name)
+            if field_metadata:
+                metadata_fields[field_name] = field_metadata
+                metadata_last_sent[field_name] = timestamp
+
+    return {'fields': metadata_fields} if metadata_fields else None
