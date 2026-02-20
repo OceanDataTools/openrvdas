@@ -56,7 +56,9 @@ class ToSealogTransform(Transform):
     """
 
     ############################
-    def __init__(self, config_file: str):
+    def __init__(self, config_file: str, **kwargs):
+        super().__init__(**kwargs)  # processes 'quiet' and type hints
+
         try:
             self.configs = read_config(config_file)
             logging.info('Loaded sealog config file: %s', pprint.pformat(self.configs))
@@ -67,19 +69,11 @@ class ToSealogTransform(Transform):
 
     def transform(self, record: Union[DASRecord, list]) -> SealogEvent:
         """Parse DASRecord and return Sealog event dict."""
-        if record is None:
-            return None
-
         if not self.configs:
             return None
 
-        # If we've got a list, hope it's a list of records. Recurse,
-        # calling transform() on each of the list elements in order and
-        # return the resulting list.
-        if isinstance(record, list):
-            results = []
-            for single_record in record:
-                results.append(self.transform(single_record))
-            return results
+        # See if it's something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from BaseModule()
+            return self.digest_record(record)  # inherited from BaseModule()
 
         return to_event(record, self.configs)

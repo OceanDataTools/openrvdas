@@ -11,7 +11,7 @@ from logger.writers.writer import Writer  # noqa: E402
 
 class ComposedWriter(Writer):
     ############################
-    def __init__(self, transforms=[], writers=[], quiet=False):
+    def __init__(self, transforms=[], writers=[], **kwargs):
         """
         Apply zero or more Transforms (in series) to passed records, then
         write them (in parallel threads) using the specified Writers.
@@ -38,6 +38,8 @@ class ComposedWriter(Writer):
         lock to prevent a writer's write() method from being called a second
         time if the first has not yet completed.
         """
+        super().__init__(**kwargs)  # processes 'quiet' and type hints
+
         # Make transforms a list if it's not. Even if it's only one transform.
         if not isinstance(transforms, list):
             self.transforms = [transforms]
@@ -54,8 +56,6 @@ class ComposedWriter(Writer):
         # new write is requested before the previous one has completed.
         self.writer_lock = [threading.Lock() for w in self.writers]
         self.exceptions = [None for w in self.writers]
-
-        super().__init__(quiet=quiet)
 
     ############################
 

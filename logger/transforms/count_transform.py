@@ -2,10 +2,10 @@
 
 import logging
 import sys
+from typing import Union
 
 from os.path import dirname, realpath
 
-from typing import Union
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.utils.das_record import DASRecord  # noqa: E402
 from logger.transforms.transform import Transform  # noqa: E402
@@ -26,18 +26,20 @@ class CountTransform(Transform):
     ```
     """
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         """
         """
+        super().__init__(**kwargs)  # processes 'quiet' and type hints
+
         self.counts = {}
 
     ############################
-    def transform(self, record: Union[DASRecord, dict]):
+    def transform(self, record: Union[DASRecord, dict]) -> Union[DASRecord, dict]:
         """Return counts of the previous times we've seen these field names."""
 
         # See if it's something we can process, and if not, try digesting
-        if not self.can_process_record(record):  # inherited from Transform()
-            return self.digest_record(record)  # inherited from Transform()
+        if not self.can_process_record(record):  # BaseModule
+            return self.digest_record(record)  # BaseModule
 
         if type(record) is DASRecord:
             fields = record.fields

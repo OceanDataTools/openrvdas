@@ -28,15 +28,17 @@ class GoogleSheetsWriter(Writer):
     A class for writing Python dictionaries as rows to Google Sheets
     with automatic column management.
 
-    This class handles authentication, column creation, and data writing to Google Sheets.
-    Each dictionary key becomes a column header, and each dictionary becomes a row.
-    New columns are automatically created when new keys are encountered.
-    Numeric values are preserved as numbers in the spreadsheet.
+    This class handles authentication, column creation, and data writing to
+    Google Sheets. Each dictionary key becomes a column header, and each
+    dictionary becomes a row. New columns are automatically created when new
+    keys are encountered. Numeric values are preserved as numbers in the
+    spreadsheet.
 
     SETUP INSTRUCTIONS:
 
     1. Install Required Packages:
-       pip install google-api-python-client google-auth-httplib2 google-auth-oauthlib
+       pip install google-api-python-client google-auth-httplib2 \
+           google-auth-oauthlib
 
     2. Set Up Google Cloud Project:
        - Go to https://console.cloud.google.com/
@@ -62,7 +64,8 @@ class GoogleSheetsWriter(Writer):
        - Go to "Keys" tab
        - Click "Add Key" > "Create New Key"
        - Select "JSON" format and click "Create"
-       - Save the downloaded JSON file securely (never commit to version control!)
+       - Save the downloaded JSON file securely (never commit to version
+         control!)
 
     6. Share Your Spreadsheet:
        - Open your Google Sheets document
@@ -80,7 +83,7 @@ class GoogleSheetsWriter(Writer):
             auth_key_path="path/to/service-account-key.json",
             use_service_account=True,
             worksheet_name="MyData",
-            force_create=True  # Will create "MyData" worksheet if it doesn't exist
+            force_create=True  # Create "MyData" worksheet if needed
         )
 
         # Write single dictionary (timestamp automatically goes first)
@@ -88,13 +91,17 @@ class GoogleSheetsWriter(Writer):
 
         # Write single DASRecord (uses DASRecord.timestamp automatically)
         from das_record import DASRecord
-        das_record = DASRecord(timestamp=1234567891, fields={'name': 'Jane', 'age': 25})
+        das_record = DASRecord(timestamp=1234567891,
+                               fields={'name': 'Jane', 'age': 25})
         writer.write(das_record)
 
         # Write multiple records (mixed types)
         records = [
-            {'timestamp': 1234567892, 'name': 'Bob', 'city': 'NYC', 'salary': 75000.50},
-            DASRecord(timestamp=1234567893, fields={'name': 'Alice', 'department': 'Engineering', 'rating': 4.8})
+            {'timestamp': 1234567892, 'name': 'Bob', 'city': 'NYC',
+             'salary': 75000.50},
+            DASRecord(timestamp=1234567893,
+                      fields={'name': 'Alice', 'department': 'Engineering',
+                              'rating': 4.8})
         ]
         writer.write(records)
 
@@ -113,25 +120,31 @@ class GoogleSheetsWriter(Writer):
     """
 
     def __init__(self, sheet_name_or_id, auth_key_path=None,
-                 use_service_account=True, worksheet_name="Sheet1", force_create=False):
+                 use_service_account=True, worksheet_name="Sheet1",
+                 force_create=False, **kwargs):
         """
-        Initialize GoogleSheetsWriter with spreadsheet name/ID and authentication.
+        Initialize GoogleSheetsWriter with spreadsheet name/ID and auth.
 
         Args:
-            sheet_name_or_id (str): Google Sheets spreadsheet ID, full URL, or name
-                                  Examples:
-                                  - "1ABC123def456ghi789..." (spreadsheet ID)
-                                  - "https://docs.google.com/spreadsheets/d/1ABC123.../edit"
-            auth_key_path (str): Path to service account JSON key file or OAuth credentials file
-                               If None and use_service_account=False, looks for 'token.json'
-            use_service_account (bool): True for service account auth, False for OAuth user auth
-            worksheet_name (str): Name of the specific worksheet/tab to write to (default: "Sheet1")
-            force_create (bool): If True, create the worksheet if it doesn't exist (default: False)
+            sheet_name_or_id (str): Google Sheets spreadsheet ID, full URL,
+                                    or name.
+            auth_key_path (str): Path to service account JSON key file or
+                                 OAuth credentials file. If None and
+                                 use_service_account=False, looks for
+                                 'token.json'.
+            use_service_account (bool): True for service account auth, False
+                                        for OAuth user auth.
+            worksheet_name (str): Name of the specific worksheet/tab to write
+                                  to (default: "Sheet1").
+            force_create (bool): If True, create the worksheet if it doesn't
+                                 exist (default: False).
 
         Raises:
             ValueError: If authentication parameters are invalid
             Exception: If unable to authenticate or access the spreadsheet
         """
+        super().__init__(**kwargs)  # processes 'quiet', encoding and hints
+
         self.sheet_name_or_id = sheet_name_or_id
         self.auth_key_path = auth_key_path
         self.use_service_account = use_service_account
@@ -151,8 +164,8 @@ class GoogleSheetsWriter(Writer):
         """
         Authenticate and build the Google Sheets service.
 
-        Sets up authentication using either service account credentials or OAuth user credentials.
-        Creates the Google Sheets API service object for making requests.
+        Sets up authentication using either service account credentials or
+        OAuth user credentials. Creates the Google Sheets API service object.
 
         Raises:
             ValueError: If authentication credentials are missing or invalid
@@ -173,13 +186,15 @@ class GoogleSheetsWriter(Writer):
             token_path = self.auth_key_path or 'token.json'
 
             if os.path.exists(token_path):
-                creds = UserCredentials.from_authorized_user_file(token_path, scopes)
+                creds = UserCredentials.from_authorized_user_file(
+                    token_path, scopes)
 
             if not creds or not creds.valid:
                 if creds and creds.expired and creds.refresh_token:
                     creds.refresh(Request())
                 else:
-                    raise ValueError("Valid OAuth credentials not found. Run OAuth flow first.")
+                    raise ValueError("Valid OAuth credentials not found. "
+                                     "Run OAuth flow first.")
 
             credentials = creds
 
@@ -191,31 +206,33 @@ class GoogleSheetsWriter(Writer):
 
         Handles different input formats:
         - Direct spreadsheet ID: "1ABC123def456..."
-        - Full Google Sheets URL: "https://docs.google.com/spreadsheets/d/1ABC123.../edit"
+        - Full URL: "https://docs.google.com/spreadsheets/d/1ABC.../edit"
         - Assumes other inputs are spreadsheet IDs
 
         Sets self.sheet_id to the extracted spreadsheet ID.
         """
-        # If it looks like a spreadsheet ID (long alphanumeric string), use it directly
+        # If it looks like a spreadsheet ID (long alphanumeric string)
         if len(self.sheet_name_or_id) > 20 and '/' not in self.sheet_name_or_id:
             self.sheet_id = self.sheet_name_or_id
         else:
             # If it's a full URL, extract the ID
             if 'docs.google.com/spreadsheets/d/' in self.sheet_name_or_id:
-                self.sheet_id = self.sheet_name_or_id.split('/d/')[1].split('/')[0]
+                part = self.sheet_name_or_id.split('/d/')[1]
+                self.sheet_id = part.split('/')[0]
             else:
                 # Assume it's a spreadsheet ID
                 self.sheet_id = self.sheet_name_or_id
 
     def _ensure_worksheet_exists(self):
         """
-        Ensure the specified worksheet exists, creating it if necessary and force_create is True.
+        Ensure the specified worksheet exists, creating it if necessary.
 
-        Checks if the worksheet exists in the spreadsheet. If force_create is True and the
-        worksheet doesn't exist, creates it.
+        Checks if the worksheet exists in the spreadsheet. If force_create
+        is True and the worksheet doesn't exist, creates it.
 
         Raises:
-            Exception: If worksheet doesn't exist and force_create is False, or if creation fails
+            Exception: If worksheet doesn't exist and force_create is False,
+                       or if creation fails.
         """
         try:
             # Get spreadsheet metadata to check existing worksheets
@@ -233,8 +250,9 @@ class GoogleSheetsWriter(Writer):
 
             if not self.force_create:
                 # Worksheet doesn't exist and we're not allowed to create it
-                raise Exception(f"Worksheet '{self.worksheet_name}' does not exist in spreadsheet. "
-                                f"Set force_create=True to create it automatically.")
+                raise Exception(f"Worksheet '{self.worksheet_name}' does not "
+                                "exist in spreadsheet. Set force_create=True "
+                                "to create it automatically.")
 
             # Create the worksheet
             requests = [{
@@ -265,8 +283,9 @@ class GoogleSheetsWriter(Writer):
         """
         Load existing column headers from the first row of the worksheet.
 
-        Reads the first row of the specified worksheet to get current column headers.
-        If the sheet is empty or doesn't exist, initializes with empty headers list.
+        Reads the first row of the specified worksheet to get current column
+        headers. If the sheet is empty or doesn't exist, initializes with
+        empty headers list.
 
         Sets self.headers to the list of existing column headers.
         """
@@ -292,11 +311,8 @@ class GoogleSheetsWriter(Writer):
         """
         Add new column headers for any keys not already present.
 
-        Compares the provided keys with existing headers and adds any new ones
-        to both the local headers list and the spreadsheet's first row.
-
         Args:
-            new_keys (iterable): Keys from a dictionary that should be column headers
+            new_keys (iterable): Keys from a dictionary that should be headers
 
         Side Effects:
             - Updates self.headers with any new column names
@@ -326,12 +342,12 @@ class GoogleSheetsWriter(Writer):
         """
         Find the next empty row number to write data to.
 
-        Scans column A to find the last row with data and returns the next row number.
-        This ensures new data is appended without overwriting existing content.
+        Scans column A to find the last row with data and returns the next
+        row number.
 
         Returns:
-            int: The row number (1-indexed) where the next data should be written.
-                 Returns 2 if unable to determine (assumes row 1 has headers).
+            int: The row number (1-indexed) where the next data should be
+                 written. Returns 2 if unable to determine (assumes headers).
         """
         try:
             # Get all data to find the last row with content
@@ -349,7 +365,7 @@ class GoogleSheetsWriter(Writer):
 
     def _normalize_record(self, record):
         """
-        Convert a record (dict or DASRecord) to a standardized dictionary format.
+        Convert a record (dict or DASRecord) to a standardized dictionary.
 
         Args:
             record: Either a dictionary or a DASRecord object
@@ -369,7 +385,7 @@ class GoogleSheetsWriter(Writer):
 
     def _ensure_timestamp_first(self, keys):
         """
-        Ensure 'timestamp' is the first column, followed by other keys in order.
+        Ensure 'timestamp' is the first column, followed by other keys.
 
         Args:
             keys: Iterable of column names
@@ -392,16 +408,16 @@ class GoogleSheetsWriter(Writer):
 
     def _format_value_for_sheets(self, value):
         """
-        Format a value appropriately for Google Sheets while preserving numeric types.
+        Format a value for Google Sheets while preserving numeric types.
 
         Args:
             value: The value to format
 
         Returns:
             The value formatted for Google Sheets:
-            - Numbers (int, float) are returned as-is to preserve numeric type
+            - Numbers (int, float) are returned as-is
             - None values are converted to empty string
-            - Booleans are converted to strings to avoid confusion
+            - Booleans are converted to strings
             - Everything else is converted to string
         """
         if value is None:
@@ -419,72 +435,35 @@ class GoogleSheetsWriter(Writer):
     def write_dict(self, record_dict):
         """
         Legacy method: Write a single dictionary as a new row.
-
-        This method is maintained for backward compatibility.
-        Use write() instead for new code.
-
-        Args:
-            record_dict (dict): Dictionary to write as a row
-
-        Returns:
-            dict: Response from the Google Sheets API update operation
+        Use write() instead.
         """
         return self.write(record_dict)
 
     def write_dicts(self, record_dicts):
         """
         Legacy method: Write multiple dictionaries as rows.
-
-        This method is maintained for backward compatibility.
-        Use write() instead for new code.
-
-        Args:
-            record_dicts (list): List of dictionaries to write as rows
-
-        Returns:
-            dict: Response from the Google Sheets API update operation
+        Use write() instead.
         """
         return self.write(record_dicts)
 
     def write(self, records):
         """
-        Write record(s) to the Google Sheet with automatic timestamp column management.
+        Write record(s) to the Google Sheet with automatic column management.
 
-        Accepts either a single record or a list of records. Each record can be either
-        a dictionary or a DASRecord object. The 'timestamp' field is always placed in
-        the first column. For DASRecord objects, the record's timestamp attribute is
-        automatically used. Numeric values are preserved as numbers in the spreadsheet.
+        Accepts either a single record or a list of records. Each record can
+        be either a dictionary or a DASRecord object. The 'timestamp' field
+        is always placed in the first column. Numeric values are preserved.
 
         Args:
-            records: Single record (dict or DASRecord) or list of records to write.
-                    Each record becomes one row, with keys/fields as column headers.
+            records: Single record (dict or DASRecord) or list of records.
 
         Returns:
-            dict: Response from the Google Sheets API update operation, or None if
-                  records is empty
+            dict: Response from the Google Sheets API update operation,
+                  or None if records is empty.
 
         Raises:
             Exception: If unable to write to the spreadsheet
             ValueError: If record type is not supported
-
-        Examples:
-            # Write single dictionary with numeric values preserved
-            writer.write({'timestamp': 1234567890, 'name': 'John', 'age': 30, 'salary': 75000.50})
-
-            # Write single DASRecord
-            das_record = DASRecord(timestamp=1234567890, fields={'name': 'Jane', 'age': 25, 'rating': 4.8})
-            writer.write(das_record)
-
-            # Write multiple records (mixed types)
-            records = [
-                {'timestamp': 1234567890, 'name': 'Bob', 'city': 'NYC', 'salary': 75000},
-                DASRecord(timestamp=1234567891, fields={'name': 'Alice',
-                                                        'department': 'Engineering', 'score': 95.5})
-            ]
-            writer.write(records)
-
-            # Timestamp column is always first, other columns follow in order encountered
-            # Numeric values (int, float) are written as numbers, not text
         """
         if not records:
             return None
@@ -506,7 +485,7 @@ class GoogleSheetsWriter(Writer):
             # Ensure timestamp is first in the column order
             ordered_keys = self._ensure_timestamp_first(all_keys)
 
-            # Update headers with any new keys (maintaining timestamp-first order)
+            # Update headers with any new keys (maintaining order)
             new_headers = []
             for key in ordered_keys:
                 if key not in self.headers:
@@ -545,22 +524,25 @@ class GoogleSheetsWriter(Writer):
 
             # Find next available row
             next_row = self._get_next_row()
+            last_col_char = chr(65 + len(self.headers) - 1)
 
             if len(rows_data) == 1:
                 # Single row
-                range_name = f"{self.worksheet_name}!A{next_row}:{chr(65 + len(self.headers) - 1)}{next_row}"  # noqa E501
+                range_name = (f"{self.worksheet_name}!A{next_row}:"
+                              f"{last_col_char}{next_row}")
             else:
                 # Multiple rows
                 end_row = next_row + len(rows_data) - 1
-                range_name = f"{self.worksheet_name}!A{next_row}:{chr(65 + len(self.headers) - 1)}{end_row}"  # noqa E501
+                range_name = (f"{self.worksheet_name}!A{next_row}:"
+                              f"{last_col_char}{end_row}")
 
-            # Write the data using USER_ENTERED to allow Sheets to interpret numeric values
+            # Write the data using USER_ENTERED to preserve numeric values
             body = {'values': rows_data}
 
             result = self.service.spreadsheets().values().update(
                 spreadsheetId=self.sheet_id,
                 range=range_name,
-                valueInputOption='USER_ENTERED',  # Changed from 'RAW' to preserve numeric types
+                valueInputOption='USER_ENTERED',
                 body=body
             ).execute()
 
@@ -574,13 +556,7 @@ class GoogleSheetsWriter(Writer):
         Return the current column headers in the sheet.
 
         Returns:
-            list: A copy of the current column headers list. Modifications to this
-                  list won't affect the internal headers.
-
-        Example:
-            headers = writer.get_headers()
-            print(f"Current columns: {headers}")
-            # Output: Current columns: ['timestamp', 'name', 'age', 'city', 'email']
+            list: A copy of the current column headers list.
         """
         return self.headers.copy()
 
@@ -588,17 +564,11 @@ class GoogleSheetsWriter(Writer):
         """
         Clear all data from the worksheet.
 
-        Removes all content from the specified worksheet, including headers and data.
-        Resets the internal headers list to empty.
+        Removes all content including headers and data. Resets internal
+        headers list.
 
         Raises:
             Exception: If unable to clear the sheet
-
-        Warning:
-            This operation cannot be undone. All data in the worksheet will be lost.
-
-        Example:
-            writer.clear_sheet()  # Removes all data from the worksheet
         """
         try:
             range_name = f"{self.worksheet_name}!A:Z"
@@ -646,15 +616,18 @@ if __name__ == "__main__":
 
     # Write multiple dictionaries at once with mixed numeric types
     records = [
-        {'timestamp': 1234567892, 'name': 'Bob', 'age': 35, 'city': 'Chicago', 'salary': 75000, 'score': 89.5},
-        {'timestamp': 1234567893, 'name': 'Alice', 'age': 28, 'occupation': 'Designer', 'salary': 65000, 'score': 92.1}
+        {'timestamp': 1234567892, 'name': 'Bob', 'age': 35,
+         'city': 'Chicago', 'salary': 75000, 'score': 89.5},
+        {'timestamp': 1234567893, 'name': 'Alice', 'age': 28,
+         'occupation': 'Designer', 'salary': 65000, 'score': 92.1}
     ]
     writer.write(records)
 
     # Write a DASRecord with numeric fields
     record = DASRecord(
         timestamp=1234567894,
-        fields={'name': 'Hal', 'favorite_color': 'green', 'years_experience': 5, 'rating': 4.2}
+        fields={'name': 'Hal', 'favorite_color': 'green',
+                'years_experience': 5, 'rating': 4.2}
     )
     writer.write(record)
 

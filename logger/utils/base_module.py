@@ -30,6 +30,8 @@ digest_record() are called, but with the default of quiet=False.
 import inspect
 import logging
 import sys
+import threading
+import queue
 from typing import get_args
 
 from os.path import dirname, realpath
@@ -74,18 +76,111 @@ class BaseModule:
     Implements method for checking whether a received record is in a format
     that the derived class can process, and also a method for splitting a
     list of records into its elements and calling subclass transform() on them.
+
+    Starting with v0.6, BaseModule also implements "mirroring" functionality.
+    If the optional 'mirror_to' argument is passed to the constructor (and
+    the subclass is valid for mirroring, i.e. not a Writer), BaseModule
+    will spin up a thread and a queue to asynchronously write a copy of
+    every record it processes to the specified Writer.
     """
     ############################
-    def __init__(self, quiet=False, input_format=None, output_format=None):
-        self._initialize_type_hints(quiet=quiet)
+    def __init__(self, quiet=False, encoding='utf-8', encoding_errors='ignore',
+                 mirror_to=None, *args, **kwargs):
+        """
+        ```
+        quiet - if type checking should log type errors or operate silently.
 
-        if input_format or output_format:
-            logging.warning(f'Code warning: {self.__class__.__name__} use of '
-                            f'"input_format" or "output_format" is deprecated. '
-                            f'Please see Transform code documentation.')
+        Two additional arguments govern how records will be encoded/decoded
+        from bytes, if desired by the Writer subclass when it calls
+        _encode_str() or _decode_bytes:
+
+        encoding - 'utf-8' by default. If empty or None, do not attempt any
+                decoding and return raw bytes. Other possible encodings are
+                listed in online documentation here:
+                https://docs.python.org/3/library/codecs.html#standard-encodings
+
+        encoding_errors - 'ignore' by default. Other error strategies are
+                'strict', 'replace', and 'backslashreplace', described here:
+                https://docs.python.org/3/howto/unicode.html#encodings
+
+        mirror_to - Optional Writer to which all records read or transformed
+                by this module (if it is a Reader or Transform) will be
+                "mirrored" (copied). Mirroring happens asynchronously via
+                a queue and background thread to minimize impact on the
+                primary data flow. Writers cannot be mirrored.
+        ```
+        """
+        if kwargs.get('input_format'):
+            logging.warning(f'Code warning: {self.__class__.__name__} use of "input_format"'
+                            'is deprecated in favor of type hints. Please see documentation'
+                            'in logger/utils/base_module.py.')
+        if kwargs.get('output_format'):
+            logging.warning(f'Code warning: {self.__class__.__name__} use of "output_format"'
+                            'is deprecated in favor of type hints. Please see documentation'
+                            'in logger/utils/base_module.py.')
+        self.quiet = quiet
+
+        # Make sure '' behaves the same as None, which is what all the
+        # docstrings say, and would be logical... but then certain things treat
+        # them differently (e.g., file.open(mode='ab', encoding='') throws
+        # ValueError: binary mode doesn't take an encoding argument)
+        if encoding == '':
+            encoding = None
+        self.encoding = encoding
+        self.encoding_errors = encoding_errors
+
+        # Handle mirroring
+        self.mirror_to = mirror_to
+        if self.mirror_to:
+            from logger.writers.writer import Writer
+            if isinstance(self, Writer):
+                logging.warning(f'Writer {self.__class__.__name__} passed "mirror_to" argument. '
+                                'Writers cannot be mirrored.')
+                self.mirror_to = None
+            elif not isinstance(self.mirror_to, Writer):
+                raise TypeError(f'mirror_to must be a Writer, not {type(self.mirror_to)}')
+            else:
+                self.mirror_queue = queue.Queue()
+                self.mirror_thread = threading.Thread(target=self._mirror_output_thread,
+                                                      daemon=True)
+                self.mirror_thread.start()
+
+                # Dynamically wrap the read() or transform() method
+                if hasattr(self, 'read'):
+                    self._original_read = self.read
+                    self.read = self._wrapped_read
+                elif hasattr(self, 'transform'):
+                    self._original_transform = self.transform
+                    self.transform = self._wrapped_transform
+
+    def _mirror_output_thread(self):
+        """Thread to pull records from the queue and write them to the
+        mirror_to writer."""
+        while True:
+            record = self.mirror_queue.get()
+            try:
+                self.mirror_to.write(record)
+            except Exception as e:
+                logging.warning(f'Error writing to mirror_to: {e}')
+
+    def _wrapped_read(self):
+        """Wrapped version of read() that intercepts records and sends
+        them to the mirror_to writer."""
+        record = self._original_read()
+        if record is not None:
+            self.mirror_queue.put(record)
+        return record
+
+    def _wrapped_transform(self, record):
+        """Wrapped version of transform() that intercepts records and sends
+        them to the mirror_to writer."""
+        result = self._original_transform(record)
+        if result is not None:
+            self.mirror_queue.put(result)
+        return result
 
     ############################
-    def _initialize_type_hints(self, module_type, module_method, quiet=False):
+    def _initialize_type_hints(self, module_type, module_method):
         """We should only get called from the _initialize_type_hints method of
         Reader/Transform/Writer subclasses, which should fill in all parameters.
 
@@ -94,7 +189,6 @@ class BaseModule:
         natively or not."""
         self.module_type = module_type
         self.module_method = module_method
-        self.quiet = quiet
 
         # We make stupid assumption that the input variable is called 'record'
         method_type_hints = get_method_type_hints(self.module_method)
@@ -187,3 +281,55 @@ class BaseModule:
             logging.warning(f'Must be instance or list of {self.input_types}')
             logging.warning(f'Received {type(record)}: {record}')
         return None
+
+    ############################
+    def _unescape_str(self, the_str):
+        """Unescape a string by encoding it to bytes, then unescaping when we
+        decode it. Ugly.
+        """
+        if not self.encoding:
+            return the_str
+
+        encoded = the_str.encode(encoding=self.encoding, errors=self.encoding_errors)
+        return encoded.decode('unicode_escape')
+
+    ############################
+    def _encode_str(self, the_str, unescape=False):
+        """Encode a string to bytes, optionally unescaping things like \n and \r.
+        Unescaping requires ugly convolutions of encoding, then decoding while we
+        escape things, then encoding a second time.
+        """
+        if not self.encoding:
+            return the_str
+        if unescape:
+            the_str = self._unescape_str(the_str)
+        return the_str.encode(encoding=self.encoding, errors=self.encoding_errors)
+
+    ############################
+    def _decode_bytes(self, record, allow_empty: bool = False):
+        """Decode a record from bytes to str, if we have an encoding specified."""
+        if record is None:
+            return None
+
+        if not record and not allow_empty:  # if it's an empty record but not None
+            return None
+
+        if not self.encoding:
+            return record
+
+        if self.encoding == 'hex':
+            try:
+                r = record.hex()
+                return r
+            except Exception as e:
+                logging.warning('Error decoding string "%s" from encoding "%s": %s',
+                                record, self.encoding, str(e))
+                return None
+
+        try:
+            return record.decode(encoding=self.encoding,
+                                 errors=self.encoding_errors)
+        except UnicodeDecodeError as e:
+            logging.warning('Error decoding string "%s" from encoding "%s": %s',
+                            record, self.encoding, str(e))
+            return None
