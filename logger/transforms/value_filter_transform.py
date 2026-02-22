@@ -9,6 +9,7 @@ DASRecords or dictionary, or...?
 
 import logging
 import sys
+from typing import Union
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
@@ -22,7 +23,7 @@ class ValueFilterTransform(Transform):
     """
     Transform that filters out values in a passed DASRecord that are out of bounds."""
 
-    def __init__(self, bounds, log_level=logging.INFO):
+    def __init__(self, bounds, log_level=logging.INFO, **kwargs):
         """
         ```
         bounds
@@ -49,6 +50,8 @@ class ValueFilterTransform(Transform):
 
         ```
         """
+        super().__init__(**kwargs)  # processes 'quiet' and type hints
+
         self.bounds = {}
         for condition in bounds.split(','):
             try:
@@ -68,19 +71,12 @@ class ValueFilterTransform(Transform):
         self.log_level = log_level
 
     ############################
-    def transform(self, record):
+    def transform(self, record: Union[dict, DASRecord]) -> Union[dict, DASRecord]:
         """Does record violate any bounds?"""
-        if not record:
-            return None
 
-        # If we've got a list, hope it's a list of records. Recurse,
-        # calling transform() on each of the list elements in order and
-        # return the resulting list.
-        if type(record) is list:
-            results = []
-            for single_record in record:
-                results.append(self.transform(single_record))
-            return results
+        # See if it's something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from BaseModule()
+            return self.digest_record(record)  # inherited from BaseModule()
 
         if type(record) is DASRecord:
             fields = record.fields

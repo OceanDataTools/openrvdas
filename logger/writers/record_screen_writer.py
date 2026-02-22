@@ -13,7 +13,9 @@ class RecordScreenWriter(Writer):
     """Write DASRecords to terminal screen in some survivable
     format. Mostly intended for debugging."""
 
-    def __init__(self):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)  # processes 'quiet' and type hints
+
         self.values = {}
         self.timestamps = {}
         self.latest = 0

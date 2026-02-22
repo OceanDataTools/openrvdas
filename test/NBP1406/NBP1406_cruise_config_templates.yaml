@@ -48,19 +48,19 @@ loggers:
     logger_template: serial_logger_template
     variables:
       serial_port: /tmp/tty_mwx1
-      baud_rate: 9600
+      # baud_rate: 9600
   s330:
     configs:
       'off': {}
       net:
         config_template: serial_net_config_template
         variables:
-          baud_rate: 9600
+          # baud_rate: 9600
           serial_port: /tmp/tty_s330
       net+file:
         config_template: serial_net_file_config_template
         variables:
-          baud_rate: 9600
+          # baud_rate: 9600
           serial_port: /tmp/tty_s330
 
   # Parse raw UDP data and send to CDS, and optionally InfluxDB;

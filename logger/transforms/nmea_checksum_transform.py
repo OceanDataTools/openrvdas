@@ -1,8 +1,12 @@
 import logging
-
+import sys
 # For efficient checksum code
 from functools import reduce
 from operator import xor
+
+from os.path import dirname, realpath
+sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
+from logger.transforms.transform import Transform  # noqa: E402
 
 
 ############################
@@ -38,7 +42,7 @@ def compute_checksum(source):
 
 
 ################################################################################
-class NMEAChecksumTransform:
+class NMEAChecksumTransform(Transform):
     """
     NMEAChecksumTransform checks the integrity/completeness of a record by confirming
     whether or not the checksum matches. If the checksum matches, it returns the record,
@@ -47,12 +51,14 @@ class NMEAChecksumTransform:
 
     DEFAULT_ERROR_MESSAGE = 'Bad checksum for record: '
 
-    def __init__(self, checksum_optional=False, error_message=DEFAULT_ERROR_MESSAGE, writer=None):
+    def __init__(self, checksum_optional=False, error_message=DEFAULT_ERROR_MESSAGE,
+                 writer=None, **kwargs):
         """
         checksum_optional — If True, then pass record along even if checksum is missing
         error_message     — Optional custom error message; if None then use DEFAULT_ERROR_MESSAGE
         writer            — Optional error writer; if None, log to stderr
         """
+        super().__init__(**kwargs)  # processes 'quiet' and type hints
 
         self.checksum_optional = checksum_optional
         self.error_message = error_message
@@ -70,15 +76,16 @@ class NMEAChecksumTransform:
                               'write() method!')
                 self.writer = None
 
-    def transform(self, record):
+    def transform(self, record: str):
         """
         Checks if computed checksum matches parsed checksum. If True, it returns the record,
         otherwise it calls send_error_message().
 
         record - the record in question
         """
-        if not record:
-            return None
+        # See if it's something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from BaseModule()
+            return self.digest_record(record)  # inherited from BaseModule()
 
         if not type(record) is str:
             logging.warning('NMEAChecksumTransform passed non-string record '

@@ -14,16 +14,17 @@ from logger.transforms.transform import Transform  # noqa: E402
 class UniqueTransform(Transform):
     """Return the record only if it has changed from the previous value."""
 
-    def __init__(self):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)  # processes 'quiet' and type hints
+
         """Starts with an empty record."""
         self.prev_record = ""
 
     ############################
-    def transform(self, record: str):
-
+    def transform(self, record: str) -> str:
         # See if it's something we can process, and if not, try digesting
-        if not self.can_process_record(record):  # inherited from Transform()
-            return self.digest_record(record)  # inherited from Transform()
+        if not self.can_process_record(record):  # inherited from BaseModule()
+            return self.digest_record(record)  # inherited from BaseModule()
 
         """If same as previous, return None, else record."""
         if record == self.prev_record:

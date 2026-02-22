@@ -57,7 +57,7 @@ class PolledSerialReader(SerialReader):
                  write_timeout=None, dsrdtr=False, inter_byte_timeout=None,
                  exclusive=None, max_bytes=None, eol=None,
                  encoding='utf-8', encoding_errors='ignore',
-                 start_cmd=None, pre_read_cmd=None, stop_cmd=None):
+                 start_cmd=None, pre_read_cmd=None, stop_cmd=None, **kwargs):
         """Extends the standard serial reader by allowing the user to define
         strings to send to the serial host on startup, before each read and
         just prior to the reader being destroyed.
@@ -101,9 +101,10 @@ class PolledSerialReader(SerialReader):
         to pause for that many seconds prior to sending the next command. If no number
         is given, it will pause for one second.
         """
-        self.start_cmd = start_cmd
-        self.pre_read_cmd = pre_read_cmd
-        self.stop_cmd = stop_cmd
+        # Can we even run this?
+        if not SERIAL_MODULE_FOUND:
+            raise RuntimeError('Serial port functionality not available. Please '
+                               'install Python module pyserial.')
 
         # Type check our pre_read commands
         if start_cmd and not is_string_or_list_of_strings(start_cmd):
@@ -118,18 +119,21 @@ class PolledSerialReader(SerialReader):
                              'a string, or a list of strings, or a dict of lists of '
                              f'strings. Found: {pre_read_cmd}')
 
-        if isinstance(pre_read_cmd, dict):
-            self.command_cycle = cycle(pre_read_cmd.items())
-
+        # Okay, let's go and build
         super().__init__(port=port, baudrate=baudrate, bytesize=bytesize,
                          parity=parity, stopbits=stopbits, timeout=timeout,
                          xonxoff=xonxoff, rtscts=rtscts, write_timeout=write_timeout,
                          dsrdtr=dsrdtr, inter_byte_timeout=inter_byte_timeout,
                          exclusive=exclusive, max_bytes=max_bytes, eol=eol,
-                         encoding=encoding, encoding_errors=encoding_errors)
-        if not SERIAL_MODULE_FOUND:
-            raise RuntimeError('Serial port functionality not available. Please '
-                               'install Python module pyserial.')
+                         encoding=encoding, encoding_errors=encoding_errors, **kwargs)
+
+        self.start_cmd = start_cmd
+        self.pre_read_cmd = pre_read_cmd
+        self.stop_cmd = stop_cmd
+
+        if isinstance(pre_read_cmd, dict):
+            self.command_cycle = cycle(pre_read_cmd.items())
+
         if self.start_cmd:
             try:
                 if isinstance(self.start_cmd, list):  # list of commands

@@ -162,8 +162,7 @@ supervisorctl restart django:*
 ```
 
 If you wish to use InfluxDB and Grafana to create dashboards and display data, you
-will need to run the installation script in `utils/install_influxdb.sh`. Please
-see and follow the instructions in [Grafana/InfluxDB-based Displays](docs/grafana_displays.md).
+will need to install those two packages separately. There is a now-deprecated script at `utils/install_influxdb.sh`, but with constant updates of Grafana and InfluxDB, maintaining the script has become too fraught a proposition. Please see the instructions in [Grafana/InfluxDB-based Displays](docs/grafana_displays.md), or the online documentation at <https://www.oceandatatools.org/openrvdas-docs/grafana_displays/>
 
 ## Starting and Stopping Servers
 

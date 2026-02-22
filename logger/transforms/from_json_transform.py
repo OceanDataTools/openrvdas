@@ -3,6 +3,7 @@
 import json
 import logging
 import sys
+from typing import Union
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
@@ -16,15 +17,16 @@ class FromJSONTransform(Transform):
     """Convert passed JSON to either a DASRecord or a dict.
     """
 
-    def __init__(self, das_record=False):
+    def __init__(self, das_record=False, **kwargs):
         """Parse the received JSON and convert to appropriate data
         structure. If das_record == True, assume we've been passed a dict
         of field:value pairs, and try to embed them into a DASRecord.
         """
+        super().__init__(**kwargs)  # processes 'quiet' and type hints
         self.das_record = das_record
 
     ############################
-    def transform(self, record: str):
+    def transform(self, record: str) -> Union[dict, DASRecord]:
         """Parse JSON record to Python data struct or DASRecord."""
 
         # See if it's something we can process, and if not, try digesting

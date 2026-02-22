@@ -88,9 +88,9 @@ class GeofenceTransform(Transform):
                  distance_from_boundary_in_degrees=0,
                  leaving_boundary_message=None,
                  entering_boundary_message=None,
-                 seconds_between_checks=0):
+                 seconds_between_checks=0,
+                 **kwargs):
         """
-        ```
         latitude_field_name
         longitude_field_name
                 Field names to read for lat/lon values.# what fields to listen
@@ -115,13 +115,14 @@ class GeofenceTransform(Transform):
         seconds_between_checks
                 Optional number of seconds to wait between doing checks,
                 computation overhead
-        ```
         """
         # Only throw this error if user tries to actually use this code
         if import_errors:
             raise ImportError('GeofenceTransform requires installation of geopandas and '
                               'shapely packages. Please run "pip install geopandas shapely" '
                               'and retry.')
+
+        super().__init__(**kwargs)  # processes 'quiet' and type hints
 
         self.latitude_field_name = latitude_field_name
         self.longitude_field_name = longitude_field_name
@@ -167,7 +168,12 @@ class GeofenceTransform(Transform):
             combined_gdf = gpd.GeoDataFrame(pd.concat(dfs, ignore_index=True), crs=dfs[0].crs)
 
             # Combine all polygons into a single polygon
-            union_polygon = combined_gdf.unary_union
+            # Handle deprecation of unary_union in newer geopandas/shapely versions
+            try:
+                union_polygon = combined_gdf.union_all()
+            except AttributeError:
+                # Fallback for older versions
+                union_polygon = combined_gdf.unary_union
 
             # Convert the union polygon into a GeoDataFrame
             eez_data = gpd.GeoDataFrame(geometry=[union_polygon])
@@ -176,7 +182,7 @@ class GeofenceTransform(Transform):
         self.buffered_eez = eez_data.buffer(distance_from_boundary_in_degrees)
 
     ############################
-    def _get_lat_lon(self, record):
+    def _get_lat_lon(self, record: Union[DASRecord, dict]):
         """If the DASRecord or dict contains a lat/lon pair, return it as a tuple,
         otherwise return (None, None)."""
 
@@ -225,8 +231,9 @@ class GeofenceTransform(Transform):
                 DASRecords/dicts in which to look for the specified latitude_field_name
                 and longitude_field_name.
         """
-        if record is None:
-            return None
+        # See if it's something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # BaseModule
+            return self.digest_record(record)  # BaseModule
 
         # If we've checked too recently, skip check. Note that because this decision
         # is made for computational efficiency rather than data efficiency, it is made
@@ -237,10 +244,6 @@ class GeofenceTransform(Transform):
             logging.debug(f'Only {time_since_last} seconds since last GeofenceTransform check; '
                           f'less than the {self.seconds_between_checks} required.')
             return None
-
-        # See if it's something we can process, and if not, try digesting
-        if not self.can_process_record(record):  # inherited from Transform()
-            return self.digest_record(record)  # inherited from Transform()
 
         # Does this record have a lat/lon?
         (lat, lon) = self._get_lat_lon(record)

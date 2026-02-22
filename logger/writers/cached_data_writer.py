@@ -23,8 +23,7 @@ from logger.utils.das_record import DASRecord  # noqa: E402
 class CachedDataWriter(Writer):
     def __init__(self, data_server, start_server=False, back_seconds=480,
                  cleanup_interval=6, update_interval=1,
-                 max_backup=60 * 60 * 24, quiet=False,
-                 use_wss=False, check_cert=False):
+                 max_backup=60 * 60 * 24, use_wss=False, check_cert=False, **kwargs):
         """Feed passed records to a CachedDataServer via a websocket. Expects
         records in DASRecord or dict formats.
         ```
@@ -44,8 +43,6 @@ class CachedDataWriter(Writer):
                       records at 1 Hz (86,400 records). If max_backup is zero,
                       cache size is unbounded.
 
-        quiet - Silence errors in input records.
-
         use_wss -     If True, use secure websockets
 
         check_cert  - If True and use_wss is True, check the server's TLS certificate
@@ -57,6 +54,8 @@ class CachedDataWriter(Writer):
         if not WEBSOCKETS_INSTALLED:
             raise ImportError('CachedDataWriter requires Python "websockets" module; '
                               'please run "pip install websockets"')
+
+        super().__init__(**kwargs)  # processes 'quiet' and type hints
 
         host_port = data_server.split(':')
         if len(host_port) == 1:

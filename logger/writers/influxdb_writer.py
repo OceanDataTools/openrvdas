@@ -40,7 +40,7 @@ class InfluxDBWriter(Writer):
     def __init__(self, bucket_name=INFLUXDB_BUCKET, measurement_name=None,
                  tags=None, auth_token=INFLUXDB_AUTH_TOKEN,
                  org=INFLUXDB_ORG, url=INFLUXDB_URL,
-                 verify_ssl=INFLUXDB_VERIFY_SSL, quiet=False):
+                 verify_ssl=INFLUXDB_VERIFY_SSL, **kwargs):
         """Write data records to the InfluxDB.
         ```
         bucket_name - the name of the bucket in InfluxDB.  If the bucket does
@@ -82,7 +82,8 @@ class InfluxDBWriter(Writer):
                   attempt to verify the validity of the relevant SSL certificate.
         ```
         """
-        super().__init__(quiet=quiet)
+        super().__init__(**kwargs)  # processes 'quiet' and type hints
+
         if not URLLIB3_INSTALLED:
             raise ImportError('InfluxDBWriter requires Python "urllib3" module; '
                               'please run "pip install urllib3"')

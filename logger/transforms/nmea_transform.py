@@ -25,10 +25,15 @@ used elsewhere.
 import logging
 import importlib
 import inspect
+import sys
 
 # For efficient checksum code
 from functools import reduce
 from operator import xor
+
+from os.path import dirname, realpath
+sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
+from logger.transforms.transform import Transform  # noqa: E402
 
 
 ############################
@@ -38,7 +43,7 @@ def checksum(source):
 
 
 ################################################################################
-class NMEATransform:
+class NMEATransform(Transform):
     """Call our various component transforms and generate NMEA strings from them.
     """
 
@@ -49,6 +54,7 @@ class NMEATransform:
         **kwargs
                 Arugments needed for the nmea transforms, see transforms below for what will be included.
         """
+        super().__init__(**kwargs)  # processes 'quiet' and type hints
 
         self.transforms = []
 

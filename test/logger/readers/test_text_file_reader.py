@@ -9,7 +9,6 @@ import unittest
 import warnings
 
 sys.path.append('.')
-from logger.utils import formats  # noqa: E402
 from logger.readers.text_file_reader import TextFileReader  # noqa: E402
 
 SAMPLE_DATA = {
@@ -116,18 +115,6 @@ class TestTextFileReader(unittest.TestCase):
                 reader = TextFileReader(tmpfilename, refresh_file_spec=True)
             for line in SAMPLE_DATA[target]:
                 self.assertEqual(line, reader.read())
-
-    ############################
-    # Check that reader output_formats work the way we expect
-    def test_formats(self):
-        reader = TextFileReader(file_spec=None)
-
-        self.assertEqual(reader.output_format(), formats.Text)
-        self.assertEqual(reader.output_format(formats.NMEA), formats.NMEA)
-        self.assertEqual(reader.output_format(), formats.NMEA)
-
-        with self.assertRaises(TypeError):
-            reader.output_format('not a format')
 
     ############################
     # Check some simple cases, forward movement only.

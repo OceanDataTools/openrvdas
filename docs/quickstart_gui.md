@@ -94,8 +94,7 @@ ports have names/locations like `/tmp/tty_s330` (where we will, for example, fin
 
      Selecting the `write` cruise mode will set the loggers to write their data both to UDP and to log files in 
  `/var/tmp/log/`. The two additional cruise modes - `no_write+influx` and `write+influx` - perform the same functions as `no_write` and `write`, but also send the parsed values to an InfluxDB database (if installed), where they can be
- read and displayed in Grafana graphs. InfluxDB and Grafana can be installed using the `utils/install_influxdb.sh`
-script, as described on the [Grafana/InfluxDB](grafana_displays.md) page.
+ read and displayed in Grafana graphs. InfluxDB and Grafana can be installed following instructions on the [Grafana/InfluxDB](grafana_displays.md) page.
 
 
 12. To verify that data are getting read and parsed, open a second browser window and direct it to [http://openrvdas/display/nbp_dashboard.html](http://openrvdas/display/nbp_dashboard.html) (again, assuming you named your openrvdas machine 'openrvdas'). You should see a set of dials, line charts and tables. If the system is in "monitor" mode, they should be updating.
@@ -144,8 +143,7 @@ Valid commands:
 
 ### InfluxDB/Grafana
 The preferred way to display live and historical OpenRVDAS data is to use the suite of InfluxDB and Grafana
-tools that are installed and configured using the utils/install_influxdb.sh script, Please see the
-[Grafana/InfluxDB](grafana_displays.md) page for information on using these tools.
+tools described on the [Grafana/InfluxDB](grafana_displays.md) page.
 
 ### Highcharts + native
 OpenRVDAS does still ship with its own Highcharts-based widgets for displaying live and historical data using Javascript-based web widgets. A set of sample web displays created with these widgets is available at [http://openrvdas/display](http://openrvdas/display); the

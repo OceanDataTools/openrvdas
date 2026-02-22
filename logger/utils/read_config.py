@@ -6,6 +6,7 @@ import os
 import glob
 import logging
 import re
+import json
 from typing import Dict, List, Any, Union
 
 try:
@@ -92,7 +93,8 @@ def expand_cruise_definition(input_dict):
 
     unmatched_vars = find_unmatched_variables(result)
     if unmatched_vars:
-        logging.error(f'Unexpanded variables found: {", ".join(unmatched_vars)}')
+        logging.error(f'Unexpanded variables found: '
+                      f'{", ".join(unmatched_vars)}')
 
     return result
 
@@ -111,7 +113,8 @@ def expand_wildcards(include_pattern: str, base_dir: str) -> List[str]:
     """
     # Resolve relative paths
     if not os.path.isabs(include_pattern):
-        full_pattern = os.path.normpath(os.path.join(base_dir, include_pattern))
+        full_pattern = os.path.normpath(os.path.join(base_dir,
+                                                     include_pattern))
     else:
         full_pattern = include_pattern
 
@@ -127,11 +130,12 @@ def expand_wildcards(include_pattern: str, base_dir: str) -> List[str]:
 ###################
 def expand_includes(input_dict: dict) -> Dict[str, Any]:
     """
-    Recursively process any included YAML files and merge them into the top level.
+    Recursively process any included YAML files and merge them into the top
+    level.
 
     Args:
-        input_dict (dict): The input dictionary optionally containing 'includes'
-        and 'includes_base_dir' keys.
+        input_dict (dict): The input dictionary optionally containing
+                           'includes' and 'includes_base_dir' keys.
 
     Returns:
         Dictionary containing the merged YAML content or empty dict on error
@@ -159,11 +163,14 @@ def expand_includes(input_dict: dict) -> Dict[str, Any]:
         # Process each included file or pattern
         for include_pattern in input_dict['includes']:
             # Expand wildcards to get list of matching files
+            if isinstance(include_pattern, str):
+                include_pattern = include_pattern.strip()
             matching_files = expand_wildcards(include_pattern, base_dir)
 
             # Process each matching file
             for include_path in matching_files:
-                # Use the directory of the include_path as the base_dir for nested includes
+                # Use the directory of the include_path as the base_dir for
+                # nested includes
                 file_path = os.path.join(base_dir, include_path)
 
                 # Load the included file
@@ -186,9 +193,11 @@ def expand_includes(input_dict: dict) -> Dict[str, Any]:
     return input_dict
 
 
-def deep_merge(base: Dict[str, Any], overlay: Dict[str, Any]) -> Dict[str, Any]:
+def deep_merge(base: Dict[str, Any],
+               overlay: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Deeply merge two dictionaries with special handling for different value types:
+    Deeply merge two dictionaries with special handling for different value
+    types:
     - Scalar values: overwrite
     - Lists: append
     - Dictionaries: recursively merge
@@ -223,14 +232,17 @@ def deep_merge(base: Dict[str, Any], overlay: Dict[str, Any]) -> Dict[str, Any]:
 
 
 ###################
-def expand_templates(cruise_definition: Dict[str, Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
+def expand_templates(
+    cruise_definition: Dict[str, Dict[str, Any]]
+) -> Dict[str, Dict[str, Any]]:
     """
     Process a complete configuration dictionary with templates.
     Handles both logger_templates and config_templates.
 
     Args:
-        cruise_definition: Dictionary containing 'logger_templates', 'config_templates',
-                    'loggers', and optionally 'variables' as top-level keys
+        cruise_definition: Dictionary containing 'logger_templates',
+                           'config_templates', 'loggers', and optionally
+                           'variables' as top-level keys
 
     Returns:
         Dictionary with fully processed logger and config configurations
@@ -241,9 +253,10 @@ def expand_templates(cruise_definition: Dict[str, Dict[str, Any]]) -> Dict[str, 
     global_variables = cruise_definition.get('variables', {})
 
     # FIRST PHASE: Process logger templates
-    for logger_name, logger_def in cruise_definition.get('loggers', {}).items():
+    for logger_name, logger_def in cruise_definition.get('loggers', {}).items():  # noqa E501
         if not isinstance(logger_def, dict):
-            raise ValueError(f'Malformed logger definition for {logger_name}; should be dict.')
+            raise ValueError(f'Malformed logger definition for {logger_name}; '
+                             f'should be dict.')
 
         # Skip loggers that don't use logger_templates
         template_name = logger_def.get('logger_template')
@@ -261,9 +274,11 @@ def expand_templates(cruise_definition: Dict[str, Dict[str, Any]]) -> Dict[str, 
         # Get the template
         template = logger_templates.get(template_name)
         if not template:
-            raise ValueError(f"Template '{template_name}' not found in logger_templates")
+            raise ValueError(f"Template '{template_name}' not found in "
+                             f"logger_templates")
 
-        # Overlay the template on the existing logger definition, overwriting configs, etc.
+        # Overlay the template on the existing logger definition,
+        # overwriting configs, etc.
         merged_def = copy.deepcopy(template)
         for key, value in logger_def.items():
             if key not in ['logger_template', 'variables']:
@@ -271,7 +286,8 @@ def expand_templates(cruise_definition: Dict[str, Dict[str, Any]]) -> Dict[str, 
 
         # Substitute variables
         try:
-            processed_definition = substitute_variables(merged_def, effective_variables)
+            processed_definition = substitute_variables(merged_def,
+                                                        effective_variables)
         except ValueError as e:
             logging.error(f"Error processing logger '{logger_name}': {e}")
             raise
@@ -286,12 +302,12 @@ def expand_templates(cruise_definition: Dict[str, Dict[str, Any]]) -> Dict[str, 
         cruise_definition['loggers'][logger_name] = processed_definition
 
     # SECOND PHASE: Process config templates
-    for logger_name, logger_def in cruise_definition.get('loggers', {}).items():
+    for logger_name, logger_def in cruise_definition.get('loggers', {}).items():  # noqa E501
         if not isinstance(logger_def, dict):
             continue
 
         # Process configs within this logger
-        if 'configs' not in logger_def or not isinstance(logger_def['configs'], dict):
+        if 'configs' not in logger_def or not isinstance(logger_def['configs'], dict):  # noqa E501
             continue
 
         for config_name, config_def in logger_def['configs'].items():
@@ -306,31 +322,34 @@ def expand_templates(cruise_definition: Dict[str, Dict[str, Any]]) -> Dict[str, 
             template_name = config_def.get('config_template')
             template = config_templates.get(template_name)
             if not template:
-                raise ValueError(f"Template '{template_name}' not found in config_templates")
+                raise ValueError(f"Template '{template_name}' not found in "
+                                 f"config_templates")
 
-            # Setup effective variables by merging global, logger, and config variables
+            # Setup effective variables by merging global, logger, and config
+            # variables
             effective_variables = copy.deepcopy(global_variables)
             effective_variables['logger'] = logger_name
 
             # Add logger-specific variables
-            if 'variables' in logger_def and isinstance(logger_def['variables'], dict):
+            if 'variables' in logger_def and isinstance(logger_def['variables'], dict):  # noqa E501
                 effective_variables.update(logger_def['variables'])
 
             # Add config-specific variables
-            if 'variables' in config_def and isinstance(config_def['variables'], dict):
+            if 'variables' in config_def and isinstance(config_def['variables'], dict):  # noqa E501
                 effective_variables.update(config_def['variables'])
 
             # Create a new config by copying the template
             merged_config = copy.deepcopy(template)
 
-            # Check for missing variables before substitution and use global values
+            # Check for missing variables before substitution and use global
+            # values
             unmatched = find_unmatched_variables(merged_config)
             for var in unmatched:
                 # Extract the variable name from the <<var>> format
                 var_name = var.strip('<>')
                 # If it's missing from the effective variables but exists
                 # in globals, use the global value
-                if var_name not in effective_variables and var_name in global_variables:
+                if var_name not in effective_variables and var_name in global_variables:  # noqa E501
                     logging.info(
                         f"Using global value for '{var_name}' in config "
                         f"'{config_name}' for logger '{logger_name}'")
@@ -338,13 +357,15 @@ def expand_templates(cruise_definition: Dict[str, Dict[str, Any]]) -> Dict[str, 
 
             # Apply variable substitution to the config
             try:
-                processed_config = substitute_variables(merged_config, effective_variables)
+                processed_config = substitute_variables(merged_config,
+                                                        effective_variables)
             except ValueError as e:
-                missing_var = str(e).split("'")[1] if "Variable '" in str(e) else "unknown"
+                missing_var = str(e).split("'")[1] if "Variable '" in str(e) else "unknown"  # noqa E501
                 logging.error(f"Missing variable '{missing_var}' "
-                              f"in config '{config_name}' for logger '{logger_name}'")
+                              f"in config '{config_name}' for "
+                              f"logger '{logger_name}'")
                 logging.error(f"Available variables: "
-                              f"{', '.join(sorted(effective_variables.keys()))}")
+                              f"{', '.join(sorted(effective_variables.keys()))}")  # noqa E501
                 raise
 
             # Merge any extra non-template keys from the original config
@@ -364,7 +385,8 @@ def expand_templates(cruise_definition: Dict[str, Dict[str, Any]]) -> Dict[str, 
         del cruise_definition['config_templates']
 
     # Apply global variables substitution
-    cruise_definition = substitute_variables(cruise_definition, global_variables)
+    cruise_definition = substitute_variables(cruise_definition,
+                                             global_variables)
 
     return cruise_definition
 
@@ -373,7 +395,8 @@ def expand_templates(cruise_definition: Dict[str, Dict[str, Any]]) -> Dict[str, 
 ConfigValue = Union[Dict[str, Any], List[Any], str, int, float, bool, None]
 
 
-def substitute_variables(config: ConfigValue, variables: Dict[str, Any]) -> ConfigValue:
+def substitute_variables(config: ConfigValue,
+                         variables: Dict[str, Any]) -> ConfigValue:
     """
     Recursively substitute template variables in a configuration dictionary.
 
@@ -383,47 +406,169 @@ def substitute_variables(config: ConfigValue, variables: Dict[str, Any]) -> Conf
 
     Returns:
         Configuration with all variables substituted
+
+    Recursively substitute template variables in a configuration structure.
+
+    Supports:
+      - <<var>>                → replaces with variable value
+      - <<var|default>>        → uses default if var missing
+      - nested defaults        → <<var|<<fallback|default>>>>
+      - type conversion        → <<timeout|10>> → int(10)
+      - pass-through unresolved placeholders
     """
+
+    def _convert_type(value: str) -> Any:
+        """
+        Convert a string default value to a native Python type when possible.
+        """
+        value = value.strip()
+
+        # Try to parse JSON literals (true/false/null/numbers)
+        try:
+            return json.loads(value)
+        except json.JSONDecodeError:
+            pass
+
+        try:
+            return int(value)
+        except ValueError:
+            try:
+                return float(value)
+            except ValueError:
+                return value
+
+    def _split_placeholder(expr: str):
+        """
+        Split a placeholder expression into its variable name and optional
+        default.
+
+        Example expr values:
+            "var"
+            "var|default"
+            "var|<<fallback|default>>"
+
+        Returns a tuple containing the variable name and default value (or
+        None):
+            (var_name, default_expr_or_None)
+
+        The split on the '|' character only occurs at the top level (depth == 0).
+        Any '|' characters inside nested placeholders delimited by '<<' and '>>'
+        are ignored. Nesting depth is tracked by counting occurrences of '<<' and
+        '>>' while scanning the string from left to right.
+
+        Examples:
+            _split_placeholder("timeout|10")
+                -> ("timeout", "10")
+
+            _split_placeholder("a|<<b|c>>")
+                -> ("a", "<<b|c>>")
+
+            _split_placeholder("a")
+                -> ("a", None)
+        """
+        depth, i = 0, 0
+        while i < len(expr):
+            if expr[i:i+2] == '<<':
+                depth += 1
+                i += 2
+                continue
+            if expr[i:i+2] == '>>':
+                depth -= 1
+                i += 2
+                continue
+            if expr[i] == '|' and depth == 0:
+                return expr[:i], expr[i+1:]
+            i += 1
+
+        return expr, None
+
+    def _resolve_variable(expr: str):
+        """
+        Resolve a single placeholder expression to its final value.
+
+        Given the inner contents of a placeholder (the text between << and >>),
+        this function:
+
+          1. Splits the expression into a variable name and optional default
+             using `_split_placeholder`, supporting nested defaults.
+          2. If the variable name exists in `variables`, returns its value.
+          3. If the variable does not exists and a default expression is
+             present, recursively resolves the default expr via
+             `substitute_variables`, allowing chains such as: <<a|<<b|10>>>>
+          4. Applies type conversion to string defaults
+             (e.g. "10" → 10, "true" → True).
+          5. If variable does not exist and no a default can be resolved,
+             returns the original placeholder in pass-through form
+             (e.g. "<<a>>").
+
+        Args:
+            expr: The inner contents of a placeholder (without the outer << >>).
+
+        Returns:
+            The resolved value in its native Python type (int, float, bool,
+            None, str, etc.) or the original placeholder string.
+        """
+
+        name, default_expr = _split_placeholder(expr)
+        if name in variables:
+            return variables[name]
+
+        if default_expr is not None:
+            resolved = substitute_variables(default_expr, variables)
+            return _convert_type(resolved) if isinstance(resolved, str) else resolved
+
+        return f"<<{name}>>"
+
+    def _walk_string(expr: str) -> str:
+        """
+        Scan the expression and replace variable syntax with actual variable
+        values.
+
+        For each complete variable syntax found, the inner expression is
+        resolved via `_resolve_variable`, and the resolved value is inserted
+        into the output.
+
+        Args:
+            expr: Input string possibly containing one or more <<...>> placeholders.
+
+        Returns:
+            A new string with all placeholders expanded and substituted.
+        """
+        out, i = [], 0
+        while i < len(expr):
+            if expr[i:i+2] == '<<':
+                depth, j = 1, i + 2
+                while j < len(expr) and depth:
+                    if expr[j:j+2] == '<<':
+                        depth += 1
+                        j += 2
+                    elif expr[j:j+2] == '>>':
+                        depth -= 1
+                        j += 2
+                    else:
+                        j += 1
+                if depth != 0: # verify there was a closing >>
+                    raise ValueError(f"Malformed variable syntax '{expr[i:]}'")
+                out.append(str(_resolve_variable(expr[i+2:j-2])))
+                i = j
+            else:
+                out.append(expr[i])
+                i += 1
+        return ''.join(out)
+
     if isinstance(config, dict):
-        # Create a new dict to hold the result with substituted keys and values
-        result = {}
-        for k, v in config.items():
-            # Substitute variables in keys if they are strings
-            if isinstance(k, str):
-                new_key = substitute_variables(k, variables)
-            else:
-                new_key = k
-            # Substitute variables in values
-            new_value = substitute_variables(v, variables)
-            result[new_key] = new_value
-        return result
-    elif isinstance(config, list):
-        return [substitute_variables(item, variables) for item in config]
-    elif isinstance(config, str):
-        # Use regex to find and replace all <<variable>> patterns
-        pattern = r'<<([^>]+)>>'
+        return {substitute_variables(k, variables): substitute_variables(v, variables)
+                for k, v in config.items()}
 
-        # Check if the string is ONLY a variable pattern
-        match = re.fullmatch(pattern, config)
-        if match:
-            # It's a standalone variable, preserve its type
-            var_name = match.group(1)
-            if var_name in variables:
-                return variables[var_name]  # Return the original value with its type
-            else:
-                raise ValueError(f"Variable '{var_name}' not found in provided variables")
-        else:
-            # It's a string with embedded variables, do string substitution
-            def replace_match(match):
-                var_name = match.group(1)
-                if var_name in variables:
-                    return str(variables[var_name])
-                else:
-                    raise ValueError(f"Variable '{var_name}' not found in provided variables")
+    if isinstance(config, list):
+        return [substitute_variables(v, variables) for v in config]
 
-            return re.sub(pattern, replace_match, config)
-    else:
-        return config
+    if isinstance(config, str):
+        if config.startswith("<<") and config.endswith(">>"):
+            return _resolve_variable(config[2:-2])
+        return _walk_string(config)
+
+    return config
 
 
 ###################
@@ -431,25 +576,28 @@ def expand_logger_definitions(input_dict):
     """
     Expand a configuration dictionary with loggers and configs structure.
 
-    This function processes a dictionary with a 'loggers' key (required) and an optional
-    'configs' key. It extracts config dictionaries from each logger and moves them to the
-    top level 'configs' section, replacing them with a list of references.
+    This function processes a dictionary with a 'loggers' key (required) and
+    an optional 'configs' key. It extracts config dictionaries from each logger
+    and moves them to the top level 'configs' section, replacing them with a
+    list of references.
 
     Args:
-        input_dict (dict): The input dictionary containing 'loggers' and optionally
-        'configs' keys.
+        input_dict (dict): The input dictionary containing 'loggers' and
+                           optionally 'configs' keys.
 
     Returns:
         dict: A new dictionary with expanded configuration structure.
 
     Raises:
-        ValueError: If the 'loggers' key is missing or if referenced configs are missing.
+        ValueError: If the 'loggers' key is missing or if referenced configs
+                    are missing.
 
     ###This code is to support flexibility in defining cruise configurations.###
 
-    In the past, the "loggers" section of a cruise definition only allowed declaring the
-    names of each configuration associated with a logger. The actual definition of each
-    configuration had to be placed in a following top-level "configs" section.
+    In the past, the "loggers" section of a cruise definition only allowed
+    declaring the names of each configuration associated with a logger. The
+    actual definition of each configuration had to be placed in a following
+    top-level "configs" section.
 
     For example:
 
@@ -475,8 +623,9 @@ def expand_logger_definitions(input_dict):
         writers:
           key2: value2
 
-    The old declaration-followed-by-definition method still works, but now, if desired,
-    the relevant configs may instead be defined within the logger definition itself.
+    The old declaration-followed-by-definition method still works, but now, if
+    desired, the relevant configs may instead be defined within the logger
+    definition itself.
 
     For example:
 
@@ -495,11 +644,11 @@ def expand_logger_definitions(input_dict):
            writers:
              key2: value2
 
-    In this case, the config names will have the logger name prepended (e.g. 'off' becomes
-    PCOD-off, net becomes PCOD-net, etc.)
+    In this case, the config names will have the logger name prepended
+    (e.g. 'off' becomes PCOD-off, net becomes PCOD-net, etc.)
 
-    Note that both methods may be used in a single cruise definition, though for clarity,
-    this is not advised.
+    Note that both methods may be used in a single cruise definition, though
+    for clarity, this is not advised.
     """
     # Validate input
     if 'loggers' not in input_dict:
@@ -544,8 +693,8 @@ def expand_logger_definitions(input_dict):
 
                 # Check for potential overwrites in the top-level configs
                 if config_name in result['configs']:
-                    print(f"Warning: Overwriting existing config '{config_name}'"
-                          "in top-level configs")
+                    print(f"Warning: Overwriting existing config "
+                          f"'{config_name}' in top-level configs")
 
                 # Add the config to the top-level configs
                 result['configs'][config_name] = config_value
@@ -561,24 +710,26 @@ def expand_modes(input_dict):
     """
     Expand or infer the modes section of a cruise definition dict.
 
-    This function processes a dictionary with a 'loggers' key (required) and an optional
-    'configs' key. It extracts config dictionaries from each logger and moves them to the
-    top level 'configs' section, replacing them with a list of references.
+    This function processes a dictionary with a 'loggers' key (required) and
+    an optional 'configs' key. It extracts config dictionaries from each
+    logger and moves them to the top level 'configs' section, replacing them
+    with a list of references.
 
     Args:
-        input_dict (dict): The input dictionary (possibly) containing 'modes' and
-        'configs' keys.
+        input_dict (dict): The input dictionary (possibly) containing 'modes'
+                           and 'configs' keys.
 
     Returns:
         dict: A new dictionary with expanded configuration structure.
 
     Raises:
-        ValueError: If the 'configs' key is missing or if referenced configs are missing.
+        ValueError: If the 'configs' key is missing or if referenced configs
+                    are missing.
 
-    ### This code is to support flexibility in defining cruise configurations. ###
+    ### This code is to support flexibility in defining cruise configurations.
 
-    In the past, cruise modes were required to be dicts mapping a logger name to config.
-    We can infer that dict from a simple list of configs.
+    In the past, cruise modes were required to be dicts mapping a logger name
+    to config. We can infer that dict from a simple list of configs.
     """
     # Validate input
     if 'loggers' not in input_dict:
@@ -594,7 +745,8 @@ def expand_modes(input_dict):
 
     # 'modes' is there. Is it a dict?
     if not isinstance(modes, dict):
-        raise ValueError(f"'modes' definition must be a dict of modes. Found {type(modes)}")
+        raise ValueError(f"'modes' definition must be a dict of modes. "
+                         f"Found {type(modes)}")
 
     # This is the copy we're going to modify and return
     result = copy.deepcopy(input_dict)
@@ -625,12 +777,14 @@ def expand_modes(input_dict):
                     found = True
                     break
             if not found:
-                raise ValueError(f"No logger found for {config_name} in mode {mode_name}")
+                raise ValueError(f"No logger found for {config_name} in "
+                                 f"mode {mode_name}")
 
         # Now confirm that each logger has had a config defined
         for logger_name in loggers:
             if logger_name not in mode_dict:
-                raise ValueError(f"No config defined for {logger_name} in mode {mode_name}")
+                raise ValueError(f"No config defined for {logger_name} "
+                                 f"in mode {mode_name}")
 
         # Replace the config list with newly-created config dict
         result['modes'][mode_name] = mode_dict
@@ -647,18 +801,20 @@ def expand_modes(input_dict):
 ###################
 def generate_default_mode(input_dict):
     """
-    If no 'modes' section is present in input_dict, create one that has a single
-    mode, named 'default', using the first config defined for each logger.
+    If no 'modes' section is present in input_dict, create one that has a
+    single mode, named 'default', using the first config defined for each
+    logger.
 
     Args:
-        input_dict (dict): The input dictionary containing 'loggers' and optionally
-        'configs' keys.
+        input_dict (dict): The input dictionary containing 'loggers' and
+                           optionally 'configs' keys.
 
     Returns:
         dict: A new dictionary with modes and default_mode keys.
 
     Raises:
-        ValueError: If the 'loggers' key is missing or if referenced configs are missing.
+        ValueError: If the 'loggers' key is missing or if referenced configs
+                    are missing.
     """
 
     # Now it's time to check up on modes - do we actually have a modes key?
@@ -679,8 +835,9 @@ def generate_default_mode(input_dict):
 
         # Handle the case where configs is a list of strings
         if not isinstance(logger_configs, list) or not len(logger_configs):
-            raise ValueError(f"Logger {logger_name} config list is not a list? "
-                             f"Found type {type(logger_configs)}: {logger_configs}")
+            raise ValueError(f"Logger {logger_name} config list is not a "
+                             f"list? Found type {type(logger_configs)}: "
+                             f"{logger_configs}")
         default_mode[logger_name] = logger_configs[0]
     result['modes'] = {'default': default_mode}
     result['default_mode'] = 'default'
@@ -691,9 +848,10 @@ def generate_default_mode(input_dict):
 ##############################################################################
 def find_unmatched_variables(data: Union[Dict, List, str, Any]) -> List[str]:
     """
-    Recursively searches through a nested data structure (dicts, lists, strings)
-    and finds all variables that begin with "<<" and end with ">>",
-    returning them with the brackets intact. These typically represent template variables.
+    Recursively searches through a nested data structure (dicts, lists,
+    strings) and finds all variables that begin with "<<" and end with ">>",
+    returning them with the brackets intact. These typically represent template
+    variables.
 
     Args:
         data: A dict, list, string, or other value to search through
@@ -742,13 +900,125 @@ def _extract_from_string(text: str) -> List[str]:
 
 
 ##############################################################################
+def load_definitions(definition_path):
+    """
+    Load and merge device definitions from YAML files.
+
+    This is a shared utility used by RegexParser and RecordParser to load
+    device and device_type definitions from YAML configuration files.
+
+    Supports both the new structured format and the legacy format:
+
+    New format:
+        devices:
+          device_name:
+            device_type: SomeType
+        device_types:
+          SomeType:
+            format: ...
+
+    Legacy format (deprecated):
+        device_name:
+          category: device
+          device_type: SomeType
+        SomeType:
+          category: device_type
+          format: ...
+
+    Args:
+        definition_path: Comma-separated glob patterns for definition files.
+                        Example: 'local/devices/*.yaml,contrib/devices/*.yaml'
+
+    Returns:
+        Dict with structure:
+        {
+            'devices': {device_name: device_def, ...},
+            'device_types': {type_name: type_def, ...}
+        }
+
+        Returns empty structure if definition_path is None or no files found.
+    """
+    definitions = {'devices': {}, 'device_types': {}}
+
+    if not definition_path:
+        return definitions
+
+    def_files = []
+    for path_glob in definition_path.split(','):
+        matched = glob.glob(path_glob.strip())
+        if not matched:
+            logging.debug('No files match definition path "%s"', path_glob.strip())
+        def_files.extend(matched)
+
+    if not def_files:
+        return definitions
+
+    for filename in def_files:
+        file_defs = read_config(filename)
+        file_defs = expand_includes(file_defs)
+
+        for key, val in file_defs.items():
+            # New format: 'devices' key contains dict of device definitions
+            if key == 'devices':
+                if not isinstance(val, dict):
+                    logging.error('"devices" value in file %s must be dict. '
+                                  'Found type "%s"', filename, type(val))
+                    continue
+                for name, defn in val.items():
+                    if name in definitions['devices']:
+                        logging.warning('Duplicate device definition "%s" in %s',
+                                        name, filename)
+                    definitions['devices'][name] = defn
+
+            # New format: 'device_types' key contains dict of device type definitions
+            elif key == 'device_types':
+                if not isinstance(val, dict):
+                    logging.error('"device_types" value in file %s must be dict. '
+                                  'Found type "%s"', filename, type(val))
+                    continue
+                for name, defn in val.items():
+                    if name in definitions['device_types']:
+                        logging.warning('Duplicate device_type definition "%s" in %s',
+                                        name, filename)
+                    definitions['device_types'][name] = defn
+
+            # Skip 'includes' - already handled by expand_includes
+            elif key == 'includes':
+                pass
+
+            # Legacy format: top-level key with 'category' field
+            elif isinstance(val, dict) and 'category' in val:
+                category = val.get('category')
+                if category == 'device':
+                    if key in definitions['devices']:
+                        logging.warning('Duplicate device definition "%s" in %s',
+                                        key, filename)
+                    definitions['devices'][key] = val
+                elif category == 'device_type':
+                    if key in definitions['device_types']:
+                        logging.warning('Duplicate device_type definition "%s" in %s',
+                                        key, filename)
+                    definitions['device_types'][key] = val
+                else:
+                    logging.warning('Top-level definition "%s" in file %s has '
+                                    'unrecognized category "%s" - ignoring',
+                                    key, filename, category)
+
+            # Unknown top-level key
+            else:
+                logging.debug('Ignoring unknown top-level key "%s" in %s', key, filename)
+
+    return definitions
+
+
+##############################################################################
 ##############################################################################
 if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('-v', '--verbosity', dest='verbosity', default=0, action='count',
-                        help='Increase output verbosity')
+    parser.add_argument('-v', '--verbosity', dest='verbosity', default=0,
+                        action='count', help='Increase output verbosity')
     parser.add_argument('filename', type=str, help='Input file to process')
     args = parser.parse_args()
 

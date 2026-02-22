@@ -28,7 +28,7 @@ except ModuleNotFoundError:
 class DatabaseWriter(Writer):
     def __init__(self, database=DEFAULT_DATABASE, host=DEFAULT_DATABASE_HOST,
                  user=DEFAULT_DATABASE_USER, password=DEFAULT_DATABASE_PASSWORD,
-                 save_source=True, quiet=False):
+                 save_source=True, **kwargs):
         """Write to the passed record to a database table. With connectors
         written so far (MySQL and Mongo), writes values in the records as
         timestamped field-value pairs. If save_source=True, also save the
@@ -69,7 +69,7 @@ class DatabaseWriter(Writer):
            }
         ```
         """
-        super().__init__(quiet=quiet)
+        super().__init__(**kwargs)  # processes 'quiet' and type hints
 
         if not DATABASE_SETTINGS_FOUND:
             raise RuntimeError('File database/settings.py not found. Database '
@@ -89,11 +89,15 @@ class DatabaseWriter(Writer):
         return self.db.table_exists(table_name)
 
     ############################
-    def _write_record(self, record):
+    def _write_record(self, record: Union[DASRecord, dict]):
         """Write record to table. Connectors assume we've got a DASRecord, but
         check; if we don't see if it's a suitably-formatted dict that we can
         convert into a DASRecord.
         """
+        if not self.can_process_record(record):  # inherited from BaseModule()
+            self.digest_record(record)  # inherited from BaseModule()
+            return
+
         if isinstance(record, dict):
             try:
                 data_id = record.get('data_id', 'no_data_id')

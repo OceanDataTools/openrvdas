@@ -5,7 +5,7 @@
 import copy
 import logging
 import sys
-
+from typing import Union
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
@@ -20,9 +20,8 @@ class SelectFieldsTransform(Transform):
     record in the same format as it received.
     """
 
-    def __init__(self, keep=None, delete=None):
+    def __init__(self, keep=None, delete=None, **kwargs):
         """
-
         ```
         keep - an optional list of field names to keep
 
@@ -34,8 +33,9 @@ class SelectFieldsTransform(Transform):
         Can accept a top-level dict, a field dict or a DASRecord, and will
         return a record in the same format as it received.
         ```
-
         """
+        super().__init__(**kwargs)  # processes 'quiet' and type hints
+
         self.keep = keep or []
         self.delete = delete or []
 
@@ -47,10 +47,13 @@ class SelectFieldsTransform(Transform):
                             '"delete" arguments will be ignored.')
 
     ############################
-    def transform(self, record):
+    def transform(self, record: Union[dict, DASRecord]):
         """
         Return a copy of the passed record with the relevant fields kept/deleted.
         """
+        # See if it's something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from BaseModule()
+            return self.digest_record(record)  # inherited from BaseModule()
 
         # We need to make a deep copy of the record, because we're going
         # to modify it as we go, and the same record may be getting passed
@@ -67,14 +70,6 @@ class SelectFieldsTransform(Transform):
         # we're going to pass records through unchanged.
         if self.keep and self.delete:
             return new_record
-
-        # If we've got a list, hope it's a list of records. Try to add
-        # them all.
-        if type(new_record) is list:
-            new_record_list = []
-            for single_new_record in new_record:
-                new_record_list.append(self.transform(single_new_record))
-            return new_record_list
 
         # If it's a dict, hope it's a single record.
         elif type(new_record) is DASRecord:

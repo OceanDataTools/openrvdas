@@ -16,11 +16,17 @@ TrimbleGPS:
     - "$GPGGA,{GPSTime:og},{Latitude:nlat},{NorS:w},{Longitude:nlat},{EorW:w},{FixQuality:d},{NumSats:d},{HDOP:of},{AntennaHeight:of},{:ow},{GeoidHeight:of},{:ow},{:ow}*{CheckSum:x}"
     - "$GPGGA,{GPSTime:og},{Latitude:nlat},{NorS:w},{Longitude:nlat},{EorW:w},{FixQuality:d},{NumSats:d},{HDOP:of},{AntennaHeight:of},{:ow},{GeoidHeight:of},{:ow},{:ow},{:ow}*{CheckSum:x}"
     - "$GPGGA,{GPSTime:og},{Latitude:nlat},{NorS:w},{Longitude:nlat},{EorW:w},{FixQuality:d},{NumSats:d},{HDOP:of},{AntennaHeight:of},{:ow},{GeoidHeight:of},{:ow},{LastDGPSUpdate:of},{DGPSStationID:od}*{CheckSum:x}"
-    - "$GPGGA,{GPSTime:og},{Latitude:nlat},{NorS:w},{Longitude:nlat},{EorW:w},{FixQuality:d},{NumSats:d},{HDOP:of},{AntennaHeight:of},{:ow},{GeoidHeight:of},{:ow},{LastDGPSUpdate:of},{DGPSStationID:od}*{CheckSum:x}"
     - "$GPGGA,{GPSTime:og},{Latitude:nlat},{NorS:w},{Longitude:nlat},{EorW:w},{FixQuality:d},{NumSats:d},{HDOP:of},{AntennaHeight:of},{:ow},{GeoidHeight:of},{:ow},{LastDGPSUpdate:of},{DGPSStationID:od},{Unknown:og}*{CheckSum:x}"
     GLL:
     - "$GPGLL,{Latitude:nlat},{NorS:w},{Longitude:nlat},{EorW:w},{FixTime:g},{DataValid:w},{Mode:w}*{CheckSum:x}"
     - "$GPGLL,{Latitude:nlat},{NorS:w},{Longitude:nlat},{EorW:w},{FixTime:g},{Mode:w}*{CheckSum:x}"
+    GSA:
+    - "$GPGSA,{ManualAutoMode:w},{DimensionMode:d},{Sat1ID:od},{Sat2ID:od},{Sat3ID:od},{Sat4ID:od},{Sat5ID:od},{Sat6ID:od},{Sat7ID:od},{Sat8ID:od},{Sat9ID:od},{Sat10ID:od},{Sat11ID:od},{Sat12ID:od},{PDOP:f},{HDOP:f},{VDOP:f}*{CheckSum:x}"
+    GSV:
+    - "$GPGSV,{TotalNumMesg:d},{MesgNum:d},{NumSats:d},{Sat1PRN:d},{Sat1Elevation:d},{Sat1Azimuth:d},{Sat1SignalToNoise:d},{Sat2PRN:d},{Sat2Elevation:d},{Sat2Azimuth:d},{Sat2SignalToNoise:d},{Sat3PRN:d},{Sat3Elevation:d},{Sat3Azimuth:d},{Sat3SignalToNoise:d},{Sat4PRN:d},{Sat4Elevation:d},{Sat4Azimuth:d},{Sat4SignalToNoise:d}*{CheckSum:x}"
+    - "$GPGSV,{TotalNumMesg:d},{MesgNum:d},{NumSats:d},{Sat1PRN:d},{Sat1Elevation:d},{Sat1Azimuth:d},{Sat1SignalToNoise:d},{Sat2PRN:d},{Sat2Elevation:d},{Sat2Azimuth:d},{Sat2SignalToNoise:d},{Sat3PRN:d},{Sat3Elevation:d},{Sat3Azimuth:d},{Sat3SignalToNoise:d}*{CheckSum:x}"
+    - "$GPGSV,{TotalNumMesg:d},{MesgNum:d},{NumSats:d},{Sat1PRN:d},{Sat1Elevation:d},{Sat1Azimuth:d},{Sat1SignalToNoise:d},{Sat2PRN:d},{Sat2Elevation:d},{Sat2Azimuth:d},{Sat2SignalToNoise:d}*{CheckSum:x}"
+    - "$GPGSV,{TotalNumMesg:d},{MesgNum:d},{NumSats:d},{Sat1PRN:d},{Sat1Elevation:d},{Sat1Azimuth:d},{Sat1SignalToNoise:d}*{CheckSum:x}"
     HDT: "$GPHDT,{HeadingTrue:f},T*{CheckSum:x}"
 
     #  $GPRMC,131208,     A,            5310.2626,   S,       07054.3592,   W,       0.1,        171.9,         020819,     14.2,           E                  ,A       *2B
@@ -162,3 +168,89 @@ TrimbleGPS:
       description: unknown
     Datum:
       description: unknown
+    ManualAutoMode:
+      description: "M = Manual, A = Automatic 2D/3D"
+    DimensionMode:
+      description: "1 = Fix, 2 = 2D fix, 3 = 3D fix"
+    PDOP:
+      description: "Dilution of precision"
+    VDOP:
+      description: "Vertical dilution of precision"
+    TDOP:
+      description: "Time dilution of precision"
+    TotalNumMesg:
+      description: "Total number of GSV messages"
+    MesgNum:
+      description: "Message number"
+    Sat1PRN:
+      description: "Satellite PRN number"
+    Sat1Elevation:
+      units: "degrees"
+      description: "Satellite elevation"
+    Sat1Azimuth:
+      units: "degrees"
+      description: "Satellite azimuth"
+    Sat1SignalToNoise:
+      units: "dB"
+      description: "Signal to noise ratio"
+    Sat2PRN:
+      description: "Satellite PRN number"
+    Sat2Elevation:
+      units: "degrees"
+      description: "Satellite elevation"
+    Sat2Azimuth:
+      units: "degrees"
+      description: "Satellite azimuth"
+    Sat2SignalToNoise:
+      units: "dB"
+      description: "Signal to noise ratio"
+    Sat3PRN:
+      description: "Satellite PRN number"
+    Sat3Elevation:
+      units: "degrees"
+      description: "Satellite elevation"
+    Sat3Azimuth:
+      units: "degrees"
+      description: "Satellite azimuth"
+    Sat3SignalToNoise:
+      units: "dB"
+      description: "Signal to noise ratio"
+    Sat4PRN:
+      description: "Satellite PRN number"
+    Sat4Elevation:
+      units: "degrees"
+      description: "Satellite elevation"
+    Sat4Azimuth:
+      units: "degrees"
+      description: "Satellite azimuth"
+    Sat4SignalToNoise:
+      units: "dB"
+      description: "Signal to noise ratio"
+    Sat1ID:
+      description: "Satellite ID 1"
+    Sat2ID:
+      description: "Satellite ID 2"
+    Sat3ID:
+      description: "Satellite ID 3"
+    Sat4ID:
+      description: "Satellite ID 4"
+    Sat5ID:
+      description: "Satellite ID 5"
+    Sat6ID:
+      description: "Satellite ID 6"
+    Sat7ID:
+      description: "Satellite ID 7"
+    Sat8ID:
+      description: "Satellite ID 8"
+    Sat9ID:
+      description: "Satellite ID 9"
+    Sat10ID:
+      description: "Satellite ID 10"
+    Sat11ID:
+      description: "Satellite ID 11"
+    Sat12ID:
+      description: "Satellite ID 12"
+    WeekNum:
+      description: "GPS Week Number"
+    SecondsInWeek:
+      description: "Seconds in GPS Week"

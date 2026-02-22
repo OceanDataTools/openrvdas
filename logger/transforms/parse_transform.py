@@ -4,8 +4,9 @@ import sys
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
-from logger.utils import record_parser  # noqa: E402
 from logger.transforms.transform import Transform  # noqa: E402
+from logger.utils.das_record import DASRecord  # noqa: E402
+from logger.utils import record_parser  # noqa: E402
 
 
 ################################################################################
@@ -17,7 +18,7 @@ class ParseTransform(Transform):
                  definition_path=record_parser.DEFAULT_DEFINITION_PATH,
                  return_json=False, return_das_record=False,
                  metadata_interval=None, strip_unprintable=False, quiet=False,
-                 prepend_data_id=False, delimiter=':'):
+                 prepend_data_id=False, delimiter=':', **kwargs):
         """
         ```
         record_format
@@ -65,6 +66,8 @@ class ParseTransform(Transform):
 
         ```
         """
+        super().__init__(**kwargs)  # processes 'quiet' and type hints
+
         self.parser = record_parser.RecordParser(
             record_format=record_format,
             field_patterns=field_patterns,
@@ -79,18 +82,10 @@ class ParseTransform(Transform):
             delimiter=delimiter)
 
     ############################
-    def transform(self, record):
+    def transform(self, record: str) -> DASRecord:
         """Parse record and return DASRecord."""
-        if record is None:
-            return None
-
-        # If we've got a list, hope it's a list of records. Recurse,
-        # calling transform() on each of the list elements in order and
-        # return the resulting list.
-        if type(record) is list:
-            results = []
-            for single_record in record:
-                results.append(self.transform(single_record))
-            return results
+        # See if it's something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from BaseModule()
+            return self.digest_record(record)  # inherited from BaseModule()
 
         return self.parser.parse_record(record)

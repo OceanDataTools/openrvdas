@@ -22,13 +22,15 @@ DEFAULT_PORT = '6379'
 class RedisWriter(Writer):
     """Write to redis server pubsub channel."""
 
-    def __init__(self, channel, password=None):
+    def __init__(self, channel, password=None, **kwargs):
         """
         Write text records to a Redis pubsub server channel.
         ```
         channel      Redis channel to write to, format channel[@hostname[:port]]
         ```
         """
+        super().__init__(**kwargs)  # processes 'quiet' and type hints
+
         if not REDIS_ENABLED:
             raise ModuleNotFoundError('RedisReader(): Redis is not installed. Please '
                                       'try "pip3 install redis" prior to use.')

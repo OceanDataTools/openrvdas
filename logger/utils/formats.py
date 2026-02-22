@@ -2,9 +2,8 @@
 
 """
 ###############################################################################
-DEPRECATED!  Please see logger/utils/type_checking.py and
-logger/transforms/transform.py for the now-preferred way to validate
-component inputs.
+DEPRECATED!  Please see logger/utils/base_module.py for the now-preferred way to
+validate component inputs.
 ###############################################################################
 
 Set of hierarchical utility classes used to check for input/output
@@ -54,12 +53,15 @@ There is also a special case 'Unknown' format that can't accept
 anything, and has no common elements with any other format.
 
 """
+import logging
+
+logging.warning('Coding error: Module "formats" is deprecated. Please use type hints, as '
+                'described in logging/utils/base_module.py.')
+
 
 ########################################
 # Test whether the passed object is actually a valid format, as
 # defined in this file.
-
-
 def is_format(format):
     # Is format even a class?
     if not isinstance(format, type(Bytes)):
@@ -71,11 +73,10 @@ def is_format(format):
 
     return False
 
+
 ########################################
 # 'Unknown' is a special case format - it can't accept anything, and
 # has no other common formats
-
-
 class Unknown:
     @classmethod
     def can_accept(self, other_format):
@@ -85,11 +86,10 @@ class Unknown:
     def common(self, other_format):
         return None
 
+
 ########################################
 # 'Bytes' is the highest, most general format in the hierarchy. All
 # more-specific formats inherit from it.
-
-
 class Bytes:
     @classmethod
     def can_accept(self, other_format):

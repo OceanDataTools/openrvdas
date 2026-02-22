@@ -5,7 +5,7 @@ config_templates:
     readers:
     - class: SerialReader
       kwargs:
-        baudrate: <<baud_rate>>
+        baudrate: <<baud_rate|9600>>
         port: <<serial_port>>
     transforms:
     - class: TimestampTransform

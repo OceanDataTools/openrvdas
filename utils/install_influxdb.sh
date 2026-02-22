@@ -1,4 +1,29 @@
 #!/bin/bash -e
+################################################################################
+#
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#                              DEPRECATION WARNING
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#
+# This script is DEPRECATED and may not work correctly with current versions
+# of InfluxDB, Grafana, and Telegraf. Constant changes to these packages have
+# made automated installation difficult to maintain.
+#
+# We strongly recommend that you install these packages manually using the
+# official installation instructions for each:
+#
+#   - InfluxDB: https://www.influxdata.com/products/influxdb/
+#   - Grafana:  https://grafana.com/grafana/download
+#   - Telegraf: https://www.influxdata.com/time-series-platform/telegraf/
+#
+# For detailed guidance on manual installation and configuration with OpenRVDAS,
+# please visit:
+#
+#   https://www.oceandatatools.org/openrvdas-docs/grafana_displays/
+#
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#
+################################################################################
 
 # OpenRVDAS is available as open source under the MIT License at
 #   https:/github.com/oceandatatools/openrvdas
@@ -1024,12 +1049,47 @@ EOF
 }
 
 ###########################################################################
+print_hdr() {
+  ## Universal header function, script reads itself up to the first
+  ## blank line, stripping out the shabang at the top and the first
+  ## comment symbol on each line.
+  ## Entire header should be commented out.
+  echo
+  ## Want to preserve whitespace so set IFS to ""
+  while IFS='' read -r LINE; do
+    case ${LINE} in
+      \#!*) continue                    ;; ## Strip out shebang
+        "") echo "" ; break             ;; ## Stop if blank line
+         *) printf '%s\n' "${LINE/\#/}" ;; ## Print everything else
+    esac
+  done < "$0"
+  }
 
 ###########################################################################
 ###########################################################################
 # Start of actual script
 ###########################################################################
 ###########################################################################
+
+################################################################################
+# Display deprecation warning and prompt user
+################################################################################
+print_hdr
+
+read -p "Do you still want to proceed with this deprecated script? (yes/no) " PROCEED
+PROCEED=${PROCEED:-no}
+
+if [ "$PROCEED" != "yes" ]; then
+    echo ""
+    echo "Installation cancelled. Please visit the documentation link above for"
+    echo "guidance on manual installation."
+    echo ""
+    exit 0
+fi
+
+echo ""
+echo "Proceeding with deprecated installation script..."
+echo ""
 
 # Figure out what type of OS we've got running
 get_os_type

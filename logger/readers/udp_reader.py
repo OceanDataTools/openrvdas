@@ -41,9 +41,8 @@ class UDPReader(Reader):
     """Read UDP packets from network."""
     ############################
     def __init__(self, interface=None, port=None, mc_group=None,
-                 reuseaddr=False, reuseport=False,
-                 encoding='utf-8', encoding_errors='ignore', eol=None,
-                 allow_empty=False, this_is_a_test=False):
+                 reuseaddr=False, reuseport=False, eol=None,
+                 allow_empty=False, this_is_a_test=False, **kwargs):
         """
         ```
         interface    IP (or resolvable name) of interface to listen on.  None or ''
@@ -63,15 +62,6 @@ class UDPReader(Reader):
         reuseport    Specifies wether we set SO_REUSEPORT on the created socket.  If
                      you don't know you need this, don't enable it.
 
-        encoding     'utf-8' by default. If empty or None, do not attempt any decoding
-                     and return raw bytes. Other possible encodings are listed in
-                     online documentation here:
-                     https://docs. python.org/3/library/codecs.html#standard-encodings
-
-        encoding_errors 'ignore' by default. Other error strategies are 'strict',
-                        'replace', and 'backslashreplace', described here:
-                        https://docs.python.org/3/howto/unicode.html#encodings
-
         eol          split the record by the eol character if present.
 
         allow_empty - If True, preserve and return empty records
@@ -80,8 +70,7 @@ class UDPReader(Reader):
                 don't output warnings about not using loopback addresses.
         ```
         """
-        super().__init__(encoding=encoding,
-                         encoding_errors=encoding_errors)
+        super().__init__(**kwargs)
 
         if interface:
             # resolve once in constructor
@@ -131,8 +120,11 @@ class UDPReader(Reader):
 
     ############################
     def __del__(self):
-        if self.socket:
-            self.socket.close()
+        try:
+            if self.socket:
+                self.socket.close()
+        except AttributeError:
+            pass
 
     ############################
     def _open_socket(self):

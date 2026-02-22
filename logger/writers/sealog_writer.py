@@ -55,8 +55,8 @@ class SealogWriter(Writer):
     """
 
     ############################
-    def __init__(self, url: str, token: str, config_file: str, quiet: bool = False):
-        super().__init__(quiet=quiet)
+    def __init__(self, url: str, token: str, config_file: str, **kwargs):
+        super().__init__(**kwargs)  # processes 'quiet' and type hints
 
         self.url = url
         self.token = token

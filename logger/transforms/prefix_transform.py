@@ -13,7 +13,7 @@ from logger.transforms.transform import Transform  # noqa: E402
 class PrefixTransform(Transform):
     """Prepend a prefix to a text record."""
 
-    def __init__(self, prefix, sep=' ', quiet=False):
+    def __init__(self, prefix, sep=' ', **kwargs):
         """Prepend the specified prefix to the record, using space as the default
         separator. If prefix is a <regex>:prefix map, go through in order and use
         the prefix of the first regex that matches. If no prefix matches, raise a
@@ -36,6 +36,8 @@ class PrefixTransform(Transform):
 
         quiet     If true, do not log a warning if no regex matches.
         """
+        super().__init__(**kwargs)  # processes 'quiet' and type hints
+
         if type(prefix) is str:
             self.prefix = prefix + sep
         elif type(prefix) is dict:
@@ -43,22 +45,14 @@ class PrefixTransform(Transform):
         else:
             raise TypeError(f'prefix argument in PrefixTransform must be either a str or '
                             f'dict. Received type "{type(prefix)}": {prefix}')
-        self.quiet = quiet
 
     ############################
-    def transform(self, record):
+    def transform(self, record: str) -> str:
         """Prepend a prefix."""
-        if record is None:
-            return None
 
-        # If we've got a list, hope it's a list of records. Recurse,
-        # calling transform() on each of the list elements in order and
-        # return the resulting list.
-        if type(record) is list:
-            results = []
-            for single_record in record:
-                results.append(self.transform(single_record))
-            return results
+        # See if it's something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from BaseModule()
+            return self.digest_record(record)  # inherited from BaseModule()
 
         if type(self.prefix) is str:
             return self.prefix + record

@@ -7,14 +7,14 @@ logger_templates:
       net:
         config_template: serial_net_config_template
         variables:
-          baud_rate: <<baud_rate>>
+          baud_rate: <<baud_rate|9600>>
           serial_port: <<serial_port>>
           raw_udp_port: <<raw_udp_port>>
           udp_destination: <<udp_destination>>
       net+file:
         config_template: serial_net_file_config_template
         variables:
-          baud_rate: <<baud_rate>>
+          baud_rate: <<baud_rate|9600>>
           serial_port: <<serial_port>>
           raw_udp_port: <<raw_udp_port>>
           udp_destination: <<udp_destination>>
