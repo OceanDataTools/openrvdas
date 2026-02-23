@@ -402,7 +402,7 @@ if __name__ == '__main__':  # noqa: C901
     parser.add_argument('--mode', dest='mode', action='store', default=None,
                         help='Optional name of mode to start system in.')
 
-    database_choices = ['memory', 'django']
+    database_choices = ['memory', 'django', 'fastapi']
     if SQLITE_API_DEFINED:
         database_choices.append('sqlite')
     parser.add_argument('--database', dest='database', action='store',
@@ -506,6 +506,9 @@ if __name__ == '__main__':  # noqa: C901
     elif args.database == 'sqlite':
         from server.sqlite_server_api import SQLiteServerAPI  # noqa F811
         api = SQLiteServerAPI()
+    elif args.database == 'fastapi':
+        from server.fastapi_server_api import FastAPIServerAPI  # noqa F811
+        api = FastAPIServerAPI()
     else:
         raise ValueError('Illegal arg for --database: "%s"' % args.database)
 
