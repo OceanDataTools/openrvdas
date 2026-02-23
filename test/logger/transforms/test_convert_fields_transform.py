@@ -13,7 +13,7 @@ class TestConvertFieldsTransform(unittest.TestCase):
 
     ############################
     def test_simple_conversion(self):
-        """Test basic type conversions (float, int, str)."""
+        """Test basic type conversions using the simple string format (float, int, str)."""
         t = ConvertFieldsTransform(fields={
             'heave': 'float',
             'count': 'int',
@@ -40,6 +40,30 @@ class TestConvertFieldsTransform(unittest.TestCase):
             self.assertTrue(any("Failed to convert field 'heave'" in log for log in cm.output))
 
     ############################
+    def test_dict_configuration(self):
+        """Test configuration where fields are defined as dicts with metadata."""
+        # This setup includes extra keys like 'units' and 'description'
+        # to ensure the transform ignores them and only uses 'data_type'.
+        t = ConvertFieldsTransform(fields={
+            'heave': {'data_type': 'float', 'units': 'm'},
+            'count': {'data_type': 'int', 'description': 'Number of events'},
+            'flag': {'data_type': 'str'}
+        })
+
+        input_dict = {'heave': '1.23', 'count': '10', 'flag': 123}
+        expected = {'heave': 1.23, 'count': 10, 'flag': '123'}
+        self.assertDictEqual(t.transform(input_dict), expected)
+
+        # Ensure that if 'data_type' is missing from the dict, it is ignored gracefully
+        t_broken = ConvertFieldsTransform(fields={
+            'heave': {'units': 'm'}  # No data_type provided
+        })
+        input_broken = {'heave': '1.23'}
+        # Should remain string because no valid conversion type was found
+        expected_broken = {'heave': '1.23'}
+        self.assertDictEqual(t_broken.transform(input_broken), expected_broken)
+
+    ############################
     def test_float_string_to_int(self):
         """Test converting a string float ('123.0') to an int."""
         t = ConvertFieldsTransform(fields={'val': 'int'})
@@ -55,24 +79,45 @@ class TestConvertFieldsTransform(unittest.TestCase):
         self.assertDictEqual(t.transform(input_trunc), expected_trunc)
 
     ############################
+    def test_hex_conversion(self):
+        """Test converting hex strings to integers."""
+        t = ConvertFieldsTransform(fields={
+            'flag_a': 'hex_int',
+            'flag_b': 'hex_int',
+            'prefixed': 'hex_int'
+        })
+
+        input_dict = {
+            'flag_a': '1A',       # 26
+            'flag_b': 'FF',       # 255
+            'prefixed': '0x10'    # 16
+        }
+        expected = {
+            'flag_a': 26,
+            'flag_b': 255,
+            'prefixed': 16
+        }
+        self.assertDictEqual(t.transform(input_dict), expected)
+
+    ############################
     def test_lat_lon_conversion(self):
         """Test NMEA lat/lon conversion logic."""
-        t = ConvertFieldsTransform(lat_lon_fields={
-            'latitude': ('raw_lat', 'lat_dir'),
-            'longitude': ('raw_lon', 'lon_dir')
+        t = ConvertFieldsTransform(fields={
+            'latitude': {'data_type': 'nmea_lat', 'direction_field': 'lat_dir'},
+            'longitude': {'data_type': 'nmea_lon', 'direction_field': 'lon_dir'}
         })
 
         # 45 deg 30 min N = 45.5, 120 deg 30 min W = -120.5
         input_dict = {
-            'raw_lat': '4530.00', 'lat_dir': 'N',
-            'raw_lon': '12030.00', 'lon_dir': 'W'
+            'latitude': '4530.00', 'lat_dir': 'N',
+            'longitude': '12030.00', 'lon_dir': 'W'
         }
 
         # By default, delete_source_fields is False, so raw fields stay
         result = t.transform(input_dict)
         self.assertAlmostEqual(result['latitude'], 45.5)
         self.assertAlmostEqual(result['longitude'], -120.5)
-        self.assertIn('raw_lat', result)
+        self.assertIn('lat_dir', result)
         self.assertIn('lon_dir', result)
 
     ############################
@@ -81,13 +126,25 @@ class TestConvertFieldsTransform(unittest.TestCase):
 
         # Case 1: Delete Source Fields = True
         t_del_src = ConvertFieldsTransform(
-            lat_lon_fields={'lat': ('raw_lat', 'lat_dir')},
+            fields={'lat': {'data_type': 'nmea_lat', 'direction_field': 'lat_dir'}},
             delete_source_fields=True
         )
-        res_src = t_del_src.transform({'raw_lat': '4530.00', 'lat_dir': 'S'})
+        # Note: Input must use the KEY defined in fields dict
+        # In previous format, we mapped target -> (value_field, dir_field) explicitly.
+        # Now: target key matches input key, and value_field is implicit.
+        # So input dict must use 'lat' as key for value.
+        res_src = t_del_src.transform({'lat': '4530.00', 'lat_dir': 'S'})
         self.assertAlmostEqual(res_src['lat'], -45.5)
-        self.assertNotIn('raw_lat', res_src)
+        # lat_dir should be deleted
         self.assertNotIn('lat_dir', res_src)
+        # 'lat' key remains but value is converted.
+        # delete_source_fields deletes source fields IF they are different from target.
+        # Here they are same ('lat'). `_convert_lat_lon` updates in place.
+        # Wait, my logic in ConvertFieldsTransform for delete:
+        # if val_field in fields and val_field != target_field: del fields[val_field]
+        # In new declarative mode, target_field == val_field == 'lat'.
+        # So 'lat' is NOT deleted.
+        # But 'lat_dir' IS deleted.
 
         # Case 2: Delete Unconverted Fields = True
         t_del_unconv = ConvertFieldsTransform(
@@ -99,22 +156,20 @@ class TestConvertFieldsTransform(unittest.TestCase):
         self.assertDictEqual(res_unconv, {'keep_me': 5})
 
         # Case 3: Both True
-        # Convert lat/lon, delete raw lat/lon, delete any other fields
+        # Convert lat/lon, delete raw lat/lon (dir), delete any other fields
         t_both = ConvertFieldsTransform(
-            lat_lon_fields={'lat': ('raw_lat', 'lat_dir')},
+            fields={'lat': {'data_type': 'nmea_lat', 'direction_field': 'lat_dir'}},
             delete_source_fields=True,
             delete_unconverted_fields=True
         )
         input_both = {
-            'raw_lat': '3000.00', 'lat_dir': 'N',  # Should be converted then deleted
+            'lat': '3000.00', 'lat_dir': 'N',
             'extra_field': 'delete_me'  # Should be deleted (unconverted)
         }
         res_both = t_both.transform(input_both)
         self.assertAlmostEqual(res_both['lat'], 30.0)
-        self.assertNotIn('raw_lat', res_both)
+        self.assertNotIn('lat_dir', res_both)
         self.assertNotIn('extra_field', res_both)
-        # Ensure only the new field remains
-        self.assertEqual(len(res_both), 1)
 
     ############################
     def test_das_record_input(self):

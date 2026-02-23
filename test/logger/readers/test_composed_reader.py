@@ -56,19 +56,6 @@ class TestComposedReader(unittest.TestCase):
             create_file(tmpfilename, SAMPLE_DATA[f])
 
     ############################
-    def test_check_format(self):
-
-        # This should be okay
-        ComposedReader([TextFileReader(self.tmpfilenames[0]),
-                        TextFileReader(self.tmpfilenames[1])],
-                       check_format=True)
-
-        # This should not be - no common reader format
-        with self.assertRaises(ValueError):
-            ComposedReader([TextFileReader(self.tmpfilenames[0]), Reader()],
-                           check_format=True)
-
-    ############################
     def test_all_files(self):
         # Use TextFileReader's 'interval' flag to make sure we interleave
         # reads the way we expect. Also make sure transforms get applied

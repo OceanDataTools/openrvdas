@@ -6,7 +6,6 @@ import sys
 import tempfile
 import unittest
 from unittest.mock import patch
-from datetime import datetime, timezone
 
 sys.path.append('.')
 from logger.writers.file_writer import FileWriter  # noqa: E402
@@ -31,7 +30,7 @@ class TestFileWriter(unittest.TestCase):
                 if hasattr(writer, 'file') and writer.file:
                     writer.file.close()
                     writer.file = None
-            except:
+            except Exception:
                 pass
         self.writers_to_cleanup.clear()
 
@@ -202,12 +201,14 @@ class TestFileWriter(unittest.TestCase):
         """Test that date_format is automatically updated for split_interval."""
         with tempfile.TemporaryDirectory() as tmpdirname:
             # Test that default date_format gets auto-updated for hourly splits
-            writer_h = self._cleanup_writer(FileWriter(tmpdirname + '/test_h', split_interval='2H'))
+            writer_h = self._cleanup_writer(FileWriter(tmpdirname + '/test_h',
+                                                       split_interval='2H'))
             self.assertIn('%H', writer_h.date_format)
             self.assertIn('T', writer_h.date_format)
 
             # Test that default date_format gets auto-updated for minute splits
-            writer_m = self._cleanup_writer(FileWriter(tmpdirname + '/test_m', split_interval='15M'))
+            writer_m = self._cleanup_writer(FileWriter(tmpdirname + '/test_m',
+                                                       split_interval='15M'))
             self.assertIn('%H', writer_m.date_format)
             self.assertIn('%M', writer_m.date_format)
             self.assertIn('T', writer_m.date_format)
@@ -218,7 +219,6 @@ class TestFileWriter(unittest.TestCase):
                                                             date_format='-%Y-%m-%d_%H'))
             self.assertEqual(writer_custom.date_format, '-%Y-%m-%d_%H')
 
-
     ############################
     def test_date_format_validation(self):
         """Test that date_format is verified against what's required for the
@@ -226,16 +226,19 @@ class TestFileWriter(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdirname:
             with self.assertRaises(ValueError) as context:
                 FileWriter(tmpdirname + '/invalid1', split_interval='24H', date_format='-%Y-%m')
-            self.assertIn('date_format must include %m, %d (month, day) or %j (day-of-year).', str(context.exception))
+            self.assertIn('date_format must include %m, %d (month, day) or %j (day-of-year).',
+                          str(context.exception))
 
             # Test invalid format - no %H in date_format
             with self.assertRaises(ValueError) as context:
-                FileWriter(tmpdirname + '/invalid1', split_interval='2H', date_format='-%Y-%m-%d')
+                FileWriter(tmpdirname + '/invalid1', split_interval='2H',
+                           date_format='-%Y-%m-%d')
             self.assertIn('date_format must include %H (hour).', str(context.exception))
 
             # Test invalid format - no %H in date_format
             with self.assertRaises(ValueError) as context:
-                FileWriter(tmpdirname + '/invalid1', split_interval='15M', date_format='-%Y-%m-%dT%H')
+                FileWriter(tmpdirname + '/invalid1', split_interval='15M',
+                           date_format='-%Y-%m-%dT%H')
             self.assertIn('date_format must include %M (minute).', str(context.exception))
 
 

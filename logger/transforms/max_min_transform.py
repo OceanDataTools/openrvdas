@@ -28,19 +28,17 @@ class MaxMinTransform(Transform):
     Note: ignores fields that are not bool, int or float.
     """
 
-    def __init__(self):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)  # processes 'quiet' and type hints
         self.max = {}
         self.min = {}
 
     ############################
     def transform(self, record: Union[DASRecord, dict]):
         """Does record exceed any previously-observed bounds?"""
-        if not record:
-            return None
-
         # See if it's something we can process, and if not, try digesting
-        if not self.can_process_record(record):  # inherited from Transform()
-            return self.digest_record(record)  # inherited from Transform()
+        if not self.can_process_record(record):  # inherited from BaseModule()
+            return self.digest_record(record)  # inherited from BaseModule()
 
         if type(record) is DASRecord:
             fields = record.fields

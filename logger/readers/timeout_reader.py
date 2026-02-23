@@ -6,7 +6,6 @@ import time
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
-from logger.utils.formats import Text  # noqa: E402
 from logger.readers.reader import Reader  # noqa: E402
 
 
@@ -34,7 +33,7 @@ class TimeoutReader(Reader):
     ############################
 
     def __init__(self, reader, timeout, message=None, resume_message=None,
-                 empty_is_okay=False, none_is_okay=False):
+                 empty_is_okay=False, none_is_okay=False, **kwargs):
         """
         ```
         reader         A client reader instance
@@ -61,7 +60,7 @@ class TimeoutReader(Reader):
                                message='No Gyroscope records received for 15 seconds')
         ```
         """
-        super().__init__(output_format=Text)
+        super().__init__(**kwargs)
 
         self.reader = reader
         self.timeout = timeout

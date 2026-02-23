@@ -1,6 +1,8 @@
 import logging
+from typing import Union
 
 from logger.utils.das_record import DASRecord  # noqa: E402
+from logger.transforms.transform import Transform
 
 KNOWN_FIELD_TYPES = ['polar']
 
@@ -11,8 +13,8 @@ def polar_diff(last_value, value):
 
 
 ################################################################################
-class DeltaTransform:
-    def __init__(self, rate=False, field_type=None):
+class DeltaTransform(Transform):
+    def __init__(self, rate=False, field_type=None, **kwargs):
         """Return a DASRecord (or dict, depending on input record type) with
         each field's delta in value from it's previous value. If a field
         is absent, it will be omitted. The first time a field appears, it
@@ -28,6 +30,8 @@ class DeltaTransform:
                special field types, if any. Currently, only 'polar' is
                implemented.
         """
+        super().__init__(**kwargs)  # processes 'quiet' and type hints
+
         if type(rate) not in [bool, list]:
             raise ValueError('"rate" argument in DeltaTransform must be either '
                              'a list or Boolean. Found type %s' % type(rate))
@@ -49,11 +53,11 @@ class DeltaTransform:
         self.last_value_dict = {}
 
     ############################
-    def transform(self, record):
-        if not record:
-            return None
+    def transform(self, record: Union[DASRecord, dict]) -> Union[DASRecord, dict]:
 
-        fields = {}
+        # See if it's something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # BaseModule
+            return self.digest_record(record)  # BaseModule
 
         if type(record) is DASRecord:
             fields = record.fields
@@ -62,13 +66,6 @@ class DeltaTransform:
         elif type(record) is dict:
             fields = record.get('fields')
             timestamp = record.get('timestamp')
-
-        elif type(record) is list:
-            results = []
-            for single_record in record:
-                results.append(self.transform(single_record))
-            return results
-
         else:
             logging.info('Record passed to DeltaTransform was neither a dict nor a '
                          'DASRecord. Type was %s: %s' % (type(record), str(record)[:80]))

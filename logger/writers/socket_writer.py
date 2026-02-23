@@ -23,12 +23,14 @@ class SocketWriter(Writer):
     Writes records to a Unix domain socket.
     """
 
-    def __init__(self, channel: str):
+    def __init__(self, channel: str, **kwargs):
         """Initialize a Writer for the specified channel.
 
         Args:
             channel: A string identifier for the communication channel
         """
+        super().__init__(**kwargs)  # processes 'quiet' and type hints
+
         # Create a unique socket path based on the channel name
         import hashlib
         channel_hash = hashlib.md5(channel.encode()).hexdigest()[:8]

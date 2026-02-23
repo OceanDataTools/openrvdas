@@ -86,6 +86,7 @@ from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(dirname(realpath(__file__))))))
 from logger.readers.reader import Reader  # noqa: E402
 
+
 ################################################################################
 class HTTPReader(Reader):  # noqa: R0913
     """
@@ -99,8 +100,7 @@ class HTTPReader(Reader):  # noqa: R0913
                  headers: dict | None = None, payload: dict | None = None,
                  interval: float = 5.0, timeout: float = 2.0,
                  encoding: str | None = 'utf-8',
-                 encoding_errors: str = 'ignore',
-    ):
+                 encoding_errors: str = 'ignore', **kwargs):
         """
         ```
         url - Network url to read, in protocol://host:port format (e.g.
@@ -127,8 +127,7 @@ class HTTPReader(Reader):  # noqa: R0913
                 https://docs.python.org/3/howto/unicode.html#encodings
         ```
         """
-        super().__init__(encoding=encoding,
-                         encoding_errors=encoding_errors)
+        super().__init__(encoding=encoding, encoding_errors=encoding_errors, **kwargs)
 
         if interval < 0:
             raise ValueError('Interval must be greater or equal to zero')

@@ -11,7 +11,7 @@ from logger.writers.writer import Writer  # noqa: E402
 
 class TimeoutWriter(Writer):
     def __init__(self, writer, timeout, message=None, resume_message=None,
-                 empty_is_okay=False, none_is_okay=False):
+                 empty_is_okay=False, none_is_okay=False, **kwargs):
         """Instantiated with a client Writer instance (such as a
         LogfileWriter), an interval, a timeout and optional
         message. Expects its write() method to be called at least every
@@ -53,6 +53,9 @@ class TimeoutWriter(Writer):
               resume_message: Okay, got another message
         ```
         """
+        # Initialize type checking
+        super().__init__(**kwargs)  # processes 'quiet' and type hints
+
         self.writer = writer
         self.timeout = timeout
         self.message = message or ('Timeout: no %s record received in %d seconds'

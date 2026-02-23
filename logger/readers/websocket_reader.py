@@ -8,6 +8,15 @@ import threading
 import time
 import websockets
 
+# Compatibility for websockets library versions < 10.0 and >= 10.0
+# InvalidStatusCode was renamed to InvalidStatus in version 10.0
+try:
+    from websockets import InvalidStatus
+except ImportError:
+    from websockets.exceptions import InvalidStatus
+
+WS_InvalidStatus = InvalidStatus
+
 DEFAULT_SERVER_WEBSOCKET = 'localhost:8766'
 
 
@@ -17,7 +26,7 @@ class WebsocketReader():
     requests from it.
     """
 
-    def __init__(self, uri, check_cert=False):
+    def __init__(self, uri, check_cert=False, **kwargs):
         """
         ```
         uri -      Hostname, port and protocol, (e.g. wss://localhost:8080) at which
@@ -28,6 +37,8 @@ class WebsocketReader():
                       file to check against.
         ```
         """
+        super().__init__(**kwargs)
+
         self.uri = uri
         self.check_cert = check_cert
 
@@ -87,8 +98,9 @@ class WebsocketReader():
                     logging.info('WebsocketReader lost websocket connection to '
                                  'data server; trying to reconnect.')
                     await asyncio.sleep(0.2)
-                except websockets.exceptions.InvalidStatusCode:  # type: ignore
-                    logging.info('WebsocketReader InvalidStatusCode connecting to '
+                # FIX: Use the compatibility alias defined at module level
+                except WS_InvalidStatus:  # type: ignore
+                    logging.info('WebsocketReader InvalidStatus/Code connecting to '
                                  'data server; trying to reconnect.')
                     await asyncio.sleep(0.2)
                 except OSError as e:

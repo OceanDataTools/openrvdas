@@ -3,12 +3,11 @@
 """Tools for parsing NMEA and other text records.
 
 By default, will load device and device_type definitions from files in
-contrib/devices/*.yaml. Please see documentation in
-contrib/devices/README.md for a description of the format these
+logger/devices/*.yaml and contrib/devices/*.yaml. Please see documentation
+in contrib/devices/README.md for a description of the format these
 definitions should take.
 """
 import datetime
-import glob
 import json
 import logging
 import pprint
@@ -23,14 +22,15 @@ except ImportError:
 # Append openrvdas root to syspath prior to importing openrvdas modules
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
-from logger.utils import read_config  # noqa: E402
 from logger.utils.das_record import DASRecord  # noqa: E402
+from logger.utils.read_config import load_definitions  # noqa: E402
+from logger.utils.das_record import collect_metadata_for_fields  # noqa: E402
 
 # Dict of format types that extend the default formats recognized by the
 # parse module.
 from logger.utils.record_parser_formats import extra_format_types  # noqa: E402
 
-DEFAULT_DEFINITION_PATH = 'contrib/devices/*.yaml'
+DEFAULT_DEFINITION_PATH = 'logger/devices/*.yaml,contrib/devices/*.yaml'
 DEFAULT_RECORD_FORMAT = '{data_id:w} {timestamp:ti} {field_string}'
 
 
@@ -121,7 +121,7 @@ class RecordParser:
         else:
             # Fill in the devices and device_types - NOTE: we won't be using
             # these if 'field_patterns' is provided as an argument.
-            definitions = self._new_read_definitions(definition_path)
+            definitions = load_definitions(definition_path)
             self.devices = definitions.get('devices', {})
             self.device_types = definitions.get('device_types', {})
 
@@ -210,7 +210,7 @@ class RecordParser:
                 logging.warning('Record: %s', record)
             return None
 
-        data_id = parsed_record.get('data_id','no_data_id')
+        data_id = parsed_record.get('data_id', 'no_data_id')
 
         # Convert timestamp to numeric, if it's there
         timestamp = parsed_record.get('timestamp')
@@ -286,24 +286,11 @@ class RecordParser:
         if message_type:
             parsed_record['message_type'] = message_type
 
-        # If we have parsed fields, see if we also have metadata. Are we
-        # supposed to occasionally send it for our variables? Is it time
-        # to send it again?
-        metadata_fields = {}
-        if self.metadata and self.metadata_interval:
-            for field_name in fields:
-                last_metadata_sent = self.metadata_last_sent.get(field_name, 0)
-                time_since_send = timestamp - last_metadata_sent
-                if time_since_send > self.metadata_interval:
-                    field_metadata = self.metadata.get(field_name)
-                    if field_metadata:
-                        metadata_fields[field_name] = field_metadata
-                        self.metadata_last_sent[field_name] = timestamp
-        if metadata_fields:
-            metadata = {'fields': metadata_fields}
-        else:
-            metadata = None
-
+        # Metadata Injection - use shared utility
+        metadata = collect_metadata_for_fields(
+            fields, timestamp, self.metadata,
+            self.metadata_interval, self.metadata_last_sent
+        )
         if metadata:
             parsed_record['metadata'] = metadata
 
@@ -450,115 +437,3 @@ class RecordParser:
         else:
             raise ValueError('Passed field_patterns must be str, list or dict. Found %s: %s'
                              % (type(field_patterns), str(field_patterns)))
-
-    ############################
-    def _read_definitions(self, filespec_paths):
-        """Read the files on the filespec_paths and return dictionary of
-        accumulated definitions.
-        """
-        definitions = {}
-        for filespec in filespec_paths.split(','):
-            filenames = glob.glob(filespec)
-            if not filenames:
-                logging.warning('No files match definition file spec "%s"', filespec)
-
-            for filename in filenames:
-                file_definitions = read_config.read_config(filename)
-
-                for new_def_name, new_def in file_definitions.items():
-                    if new_def_name in definitions:
-                        logging.warning('Duplicate definition for "%s" found in %s',
-                                        new_def_name, filename)
-                    definitions[new_def_name] = new_def
-        return definitions
-
-    ############################
-    def _new_read_definitions(self, filespec_paths, definitions=None):
-        """Read the files on the filespec_paths and return dictionary of
-        accumulated definitions.
-
-        filespec_paths - a list of possibly-globbed filespecs to be read
-
-        definitions - optional dict of pre-existing definitions that will
-                      be added to. Typically this will be omitted on a base call,
-                      but may be added to when recursing. Passing it in allows
-                      flagging when items are defined more than once.
-        """
-        # If nothing was passed in, start with base case.
-        definitions = definitions or {'devices': {}, 'device_types': {}}
-
-        for filespec in filespec_paths.split(','):
-            filenames = glob.glob(filespec)
-            if not filenames:
-                logging.warning('No files match definition file spec "%s"', filespec)
-
-            for filename in filenames:
-                file_definitions = read_config.read_config(filename)
-
-                for key, val in file_definitions.items():
-                    # If we have a dict of device definitions, copy them into the
-                    # 'devices' key of our definitions.
-                    if key == 'devices':
-                        if not isinstance(val, dict):
-                            logging.error('"devices" values in file %s must be dict. '
-                                          'Found type "%s"', filename, type(val))
-                            return None
-
-                        for device_name, device_def in val.items():
-                            if device_name in definitions['devices']:
-                                logging.warning('Duplicate definition for "%s" found in %s',
-                                                device_name, filename)
-                            definitions['devices'][device_name] = device_def
-
-                    # If we have a dict of device_type definitions, copy them into the
-                    # 'device_types' key of our definitions.
-                    elif key == 'device_types':
-                        if not isinstance(val, dict):
-                            logging.error('"device_typess" values in file %s must be dict. '
-                                          'Found type "%s"', filename, type(val))
-                            return None
-
-                        for device_type_name, device_type_def in val.items():
-                            if device_type_name in definitions['device_types']:
-                                logging.warning('Duplicate definition for "%s" found in %s',
-                                                device_type_name, filename)
-                            definitions['device_types'][device_type_name] = device_type_def
-
-                    # If we're including other files, recurse inelegantly
-                    elif key == 'includes':
-                        if not type(val) in [str, list]:
-                            logging.error('"includes" values in file %s must be either '
-                                          'a list or a simple string. Found type "%s"',
-                                          filename, type(val))
-                            return None
-
-                        if isinstance(val, str):
-                            val = [val]
-                        for filespec in val:
-                            new_defs = self._new_read_definitions(filespec, definitions)
-                            definitions['devices'].update(new_defs.get('devices', {}))
-                            definitions['device_types'].update(new_defs.get('device_types', {}))
-
-                    # If it's not an includes/devices/device_types def, assume
-                    # it's a (deprecated) top-level device or device_type
-                    # definition. Try adding it to the right place.
-                    else:
-                        category = val.get('category')
-                        if category not in ['device', 'device_type']:
-                            logging.warning('Top-level definition "%s" in file %s is not '
-                                            'category "device" or "device_type". '
-                                            'Category is "%s" - ignoring', category)
-                            continue
-                        if category == 'device':
-                            if key in definitions['devices']:
-                                logging.warning('Duplicate definition for "%s" found in %s',
-                                                key, filename)
-                            definitions['devices'][key] = val
-                        else:
-                            if key in definitions['device_types']:
-                                logging.warning('Duplicate definition for "%s" found in %s',
-                                                key, filename)
-                            definitions['device_types'][key] = val
-
-        # Finally, return the accumulated definitions
-        return definitions

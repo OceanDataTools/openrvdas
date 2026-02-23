@@ -66,7 +66,7 @@ class GrafanaLiveWriter(Writer):
 
     def __init__(self, host, stream_id, api_token=None, token_file=None,
                  secure=False, measurement_name=None, batch_size=1,
-                 queue_size=1000, quiet=False):
+                 queue_size=1000, **kwargs):
         """
         Initialize GrafanaLiveWriter.
 
@@ -81,7 +81,7 @@ class GrafanaLiveWriter(Writer):
             queue_size (int): Maximum queue size before dropping records
             quiet (bool): Suppress routine logging
         """
-        super().__init__(quiet=quiet)
+        super().__init__(**kwargs)  # processes 'quiet' and type hints
 
         # -----------------------------------------------------------
         # SECURITY LOGIC: File > Env > Argument

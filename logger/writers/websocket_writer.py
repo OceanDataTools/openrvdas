@@ -6,16 +6,19 @@ import logging
 import ssl
 import sys
 import threading
+import inspect
 
 from typing import Union
 from urllib.parse import urlparse
 
 from os.path import dirname, realpath
+
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.writers.writer import Writer  # noqa E402
 
 try:
     import websockets
+
     WEBSOCKETS_INSTALLED = True
 except ImportError:
     WEBSOCKETS_INSTALLED = False
@@ -25,7 +28,7 @@ except ImportError:
 class WebsocketWriter(Writer):
     ############################
 
-    def __init__(self, uri, cert_file=None, key_file=None, quiet=False):
+    def __init__(self, uri, cert_file=None, key_file=None, **kwargs):
         """
         ```
         uri         Protocol, hostname and port to serve as. E.g. 'wss://openrvdas:8081'
@@ -35,6 +38,9 @@ class WebsocketWriter(Writer):
         key_file
         ```
         """
+        # Initialize type checking
+        super().__init__(**kwargs)  # processes 'quiet' and type hints
+
         if not WEBSOCKETS_INSTALLED:
             raise ImportError('WebsocketWriter requires Python "websockets" module; '
                               'please run "pip install websockets"')
@@ -43,9 +49,6 @@ class WebsocketWriter(Writer):
         self.host = parsed_uri.hostname
         self.port = parsed_uri.port
         self.protocol = parsed_uri.scheme
-
-        # Initialize record type checking.
-        super().__init__(quiet=quiet)
 
         if self.protocol == 'wss':
             self.ssl = True
@@ -94,7 +97,8 @@ class WebsocketWriter(Writer):
             logging.info(f'Websocket connection lost for client {client_id}')
 
     ############################
-    async def _websocket_handler(self, websocket, path):
+    # FIX: path=None makes this compatible with both new (1 arg) and old (2 args) libs
+    async def _websocket_handler(self, websocket, path=None):
         with self.client_map_lock:
             # Find a unique client_id for this client
             client_id = 0
@@ -128,12 +132,44 @@ class WebsocketWriter(Writer):
         self.loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self.loop)
 
-        start_server = websockets.serve(ws_handler=self._websocket_handler,  # type: ignore
-                                        host=self.host, port=self.port,
-                                        ssl=ssl_context)
+        # Build arguments dynamically to support both old and new websockets versions
+        serve_kwargs = {
+            'host': self.host,
+            'port': self.port,
+            'ssl': ssl_context
+        }
 
-        self.loop.run_until_complete(start_server)
-        self.loop.run_forever()
+        # Check signature of websockets.serve to decide on 'handler' vs 'ws_handler'
+        sig = inspect.signature(websockets.serve)
+        if 'handler' in sig.parameters:
+            serve_kwargs['handler'] = self._websocket_handler
+        else:
+            serve_kwargs['ws_handler'] = self._websocket_handler
+
+        async def runner():
+            # Create the server object/context manager
+            # We must do this INSIDE the coroutine so that 'websockets'
+            # can find the running loop.
+            server_result = websockets.serve(**serve_kwargs)
+
+            # Modern websockets (v10+): returns an AsyncContextManager
+            if hasattr(server_result, '__aenter__'):
+                async with server_result:
+                    # Keep the loop running while the server is active
+                    await asyncio.Future()
+
+            # Legacy websockets: returns an awaitable that yields the server
+            else:
+                await server_result
+                # Keep the loop running
+                await asyncio.Future()
+
+        try:
+            # run_until_complete starts the loop, then executes runner(),
+            # which keeps running via await asyncio.Future()
+            self.loop.run_until_complete(runner())
+        except Exception as e:
+            logging.error(f"WebsocketWriter server loop error: {e}")
 
     ############################
     def write(self, record: Union[str, bytes]):
@@ -148,5 +184,5 @@ class WebsocketWriter(Writer):
         with self.client_map_lock:
             for client_id, sender in self.client_map.items():
                 logging.debug(f'Pushing record to client {client_id}')
-                self.loop.call_soon_threadsafe(                        # type: ignore
+                self.loop.call_soon_threadsafe(  # type: ignore
                     self.send_queue[client_id].put_nowait, record)

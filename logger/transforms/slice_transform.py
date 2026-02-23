@@ -11,7 +11,7 @@ from logger.transforms.transform import Transform  # noqa: E402
 
 ################################################################################
 class SliceTransform(Transform):
-    def __init__(self, fields=None, sep=None):
+    def __init__(self, fields=None, sep=None, **kwargs):
         """
         ```
         fields    A comma-separated list of integers and/or ranges. A range
@@ -37,6 +37,8 @@ class SliceTransform(Transform):
         transform = SliceTransform('9,0,4,0,0:2')
         ```
         """
+        super().__init__(**kwargs)  # processes 'quiet' and type hints
+
         if not fields:
             fields = ':'
 
@@ -62,12 +64,12 @@ class SliceTransform(Transform):
             raise e
 
     ############################
-    def transform(self, record: str):
+    def transform(self, record: str) -> str:
         """Strip and return only the requested fields."""
 
         # See if it's something we can process, and if not, try digesting
-        if not self.can_process_record(record):  # inherited from Transform()
-            return self.digest_record(record)  # inherited from Transform()
+        if not self.can_process_record(record):  # inherited from BaseModule()
+            return self.digest_record(record)  # inherited from BaseModule()
 
         in_record = record.split(self.sep)
         out_record = []

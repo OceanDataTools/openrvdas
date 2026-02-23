@@ -10,6 +10,7 @@ from unittest.mock import MagicMock, patch
 sys.path.append('.')  # ensure modules are importable
 
 from logger.readers.modbus_serial_reader import ModBusSerialReader  # noqa: E402
+from logger.readers.modbus_serial_reader import MODBUS_MODULE_FOUND  # noqa: E402
 
 # Test data
 SAMPLE_REGISTERS = [
@@ -26,6 +27,7 @@ SAMPLE_TIMEOUT_REGISTERS = [
 ]
 
 
+@unittest.skipUnless(MODBUS_MODULE_FOUND, 'pymodbus not installed')
 class TestModBusSerialReader(unittest.TestCase):
 
     ###########################################################################

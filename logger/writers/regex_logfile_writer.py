@@ -21,7 +21,7 @@ class RegexLogfileWriter(Writer):
                  date_format=timestamp.DATE_FORMAT,
                  split_char=' ', suffix='', header=None,
                  header_file=None, rollover_hourly=False,
-                 quiet=False):
+                 **kwargs):
         """Write timestamped text records to a filebase. The filebase will
         have the current date appended, in keeping with R2R format
         recommendations (http://www.rvdata.us/operators/directory). When the
@@ -59,7 +59,8 @@ class RegexLogfileWriter(Writer):
                         any mapped prefix
         ```
         """
-        super().__init__(quiet=quiet)
+        super().__init__(**kwargs)  # processes 'quiet' and type hints
+
         self.filebase = filebase
         self.flush = flush
         self.time_format = time_format

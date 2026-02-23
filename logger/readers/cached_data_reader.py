@@ -18,7 +18,7 @@ except ModuleNotFoundError:
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.readers.reader import Reader  # noqa: E402
-from logger.utils.das_record import to_das_record_list
+from logger.utils.das_record import to_das_record_list  # noqa: E402
 
 DEFAULT_SERVER_WEBSOCKET = 'localhost:8766'
 
@@ -31,7 +31,7 @@ class CachedDataReader(Reader):
 
     def __init__(self, subscription, data_server=DEFAULT_SERVER_WEBSOCKET,
                  bundle_seconds=0, return_das_record=False, data_id=None,
-                 use_wss=False, check_cert=False):
+                 use_wss=False, check_cert=False, **kwargs):
         """
         ```
         subscription - a dictionary corresponding to the full
@@ -79,6 +79,7 @@ class CachedDataReader(Reader):
                     seconds: 0
         ```
         """
+        super().__init__(**kwargs)
 
         if not WEBSOCKETS_ENABLED:
             raise ModuleNotFoundError('CachedDataReader(): websockets module is not '

@@ -53,7 +53,7 @@ class SealogControlTransform(Transform):
     appropiate logger_manager command str.
     """
     def __init__(self, event_value, event_option_name,
-                 event_author=None):
+                 event_author=None, **kwargs):
         """
         event_value: only process events with this event_value
 
@@ -61,6 +61,7 @@ class SealogControlTransform(Transform):
 
         event_author: optionally accept only events by a specific author
         """
+        super().__init__(**kwargs)  # processes 'quiet' and type hints
 
         self.event_value = event_value
         self.event_author = event_author
@@ -75,9 +76,9 @@ class SealogControlTransform(Transform):
         determine if it matches the requirements for requesting an OpenRVDAS
         mode change.
         """
-
-        if not record:
-            return None
+        # See if it's something we can process, and if not, try digesting
+        if not self.can_process_record(record):  # inherited from BaseModule()
+            return self.digest_record(record)  # inherited from BaseModule()
 
         try:
             event = to_event(record)

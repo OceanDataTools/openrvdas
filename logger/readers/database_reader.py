@@ -7,7 +7,6 @@ import time
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.readers.reader import TimestampedReader  # noqa: E402
-from logger.utils.formats import Python_Record  # noqa: E402
 
 # Don't freak out if we can't find database settings - unless they actually
 # try to instantiate a DatabaseReader.
@@ -33,8 +32,8 @@ class DatabaseReader(TimestampedReader):
     def __init__(self, fields=None,
                  database=DEFAULT_DATABASE, host=DEFAULT_DATABASE_HOST,
                  user=DEFAULT_DATABASE_USER, password=DEFAULT_DATABASE_PASSWORD,
-                 tail=False, sleep_interval=1.0):
-        super().__init__(output_format=Python_Record)
+                 tail=False, sleep_interval=1.0, **kwargs):
+        super().__init__(**kwargs)
 
         if not DATABASE_SETTINGS_FOUND:
             raise RuntimeError('File database/settings.py not found. Database '

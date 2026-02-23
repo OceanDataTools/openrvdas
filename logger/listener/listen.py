@@ -108,7 +108,8 @@ class ListenerFromLoggerConfig(Listener):
             # Declaration of readers, transforms and writers. Note that the
             # singular "reader" is a special case for TimeoutReader that
             # takes a single reader.
-            if key in ['readers', 'reader', 'transforms', 'writers', 'writer']:
+            if key in ['readers', 'reader', 'transforms', 'writers', 'writer',
+                       'mirror_to']:
                 if not value:
                     raise ValueError('declaration of "%s" in class has no kwargs?!?' % key)
                 kwargs[key] = self._class_kwargs_from_config(value)

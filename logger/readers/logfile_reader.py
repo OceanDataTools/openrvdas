@@ -14,7 +14,6 @@ from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.utils import timestamp  # noqa: E402
 from logger.utils.das_record import DASRecord  # noqa: E402
-from logger.utils.formats import Text  # noqa: E402
 from logger.readers.text_file_reader import TextFileReader  # noqa: E402
 from logger.readers.reader import TimestampedReader  # noqa: E402
 
@@ -40,7 +39,7 @@ class LogfileReader(TimestampedReader):
                  record_format=None,
                  time_format=timestamp.TIME_FORMAT,
                  date_format=timestamp.DATE_FORMAT,
-                 eol=None, quiet=False):
+                 eol=None, quiet=False, **kwargs):
         """
         ```
         filebase     Possibly wildcarded string specifying files to be opened.
@@ -87,7 +86,7 @@ class LogfileReader(TimestampedReader):
         alphanumeric by filename, but this is not strictly enforced and
         depends on how glob returns them.
         """
-        super().__init__(output_format=Text)
+        super().__init__(**kwargs)
 
         if not PARSE_INSTALLED:
             raise ImportError('LogfileReader requires Python "parse" module; '
