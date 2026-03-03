@@ -547,7 +547,7 @@ def substitute_variables(config: ConfigValue,
                         j += 2
                     else:
                         j += 1
-                if depth != 0: # verify there was a closing >>
+                if depth != 0:  # verify there was a closing >>
                     raise ValueError(f"Malformed variable syntax '{expr[i:]}'")
                 out.append(str(_resolve_variable(expr[i+2:j-2])))
                 i = j
@@ -564,8 +564,26 @@ def substitute_variables(config: ConfigValue,
         return [substitute_variables(v, variables) for v in config]
 
     if isinstance(config, str):
-        if config.startswith("<<") and config.endswith(">>"):
-            return _resolve_variable(config[2:-2])
+        # Check whether the entire string is a single top-level placeholder.
+        # We track nesting depth so that a string like
+        # "<<file_root>>/<<logger>>/raw/<<cruise>>_<<logger>>" is NOT treated
+        # as a single placeholder (the first ">>" closes at position 12, not
+        # at the end of the string).
+        if config.startswith("<<"):
+            depth, i = 1, 2
+            while i < len(config) and depth:
+                if config[i:i+2] == '<<':
+                    depth += 1
+                    i += 2
+                elif config[i:i+2] == '>>':
+                    depth -= 1
+                    i += 2
+                else:
+                    i += 1
+            if depth == 0 and i == len(config):
+                # The whole string is one placeholder — resolve with type
+                # preservation (so e.g. <<baud_rate>> can return an int).
+                return _resolve_variable(config[2:i-2])
         return _walk_string(config)
 
     return config
