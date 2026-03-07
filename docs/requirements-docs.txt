@@ -6,6 +6,8 @@ pdoc>=14.0.0
 # These packages are imported at module level (not in try/except) in some
 # logger/server modules, so pdoc needs them installed to import those modules.
 PyYAML
+parse
 setproctitle
+websockets
 google-auth
 google-api-python-client
