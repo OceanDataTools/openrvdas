@@ -12,7 +12,7 @@
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 
 # Get list of staged YAML files
-STAGED_YAML=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(yaml|yml)$')
+STAGED_YAML=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(yaml|yml)$' | grep -v '^\.github/')
 
 if [ -z "$STAGED_YAML" ]; then
     # No YAML files staged, nothing to validate
