@@ -8,6 +8,7 @@ on:
       - 'server/**/*.py'
       - 'docs/generate_html_docs.sh'
       - 'docs/pdoc_templates/**'
+      - 'docs/requirements-docs.txt'
 
 jobs:
   build-docs:
