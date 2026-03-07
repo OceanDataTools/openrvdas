@@ -20,7 +20,7 @@ It is maintained as a separate Jekyll-based site at
 ### Component API reference
 
 Auto-generated API documentation for all OpenRVDAS logger and server components
-is located in [`docs/html/`](file://html/index.html). Open **[html/index.html](file://html/index.html)**
+is located in [`docs/html/`](html/index.html). Open **[html/index.html](html/index.html)**
 in a browser to browse calling conventions for all Readers, Transforms, Writers, and server modules in the repository.
 
 This documentation is generated directly from the source code and is fully
