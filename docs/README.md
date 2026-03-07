@@ -15,12 +15,12 @@ The project code repository is at [https://github.com/oceandatatools/openrvdas](
 The full OpenRVDAS documentation is hosted online at **[http://www.oceandatatools.org/openrvdas-docs/](http://www.oceandatatools.org/openrvdas-docs/)**.
 
 It is maintained as a separate Jekyll-based site at
-[https://github.com/oceandatatools/openrvdas-docs](https://github.com/oceandatatools/openrvdas-docs).  To browse the documentation locally, clone that repository and follow the setup instructions in its INSTALL.md. Once running, it will be available at [http://localhost:4000](http://localhost:4000).
+[https://github.com/oceandatatools/openrvdas-docs](https://github.com/oceandatatools/openrvdas-docs).  To browse the documentation locally, clone that repository and follow the setup instructions in its [INSTALL.md](https://github.com/OceanDataTools/openrvdas-docs/blob/master/install.md). Once running, it will be available at [http://localhost:4000](http://localhost:4000).
 
 ### Component API reference
 
 Auto-generated API documentation for all OpenRVDAS logger and server components
-is located in [`docs/html/`](html/index.html). Open **[html/index.html](html/index.html)**
+is located in [`docs/html/`](file://html/index.html). Open **[html/index.html](file://html/index.html)**
 in a browser to browse calling conventions for all Readers, Transforms, Writers, and server modules in the repository.
 
 This documentation is generated directly from the source code and is fully
