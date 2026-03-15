@@ -48,8 +48,12 @@ function exit_gracefully {
     echo Exiting.
 
     # Try deactivating virtual environment, if it's active
-    if [ -n "$INSTALL_ROOT" ];then
-        deactivate
+    if [ -n "$VIRTUAL_ENV" ]; then
+        # Check if the deactivate function or command is available
+        if command -v deactivate >/dev/null 2>&1; then
+            echo "Deactivating current virtual environment: $VIRTUAL_ENV"
+            deactivate
+        fi
     fi
     return -1 2> /dev/null || exit -1  # exit correctly if sourced/bashed
 }
@@ -362,7 +366,7 @@ function create_user {
         # MacOS
         if [ $OS_TYPE == 'MacOS' ]; then
           echo No such pre-existing user: $RVDAS.
-          echo On MacOS, must install for pre-existing user. Exiting.
+          echo On MacOS, must install for pre-existing user.
           exit_gracefully
 
         # CentOS/RHEL
@@ -413,10 +417,10 @@ function install_prereqs {
     if [ $OS_TYPE == 'MacOS' ]; then
         # Loop until the Xcode tools are installed
         if is_xcode_installed; then
-            echo "XCode Tools already installed"
+            echo "Xcode Command Line Tools already installed"
         fi
         while ! is_xcode_installed; do
-            echo "Xcode Command Line Tools are not installed. Initiating installation..."
+            echo "Installing the Xcode Command Line Tools..."
             # Request installation (this brings up a GUI prompt)
             xcode-select --install
 
@@ -426,24 +430,62 @@ function install_prereqs {
         done
 
         # Install Homebrew - note: reinstalling is idempotent
-        if command -v brew &> /dev/null; then
-            echo "Homebrew already installed."
-            brew --version
+        ARCHITECTURE=$(uname -m)
+        if [ "$ARCHITECTURE" = "arm64" ]; then
+            BREW_PATH='/opt/homebrew/bin/brew'
+        elif [ "$ARCHITECTURE" = "x86_64" ]; then
+            BREW_PATH='/usr/local/bin/brew'
+        else
+            BREW_PATH=''
+        fi
+        if [ -f ${BREW_PATH} ]; then
+            echo "Homebrew already installed"
         else
             echo "Installing Homebrew..."
-            pushd /tmp
+            pushd /tmp >/dev/null 2>&1
             HOMEBREW_VERSION=4.5.13
             HOMEBREW_TARGET=Homebrew-${HOMEBREW_VERSION}.pkg
             HOMEBREW_PATH=https://github.com/Homebrew/brew/releases/download/${HOMEBREW_VERSION}/${HOMEBREW_TARGET}
 
-            curl -O -L ${HOMEBREW_PATH}
+            [ ! -f ${HOMEBREW_TARGET} ] && curl -O -L ${HOMEBREW_PATH}
 
             # The -target / specifies that the package should be installed on the root volume.
             sudo installer -pkg ${HOMEBREW_TARGET} -target /
-            popd
+            popd >/dev/null 2>&1
         fi
 
-        brew install python git nginx supervisor
+        # Is it in the path?
+        if [ -z "$(command -v brew &> /dev/null)" ]; then
+            if [ "$ARCHITECTURE" = "arm64" ]; then
+                HOMEBREW_SHELLENV='eval "$(/opt/homebrew/bin/brew shellenv)"'
+            elif [ "$ARCHITECTURE" = "x86_64" ]; then
+                HOMEBREW_SHELLENV='eval "$(/usr/local/bin/brew shellenv)"'
+            else
+                HOMEBREW_SHELLENV=''
+            fi
+
+            ZPROFILE_PATH=~/.zprofile
+            if [ -n "$HOMEBREW_SHELLENV" ] &&
+                { [ ! -f "$ZPROFILE_PATH" ] || ! grep -qF "$HOMEBREW_SHELLENV" "$ZPROFILE_PATH"; }; then
+                echo "$HOMEBREW_SHELLENV" >> "$ZPROFILE_PATH"
+                source "$ZPROFILE_PATH"
+                brew --version
+            fi
+
+            echo " "
+            if command -v brew &> /dev/null; then
+                echo "Homebrew was installed and your $ZPROFILE_PATH was updated. Restart your terminal or run 'source $ZPROFILE_PATH' after this script completes to make the 'brew' command available."
+                brew --version
+            else
+                echo "Homebrew was installed but updating $ZPROFILE_PATH with $HOMEBREW_SHELLENV failed. Please follow the Homebrew instructions to add it to the path."
+            fi
+            echo " "
+            read -p "Please press ENTER to continue..."
+        fi
+        brew --version
+
+        # Homebrew won't run under elevation (sudo), so we have to run it as the regular user
+        su - $SUDO_USER -c "brew install python git nginx supervisor"
 
         #brew upgrade openssh nginx supervisor || echo Upgraded packages
         #brew link --overwrite python || echo Linking Python
@@ -1219,7 +1261,9 @@ echo
 install_prereqs
 
 echo
+echo "#####################################################################"
 echo "OpenRVDAS configuration script"
+echo
 
 # Read from the preferences file in $PREFERENCES_FILE, if it exists
 set_default_variables
@@ -1566,44 +1610,34 @@ fi
 echo
 echo "#########################################################################"
 echo "Restarting services: supervisor"
-    # If we're on MacOS
-    if [ $OS_TYPE == 'MacOS' ]; then
-        #sudo mkdir -p /usr/local/var/run/
-        #sudo chown $RVDAS_USER /usr/local/var/run
-        #sudo chgrp $RVDAS_GROUP /usr/local/var/run
+# If we're on MacOS
+if [ $OS_TYPE == 'MacOS' ]; then
+    su - $SUDO_USER -c "brew services restart supervisor"
 
-        echo "NOTE: on MacOS, supervisord will not be started automatically."
-        echo "To run it, try"
-        echo "brew services run supervisor"
-        #echo "    sudo /opt/openrvdas/venv/bin/supervisord \\"
-        #echo "       -c /usr/local/etc/supervisord.conf"
-        #echo
-        read -p "Hit return to continue. " DUMMY_VAR
-        
-    # Linux
-    elif [ $OS_TYPE == 'CentOS' ] || [ $OS_TYPE == 'Ubuntu' ]; then
-        sudo mkdir -p /var/run/supervisor/
-        sudo chgrp $RVDAS_GROUP /var/run/supervisor
+# Linux
+elif [ $OS_TYPE == 'CentOS' ] || [ $OS_TYPE == 'Ubuntu' ]; then
+    sudo mkdir -p /var/run/supervisor/
+    sudo chgrp $RVDAS_GROUP /var/run/supervisor
 
-        # CentOS/RHEL
-        if [ $OS_TYPE == 'CentOS' ]; then
-            sudo systemctl enable supervisord
-            sudo systemctl restart supervisord
-        else # Ubuntu/Debian
-            sudo systemctl enable supervisor
-            sudo systemctl restart supervisor
-        fi
-
-        if [[ "$INSTALL_GUI" == "yes" ]];then
-            # Previous installations used nginx and uwsgi as a service. We need to
-            # disable them if they're running.
-            echo Disabling legacy services
-            sudo systemctl stop nginx 2> /dev/null || echo "nginx not running"
-            sudo systemctl disable nginx 2> /dev/null || echo "nginx disabled"
-            sudo systemctl stop uwsgi 2> /dev/null || echo "uwsgi not running"
-            sudo systemctl disable uwsgi 2> /dev/null || echo "uwsgi disabled"
-        fi
+    # CentOS/RHEL
+    if [ $OS_TYPE == 'CentOS' ]; then
+        sudo systemctl enable supervisord
+        sudo systemctl restart supervisord
+    else # Ubuntu/Debian
+        sudo systemctl enable supervisor
+        sudo systemctl restart supervisor
     fi
+
+    if [[ "$INSTALL_GUI" == "yes" ]];then
+        # Previous installations used nginx and uwsgi as a service. We need to
+        # disable them if they're running.
+        echo Disabling legacy services
+        sudo systemctl stop nginx 2> /dev/null || echo "nginx not running"
+        sudo systemctl disable nginx 2> /dev/null || echo "nginx disabled"
+        sudo systemctl stop uwsgi 2> /dev/null || echo "uwsgi not running"
+        sudo systemctl disable uwsgi 2> /dev/null || echo "uwsgi disabled"
+    fi
+fi
 
 # Deactivate the virtual environment - we'll be calling all relevant
 # binaries using their venv paths, so don't need it.
