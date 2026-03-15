@@ -13,7 +13,7 @@
 # and then running 'utils/build_openrvdas_centos7.sh' to run that
 # script.
 #
-# The script has been designed to be idempotent, that is, if can be
+# The script has been designed to be idempotent, that is, it can be
 # run over again with no ill effects.
 #
 # If you have selected "yes" to running OpenRVDAS as a service then,
@@ -39,7 +39,7 @@
 PREFERENCES_FILE='.install_openrvdas_preferences'
 
 # Define this here, even though it's just for MacOS, so that it's defined
-# when it's referenced down in install_packages, and doesn't have to
+# when it's referenced down in install_prereqs, and doesn't have to
 # be defined twice.
 
 ###########################################################################
@@ -392,26 +392,56 @@ function create_user {
     fi
 }
 
+# Function to check if Command Line Tools are installed
+function is_xcode_installed {
+    # Check if a valid developer directory is found using xcode-select -p
+    if xcode-select -p &>/dev/null; then
+        # Check if the directory actually exists and is executable
+        if [ -d "$(xcode-select -p)" ] && [ -x "$(xcode-select -p)" ]; then
+            return 0 # Installed
+        fi
+    fi
+    return 1 # Not installed
+}
+
 ###########################################################################
 ###########################################################################
 # Install and configure required packages
-function install_packages {
+function install_prereqs {
 
     # MacOS
     if [ $OS_TYPE == 'MacOS' ]; then
+        # Loop until the Xcode tools are installed
+        if is_xcode_installed; then
+            echo "XCode Tools already installed"
+        fi
+        while ! is_xcode_installed; do
+            echo "Xcode Command Line Tools are not installed. Initiating installation..."
+            # Request installation (this brings up a GUI prompt)
+            xcode-select --install
+
+            echo " "
+            read -p "After the Xcode installation completes, please press ENTER to continue..."
+            echo " "
+        done
+
         # Install Homebrew - note: reinstalling is idempotent
-        echo 'Installing XCode Tools'
-        xcode-select --install || echo "XCode Tools already installed"
-        pushd /tmp
-        HOMEBREW_VERSION=4.5.13
-        HOMEBREW_TARGET=Homebrew-${HOMEBREW_VERSION}.pkg
-        HOMEBREW_PATH=https://github.com/Homebrew/brew/releases/download/${HOMEBREW_VERSION}/${HOMEBREW_TARGET}
+        if command -v brew &> /dev/null; then
+            echo "Homebrew already installed."
+            brew --version
+        else
+            echo "Installing Homebrew..."
+            pushd /tmp
+            HOMEBREW_VERSION=4.5.13
+            HOMEBREW_TARGET=Homebrew-${HOMEBREW_VERSION}.pkg
+            HOMEBREW_PATH=https://github.com/Homebrew/brew/releases/download/${HOMEBREW_VERSION}/${HOMEBREW_TARGET}
 
-        curl -O -L ${HOMEBREW_PATH}
+            curl -O -L ${HOMEBREW_PATH}
 
-        # The -target / specifies that the package should be installed on the root volume.
-        sudo installer -pkg ${HOMEBREW_TARGET} -target /
-        popd
+            # The -target / specifies that the package should be installed on the root volume.
+            sudo installer -pkg ${HOMEBREW_TARGET} -target /
+            popd
+        fi
 
         brew install python git nginx supervisor
 
@@ -1163,11 +1193,6 @@ EOF
 # Start of actual script
 ###########################################################################
 ###########################################################################
-echo
-echo "OpenRVDAS configuration script"
-
-# Read from the preferences file in $PREFERENCES_FILE, if it exists
-set_default_variables
 
 # Set OS_TYPE to either MacOS, CentOS or Ubuntu
 get_os_type
@@ -1176,7 +1201,6 @@ get_os_type
 # world readable/executable.
 umask 022
 
-echo "#####################################################################"
 # We don't set hostname on MacOS
 if [ $OS_TYPE != 'MacOS' ]; then
     read -p "Name to assign to host ($DEFAULT_HOSTNAME)? " HOSTNAME
@@ -1185,6 +1209,20 @@ if [ $OS_TYPE != 'MacOS' ]; then
     # Set hostname
     set_hostname $HOSTNAME
 fi
+
+#########################################################################
+#########################################################################
+# Install prerequisite packages
+echo "#####################################################################"
+echo "Installing prerequisite packages..."
+echo
+install_prereqs
+
+echo
+echo "OpenRVDAS configuration script"
+
+# Read from the preferences file in $PREFERENCES_FILE, if it exists
+set_default_variables
 
 read -p "OpenRVDAS install root? ($DEFAULT_INSTALL_ROOT) " INSTALL_ROOT
 INSTALL_ROOT=${INSTALL_ROOT:-$DEFAULT_INSTALL_ROOT}
@@ -1405,13 +1443,6 @@ INSTALL_DOC_MARKDOWN=$YES_NO_RESULT
 #########################################################################
 # Save defaults in a preferences file for the next time we run.
 save_default_variables
-
-#########################################################################
-#########################################################################
-# Install packages
-echo "#####################################################################"
-echo "Installing required packages from repository..."
-install_packages
 
 #########################################################################
 #########################################################################
