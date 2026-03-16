@@ -252,7 +252,11 @@ function set_default_variables {
     DEFAULT_SSL_CRT_LOCATION=${DEFAULT_INSTALL_ROOT}/openrvdas/openrvdas.crt
     DEFAULT_SSL_KEY_LOCATION=${DEFAULT_INSTALL_ROOT}/openrvdas/openrvdas.key
 
-    DEFAULT_RVDAS_USER=rvdas
+    if [ "${OS_TYPE:-}" == 'MacOS' ]; then
+        DEFAULT_RVDAS_USER=${SUDO_USER:-$USER}
+    else
+        DEFAULT_RVDAS_USER=rvdas
+    fi
 
     DEFAULT_INSTALL_FIREWALLD=no
     DEFAULT_OPENRVDAS_AUTOSTART=yes
@@ -434,10 +438,13 @@ function install_prereqs {
         ARCHITECTURE=$(uname -m)
         if [ "$ARCHITECTURE" = "arm64" ]; then
             BREW_PATH='/opt/homebrew/bin/brew'
+            HOMEBREW_PREFIX='/opt/homebrew'
         elif [ "$ARCHITECTURE" = "x86_64" ]; then
             BREW_PATH='/usr/local/bin/brew'
+            HOMEBREW_PREFIX='/usr/local'
         else
             BREW_PATH=''
+            HOMEBREW_PREFIX='/usr/local'
         fi
         if [ -f ${BREW_PATH} ]; then
             echo "Homebrew already installed"
@@ -456,7 +463,7 @@ function install_prereqs {
         fi
 
         # Is it in the path?
-        if [ -z "$(command -v brew &> /dev/null)" ]; then
+        if ! command -v brew &> /dev/null; then
             if [ "$ARCHITECTURE" = "arm64" ]; then
                 HOMEBREW_SHELLENV='eval "$(/opt/homebrew/bin/brew shellenv)"'
             elif [ "$ARCHITECTURE" = "x86_64" ]; then
@@ -486,7 +493,10 @@ function install_prereqs {
         brew --version
 
         # Homebrew won't run under elevation (sudo), so we have to run it as the regular user
-        su - $SUDO_USER -c "brew install python git nginx supervisor"
+        BREW_USER=${SUDO_USER:-$USER}
+        # Install python@3.12 explicitly: uWSGI does not yet support Python 3.14+
+        # HOMEBREW_NO_AUTO_UPDATE prevents mid-install updates that cause bottle checksum mismatches
+        sudo -u $BREW_USER env HOMEBREW_NO_AUTO_UPDATE=1 brew install python@3.12 git nginx supervisor
 
         #brew upgrade openssh nginx supervisor || echo Upgraded packages
         #brew link --overwrite python || echo Linking Python
@@ -675,7 +685,29 @@ function setup_python_packages {
 
     echo "Creating virtual environment"
     cd $INSTALL_ROOT/openrvdas
-    python3 -m venv $VENV_PATH
+    # On macOS we install python@3.12 explicitly (uWSGI doesn't support 3.14+).
+    # python@3.12 is keg-only in Homebrew so it is not in PATH; use the opt path.
+    if [ "${OS_TYPE:-}" == 'MacOS' ]; then
+        BREW_PREFIX=$(brew --prefix 2>/dev/null || echo "${HOMEBREW_PREFIX:-/opt/homebrew}")
+        PYTHON_BIN="${BREW_PREFIX}/opt/python@3.12/bin/python3.12"
+        if [ ! -x "$PYTHON_BIN" ]; then
+            echo "ERROR: python@3.12 not found at $PYTHON_BIN. Please run: brew install python@3.12"
+            exit_gracefully
+        fi
+    else
+        PYTHON_BIN=python3
+    fi
+
+    # If an existing venv was built with a different Python, recreate it.
+    if [ -d "$VENV_PATH" ]; then
+        VENV_PYTHON="$VENV_PATH/bin/python3"
+        if [ -x "$VENV_PYTHON" ] && ! "$VENV_PYTHON" -c "import sys; assert sys.executable.startswith('$(dirname $PYTHON_BIN)')" 2>/dev/null; then
+            echo "Existing venv uses a different Python; recreating..."
+            rm -rf "$VENV_PATH"
+        fi
+    fi
+
+    $PYTHON_BIN -m venv "$VENV_PATH"
     source $VENV_PATH/bin/activate  # activate virtual environment
 
     echo "Installing Python packages - please enter sudo password if prompted."
@@ -687,6 +719,16 @@ function setup_python_packages {
     venv/bin/python venv/bin/pip3 install \
       --trusted-host pypi.org --trusted-host files.pythonhosted.org \
       wheel
+
+    # On macOS ARM, uWSGI's build system can pick up a stale x86_64 OpenSSL
+    # from /usr/local. Point it at Homebrew's arm64 OpenSSL explicitly.
+    if [ "${OS_TYPE:-}" == 'MacOS' ]; then
+        OPENSSL_PREFIX=$(brew --prefix openssl@3 2>/dev/null || echo "${HOMEBREW_PREFIX:-/opt/homebrew}/opt/openssl@3")
+        export LDFLAGS="-L${OPENSSL_PREFIX}/lib ${LDFLAGS:-}"
+        export CPPFLAGS="-I${OPENSSL_PREFIX}/include ${CPPFLAGS:-}"
+        export PKG_CONFIG_PATH="${OPENSSL_PREFIX}/lib/pkgconfig:${PKG_CONFIG_PATH:-}"
+    fi
+
     venv/bin/python venv/bin/pip3 install -r utils/requirements.txt
 }
 
@@ -884,7 +926,7 @@ function setup_uwsgi {
 
     # MacOS
     if [ $OS_TYPE == 'MacOS' ]; then
-        ETC_HOME=/opt/homebrew/etc
+        ETC_HOME=${HOMEBREW_PREFIX:-$(brew --prefix 2>/dev/null || echo /opt/homebrew)}/etc
 
     # CentOS/RHEL and Ubuntu/Debian
     elif [ $OS_TYPE == 'CentOS' ] || [ $OS_TYPE == 'Ubuntu' ]; then
@@ -968,12 +1010,13 @@ function setup_supervisor {
 
     # MacOS
     if [ $OS_TYPE == 'MacOS' ]; then
-        ETC_HOME=/opt/homebrew/etc
+        _HB=${HOMEBREW_PREFIX:-$(brew --prefix 2>/dev/null || echo /opt/homebrew)}
+        ETC_HOME=${_HB}/etc
         HTTP_HOST=127.0.0.1
-        NGINX_BIN=/opt/homebrew/bin/nginx
-        SUPERVISOR_DIR=/opt/homebrew/etc/supervisor.d
+        NGINX_BIN=${_HB}/bin/nginx
+        SUPERVISOR_DIR=${_HB}/etc/supervisor.d
         SUPERVISOR_SUFFIX='ini'
-        SUPERVISOR_SOCK=/opt/homebrew/var/run/supervisor.sock
+        SUPERVISOR_SOCK=${_HB}/var/run/supervisor.sock
         COMMENT_SOCK_OWNER=';'
         mkdir -p ${SUPERVISOR_DIR}
 
@@ -1613,7 +1656,8 @@ echo "#########################################################################"
 echo "Restarting services: supervisor"
 # If we're on MacOS
 if [ $OS_TYPE == 'MacOS' ]; then
-    su - $SUDO_USER -c "brew services restart supervisor"
+    BREW_USER=${SUDO_USER:-$USER}
+    sudo -u $BREW_USER brew services restart supervisor
 
 # Linux
 elif [ $OS_TYPE == 'CentOS' ] || [ $OS_TYPE == 'Ubuntu' ]; then
