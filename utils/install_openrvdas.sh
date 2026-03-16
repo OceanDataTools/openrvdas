@@ -270,6 +270,7 @@ function set_default_variables {
 
     # Read in the preferences file, if it exists, to overwrite the defaults.
     if [ -e $PREFERENCES_FILE ]; then
+        echo
         echo "#####################################################################"
         echo Reading pre-saved defaults from "$PREFERENCES_FILE"
         source $PREFERENCES_FILE
@@ -1243,15 +1244,6 @@ get_os_type
 # world readable/executable.
 umask 022
 
-# We don't set hostname on MacOS
-if [ $OS_TYPE != 'MacOS' ]; then
-    read -p "Name to assign to host ($DEFAULT_HOSTNAME)? " HOSTNAME
-    HOSTNAME=${HOSTNAME:-$DEFAULT_HOSTNAME}
-    echo "Hostname will be '$HOSTNAME'"
-    # Set hostname
-    set_hostname $HOSTNAME
-fi
-
 #########################################################################
 #########################################################################
 # Install prerequisite packages
@@ -1260,13 +1252,22 @@ echo "Installing prerequisite packages..."
 echo
 install_prereqs
 
+# Read from the preferences file in $PREFERENCES_FILE, if it exists
+set_default_variables
+
 echo
 echo "#####################################################################"
 echo "OpenRVDAS configuration script"
 echo
 
-# Read from the preferences file in $PREFERENCES_FILE, if it exists
-set_default_variables
+# We don't set hostname on MacOS
+if [ $OS_TYPE != 'MacOS' ]; then
+    read -p "Name to assign to host ($DEFAULT_HOSTNAME)? " HOSTNAME
+    HOSTNAME=${HOSTNAME:-$DEFAULT_HOSTNAME}
+    echo "Hostname will be '$HOSTNAME'"
+    # Set hostname
+    set_hostname $HOSTNAME
+fi
 
 read -p "OpenRVDAS install root? ($DEFAULT_INSTALL_ROOT) " INSTALL_ROOT
 INSTALL_ROOT=${INSTALL_ROOT:-$DEFAULT_INSTALL_ROOT}
