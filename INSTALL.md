@@ -68,10 +68,10 @@ You can either:
 Use existing clone at /home/user/openrvdas? (yes/no) [yes]
 ```
 
-_Script will next ask which code repo and branch to use. Use the default
+Script will next ask which code repo and branch to use. Use the default
 repo and branch unless you have a project-specific branch in mind (e.g. "usap").
 If you need to access the internet via a proxy (as shown below), enter it when
-asked; otherwise just hit return._
+asked; otherwise just hit return.
 
 ```
 Repository to install from? (http://github.com/oceandatatools/openrvdas)
@@ -83,10 +83,10 @@ Repository: 'http://github.com/oceandatatools/openrvdas'
 Branch: 'master'
 ```
 
-_Script will try to create the rvdas user under which the system will run. 
+Script will try to create the rvdas user under which the system will run. 
 It won't mind if the user already exists (note: under MacOS, script is not
 yet able to create a new user and will prompt you for a pre-existing user
-name to use):_
+name to use):
 
 ```
 OpenRVDAS user to create? (rvdas)
@@ -94,17 +94,17 @@ Checking if user rvdas exists yet
 User exists, skipping
 ```
 
-_By default, anyone can access the OpenRVDAS Django console as a viewer. But to load configurations or
+By default, anyone can access the OpenRVDAS Django console as a viewer. But to load configurations or
 change logger states you must be logged in. The system will create a login for the OpenRVDAS user
 created above, but will use a password different from the user's system password to provide access
-to OpenRVDAS. The system will prompt for that password now:_
+to OpenRVDAS. The system will prompt for that password now:
 
 ```
 Django/database password to use for user rvdas? (rvdas) 
 ```
 
-_OpenRVDAS can use SSL and HTTPS for web access if desired. If you respond 'yes', to the question of whether to use
-SSL, the script will prompt you to either create or provide the locations of .key and .crt files._
+OpenRVDAS can use SSL and HTTPS for web access if desired. If you respond 'yes', to the question of whether to use
+SSL, the script will prompt you to either create or provide the locations of .key and .crt files.
 
 ```
 #####################################################################
@@ -119,15 +119,15 @@ this project's docs subdirectory.
 
 Use SSL and secure websockets?  (no) 
 ```
-_By default, the OpenRVDAS web console will be served on port 80 (or 442 if using SSL). The script will prompt whether
-you want to use an alternate port._
+By default, the OpenRVDAS web console will be served on port 80 (or 442 if using SSL). The script will prompt whether
+you want to use an alternate port.
 ````
 Port on which to serve web console? (80) 
 ````
-_The script will prompt whether you want to run OpenRVDAS automatically (i.e. on boot) or manually. If your server is
+The script will prompt whether you want to run OpenRVDAS automatically (i.e. on boot) or manually. If your server is
 running on dedicated machine (or VM) you'll probably want to answer 'yes'; if you're running it on your personal
 to try things out, you should probably answer 'no' and start/stop the servers manually via `supervisorctl start all` and 
-`supervisorctl stop all`._
+`supervisorctl stop all`.
 ```
 #####################################################################
 The OpenRVDAS server can be configured to start on boot. If you wish this
@@ -141,14 +141,14 @@ and starting processes logger_manager and cached_data_server.
 Start the OpenRVDAS server on boot?  (yes) 
 ```
 
-_OpenRVDAS provides a test script that can be used to run a sample cruise configuration on stored test data. If you
+OpenRVDAS provides a test script that can be used to run a sample cruise configuration on stored test data. If you
 are installing OpenRVDAS to try it out, you probably want to install this script. Again, whether or not you have it
-run on boot will depend on whether or not your installation is on a dedicated machine._
+run on boot will depend on whether or not your installation is on a dedicated machine.
 
-_Note that this script may be disabled
+Note that this script may be disabled
 by commenting out or deleting the `openrvdas_simulate.[ini,conf]` file in the supervisord configuration directory
 (variously `/usr/local/etc/supervisor.d/`, `/etc/supervisord.d` or `/etc/supervisor/conf.d`, depending on which
-OS distribution you are using)._
+OS distribution you are using).
 ```
 #####################################################################
 For test installations, OpenRVDAS can configure simulated inputs from
@@ -160,8 +160,8 @@ Do you want to install this script? (yes)
 Run simulate:simulate_nbp on boot? (no) 
 ```
 
-_Users may optionally decide to **not** install the default web console if they wish to operate OpenRVDAS from the
-command line. First-timers are encouraged to go with the default and install the web console._
+Users may optionally decide to **not** install the default web console if they wish to operate OpenRVDAS from the
+command line. First-timers are encouraged to go with the default and install the web console.
 
 ```#####################################################################
 The full OpenRVDAS installation includes a web-based console for loading
@@ -171,8 +171,8 @@ reasons.
 
 Install OpenRVDAS web console GUI?  (yes) 
 ```
-_The OpenRVDAS scripts are controlled by the supervisor daemon. The daemon may be managed either from the command line
-via the `supervisorctl` command or, optionally, via a web server._
+The OpenRVDAS scripts are controlled by the supervisor daemon. The daemon may be managed either from the command line
+via the `supervisorctl` command or, optionally, via a web server.
 ```
 #####################################################################
 The supervisord service provides an optional web-interface that enables
@@ -285,6 +285,8 @@ command line. E.g.
 ```
 /opt/openrvdas/venv/bin/python logger/listener/listen.py --udp 6204 --write_file /var/log/udp_6204.txt
 ```
-This latter method is how the servers are configured to run inside the supervisor's config file at
-``/etc/supervisor.d/openrvdas.ini`` (Ubuntu: ``/etc/supervisor/conf.d/openrvdas.conf``,
-MacOS: ``/opt/homebrew/etc/supervisor.d/openrvdas.ini``).
+This latter method is how the servers are configured to run inside the supervisor's config file:
+ * RHEL: ``/etc/supervisor.d/openrvdas.ini`` 
+ * Ubuntu: ``/etc/supervisor/conf.d/openrvdas.conf``
+
+ * MacOS: ``/opt/homebrew/etc/supervisor.d/openrvdas.ini``
