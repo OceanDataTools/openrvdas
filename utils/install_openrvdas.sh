@@ -1312,6 +1312,28 @@ if [ $OS_TYPE != 'MacOS' ]; then
     set_hostname $HOSTNAME
 fi
 
+# Check whether this script is being run from inside an existing openrvdas clone.
+SCRIPT_GIT_ROOT=$(git -C "$(dirname "$(realpath "$0")")" rev-parse --show-toplevel 2>/dev/null || true)
+if [ -n "$SCRIPT_GIT_ROOT" ] && [ "$(basename "$SCRIPT_GIT_ROOT")" = "openrvdas" ]; then
+    CLONE_PARENT=$(dirname "$SCRIPT_GIT_ROOT")
+    echo "This script appears to be running from an existing openrvdas clone at:"
+    echo "  $SCRIPT_GIT_ROOT"
+    echo
+    echo "You can either:"
+    echo "  1) Use this existing clone (install root: $CLONE_PARENT)"
+    echo "  2) Install to the standard location (install root: $DEFAULT_INSTALL_ROOT)"
+    echo
+    read -p "Use existing clone at $SCRIPT_GIT_ROOT? (yes/no) [yes] " USE_EXISTING_CLONE
+    USE_EXISTING_CLONE=${USE_EXISTING_CLONE:-yes}
+    if [ "$USE_EXISTING_CLONE" = "yes" ]; then
+        DEFAULT_INSTALL_ROOT=$CLONE_PARENT
+        echo "Using existing clone — install root set to '$DEFAULT_INSTALL_ROOT'"
+    else
+        echo "Proceeding with standard install root '$DEFAULT_INSTALL_ROOT'"
+    fi
+    echo
+fi
+
 read -p "OpenRVDAS install root? ($DEFAULT_INSTALL_ROOT) " INSTALL_ROOT
 INSTALL_ROOT=${INSTALL_ROOT:-$DEFAULT_INSTALL_ROOT}
 echo "Install root will be '$INSTALL_ROOT'"
@@ -1691,4 +1713,10 @@ deactivate
 echo
 echo "#########################################################################"
 echo "Installation complete - happy logging!"
+echo
+echo "OpenRVDAS has been installed to:"
+echo "  ${INSTALL_ROOT}/openrvdas"
+echo
+echo "To activate the virtual environment in a new terminal, run:"
+echo "  source ${INSTALL_ROOT}/openrvdas/venv/bin/activate"
 echo
