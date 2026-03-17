@@ -609,7 +609,10 @@ function install_prereqs {
     # Ubuntu/Debian
     elif [ $OS_TYPE == 'Ubuntu' ]; then
         sudo apt-get update
-        sudo apt install -y git nginx libreadline-dev \
+        # DEBIAN_FRONTEND=noninteractive suppresses interactive configuration
+        # dialogs (e.g. openssh-server) that cannot be answered when stdin is
+        # a pipe (curl | bash) or a non-interactive session.
+        sudo DEBIAN_FRONTEND=noninteractive apt install -y git nginx libreadline-dev \
             python3-dev python3-pip python3-venv libsqlite3-dev \
             openssh-server supervisor libssl-dev
     fi
