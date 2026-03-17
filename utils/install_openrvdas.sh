@@ -3,10 +3,11 @@
 # OpenRVDAS is available as open source under the MIT License at
 #   https:/github.com/oceandatatools/openrvdas
 #
-# This script installs and configures OpenRVDAS to run.  It
-# is designed to be run as root. It should take a (relatively) clean
-# Linux/MacOS installation and install and configure all the components
-# to run the full OpenRVDAS system.
+# This script installs and configures OpenRVDAS to run.  It should
+# take a (relatively) clean Linux/MacOS installation and install and
+# configure all the components to run the full OpenRVDAS system. It
+# may be run as any user with sudo privileges; it will invoke sudo
+# internally for operations that require elevated permissions.
 #
 # INVOCATION
 #
@@ -14,7 +15,7 @@
 #
 #   git clone https://github.com/oceandatatools/openrvdas
 #   cd openrvdas
-#   sudo bash utils/install_openrvdas.sh
+#   bash utils/install_openrvdas.sh
 #
 # Option 2 - download and run without cloning first. Must use 'bash',
 # not 'sh', as the script uses bash-specific syntax. Note: piping
@@ -23,7 +24,7 @@
 # the script first, then run it:
 #
 #   curl -fsSL https://raw.githubusercontent.com/oceandatatools/openrvdas/dev/utils/install_openrvdas.sh -o /tmp/install_openrvdas.sh
-#   sudo bash /tmp/install_openrvdas.sh
+#   bash /tmp/install_openrvdas.sh
 #
 # If it detects that it is running inside an existing clone it will
 # offer to use that clone's location as the install root instead of
@@ -512,11 +513,17 @@ function install_prereqs {
         fi
         brew --version
 
-        # Homebrew won't run under elevation (sudo), so we have to run it as the regular user
-        BREW_USER=${SUDO_USER:-$USER}
-        # Install python@3.12 explicitly: uWSGI does not yet support Python 3.14+
-        # HOMEBREW_NO_AUTO_UPDATE prevents mid-install updates that cause bottle checksum mismatches
-        sudo -u $BREW_USER env HOMEBREW_NO_AUTO_UPDATE=1 brew install python@3.12 git nginx supervisor
+        # Homebrew won't run under elevation (sudo), so run it as the
+        # regular user. If we're already root (script run as sudo bash),
+        # demote to SUDO_USER; otherwise run directly as the current user.
+        # HOMEBREW_NO_AUTO_UPDATE prevents mid-install updates that cause
+        # bottle checksum mismatches.
+        if [ "$EUID" -eq 0 ]; then
+            BREW_USER=${SUDO_USER:-$USER}
+            sudo -u $BREW_USER env HOMEBREW_NO_AUTO_UPDATE=1 brew install python@3.12 git nginx supervisor
+        else
+            env HOMEBREW_NO_AUTO_UPDATE=1 brew install python@3.12 git nginx supervisor
+        fi
 
         #brew upgrade openssh nginx supervisor || echo Upgraded packages
         #brew link --overwrite python || echo Linking Python
@@ -1309,6 +1316,22 @@ EOF
 # Set OS_TYPE to either MacOS, CentOS or Ubuntu
 get_os_type
 
+# Verify sudo access and keep credentials alive throughout the install.
+# This allows the script to run as any user with sudo privileges rather
+# than requiring the entire script to be run as root.
+if [ "$EUID" -ne 0 ]; then
+    echo "This script requires sudo for some operations. Please enter your password if prompted."
+    if ! sudo -v; then
+        echo "ERROR: Could not obtain sudo privileges. Exiting."
+        exit 1
+    fi
+    # Refresh sudo credentials every 60 seconds in the background so
+    # long-running steps (e.g. package installs, pip) don't time out.
+    ( while true; do sudo -n true; sleep 60; kill -0 "$$" 2>/dev/null || exit; done ) &
+    SUDO_KEEPALIVE_PID=$!
+    trap 'kill "$SUDO_KEEPALIVE_PID" 2>/dev/null' EXIT
+fi
+
 # Set creation mask so that everything we install is, by default,
 # world readable/executable.
 umask 022
@@ -1704,8 +1727,12 @@ echo "#########################################################################"
 echo "Restarting services: supervisor"
 # If we're on MacOS
 if [ $OS_TYPE == 'MacOS' ]; then
-    BREW_USER=${SUDO_USER:-$USER}
-    sudo -u $BREW_USER brew services restart supervisor
+    if [ "$EUID" -eq 0 ]; then
+        BREW_USER=${SUDO_USER:-$USER}
+        sudo -u $BREW_USER brew services restart supervisor
+    else
+        brew services restart supervisor
+    fi
 
 # Linux
 elif [ $OS_TYPE == 'CentOS' ] || [ $OS_TYPE == 'Ubuntu' ]; then
