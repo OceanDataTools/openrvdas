@@ -5,10 +5,27 @@ will be added here as they are verified and documented.
 
 You will need to be able to run the ``sudo`` command. The script handles privilege escalation internally — do **not** run it with ``sudo`` directly.
 
+## Choosing a branch
+
+| Branch | Description |
+|--------|-------------|
+| `master` | Stable release — recommended for production deployments |
+| `dev` | Latest development — newer features but may be less stable |
+
+Replace `dev` with `master` (or any other branch name) in the commands below to select the version you want.
+
 ## Option 1: Download and run (recommended)
 
 ```
 curl -fsSL https://raw.githubusercontent.com/oceandatatools/openrvdas/dev/utils/install_openrvdas.sh \
+  -o /tmp/install_openrvdas.sh
+bash /tmp/install_openrvdas.sh
+```
+
+For the stable release, use the `master` branch instead:
+
+```
+curl -fsSL https://raw.githubusercontent.com/oceandatatools/openrvdas/master/utils/install_openrvdas.sh \
   -o /tmp/install_openrvdas.sh
 bash /tmp/install_openrvdas.sh
 ```
@@ -18,12 +35,12 @@ bash /tmp/install_openrvdas.sh
 ## Option 2: Run from a local clone
 
 ```
-git clone https://github.com/oceandatatools/openrvdas
+git clone -b master https://github.com/oceandatatools/openrvdas
 cd openrvdas
 bash utils/install_openrvdas.sh
 ```
 
-When run from inside a clone, the script will detect this and offer to install into that location rather than the default (`/opt`), avoiding a confusing duplicate copy.
+Replace `-b master` with `-b dev` to clone the development branch instead. When run from inside a clone, the script will detect this and offer to install into that location rather than the default (`/opt`), avoiding a confusing duplicate copy.
 
 ---
 
