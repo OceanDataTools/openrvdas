@@ -8,10 +8,27 @@
 # Linux/MacOS installation and install and configure all the components
 # to run the full OpenRVDAS system.
 #
-# It should be re-run whenever the code has been refresh. Preferably
+# INVOCATION
+#
+# Option 1 - run directly from a local clone:
+#
+#   git clone https://github.com/oceandatatools/openrvdas
+#   cd openrvdas
+#   sudo bash utils/install_openrvdas.sh
+#
+# Option 2 - run directly without cloning first (curl pipe). Must use
+# 'bash', not 'sh', as the script uses bash-specific syntax:
+#
+#   curl -fsSL https://raw.githubusercontent.com/oceandatatools/openrvdas/dev/utils/install_openrvdas.sh | sudo bash
+#
+# When run via a curl pipe the script will prompt interactively as
+# normal. If it detects that it is running inside an existing clone it
+# will offer to use that clone's location as the install root instead
+# of the default (/opt).
+#
+# It should be re-run whenever the code has been refreshed. Preferably
 # by first running 'git pull' to get the latest copy of the script,
-# and then running 'utils/build_openrvdas_centos7.sh' to run that
-# script.
+# and then running 'utils/install_openrvdas.sh' again.
 #
 # The script has been designed to be idempotent, that is, it can be
 # run over again with no ill effects.
@@ -1302,6 +1319,12 @@ echo
 echo "#####################################################################"
 echo "OpenRVDAS configuration script"
 echo
+
+# When this script is run via a curl pipe (curl ... | bash), stdin is the
+# script itself. Reopen stdin from the terminal so interactive prompts work.
+if [ ! -t 0 ]; then
+    exec </dev/tty
+fi
 
 # We don't set hostname on MacOS
 if [ $OS_TYPE != 'MacOS' ]; then
