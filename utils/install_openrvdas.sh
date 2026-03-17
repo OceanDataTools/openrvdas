@@ -16,15 +16,18 @@
 #   cd openrvdas
 #   sudo bash utils/install_openrvdas.sh
 #
-# Option 2 - run directly without cloning first (curl pipe). Must use
-# 'bash', not 'sh', as the script uses bash-specific syntax:
+# Option 2 - download and run without cloning first. Must use 'bash',
+# not 'sh', as the script uses bash-specific syntax. Note: piping
+# directly to bash (curl ... | bash) does NOT work because bash reads
+# ahead from stdin, making interactive prompts unreliable. Download
+# the script first, then run it:
 #
-#   curl -fsSL https://raw.githubusercontent.com/oceandatatools/openrvdas/dev/utils/install_openrvdas.sh | sudo bash
+#   curl -fsSL https://raw.githubusercontent.com/oceandatatools/openrvdas/dev/utils/install_openrvdas.sh -o /tmp/install_openrvdas.sh
+#   sudo bash /tmp/install_openrvdas.sh
 #
-# When run via a curl pipe the script will prompt interactively as
-# normal. If it detects that it is running inside an existing clone it
-# will offer to use that clone's location as the install root instead
-# of the default (/opt).
+# If it detects that it is running inside an existing clone it will
+# offer to use that clone's location as the install root instead of
+# the default (/opt).
 #
 # It should be re-run whenever the code has been refreshed. Preferably
 # by first running 'git pull' to get the latest copy of the script,
@@ -52,16 +55,6 @@
 # This script has been tested on a variety of architectures and operating
 # systems, but not exhaustively. Bug reports, and even better, bug
 # fixes, will be greatly appreciated.
-
-# When run via a curl pipe (curl ... | bash), bash streams the script from
-# stdin, so interactive 'read' prompts cannot use /dev/tty without cutting
-# off the rest of the unread script. Instead, save the full script to a temp
-# file and re-execute it so that stdin is free for interactive prompts.
-if [ ! -t 0 ]; then
-    TMPFILE=$(mktemp /tmp/install_openrvdas.XXXXXX.sh)
-    cat > "$TMPFILE"
-    exec bash -e "$TMPFILE" "$@"
-fi
 
 PREFERENCES_FILE='.install_openrvdas_preferences'
 
