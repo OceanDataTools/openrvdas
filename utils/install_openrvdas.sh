@@ -519,8 +519,13 @@ function install_prereqs {
         # HOMEBREW_NO_AUTO_UPDATE prevents mid-install updates that cause
         # bottle checksum mismatches.
         if [ "$EUID" -eq 0 ]; then
-            BREW_USER=${SUDO_USER:-$USER}
-            sudo -u $BREW_USER env HOMEBREW_NO_AUTO_UPDATE=1 brew install python@3.12 git nginx supervisor
+            if [ -z "${SUDO_USER:-}" ]; then
+                echo "ERROR: Running as root on MacOS but SUDO_USER is not set."
+                echo "Homebrew cannot run as root. Please run this script as a"
+                echo "non-root user with sudo privileges (e.g. 'bash install_openrvdas.sh')."
+                exit_gracefully
+            fi
+            sudo -u $SUDO_USER env HOMEBREW_NO_AUTO_UPDATE=1 brew install python@3.12 git nginx supervisor
         else
             env HOMEBREW_NO_AUTO_UPDATE=1 brew install python@3.12 git nginx supervisor
         fi
@@ -1728,8 +1733,7 @@ echo "Restarting services: supervisor"
 # If we're on MacOS
 if [ $OS_TYPE == 'MacOS' ]; then
     if [ "$EUID" -eq 0 ]; then
-        BREW_USER=${SUDO_USER:-$USER}
-        sudo -u $BREW_USER brew services restart supervisor
+        sudo -u $SUDO_USER brew services restart supervisor
     else
         brew services restart supervisor
     fi
