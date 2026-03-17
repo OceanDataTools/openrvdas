@@ -3,19 +3,31 @@ At the time of this writing OpenRVDAS has been built and tested against MacOS X,
 and Raspbian operating systems. It may be possible to build against other Linux-based operating systems, and guides
 will be added here as they are verified and documented.
 
-You will need to be able to run the ``sudo`` command. To begin installation, grab the script from Github and run from
-the command line using the following commands:
-```
-BRANCH=master
-OPENRVDAS_REPO=raw.githubusercontent.com/oceandatatools/openrvdas
-curl -O -L https://$OPENRVDAS_REPO/$BRANCH/utils/install_openrvdas.sh
-chmod +x install_openrvdas.sh
-sudo ./install_openrvdas.sh
-```
-selecting ``master``, ``dev`` or other branch of the repo if your project has one.
+You will need to be able to run the ``sudo`` command. The script handles privilege escalation internally — do **not** run it with ``sudo`` directly.
 
-The script must be run as a user that has sudo permissions (the script will prompt several times
-for the sudo password when needed). It will ask a lot of questions and provide default answers in parens that will be filled in if you hit "return"; without any other input:
+## Option 1: Download and run (recommended)
+
+```
+curl -fsSL https://raw.githubusercontent.com/oceandatatools/openrvdas/dev/utils/install_openrvdas.sh \
+  -o /tmp/install_openrvdas.sh
+bash /tmp/install_openrvdas.sh
+```
+
+> **Note:** Piping directly to bash (`curl ... | bash`) does **not** work because bash reads ahead from stdin, which makes interactive prompts unreliable. Always download the script first, then run it.
+
+## Option 2: Run from a local clone
+
+```
+git clone https://github.com/oceandatatools/openrvdas
+cd openrvdas
+bash utils/install_openrvdas.sh
+```
+
+When run from inside a clone, the script will detect this and offer to install into that location rather than the default (`/opt`), avoiding a confusing duplicate copy.
+
+---
+
+The script will prompt you for your sudo password once at startup and then cache credentials for the duration of the install. It will ask a lot of questions and provide default answers in parens that will be filled in if you hit "return"; without any other input:
 
 ############################################################################
 
@@ -23,8 +35,21 @@ for the sudo password when needed). It will ask a lot of questions and provide d
 OpenRVDAS configuration script
 Name to assign to host (lmg-dast-s1-t)?
 Hostname will be 'lmg-dast-s1-t'
-Install root? (/opt)
+OpenRVDAS install root? (/opt)
 Install root will be '/opt'
+```
+
+If the script detects it is running inside an existing clone it will first ask:
+
+```
+This script appears to be running from an existing openrvdas clone at:
+  /home/user/openrvdas
+
+You can either:
+  1) Use this existing clone (install root: /home/user)
+  2) Install to the standard location (install root: /opt)
+
+Use existing clone at /home/user/openrvdas? (yes/no) [yes]
 ```
 
 _Script will next ask which code repo and branch to use. Use the default
@@ -145,8 +170,15 @@ Would you like to enable a password on the supervisord web-interface?
 Enable Supervisor Web-interface user/pass?  (no)
 ```
 
-At this point, the script will run a while and, if all has gone well, wish you "Happy logging" when it has completed.
-Whew.
+At this point, the script will run a while and, if all has gone well, wish you "Happy logging" and print the install location and the command to activate the virtual environment:
+
+```
+OpenRVDAS has been installed to:
+  /opt/openrvdas
+
+To activate the virtual environment in a new terminal, run:
+  source /opt/openrvdas/venv/bin/activate
+```
 
 ## Post-Installation
 
@@ -219,22 +251,24 @@ under, or some of the Python packages they depend on may not be available.
 
 The OpenRVDAS virtual environment may be activated for a shell by running
 
-```source venv/bin/activate```
+```
+source /opt/openrvdas/venv/bin/activate
+```
 
-from the OpenRVDAS home directory. The primary effect of this activation is to modify the default path searched for binaries
-so that invoking ``python`` uses the version at ``venv/bin/python`` rather than the default system path. Once activated,
-OpenRVDAS scripts may be run by invoking their location, e.g.:
+(substituting your actual install root if you chose a different location — it is printed at the end of the installation). The primary effect of this activation is to modify the default path searched for binaries so that invoking ``python`` uses the version at ``venv/bin/python`` rather than the default system path. Once activated, OpenRVDAS scripts may be run by invoking their location, e.g.:
+
 ```
 logger/listener/listen.py --udp 6204 --write_file /var/log/udp_6204.txt
 ```
+
 To deactivate the virtual environment, run the ``deactivate`` command.
 
-OpenRVDAS scripts may be run outside the virtual environment by specifying the path to the executable to be use on the
+OpenRVDAS scripts may be run outside the virtual environment by specifying the path to the executable to be used on the
 command line. E.g.
 
 ```
-venv/bin/python logger/listener/listen.py --udp 6204 --write_file /var/log/udp_6204.txt
+/opt/openrvdas/venv/bin/python logger/listener/listen.py --udp 6204 --write_file /var/log/udp_6204.txt
 ```
 This latter method is how the servers are configured to run inside the supervisor's config file at
 ``/etc/supervisor.d/openrvdas.ini`` (Ubuntu: ``/etc/supervisor/conf.d/openrvdas.conf``,
-MacOS: ``/usr/local/etc/supervisor.d/openrvdas.ini``).
+MacOS: ``/opt/homebrew/etc/supervisor.d/openrvdas.ini``).
