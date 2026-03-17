@@ -46,9 +46,8 @@ Replace `-b master` with `-b dev` to clone the development branch instead. When 
 
 The script will prompt you for your sudo password once at startup and then cache credentials for the duration of the install. It will ask a lot of questions and provide default answers in parens that will be filled in if you hit "return"; without any other input:
 
-############################################################################
-
 ```
+############################################################################
 OpenRVDAS configuration script
 Name to assign to host (lmg-dast-s1-t)?
 Hostname will be 'lmg-dast-s1-t'
