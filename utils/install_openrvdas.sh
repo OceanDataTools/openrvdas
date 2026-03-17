@@ -30,9 +30,10 @@
 # offer to use that clone's location as the install root instead of
 # the default (/opt).
 #
-# It should be re-run whenever the code has been refreshed. Preferably
-# by first running 'git pull' to get the latest copy of the script,
-# and then running 'utils/install_openrvdas.sh' again.
+# It should be re-run after 'git pull' to pick up new dependencies,
+# updated config templates, or service definition changes. Ordinary
+# code edits (Python files, YAML configs) do not require re-running
+# the script — just restart the relevant supervisor processes.
 #
 # The script has been designed to be idempotent, that is, it can be
 # run over again with no ill effects.
@@ -455,80 +456,47 @@ function install_prereqs {
             echo " "
         done
 
-        # Install Homebrew - note: reinstalling is idempotent
+        # Determine Homebrew prefix from architecture. Abort on unknown
+        # architectures rather than guessing a prefix that may be wrong.
         ARCHITECTURE=$(uname -m)
         if [ "$ARCHITECTURE" = "arm64" ]; then
-            BREW_PATH='/opt/homebrew/bin/brew'
             HOMEBREW_PREFIX='/opt/homebrew'
         elif [ "$ARCHITECTURE" = "x86_64" ]; then
-            BREW_PATH='/usr/local/bin/brew'
             HOMEBREW_PREFIX='/usr/local'
         else
-            BREW_PATH=''
-            HOMEBREW_PREFIX='/usr/local'
+            echo "ERROR: Unsupported architecture '$ARCHITECTURE'. Cannot determine Homebrew prefix."
+            exit_gracefully
         fi
-        if [ -f ${BREW_PATH} ]; then
+
+        # Install Homebrew using the official installer, downloaded first
+        # to avoid the curl|bash stdin problem. NONINTERACTIVE=1 suppresses
+        # all prompts.
+        if [ -f "${HOMEBREW_PREFIX}/bin/brew" ]; then
             echo "Homebrew already installed"
         else
             echo "Installing Homebrew..."
-            pushd /tmp >/dev/null 2>&1
-            HOMEBREW_VERSION=4.5.13
-            HOMEBREW_TARGET=Homebrew-${HOMEBREW_VERSION}.pkg
-            HOMEBREW_PATH=https://github.com/Homebrew/brew/releases/download/${HOMEBREW_VERSION}/${HOMEBREW_TARGET}
-
-            [ ! -f ${HOMEBREW_TARGET} ] && curl -O -L ${HOMEBREW_PATH}
-
-            # The -target / specifies that the package should be installed on the root volume.
-            sudo installer -pkg ${HOMEBREW_TARGET} -target /
-            popd >/dev/null 2>&1
+            HOMEBREW_INSTALL=/tmp/install_homebrew.sh
+            curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh \
+                -o "$HOMEBREW_INSTALL"
+            NONINTERACTIVE=1 bash "$HOMEBREW_INSTALL"
+            rm -f "$HOMEBREW_INSTALL"
         fi
 
-        # Is it in the path?
+        # Ensure brew is in PATH for this shell session and future terminals.
         if ! command -v brew &> /dev/null; then
-            if [ "$ARCHITECTURE" = "arm64" ]; then
-                HOMEBREW_SHELLENV='eval "$(/opt/homebrew/bin/brew shellenv)"'
-            elif [ "$ARCHITECTURE" = "x86_64" ]; then
-                HOMEBREW_SHELLENV='eval "$(/usr/local/bin/brew shellenv)"'
-            else
-                HOMEBREW_SHELLENV=''
-            fi
-
+            eval "$(${HOMEBREW_PREFIX}/bin/brew shellenv)"
+            HOMEBREW_SHELLENV="eval \"\$(${HOMEBREW_PREFIX}/bin/brew shellenv)\""
             ZPROFILE_PATH=~/.zprofile
-            if [ -n "$HOMEBREW_SHELLENV" ] &&
-                { [ ! -f "$ZPROFILE_PATH" ] || ! grep -qF "$HOMEBREW_SHELLENV" "$ZPROFILE_PATH"; }; then
+            if [ ! -f "$ZPROFILE_PATH" ] || ! grep -qF "$HOMEBREW_SHELLENV" "$ZPROFILE_PATH"; then
                 echo "$HOMEBREW_SHELLENV" >> "$ZPROFILE_PATH"
-                source "$ZPROFILE_PATH"
-                brew --version
             fi
-
-            echo " "
-            if command -v brew &> /dev/null; then
-                echo "Homebrew was installed and your $ZPROFILE_PATH was updated. Restart your terminal or run 'source $ZPROFILE_PATH' after this script completes to make the 'brew' command available."
-                brew --version
-            else
-                echo "Homebrew was installed but updating $ZPROFILE_PATH with $HOMEBREW_SHELLENV failed. Please follow the Homebrew instructions to add it to the path."
-            fi
-            echo " "
-            read -p "Please press ENTER to continue..."
+            echo "Note: run 'source ~/.zprofile' after this script to use brew in future terminals."
         fi
         brew --version
 
-        # Homebrew won't run under elevation (sudo), so run it as the
-        # regular user. If we're already root (script run as sudo bash),
-        # demote to SUDO_USER; otherwise run directly as the current user.
         # HOMEBREW_NO_AUTO_UPDATE prevents mid-install updates that cause
         # bottle checksum mismatches.
-        if [ "$EUID" -eq 0 ]; then
-            if [ -z "${SUDO_USER:-}" ]; then
-                echo "ERROR: Running as root on MacOS but SUDO_USER is not set."
-                echo "Homebrew cannot run as root. Please run this script as a"
-                echo "non-root user with sudo privileges (e.g. 'bash install_openrvdas.sh')."
-                exit_gracefully
-            fi
-            sudo -u $SUDO_USER env HOMEBREW_NO_AUTO_UPDATE=1 brew install python@3.12 git nginx supervisor
-        else
-            env HOMEBREW_NO_AUTO_UPDATE=1 brew install python@3.12 git nginx supervisor
-        fi
+        env HOMEBREW_NO_AUTO_UPDATE=1 brew install python@3.12 git nginx supervisor
 
         #brew upgrade openssh nginx supervisor || echo Upgraded packages
         #brew link --overwrite python || echo Linking Python
@@ -726,8 +694,7 @@ function setup_python_packages {
     # On macOS we install python@3.12 explicitly (uWSGI doesn't support 3.14+).
     # python@3.12 is keg-only in Homebrew so it is not in PATH; use the opt path.
     if [ "${OS_TYPE:-}" == 'MacOS' ]; then
-        BREW_PREFIX=$(brew --prefix 2>/dev/null || echo "${HOMEBREW_PREFIX:-/opt/homebrew}")
-        PYTHON_BIN="${BREW_PREFIX}/opt/python@3.12/bin/python3.12"
+        PYTHON_BIN="${HOMEBREW_PREFIX}/opt/python@3.12/bin/python3.12"
         if [ ! -x "$PYTHON_BIN" ]; then
             echo "ERROR: python@3.12 not found at $PYTHON_BIN. Please run: brew install python@3.12"
             exit_gracefully
@@ -761,7 +728,7 @@ function setup_python_packages {
     # On macOS ARM, uWSGI's build system can pick up a stale x86_64 OpenSSL
     # from /usr/local. Point it at Homebrew's arm64 OpenSSL explicitly.
     if [ "${OS_TYPE:-}" == 'MacOS' ]; then
-        OPENSSL_PREFIX=$(brew --prefix openssl@3 2>/dev/null || echo "${HOMEBREW_PREFIX:-/opt/homebrew}/opt/openssl@3")
+        OPENSSL_PREFIX="${HOMEBREW_PREFIX}/opt/openssl@3"
         export LDFLAGS="-L${OPENSSL_PREFIX}/lib ${LDFLAGS:-}"
         export CPPFLAGS="-I${OPENSSL_PREFIX}/include ${CPPFLAGS:-}"
         export PKG_CONFIG_PATH="${OPENSSL_PREFIX}/lib/pkgconfig:${PKG_CONFIG_PATH:-}"
@@ -964,7 +931,7 @@ function setup_uwsgi {
 
     # MacOS
     if [ $OS_TYPE == 'MacOS' ]; then
-        ETC_HOME=${HOMEBREW_PREFIX:-$(brew --prefix 2>/dev/null || echo /opt/homebrew)}/etc
+        ETC_HOME=${HOMEBREW_PREFIX}/etc
 
     # CentOS/RHEL and Ubuntu/Debian
     elif [ $OS_TYPE == 'CentOS' ] || [ $OS_TYPE == 'Ubuntu' ]; then
@@ -1048,13 +1015,12 @@ function setup_supervisor {
 
     # MacOS
     if [ $OS_TYPE == 'MacOS' ]; then
-        _HB=${HOMEBREW_PREFIX:-$(brew --prefix 2>/dev/null || echo /opt/homebrew)}
-        ETC_HOME=${_HB}/etc
+        ETC_HOME=${HOMEBREW_PREFIX}/etc
         HTTP_HOST=127.0.0.1
-        NGINX_BIN=${_HB}/bin/nginx
-        SUPERVISOR_DIR=${_HB}/etc/supervisor.d
+        NGINX_BIN=${HOMEBREW_PREFIX}/bin/nginx
+        SUPERVISOR_DIR=${HOMEBREW_PREFIX}/etc/supervisor.d
         SUPERVISOR_SUFFIX='ini'
-        SUPERVISOR_SOCK=${_HB}/var/run/supervisor.sock
+        SUPERVISOR_SOCK=${HOMEBREW_PREFIX}/var/run/supervisor.sock
         COMMENT_SOCK_OWNER=';'
         mkdir -p ${SUPERVISOR_DIR}
 
@@ -1320,6 +1286,14 @@ EOF
 
 # Set OS_TYPE to either MacOS, CentOS or Ubuntu
 get_os_type
+
+# On MacOS, Homebrew cannot run as root, so the script must not be
+# invoked as root or via sudo.
+if [ "$OS_TYPE" == 'MacOS' ] && [ "$EUID" -eq 0 ]; then
+    echo "ERROR: On MacOS this script must not be run as root or via sudo."
+    echo "Please run as a regular user: bash utils/install_openrvdas.sh"
+    exit 1
+fi
 
 # Verify sudo access and keep credentials alive throughout the install.
 # This allows the script to run as any user with sudo privileges rather
@@ -1732,11 +1706,7 @@ echo "#########################################################################"
 echo "Restarting services: supervisor"
 # If we're on MacOS
 if [ $OS_TYPE == 'MacOS' ]; then
-    if [ "$EUID" -eq 0 ]; then
-        sudo -u $SUDO_USER brew services restart supervisor
-    else
-        brew services restart supervisor
-    fi
+    brew services restart supervisor
 
 # Linux
 elif [ $OS_TYPE == 'CentOS' ] || [ $OS_TYPE == 'Ubuntu' ]; then
