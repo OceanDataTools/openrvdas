@@ -53,6 +53,16 @@
 # systems, but not exhaustively. Bug reports, and even better, bug
 # fixes, will be greatly appreciated.
 
+# When run via a curl pipe (curl ... | bash), bash streams the script from
+# stdin, so interactive 'read' prompts cannot use /dev/tty without cutting
+# off the rest of the unread script. Instead, save the full script to a temp
+# file and re-execute it so that stdin is free for interactive prompts.
+if [ ! -t 0 ]; then
+    TMPFILE=$(mktemp /tmp/install_openrvdas.XXXXXX.sh)
+    cat > "$TMPFILE"
+    exec bash -e "$TMPFILE" "$@"
+fi
+
 PREFERENCES_FILE='.install_openrvdas_preferences'
 
 # Define this here, even though it's just for MacOS, so that it's defined
@@ -608,6 +618,9 @@ function install_prereqs {
 
     # Ubuntu/Debian
     elif [ $OS_TYPE == 'Ubuntu' ]; then
+        # Repair any interrupted dpkg state before running apt, otherwise apt
+        # will refuse to proceed with an error.
+        sudo DEBIAN_FRONTEND=noninteractive dpkg --configure -a
         sudo apt-get update
         # DEBIAN_FRONTEND=noninteractive suppresses interactive configuration
         # dialogs (e.g. openssh-server) that cannot be answered when stdin is
@@ -1322,12 +1335,6 @@ echo
 echo "#####################################################################"
 echo "OpenRVDAS configuration script"
 echo
-
-# When this script is run via a curl pipe (curl ... | bash), stdin is the
-# script itself. Reopen stdin from the terminal so interactive prompts work.
-if [ ! -t 0 ]; then
-    exec </dev/tty
-fi
 
 # We don't set hostname on MacOS
 if [ $OS_TYPE != 'MacOS' ]; then
