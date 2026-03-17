@@ -773,8 +773,8 @@ function setup_nginx {
     # CentOS/RHEL or Debian/Ubuntu
     if [ $OS_TYPE == 'CentOS' ] || [ $OS_TYPE == 'Ubuntu' ]; then
         # Disable because we're going to run it via supervisor
-        systemctl stop nginx
-        systemctl disable nginx # NGINX seems to be enabled by default?
+        sudo systemctl stop nginx
+        sudo systemctl disable nginx # NGINX seems to be enabled by default?
     fi
 
     if [ "$USE_SSL" == "yes" ]; then
@@ -1231,8 +1231,8 @@ function setup_firewall {
     semanage permissive -a httpd_t
 
     # Set up the firewall and open some holes in it
-    systemctl start firewalld
-    systemctl enable firewalld
+    sudo systemctl start firewalld
+    sudo systemctl enable firewalld
 
     firewall-cmd -q --set-default-zone=public
     firewall-cmd -q --permanent --add-port=${SERVER_PORT}/tcp > /dev/null
