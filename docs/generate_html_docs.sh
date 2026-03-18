@@ -102,13 +102,16 @@ if [[ -n "$EMPTY_PKG_PATHS" ]]; then
             rm -rf "$pkg_dir"
         fi
         # Remove references from index.html and search.js (use dotted module name).
+        # sed -i.bak is portable across macOS and Linux; we remove the backup immediately.
         mod_name="${pkg_path//\//.}"
-        sed -i '' "/${mod_name//./\.}/d" "$OUTPUT_DIR/index.html" "$OUTPUT_DIR/search.js"
+        sed -i.bak "/${mod_name//./\.}/d" "$OUTPUT_DIR/index.html" "$OUTPUT_DIR/search.js"
+        rm -f "$OUTPUT_DIR/index.html.bak" "$OUTPUT_DIR/search.js.bak"
         # Remove reference from the parent package HTML (e.g. logger.html lists devices).
         leaf="${pkg_path##*/}"
         parent_html="$OUTPUT_DIR/openrvdas/${pkg_path%/*}.html"
         if [[ -f "$parent_html" ]]; then
-            sed -i '' "/${leaf}/d" "$parent_html"
+            sed -i.bak "/${leaf}/d" "$parent_html"
+            rm -f "${parent_html}.bak"
         fi
     done <<< "$EMPTY_PKG_PATHS"
 fi
