@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
+import fcntl
 import logging
 import os
-import select
 import sys
 import tty
 import tempfile
@@ -71,15 +71,14 @@ class SimSerialPort:
         try:
             master1, slave1 = os.openpty()
             master2, slave2 = os.openpty()
-            self._fds = [master1, slave1, master2, slave2]
+            self._fds = [slave1, slave2]
             self._master1 = master1
             self._master2 = master2
 
-            # Put ptys in raw mode immediately so the line discipline does not
-            # strip high bits or apply any cooked-mode transformations before
-            # pyserial configures the slaves.
-            tty.setraw(master1)
-            tty.setraw(master2)
+            # Put slave ends in raw mode immediately so the line discipline
+            # does not strip high bits before pyserial configures the ports.
+            tty.setraw(slave1)
+            tty.setraw(slave2)
 
             # Expose slave ends at the paths pyserial will open
             for path, slave_fd in [(self.read_port, slave1),
@@ -93,15 +92,27 @@ class SimSerialPort:
 
     ############################
     def _run_bridge(self):
-        """Forward bytes between the two pty master ends until quit_flag is set."""
+        """Forward bytes from master2 to master1.
+
+        master2 is set to non-blocking mode so the loop can respond to
+        quit_flag without relying on fd-close to interrupt a blocked read
+        (closing a fd from another thread does not reliably unblock a read
+        on macOS).
+        """
+        try:
+            flags = fcntl.fcntl(self._master2, fcntl.F_GETFL)
+            fcntl.fcntl(self._master2, fcntl.F_SETFL, flags | os.O_NONBLOCK)
+        except OSError:
+            pass
+
         try:
             while not self.quit_flag:
-                r, _, _ = select.select([self._master1, self._master2], [], [], 0.1)
-                for fd in r:
-                    data = os.read(fd, 4096)
+                try:
+                    data = os.read(self._master2, 4096)
                     if data:
-                        other = self._master2 if fd == self._master1 else self._master1
-                        os.write(other, data)
+                        os.write(self._master1, data)
+                except BlockingIOError:
+                    time.sleep(0.005)
         except OSError:
             pass
         finally:
@@ -110,7 +121,7 @@ class SimSerialPort:
                     os.unlink(path)
                 except OSError:
                     pass
-            for fd in self._fds:
+            for fd in self._fds + [self._master1, self._master2]:
                 try:
                     os.close(fd)
                 except OSError:
