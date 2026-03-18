@@ -2,6 +2,7 @@
 
 import logging
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -74,10 +75,7 @@ class SimSerialPort:
         self.quit_flag = False
 
         # Finally, find path to socat executable
-        self.socat_path = None
-        for socat_path in ['/usr/bin/socat', '/usr/local/bin/socat']:
-            if os.path.exists(socat_path) and os.path.isfile(socat_path):
-                self.socat_path = socat_path
+        self.socat_path = shutil.which('socat')
         if not self.socat_path:
             logging.error('Executable "socat" not found on path. Please refer '
                           'to installation guide to install socat.')
@@ -136,9 +134,10 @@ class SimSerialPort:
 ################################################################################
 class TestSerialWriter(unittest.TestCase):
     ############################
-    # Set up set up simulated serial in/out ports
-    @unittest.skip('Test (or SerialWriter) appears to be broken!')
+    # Set up simulated serial in/out ports
     def setUp(self):
+        if not shutil.which('socat'):
+            self.skipTest('socat not found on PATH; install socat to run serial writer tests')
         warnings.simplefilter("ignore", ResourceWarning)
 
         # Set up simulated in/out serial ports
@@ -174,7 +173,7 @@ class TestSerialWriter(unittest.TestCase):
 
         sim_serial = SimSerialPort(temp_port)
         if sim_serial.quit_flag:
-            return
+            self.skipTest('socat not available')
         sim_serial.run()
 
         # Give it a moment to get started
