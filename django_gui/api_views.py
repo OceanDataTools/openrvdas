@@ -6,12 +6,10 @@ from rest_framework import authentication, serializers
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authentication import TokenAuthentication
-from rest_framework.compat import coreapi, coreschema
 from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
-from rest_framework.schemas import ManualSchema, coreapi as coreapi_schema
 from rest_framework.views import APIView
 
 from .views import log_request
@@ -35,13 +33,6 @@ from logger.utils.read_config import read_config, expand_cruise_definition  # no
 
 # About the general layout of this file.
 # Each API View that features a POST action uses a serializer to wrap those values.
-
-# In each APIView with a post action there is a code block in ther class
-#
-#  if coreapi_schema.is_enabled():
-#        schema = ....
-#
-# These act as a hint that allows the core django rest framework to generate an API UI for POST requests.
 
 # Interacting with the Django DB via its API class
 # As per the standard view.
@@ -196,22 +187,6 @@ class CruiseSelectModeAPIView(APIView):
     }
     """
 
-    if coreapi_schema.is_enabled():
-        schema = ManualSchema(
-            fields=[
-                coreapi.Field(
-                    name="select_mode",
-                    required=True,
-                    location="form",
-                    schema=coreschema.String(
-                        title="select_mode",
-                        description="Valid mode_id for configuration.",
-                    ),
-                ),
-            ],
-            encoding="application/json",
-        )
-
     serializer_class = CruiseSelectModeSerializer
     authentication_classes = [authentication.BasicAuthentication, TokenAuthentication]
     permission_classes = [IsAuthenticated]
@@ -273,22 +248,6 @@ class CruiseReloadCurrentConfigurationAPIView(APIView):
     }
     """
 
-    if coreapi_schema.is_enabled():
-        schema = ManualSchema(
-            fields=[
-                coreapi.Field(
-                    name="reload",
-                    required=True,
-                    location="form",
-                    schema=coreschema.String(
-                        title="reload",
-                        description="true / false",
-                    ),
-                ),
-            ],
-            encoding="application/json",
-        )
-
     serializer_class = CruiseReloadCurrentConfigurationSerializer
     authentication_classes = [authentication.BasicAuthentication, TokenAuthentication]
     permission_classes = [IsAuthenticated]
@@ -335,22 +294,6 @@ class CruiseDeleteConfigurationAPIView(APIView):
     """
     API endpoint for deleting all configurations.
     """
-
-    if coreapi_schema.is_enabled():
-        schema = ManualSchema(
-            fields=[
-                coreapi.Field(
-                    name="delete",
-                    required=True,
-                    location="form",
-                    schema=coreschema.String(
-                        title="delete",
-                        description="id for configuration.",
-                    ),
-                ),
-            ],
-            encoding="application/json",
-        )
 
     serializer_class = CruiseDeleteConfigurationSerializer
     authentication_classes = [authentication.BasicAuthentication, TokenAuthentication]
@@ -424,40 +367,6 @@ class EditLoggerConfigAPIView(APIView):
     - Response with status and message
     """
 
-    if coreapi_schema.is_enabled():
-        schema = ManualSchema(
-            fields=[
-                coreapi.Field(
-                    name="update",
-                    required=True,
-                    location="form",
-                    schema=coreschema.String(
-                        title="reload",
-                        description="true / false",
-                    ),
-                ),
-                coreapi.Field(
-                    name="logger_id",
-                    required=True,
-                    location="form",
-                    schema=coreschema.String(
-                        title="reload",
-                        description="The logger id to update",
-                    ),
-                ),
-                coreapi.Field(
-                    name="config",
-                    required=True,
-                    location="form",
-                    schema=coreschema.String(
-                        title="reload",
-                        description="The logger id to update",
-                    ),
-                ),
-            ],
-            encoding="application/json",
-        )
-
     serializer_class = EditLoggerConfigSerializer
     authentication_classes = [authentication.BasicAuthentication, TokenAuthentication]
     permission_classes = [IsAuthenticated]
@@ -522,22 +431,6 @@ class LoadConfigurationFileAPIView(APIView):
     Returns:
     - Response with status and message.
     """
-
-    if coreapi_schema.is_enabled():
-        schema = ManualSchema(
-            fields=[
-                coreapi.Field(
-                    name="target_file",
-                    required=True,
-                    location="form",
-                    schema=coreschema.String(
-                        title="target_file",
-                        description="A path to a file.",
-                    ),
-                ),
-            ],
-            encoding="application/json",
-        )
 
     serializer_class = LoadConfigurationFileSerializer
     authentication_classes = [authentication.BasicAuthentication, TokenAuthentication]
