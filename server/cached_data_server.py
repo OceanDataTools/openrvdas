@@ -973,11 +973,22 @@ class CachedDataServer:
                     async def _handle_non_ws_request(connection, request):
                         upgrade = request.headers.get('Upgrade', '')
                         if upgrade.lower() != 'websocket':
-                            logging.debug(
-                                'Plain HTTP request on WebSocket port %d '
-                                '(Upgrade header missing or wrong value: %r). '
-                                'Check nginx proxy_set_header Upgrade config.',
-                                self.port, upgrade or '<none>')
+                            via = request.headers.get('Via', '')
+                            if via:
+                                logging.warning(
+                                    'WebSocket upgrade on port %d was blocked by an HTTP '
+                                    'proxy (Via: %s) which stripped the Upgrade header. '
+                                    'WebSocket connections cannot be established through '
+                                    'this proxy. Fix: enable SSL/WSS, configure the proxy '
+                                    'to pass WebSocket upgrades, or bypass the proxy for '
+                                    'this host.',
+                                    self.port, via)
+                            else:
+                                logging.debug(
+                                    'Plain HTTP request on WebSocket port %d '
+                                    '(Upgrade header missing or wrong value: %r). '
+                                    'Check nginx proxy_set_header Upgrade config.',
+                                    self.port, upgrade or '<none>')
                             return _WsResponse(
                                 200, 'OK',
                                 _WsHeaders([('Content-Type', 'text/plain')]),
