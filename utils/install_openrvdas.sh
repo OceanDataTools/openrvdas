@@ -632,7 +632,9 @@ function install_openrvdas {
     if [ -e openrvdas/.git ] ; then   # If we've already got an installation
       cd openrvdas
       git fetch --all
-      if ! git checkout "$OPENRVDAS_BRANCH" ; then
+      # Try local branch first; if not found, try tracking the remote branch
+      if ! git checkout "$OPENRVDAS_BRANCH" 2>/dev/null && \
+         ! git checkout -b "$OPENRVDAS_BRANCH" "origin/$OPENRVDAS_BRANCH" 2>/dev/null ; then
         echo "ERROR: Branch '$OPENRVDAS_BRANCH' not found in $OPENRVDAS_REPO"
         exit_gracefully
       fi
