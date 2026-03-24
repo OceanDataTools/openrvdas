@@ -30,8 +30,6 @@ import time
 from pprint import pformat
 from typing import Union
 
-from os.path import dirname, realpath
-sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.utils.das_record import DASRecord, to_das_record_list  # noqa: E402
 from logger.utils.truewinds.truew import truew  # noqa: E402
 from logger.transforms.derived_data_transform import DerivedDataTransform  # noqa: E402

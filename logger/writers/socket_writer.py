@@ -8,8 +8,6 @@ import threading
 from typing import Any, Dict
 
 # Add parent directory to path
-from os.path import dirname, realpath
-sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.writers.writer import Writer  # noqa: E402
 
 # Global reference counter for channels

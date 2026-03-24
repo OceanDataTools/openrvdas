@@ -9,8 +9,6 @@ import math
 from datetime import datetime, timedelta, timezone
 
 from typing import Union
-from os.path import dirname, realpath
-sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.utils.das_record import DASRecord  # noqa: E402
 from logger.utils import timestamp  # noqa: E402
 from logger.writers.writer import Writer  # noqa: E402

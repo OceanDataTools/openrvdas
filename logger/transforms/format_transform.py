@@ -39,9 +39,7 @@ Sample config:
 
 import sys
 from typing import Union
-from os.path import dirname, realpath
 
-sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.utils.das_record import DASRecord  # noqa: E402
 from logger.utils.timestamp import time_str  # noqa: E402
 from logger.transforms.transform import Transform  # noqa: E402

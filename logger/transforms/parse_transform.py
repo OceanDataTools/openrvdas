@@ -2,8 +2,6 @@
 
 import sys
 
-from os.path import dirname, realpath
-sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.transforms.transform import Transform  # noqa: E402
 from logger.utils.das_record import DASRecord  # noqa: E402
 from logger.utils import record_parser  # noqa: E402

@@ -10,8 +10,6 @@ try:
 except ImportError:
     PARSE_INSTALLED = False
 
-from os.path import dirname, realpath
-sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.utils import timestamp  # noqa: E402
 from logger.utils.das_record import DASRecord  # noqa: E402
 from logger.readers.text_file_reader import TextFileReader  # noqa: E402

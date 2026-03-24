@@ -13,10 +13,8 @@ import threading
 import time
 
 from importlib import reload
-from os.path import dirname, realpath
 
 # Add the openrvdas components onto sys.path
-sys.path.append(dirname(dirname(realpath(__file__))))
 
 # Imports for running CachedDataServer
 from server.cached_data_server import CachedDataServer  # noqa: E402

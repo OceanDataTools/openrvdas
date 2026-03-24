@@ -34,8 +34,6 @@ import threading
 import queue
 from typing import get_args
 
-from os.path import dirname, realpath
-sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.utils.das_record import DASRecord  # noqa E402
 
 

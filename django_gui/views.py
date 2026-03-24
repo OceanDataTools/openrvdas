@@ -8,13 +8,12 @@ import sys
 
 from json import JSONDecodeError
 from os import listdir
-from os.path import dirname, realpath, isfile, isdir, abspath, relpath
+from os.path import dirname, isfile, isdir, abspath, relpath
 from yaml.scanner import ScannerError
 
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 
-sys.path.append(dirname(dirname(realpath(__file__))))
 
 # Read in JSON with comments
 from logger.utils.read_config import parse, read_config, expand_cruise_definition  # noqa: E402

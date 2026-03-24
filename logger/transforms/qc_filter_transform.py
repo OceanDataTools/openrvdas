@@ -10,9 +10,7 @@ DASRecords or dictionary, or...?
 import logging
 import sys
 
-from os.path import dirname, realpath
 from typing import Union
-sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.utils.das_record import DASRecord  # noqa: E402
 from logger.transforms.transform import Transform  # noqa: E402
 
