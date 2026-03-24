@@ -359,12 +359,12 @@ function set_hostname {
     # If we're on CentOS/RHEL
     elif [ $OS_TYPE == 'CentOS' ]; then
         sudo hostnamectl set-hostname $HOSTNAME
-        sudo echo "HOSTNAME=$HOSTNAME" > /etc/sysconfig/network  || echo "Unable to update /etc/sysconfig/network"
+        echo "HOSTNAME=$HOSTNAME" | sudo tee /etc/sysconfig/network > /dev/null || echo "Unable to update /etc/sysconfig/network"
 
     # Ubuntu/Debian
     elif [ $OS_TYPE == 'Ubuntu' ]; then
         sudo hostnamectl set-hostname $HOSTNAME
-        sudo echo $HOSTNAME > /etc/hostname || echo "Unable to update /etc/hostname"
+        echo $HOSTNAME | sudo tee /etc/hostname > /dev/null || echo "Unable to update /etc/hostname"
     fi
 
     ETC_HOSTS_LINE="127.0.1.1	$HOSTNAME"
@@ -372,7 +372,7 @@ function set_hostname {
         echo Hostname already in /etc/hosts
     else
         echo Skipping adding to /etc/hosts
-        sudo echo "$ETC_HOSTS_LINE" >> /etc/hosts || echo "Unable to update /etc/hosts"
+        echo "$ETC_HOSTS_LINE" | sudo tee -a /etc/hosts > /dev/null || echo "Unable to update /etc/hosts"
     fi
 }
 
@@ -777,6 +777,13 @@ http {
     #tcp_nopush     on;
     keepalive_timeout  65;
 
+    # Map WebSocket upgrade requests so keep-alive connections are not broken
+    # when a client does not send an Upgrade header.
+    map \$http_upgrade \$connection_upgrade {
+        default upgrade;
+        ''      close;
+    }
+
     # the upstream component nginx needs to connect to
     upstream django {
         server unix://${INSTALL_ROOT}/openrvdas/django_gui/openrvdas.sock; # for a file socket
@@ -831,7 +838,7 @@ http {
             proxy_pass http://localhost:8766;
             proxy_http_version 1.1;
             proxy_set_header Upgrade \$http_upgrade;
-            proxy_set_header Connection "Upgrade";
+            proxy_set_header Connection \$connection_upgrade;
             proxy_set_header Host \$host;
         }
 
