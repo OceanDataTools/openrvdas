@@ -77,7 +77,10 @@ function exit_gracefully {
             deactivate
         fi
     fi
-    return -1 2> /dev/null || exit -1  # exit correctly if sourced/bashed
+    # 'return' only exits the immediate function, so callers nested inside
+    # other functions would silently continue. Use 'exit' unconditionally so
+    # errors always stop the script regardless of call depth.
+    exit 1
 }
 
 #########################################################################
