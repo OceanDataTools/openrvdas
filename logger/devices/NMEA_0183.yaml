@@ -1068,6 +1068,16 @@ NMEA_Meteo:
       - "${:2l}XDR,{Type1:nc},{Value1:of},{Units1:nc},{Name1:nc},{Type2:nc},{Value2:of},{Units2:nc},{Name2:nc},{Type3:nc},{Value3:of},{Units3:nc},{Name3:nc}*{CheckSum:x}"
       - "${:2l}XDR,{Type1:nc},{Value1:of},{Units1:nc},{Name1:nc},{Type2:nc},{Value2:of},{Units2:nc},{Name2:nc},{Type3:nc},{Value3:of},{Units3:nc},{Name3:nc},{Type4:nc},{Value4:of},{Units4:nc},{Name4:nc}*{CheckSum:x}"
 
+    # Air Temperature (deprecated NMEA, superseded by XDR; still used by Vaisala WI talker)
+    MTA: "${:2l}MTA,{AirTemp:of},{Units:ow}*{CheckSum:x}"
+
+    # Relative Humidity and Dew Point (deprecated NMEA, superseded by XDR; still used by Vaisala WI talker)
+    # AbsHumidity is optional (of) to handle instruments that omit it (e.g. $WIMHU,80,,15.4,C)
+    MHU: "${:2l}MHU,{RelHumidity:of},{AbsHumidity:of},{DewPoint:of},{DewPointUnits:ow}*{CheckSum:x}"
+
+    # Barometric Pressure (deprecated NMEA, superseded by XDR; still used by Vaisala WI talker)
+    MMB: "${:2l}MMB,{BaroInches:of},{BaroInchesUnit:ow},{BaroBars:of},{BaroBarsUnit:ow}*{CheckSum:x}"
+
     ########################################
     # Proprietary: Sea-Bird Scientific
     ########################################
@@ -1153,6 +1163,12 @@ NMEA_Meteo:
       description: "Transducer 4 units"
     Name4:
       description: "Transducer 4 name"
+    DewPointUnits:
+      description: "C=Celsius, F=Fahrenheit"
+    BaroInchesUnit:
+      description: "I=inches of mercury"
+    BaroBarsUnit:
+      description: "B=bars"
     # Sea-Bird fields
     Conductivity:
       units: "S/m"

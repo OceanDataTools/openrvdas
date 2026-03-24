@@ -43,6 +43,28 @@ var retry_interval = 3000;
 var retry_websocket_connection;
 var ws;
 
+// Run once: probe the WebSocket endpoint via plain HTTP to check whether
+// an HTTP proxy is stripping the Upgrade header.
+var proxy_check_done = false;
+function check_for_proxy() {
+  if (proxy_check_done) return;
+  proxy_check_done = true;
+  var http_url = websocket_server.replace(/^ws:/, 'http:').replace(/^wss:/, 'https:');
+  fetch(http_url).then(function(response) {
+    var via = response.headers.get('Via');
+    if (via) {
+      console.warn(
+        'WebSocket connection appears to be blocked by an HTTP proxy ("' + via + '"). ' +
+        'The proxy is stripping the Upgrade header required for WebSocket connections. ' +
+        'Fix: use SSL/WSS, bypass the proxy for this host, or configure the proxy to ' +
+        'pass WebSocket upgrades (Upgrade/Connection headers).'
+      );
+    }
+  }).catch(function() {
+    // Diagnostic fetch failed — host unreachable or fetch blocked; ignore.
+  });
+}
+
 // Try connecting right off the bat
 connect_websocket();
 
@@ -63,6 +85,9 @@ function connect_websocket() {
   ws.onclose = function() {
     // websocket is closed.
     console.log("Connection is closed...");
+
+    // On first failure, probe via HTTP to detect proxy interference.
+    check_for_proxy();
 
     // Set up an alarm to sleep, then try re-opening websocket
     console.log("Setting timer to reconnect");

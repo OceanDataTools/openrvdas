@@ -1,0 +1,12 @@
+{% extends "default/module.html.jinja2" %}
+{#
+  Override docstring macro: for module-level objects that have no docstring,
+  show an explicit notice instead of leaving the section blank.
+#}
+{% defaultmacro docstring(var) %}
+    {% if var.docstring %}
+        <div class="docstring">{{ var.docstring | replace("@public", "") | to_markdown | to_html | linkify(namespace=var.qualname, shorten=False) }}</div>
+    {% elif var.kind == "module" %}
+        <div class="docstring"><em>No module-level documentation available.</em></div>
+    {% endif %}
+{% enddefaultmacro %}

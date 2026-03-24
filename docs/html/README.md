@@ -1,15 +1,31 @@
 # OpenRVDAS Logger Component HTML Documents
-© David Pablo Cohn - david.cohn@gmail.com  
-2019-09-03
 
-This directory contains automatically-generated HTML documentation for OpenRVDAS logger components and servers.  It is best viewed by viewing [the directory's index.html page](https://htmlpreview.github.io/?https://github.com/oceandatatools/openrvdas/blob/master/docs/html/index.html).
+This directory contains automatically-generated HTML documentation for OpenRVDAS
+logger components and server scripts.
 
-The documents in this directory were generated automatically by [pdoc](https://pdoc3.github.io/pdoc/) using the commands:
+The docs are fully self-contained (no external resources fetched), so they work
+offline. Open `index.html` in any browser to start browsing.
 
+## Regenerating
+
+Run the generation script from the repo root:
+
+```bash
+./docs/generate_html_docs.sh
 ```
-pip3 install pdoc3
 
-# Generate docs for logger components and some server scripts
-pdoc3 --force --html -o docs/html logger
-pdoc3 --force --html --filter logger_,server_api,cached -o docs/html server
+Requirements: `pdoc >= 14.0.0` and all OpenRVDAS dependencies installed.
+If using the project venv, pdoc is included in `utils/requirements.txt` and the
+script will activate the venv automatically.
+
+## Live preview during development
+
+```bash
+# Serves docs with live reload at http://localhost:8080
+source venv/bin/activate
+pdoc logger server
 ```
+
+## Generated with
+
+[pdoc](https://pdoc.dev/) >= 14.0.0

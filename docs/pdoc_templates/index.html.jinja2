@@ -1,0 +1,49 @@
+{% extends "default/index.html.jinja2" %}
+
+{% block nav %}
+    <h2>Components</h2>
+    <ul>
+        {% for submodule in all_modules if "._" not in submodule and not submodule.startswith("_") %}
+            {%- set parent = submodule.rsplit(".", 1)[0] -%}
+            {%- if parent not in all_modules %}
+                <li><a href="{{ submodule.replace(".", "/") }}.html">{{ submodule.split(".")[-1] }}</a></li>
+            {%- endif %}
+        {% endfor %}
+    </ul>
+{% endblock %}
+
+{% block content %}
+    <header class="pdoc">
+        {% if search %}
+            <input type="search" placeholder="Search API Documentation..." aria-label="search box">
+        {% endif %}
+    </header>
+    <main class="pdoc">
+        <h1>OpenRVDAS Component API Documentation</h1>
+        <p>
+            This is the automatically generated API reference for the
+            <a href="https://github.com/OceanDataTools/openrvdas">OpenRVDAS</a>
+            logger components and server scripts.
+        </p>
+        <p>
+            OpenRVDAS loggers are built from three types of components chained together:
+        </p>
+        <ul>
+            <li><strong><a href="openrvdas/logger/readers.html">Readers</a></strong> — acquire data from serial ports, UDP/TCP sockets, files, and other sources.</li>
+            <li><strong><a href="openrvdas/logger/transforms.html">Transforms</a></strong> — parse, filter, reformat, or otherwise manipulate records.</li>
+            <li><strong><a href="openrvdas/logger/writers.html">Writers</a></strong> — send records to files, databases, network sockets, and other destinations.</li>
+        </ul>
+        <p>
+            The <a href="openrvdas/server.html">server</a> components manage
+            the lifecycle of loggers and provide APIs for monitoring and control.
+        </p>
+        <p>
+            Use the sidebar or search box to navigate. To regenerate these docs
+            after code changes, run <code>docs/generate_html_docs.sh</code> from
+            the repository root.
+        </p>
+    </main>
+    {% if search %}
+        {% include "search.html.jinja2" %}
+    {% endif %}
+{% endblock %}

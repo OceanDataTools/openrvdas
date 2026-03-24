@@ -1,0 +1,13 @@
+# Minimal requirements for regenerating API documentation.
+# Used by .github/workflows/update-docs.yml
+# To regenerate docs locally, use the full venv (utils/requirements.txt) instead.
+pdoc>=14.0.0
+
+# These packages are imported at module level (not in try/except) in some
+# logger/server modules, so pdoc needs them installed to import those modules.
+PyYAML
+parse
+setproctitle
+websockets
+google-auth
+google-api-python-client

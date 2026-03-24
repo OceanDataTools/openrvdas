@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 
+import fcntl
 import logging
 import os
-import subprocess
 import sys
+import tty
 import tempfile
 import time
 import threading
@@ -48,9 +49,14 @@ SAMPLE_TIMEOUT = [None,
 
 
 class SimSerialPort:
-    """Create a virtual serial port and feed stored logfile data to it."""
-    ############################
+    """Create a pair of virtual serial ports using os.openpty() and bridge them.
 
+    Two pty pairs are created. The slave ends are symlinked to the requested
+    port names so that pyserial can open them by path. A bridge thread copies
+    data between the two master ends, emulating the loopback that socat would
+    normally provide.
+    """
+    ############################
     def __init__(self, port,
                  baudrate=9600, bytesize=8, parity='N', stopbits=1,
                  timeout=None, xonxoff=False, rtscts=False, write_timeout=None,
@@ -59,74 +65,73 @@ class SimSerialPort:
         to port_in and read the values back out from port."""
         self.read_port = port
         self.write_port = port + '_in'
-
-        self.serial_params = {'baudrate': baudrate,
-                              'byteside': bytesize,
-                              'parity': parity,
-                              'stopbits': stopbits,
-                              'timeout': timeout,
-                              'xonxoff': xonxoff,
-                              'rtscts': rtscts,
-                              'write_timeout': write_timeout,
-                              'dsrdtr': dsrdtr,
-                              'inter_byte_timeout': inter_byte_timeout,
-                              'exclusive': exclusive}
         self.quit_flag = False
+        self._fds = []  # all open fds, closed on quit
 
-        # Finally, find path to socat executable
-        self.socat_path = None
-        for socat_path in ['/usr/bin/socat', '/usr/local/bin/socat']:
-            if os.path.exists(socat_path) and os.path.isfile(socat_path):
-                self.socat_path = socat_path
-        if not self.socat_path:
-            logging.error('Executable "socat" not found on path. Please refer '
-                          'to installation guide to install socat.')
+        try:
+            master1, slave1 = os.openpty()
+            master2, slave2 = os.openpty()
+            self._fds = [slave1, slave2]
+            self._master1 = master1
+            self._master2 = master2
+
+            # Put slave ends in raw mode immediately so the line discipline
+            # does not strip high bits before pyserial configures the ports.
+            tty.setraw(slave1)
+            tty.setraw(slave2)
+
+            # Expose slave ends at the paths pyserial will open
+            for path, slave_fd in [(self.read_port, slave1),
+                                   (self.write_port, slave2)]:
+                if os.path.lexists(path):
+                    os.unlink(path)
+                os.symlink(os.ttyname(slave_fd), path)
+        except OSError as e:
+            logging.error('Failed to create virtual serial ports: %s', e)
             self.quit_flag = True
 
     ############################
-    def _run_socat(self):
-        """Internal: run the actual command."""
-        verbose = '-d'
-        write_port_params = 'pty,link=%s,raw,echo=0' % self.write_port
-        read_port_params = 'pty,link=%s,raw,echo=0' % self.read_port
+    def _run_bridge(self):
+        """Forward bytes from master2 to master1.
 
-        cmd = [self.socat_path,
-               verbose,
-               # verbose,   # repeating makes it more verbose
-               read_port_params,
-               write_port_params,
-               ]
+        master2 is set to non-blocking mode so the loop can respond to
+        quit_flag without relying on fd-close to interrupt a blocked read
+        (closing a fd from another thread does not reliably unblock a read
+        on macOS).
+        """
         try:
-            # Run socat process using Popen, checking every second or so whether
-            # it's died (poll() != None) or we've gotten a quit signal.
-            logging.info('Calling: %s', ' '.join(cmd))
-            socat_process = subprocess.Popen(cmd)
-            while not self.quit_flag and not socat_process.poll():
+            flags = fcntl.fcntl(self._master2, fcntl.F_GETFL)
+            fcntl.fcntl(self._master2, fcntl.F_SETFL, flags | os.O_NONBLOCK)
+        except OSError:
+            pass
+
+        try:
+            while not self.quit_flag:
                 try:
-                    socat_process.wait(1)
-                except subprocess.TimeoutExpired:
+                    data = os.read(self._master2, 4096)
+                    if data:
+                        os.write(self._master1, data)
+                except BlockingIOError:
+                    time.sleep(0.005)
+        except OSError:
+            pass
+        finally:
+            for path in [self.read_port, self.write_port]:
+                try:
+                    os.unlink(path)
+                except OSError:
                     pass
-
-        except Exception as e:
-            logging.error('ERROR: socat command: %s', e)
-
-        # If here, process has terminated, or we've seen self.quit_flag. We
-        # want both to be true: if we've terminated, set self.quit so that
-        # 'run' loop can exit. If self.quit_flag, terminate process.
-        if self.quit_flag:
-            socat_process.kill()
-
-            # TODO: Need to delete simulated ports!
-        else:
-            self.quit_flag = True
-        logging.info('Finished: %s', ' '.join(cmd))
+            for fd in self._fds + [self._master1, self._master2]:
+                try:
+                    os.close(fd)
+                except OSError:
+                    pass
 
     ############################
     def run(self):
-        """Create the virtual port with socat and start feeding it records from
-        the designated logfile. If loop==True, loop when reaching end of input."""
-        self.socat_thread = threading.Thread(target=self._run_socat, daemon=True)
-        self.socat_thread.start()
+        """Start the bridge thread."""
+        self._bridge_thread = threading.Thread(target=self._run_bridge, daemon=True)
+        self._bridge_thread.start()
 
     ############################
     def quit(self):
@@ -136,8 +141,7 @@ class SimSerialPort:
 ################################################################################
 class TestSerialWriter(unittest.TestCase):
     ############################
-    # Set up set up simulated serial in/out ports
-    @unittest.skip('Test (or SerialWriter) appears to be broken!')
+    # Set up simulated serial in/out ports
     def setUp(self):
         warnings.simplefilter("ignore", ResourceWarning)
 
@@ -174,7 +178,7 @@ class TestSerialWriter(unittest.TestCase):
 
         sim_serial = SimSerialPort(temp_port)
         if sim_serial.quit_flag:
-            return
+            self.skipTest('Could not create virtual serial ports')
         sim_serial.run()
 
         # Give it a moment to get started
