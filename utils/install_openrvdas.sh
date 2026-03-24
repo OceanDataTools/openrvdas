@@ -77,7 +77,10 @@ function exit_gracefully {
             deactivate
         fi
     fi
-    return -1 2> /dev/null || exit -1  # exit correctly if sourced/bashed
+    # 'return' only exits the immediate function, so callers nested inside
+    # other functions would silently continue. Use 'exit' unconditionally so
+    # errors always stop the script regardless of call depth.
+    exit 1
 }
 
 #########################################################################
@@ -628,14 +631,25 @@ function install_openrvdas {
 
     if [ -e openrvdas/.git ] ; then   # If we've already got an installation
       cd openrvdas
-      git pull
-      git checkout $OPENRVDAS_BRANCH
+      # Ensure origin points to the requested repo (may differ on re-installs)
+      echo "Fetching branch '$OPENRVDAS_BRANCH' from $OPENRVDAS_REPO"
+      git remote set-url origin "$OPENRVDAS_REPO"
+      git fetch origin "$OPENRVDAS_BRANCH"
+      # Try local branch first; if not found, try tracking the remote branch
+      if ! git checkout "$OPENRVDAS_BRANCH" 2>/dev/null && \
+         ! git checkout -b "$OPENRVDAS_BRANCH" "origin/$OPENRVDAS_BRANCH" 2>/dev/null ; then
+        echo "ERROR: Branch '$OPENRVDAS_BRANCH' not found in $OPENRVDAS_REPO"
+        exit_gracefully
+      fi
       git pull
     else                              # If we don't already have an installation
       sudo rm -rf openrvdas           # in case there's a non-git dir there
       sudo mkdir openrvdas
       sudo chown ${RVDAS_USER} openrvdas
-      git clone -b $OPENRVDAS_BRANCH $OPENRVDAS_REPO
+      if ! git clone -b "$OPENRVDAS_BRANCH" "$OPENRVDAS_REPO" ; then
+        echo "ERROR: Failed to clone branch '$OPENRVDAS_BRANCH' from $OPENRVDAS_REPO"
+        exit_gracefully
+      fi
       cd openrvdas
     fi
 
@@ -799,8 +813,12 @@ http {
         # Section will be commented out if we're not using SSL
         ${SSL_COMMENT}ssl_certificate     $SSL_CRT_LOCATION;
         ${SSL_COMMENT}ssl_certificate_key $SSL_KEY_LOCATION;
-        ${SSL_COMMENT}ssl_protocols       TLSv1 TLSv1.1 TLSv1.2;
-        ${SSL_COMMENT}ssl_ciphers         HIGH:!aNULL:!MD5;
+        ${SSL_COMMENT}ssl_protocols       TLSv1.2 TLSv1.3;
+        ${SSL_COMMENT}ssl_ciphers         ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA256;
+        ${SSL_COMMENT}ssl_prefer_server_ciphers on;
+        ${SSL_COMMENT}ssl_session_cache   shared:SSL:10m;
+        ${SSL_COMMENT}ssl_session_timeout 1d;
+        ${SSL_COMMENT}add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
 
         # max upload size
         client_max_body_size 75M;   # adjust to taste
@@ -848,6 +866,16 @@ http {
             include     ${INSTALL_ROOT}/openrvdas/django_gui/uwsgi_params;
         }
     }
+
+$(if [ "$USE_SSL" == "yes" ]; then cat <<REDIRECT
+    # Redirect HTTP to HTTPS when SSL is enabled
+    server {
+        listen      *:${NONSSL_SERVER_PORT} default_server;
+        server_name _;
+        return 301 https://\$host\$request_uri;
+    }
+REDIRECT
+fi)
 }
 EOF
 
@@ -859,11 +887,54 @@ EOF
 function setup_ssl_certificate {
     echo "Certificate will be placed in ${SSL_CRT_LOCATION}"
     echo "Key will be placed in ${SSL_KEY_LOCATION}"
-    echo "Please answer the following prompts to continue:"
     echo
-    openssl req \
-       -newkey rsa:2048 -nodes -keyout ${SSL_KEY_LOCATION} \
-       -x509 -days 365 -out ${SSL_CRT_LOCATION}
+
+    # Build SAN list: always include hostname, localhost and loopback
+    local SAN_LIST="DNS:${HOSTNAME},DNS:localhost,IP:127.0.0.1"
+    local SERVER_IP
+    SERVER_IP=$(hostname -I 2>/dev/null | awk '{print $1}')
+    if [ -n "$SERVER_IP" ] && [ "$SERVER_IP" != "127.0.0.1" ]; then
+        SAN_LIST="${SAN_LIST},IP:${SERVER_IP}"
+    fi
+
+    # Use -addext if supported (OpenSSL >= 1.1.1), otherwise fall back to a
+    # temporary config file. Both produce a cert with Subject Alternative
+    # Names, which modern browsers require.
+    if openssl req -help 2>&1 | grep -q '\-addext'; then
+        openssl req \
+            -newkey rsa:4096 -nodes -keyout "${SSL_KEY_LOCATION}" \
+            -x509 -days 3650 -out "${SSL_CRT_LOCATION}" \
+            -subj "/CN=${HOSTNAME}/O=OpenRVDAS" \
+            -addext "subjectAltName=${SAN_LIST}"
+    else
+        local OPENSSL_CNF
+        OPENSSL_CNF=$(mktemp)
+        cat > "$OPENSSL_CNF" <<SSLCNF
+[req]
+distinguished_name = req_distinguished_name
+x509_extensions    = v3_req
+prompt             = no
+
+[req_distinguished_name]
+CN = ${HOSTNAME}
+O  = OpenRVDAS
+
+[v3_req]
+subjectAltName = ${SAN_LIST}
+SSLCNF
+        openssl req \
+            -newkey rsa:4096 -nodes -keyout "${SSL_KEY_LOCATION}" \
+            -x509 -days 3650 -out "${SSL_CRT_LOCATION}" \
+            -config "$OPENSSL_CNF"
+        rm -f "$OPENSSL_CNF"
+    fi
+
+    chmod 600 "${SSL_KEY_LOCATION}"
+
+    echo
+    echo "Self-signed certificate created (valid 10 years, SAN: ${SAN_LIST})."
+    echo "Browsers will show a security warning for self-signed certificates."
+    echo "See docs/secure_websockets.md for guidance on trusting the certificate."
 }
 
 ###########################################################################
