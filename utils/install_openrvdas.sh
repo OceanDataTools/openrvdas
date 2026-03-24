@@ -632,8 +632,9 @@ function install_openrvdas {
     if [ -e openrvdas/.git ] ; then   # If we've already got an installation
       cd openrvdas
       # Ensure origin points to the requested repo (may differ on re-installs)
+      echo "Fetching branch '$OPENRVDAS_BRANCH' from $OPENRVDAS_REPO"
       git remote set-url origin "$OPENRVDAS_REPO"
-      git fetch --all
+      git fetch origin "$OPENRVDAS_BRANCH"
       # Try local branch first; if not found, try tracking the remote branch
       if ! git checkout "$OPENRVDAS_BRANCH" 2>/dev/null && \
          ! git checkout -b "$OPENRVDAS_BRANCH" "origin/$OPENRVDAS_BRANCH" 2>/dev/null ; then
