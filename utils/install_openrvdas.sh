@@ -628,14 +628,20 @@ function install_openrvdas {
 
     if [ -e openrvdas/.git ] ; then   # If we've already got an installation
       cd openrvdas
-      git pull
-      git checkout $OPENRVDAS_BRANCH
+      git fetch --all
+      if ! git checkout "$OPENRVDAS_BRANCH" ; then
+        echo "ERROR: Branch '$OPENRVDAS_BRANCH' not found in $OPENRVDAS_REPO"
+        exit_gracefully
+      fi
       git pull
     else                              # If we don't already have an installation
       sudo rm -rf openrvdas           # in case there's a non-git dir there
       sudo mkdir openrvdas
       sudo chown ${RVDAS_USER} openrvdas
-      git clone -b $OPENRVDAS_BRANCH $OPENRVDAS_REPO
+      if ! git clone -b "$OPENRVDAS_BRANCH" "$OPENRVDAS_REPO" ; then
+        echo "ERROR: Failed to clone branch '$OPENRVDAS_BRANCH' from $OPENRVDAS_REPO"
+        exit_gracefully
+      fi
       cd openrvdas
     fi
 
