@@ -81,6 +81,12 @@ try:
         from websockets.exceptions import ConnectionClosed
     except ImportError:
         from websockets.connection import ConnectionClosed
+    # websockets 12+ (asyncio server) exposes http11.Response for process_request handlers
+    try:
+        from websockets.http11 import Response as _WsResponse, Headers as _WsHeaders
+        _WEBSOCKETS_HAS_HTTP11 = True
+    except ImportError:
+        _WEBSOCKETS_HAS_HTTP11 = False
 except ModuleNotFoundError:
     raise ModuleNotFoundError('CachedDataServer requires websockets module.\n'
                               'Please run "pip3 install websockets".')
@@ -959,10 +965,31 @@ class CachedDataServer:
         async def start_server():
             logging.info('Starting WebSocketServer on port %d', self.port)
             try:
+                extra_kwargs = {}
+                if _WEBSOCKETS_HAS_HTTP11:
+                    # Intercept plain HTTP requests (e.g. nginx health checks or
+                    # mis-routed probes) before the library raises InvalidUpgrade
+                    # at ERROR level. Log at DEBUG and return 200 instead.
+                    async def _handle_non_ws_request(connection, request):
+                        upgrade = request.headers.get('Upgrade', '')
+                        if upgrade.lower() != 'websocket':
+                            logging.debug(
+                                'Plain HTTP request on WebSocket port %d '
+                                '(Upgrade header missing or wrong value: %r). '
+                                'Check nginx proxy_set_header Upgrade config.',
+                                self.port, upgrade or '<none>')
+                            return _WsResponse(
+                                200, 'OK',
+                                _WsHeaders([('Content-Type', 'text/plain')]),
+                                b'WebSocket server\n')
+                        return None
+                    extra_kwargs['process_request'] = _handle_non_ws_request
+
                 self.websocket_server = await websockets.serve(
                     self._serve_websocket_data,
                     host='',
-                    port=self.port
+                    port=self.port,
+                    **extra_kwargs
                 )
                 logging.info('WebSocket server running on port %d', self.port)
                 await self.websocket_server.wait_closed()

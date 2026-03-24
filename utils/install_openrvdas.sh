@@ -777,6 +777,13 @@ http {
     #tcp_nopush     on;
     keepalive_timeout  65;
 
+    # Map WebSocket upgrade requests so keep-alive connections are not broken
+    # when a client does not send an Upgrade header.
+    map \$http_upgrade \$connection_upgrade {
+        default upgrade;
+        ''      close;
+    }
+
     # the upstream component nginx needs to connect to
     upstream django {
         server unix://${INSTALL_ROOT}/openrvdas/django_gui/openrvdas.sock; # for a file socket
@@ -831,7 +838,7 @@ http {
             proxy_pass http://localhost:8766;
             proxy_http_version 1.1;
             proxy_set_header Upgrade \$http_upgrade;
-            proxy_set_header Connection "Upgrade";
+            proxy_set_header Connection \$connection_upgrade;
             proxy_set_header Host \$host;
         }
 
