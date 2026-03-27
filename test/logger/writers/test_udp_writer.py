@@ -167,7 +167,6 @@ class TestUDPWriter(unittest.TestCase):
     def test_multicast(self):
         # Main method starts here
         mc_interface = "239.192.0.100"
-        dest = ''
         port = 8004
         ttl = 3
         source_ip = socket.gethostbyname(socket.gethostname())
@@ -184,11 +183,11 @@ class TestUDPWriter(unittest.TestCase):
         sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
 
         # Just bind to the port, we're already joined to the group.
-        sock.bind((dest, port))
+        sock.bind(('', port))
 
         # Start the writer
         threading.Thread(target=self.write,
-                         args=(dest, port),
+                         args=('', port),
                          kwargs={"data": SAMPLE_DATA, "interval": 0.1,
                                  "mc_interface": mc_interface, "mc_ttl": ttl}).start()
 
