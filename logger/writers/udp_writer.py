@@ -176,6 +176,14 @@ class UDPWriter(Writer):
         if mc_interface:
             # resolve once in constructor
             mc_interface = socket.gethostbyname(mc_interface)
+
+            if not ipaddress.ip_address(mc_interface).is_multicast:
+                logging.error("mc_interface %s IPV4 Multicast addresses use reserved class D address range: 224.0.0.0 through 239.255.255.255", mc_interface)
+                raise TypeError('must specify valid mc_interface')
+
+            # Set the destination to the mc_interface as we are using sendto()
+            self.destination = mc_interface
+
         self.mc_interface = mc_interface
         self.mc_ttl = mc_ttl
 
@@ -211,20 +219,12 @@ class UDPWriter(Writer):
             # set the time-to-live for messages
             udp_socket.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL,
                                   struct.pack('b', self.mc_ttl))
-            # set outgoing multicast interface
-            udp_socket.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_IF,
-                                  socket.inet_aton(self.mc_interface))
         else:
             # maybe broadcast, but very non-trivial to detect broadcast IP, so
             # we set the broadcast flag anytime we're not doing multicast
             udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, True)
 
-        try:
-            udp_socket.connect((self.destination, self.port))
-            return udp_socket
-        except OSError as e:
-            logging.error('Unable to connect to %s:%d - %s', self.destination, self.port, e)
-            return None
+        return udp_socket
 
     ############################
     def write(self, record: Union[str, bytes, DASRecord]):
@@ -286,7 +286,7 @@ class UDPWriter(Writer):
         rec_len = len(record)
         while num_tries <= self.num_retry and bytes_sent < rec_len:
             try:
-                bytes_sent = self.socket.send(record)
+                bytes_sent = self.socket.sendto(record, (self.destination, self.port))
 
                 # If here, write succeeded. Reset warnings
                 #

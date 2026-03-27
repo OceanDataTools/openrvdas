@@ -3,6 +3,7 @@
 import logging
 import socket
 import sys
+import ipaddress
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
@@ -55,6 +56,7 @@ class UDPReader(Reader):
         port         Port to listen to for packets.  REQUIRED
 
         mc_group     If specified, IP address of multicast group id to subscribe to.
+                    Must be in range 224.0.0.0 to 239.255.255.255
 
         reuseaddr    Specifies wether we set SO_REUSEADDR on the created socket.  If
                      you don't know you need this, don't enable it.
@@ -96,14 +98,13 @@ class UDPReader(Reader):
         if mc_group:
             # resolve once in constructor
             mc_group = socket.gethostbyname(mc_group)
+
+            if not ipaddress.ip_address(mc_group).is_multicast:
+                logging.error("mc_interface %s IPV4 Multicast addresses use reserved class D address range: 224.0.0.0 through 239.255.255.255", mc_group)
+                raise TypeError('must specify valid mc_interface')
+
             if not interface:
-                # multicast needs to specify interface to use, so let's pick a
-                # sane default
-                #
-                # NOTE: This means hostname cannot be an alias to localhost, or
-                #       you won't be able to send IGMP packets correctly.
-                #
-                self.interface = socket.gethostbyname(socket.gethostname())
+                self.interface = ''
 
         self.mc_group = mc_group
 
@@ -145,32 +146,15 @@ class UDPReader(Reader):
         # If mc_group is specified, subscribe to it as a multicast group
         if self.mc_group:
             # set outgoing multicast interface
-            #
-            # NOTE: Can't use loopback device for this, otherwise IGMP packets
-            #       never leave the system, and you never actually join the
-            #       group.
-            #
-            if self.interface.startswith('127.') and not self.this_is_a_test:
-                logging.warning("Can't use loopback device for joining multicast groups.  Make "
-                                "sure your system's hostname does NOT resolve to something in "
-                                "the 127.0.0.0/8 address block (e.g., localhost, 127.0.0.1), or "
-                                "specify the interface to use by passing its IP address as the "
-                                "`interface` parameter.  (You can ignore this message if you're "
-                                "actually just doing loopback testing.)")
             sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_IF,
                             socket.inet_aton(self.interface))
 
             # join the group via IGMP
-            #
-            # NOTE: Since these are both already encoded as binary by
-            #       inet_aton(), we can just concatenate them.  Alternatively,
-            #       could use struct.pack("4s4s", ...) to create a struct to
-            #       pass into setsockopt()
-            #
-            sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP,
-                            socket.inet_aton(self.mc_group) + socket.inet_aton(self.interface))
+            mreq = struct.pack("4sl", socket.inet_aton(self.mc_group),
+                               socket.INADDR_ANY)
+            sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
 
-            # bind to mc_group:port
+            # bind to '':port as we have already subscribed to the group above
             sock.bind((self.mc_group, self.port))
 
         else:

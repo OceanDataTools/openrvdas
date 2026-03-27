@@ -166,29 +166,31 @@ class TestUDPWriter(unittest.TestCase):
     #
     def test_multicast(self):
         # Main method starts here
-        host = "239.192.0.100"
+        mc_interface = "239.192.0.100"
+        dest = ''
         port = 8004
         ttl = 3
         source_ip = socket.gethostbyname(socket.gethostname())
 
-        sock = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
+        sock = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM, proto=socket.IPPROTO_UDP)
 
         # join the multicast group
-        logging.info("joing %s to multicast group %s", source_ip, host)
-        # NOTE: Since these are both already encoded as binary by inet_aton(),
-        #       we can just concatenate them.  Alternatively, could use
-        #       struct.pack("4s4s", ...)
-        sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP,
-                        socket.inet_aton(host) + socket.inet_aton(source_ip))
+        logging.info("joing %s to multicast group %s", source_ip, mc_interface)
 
-        # bind to the mc host, port
-        sock.bind((host, port))
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, True)
+
+        mreq = struct.pack("4sl", socket.inet_aton(mc_interface),
+                           socket.INADDR_ANY)
+        sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
+
+        # Just bind to the port, we're already joined to the group.
+        sock.bind((dest, port))
 
         # Start the writer
         threading.Thread(target=self.write,
-                         args=(host, port),
+                         args=(dest, port),
                          kwargs={"data": SAMPLE_DATA, "interval": 0.1,
-                                 "mc_interface": source_ip, "mc_ttl": ttl}).start()
+                                 "mc_interface": mc_interface, "mc_ttl": ttl}).start()
 
         # Set timeout we can catch if things are taking too long
         signal.signal(signal.SIGALRM, self._handler)
