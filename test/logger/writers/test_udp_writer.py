@@ -8,6 +8,7 @@ import sys
 import threading
 import time
 import unittest
+import struct
 
 sys.path.append('.')
 from logger.writers.udp_writer import UDPWriter  # noqa E402
