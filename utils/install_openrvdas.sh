@@ -1130,7 +1130,7 @@ EOF
         cat >> $TEMP_FILE <<EOF
 
 [inet_http_server]
-port=127.0.0.1:${SUPERVISORD_WEBINTERFACE_PORT}
+port=*:${SUPERVISORD_WEBINTERFACE_PORT}
 EOF
         if [ $SUPERVISORD_WEBINTERFACE_AUTH == 'yes' ]; then
             SUPERVISORD_WEBINTERFACE_HASH=`echo -n ${SUPERVISORD_WEBINTERFACE_PASS} | sha1sum | awk '{printf("{SHA}%s",$1)}'`
