@@ -44,8 +44,6 @@ import pprint
 import re
 import sys
 
-from os.path import dirname, realpath
-sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
 # flake8: noqa E402, F406
 from logger.readers import *

@@ -6,8 +6,6 @@ import sys
 import time
 import traceback
 
-from os.path import dirname, realpath
-sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
 from logger.readers.composed_reader import ComposedReader  # noqa: E402
 from logger.writers.composed_writer import ComposedWriter  # noqa: E402

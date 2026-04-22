@@ -16,9 +16,7 @@ from google.oauth2.credentials import Credentials as UserCredentials
 import os
 import sys
 
-from os.path import dirname, realpath
 
-sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.utils.das_record import DASRecord  # noqa: E402
 from logger.writers.writer import Writer  # noqa: E402
 

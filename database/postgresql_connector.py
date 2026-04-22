@@ -29,8 +29,6 @@ TODO: Allow wildcarding field selection, so client can specify 'S330*,Knud*'
 import logging
 import sys
 
-from os.path import dirname, realpath
-sys.path.append(dirname(dirname(realpath(__file__))))
 from logger.utils.das_record import DASRecord  # noqa: E402
 
 try:

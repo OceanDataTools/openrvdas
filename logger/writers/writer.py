@@ -30,8 +30,6 @@ digest_record() are called, but with the default of quiet=False.
 """
 import sys
 
-from os.path import dirname, realpath
-sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.utils.base_module import BaseModule  # noqa: E402
 
 

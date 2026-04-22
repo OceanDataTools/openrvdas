@@ -13,7 +13,6 @@ try:
 except ModuleNotFoundError:
     SERIAL_MODULE_FOUND = False
 
-sys.path.append('.')
 from logger.readers.serial_reader import SerialReader  # noqa: E402
 
 

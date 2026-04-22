@@ -26,8 +26,6 @@ import pprint
 import sys
 
 # Append openrvdas root to syspath prior to importing openrvdas modules
-from os.path import dirname, realpath
-sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
 # Dict of format types that extend the default formats recognized by the
 # parse module.

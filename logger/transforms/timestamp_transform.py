@@ -3,8 +3,6 @@
 import logging
 import sys
 
-from os.path import dirname, realpath
-sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.utils import timestamp  # noqa: E402
 from logger.utils.nmea_timestamp import NMEATimestampExtractor  # noqa: E402
 from logger.transforms.transform import Transform  # noqa: E402

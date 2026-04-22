@@ -4,9 +4,7 @@ import sys
 import logging
 import pprint
 from typing import Union
-from os.path import dirname, realpath
 
-sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.utils.read_config import read_config  # noqa:E402
 from logger.utils.das_record import DASRecord  # noqa: E402
 from logger.utils.sealog_event import SealogEvent, to_event  # noqa: E402

@@ -13,8 +13,6 @@ try:
 except ModuleNotFoundError:
     SERIAL_MODULE_FOUND = False
 
-from os.path import dirname, realpath
-sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.writers.writer import Writer  # noqa: E402
 
 

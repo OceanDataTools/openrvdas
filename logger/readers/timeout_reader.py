@@ -4,8 +4,6 @@ import sys
 import threading
 import time
 
-from os.path import dirname, realpath
-sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.readers.reader import Reader  # noqa: E402
 
 

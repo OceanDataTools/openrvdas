@@ -5,8 +5,6 @@ record have changed from the previous value.
 
 import sys
 
-from os.path import dirname, realpath
-sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.transforms.transform import Transform  # noqa: E402
 
 

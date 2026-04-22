@@ -82,8 +82,6 @@ import json
 from urllib.request import Request, urlopen
 from urllib.error import HTTPError, URLError
 
-from os.path import dirname, realpath
-sys.path.append(dirname(dirname(dirname(dirname(realpath(__file__))))))
 from logger.readers.reader import Reader  # noqa: E402
 
 

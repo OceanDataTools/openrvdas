@@ -53,8 +53,6 @@ try:
 except ModuleNotFoundError:
     MODBUS_MODULE_FOUND = False
 
-from os.path import dirname, realpath
-sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.readers.reader import Reader  # noqa
 
 

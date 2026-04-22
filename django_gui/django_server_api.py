@@ -15,8 +15,6 @@ import time
 
 import django
 
-from os.path import dirname, realpath
-sys.path.append(dirname(dirname(realpath(__file__))))
 from logger.utils.timestamp import datetime_obj, datetime_obj_from_timestamp  # noqa: E402
 from logger.utils.timestamp import DATE_FORMAT  # noqa: E402
 
