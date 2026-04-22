@@ -3,10 +3,8 @@
 # flake8: noqa E502  - ignore long lines
 
 import logging
-import sys
 import unittest
 
-sys.path.append('.')
 from logger.utils.nmea_parser import NMEAParser  # noqa: E402
 
 try:

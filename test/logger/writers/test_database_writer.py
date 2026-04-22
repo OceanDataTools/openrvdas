@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 
 import logging
-import sys
 import unittest
 
-sys.path.append('.')
 from database.settings import DATABASE_ENABLED  # noqa: E402
 from logger.writers.database_writer import DatabaseWriter  # noqa: E402
 from logger.utils.record_parser import RecordParser  # noqa: E402

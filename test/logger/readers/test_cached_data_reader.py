@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
 
 import logging
-import sys
 import threading
 import time
 import unittest
 import warnings
 
-sys.path.append('.')
 from server.cached_data_server import CachedDataServer  # noqa: E402
 from logger.readers.cached_data_reader import CachedDataReader  # noqa: E402
 WEBSOCKET_PORT = 8769

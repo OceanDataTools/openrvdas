@@ -2,10 +2,8 @@
 
 import logging
 import re
-import sys
 import unittest
 
-sys.path.append('.')
 from logger.transforms.regex_replace_transform import RegexReplaceTransform  # noqa: E402
 
 

@@ -5,13 +5,11 @@
 import json
 import logging
 import pprint
-import sys
 import tempfile
 import time
 import unittest
 import warnings
 
-sys.path.append('.')
 from logger.transforms.nmea_transform import NMEATransform
 
 

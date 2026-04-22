@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
 
 import logging
-import sys
 import tempfile
 import threading
 import unittest
 import warnings
 
-sys.path.append('.')
 from logger.utils.simulate_data import SimSerial  # noqa: E402
 from logger.transforms.slice_transform import SliceTransform  # noqa: E402
 from logger.readers.serial_reader import SerialReader  # noqa: E402

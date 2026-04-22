@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 
 import logging
-import sys
 import unittest
 
-sys.path.append('.')
 from logger.utils.das_record import DASRecord  # noqa: E402
 from logger.transforms.delta_transform import polar_diff, DeltaTransform  # noqa: E402
 

@@ -10,7 +10,6 @@ import os
 import sys
 import unittest
 
-sys.path.append('.')
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'django_gui.settings')
 django.setup()
 

@@ -4,14 +4,12 @@ from os import environ
 import asyncio
 import json
 import logging
-import sys
 import tempfile
 import time
 import unittest
 import warnings
 import websockets
 
-sys.path.append('.')
 from server.cached_data_server import CachedDataServer  # noqa: E402
 
 # Django 3 doesn't play nicely when mixing sync and async, so when we

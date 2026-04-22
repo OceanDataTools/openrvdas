@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
 
 import logging
-import sys
 import unittest
 import json
 
-sys.path.append('.')
 from logger.transforms.parse_nmea_transform import ParseNMEATransform  # noqa: E402
 
 # flake8: noqa E501  - don't worry about long lines in sample data
