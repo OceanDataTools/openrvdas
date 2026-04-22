@@ -5,7 +5,6 @@ import json
 import logging
 import queue
 import ssl
-import sys
 import threading
 import time
 

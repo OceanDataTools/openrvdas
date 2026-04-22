@@ -3,7 +3,6 @@
 Abstract base class for data Readers.
 """
 
-import sys
 
 from logger.utils.base_module import BaseModule   # noqa: E402
 

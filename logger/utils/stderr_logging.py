@@ -3,7 +3,6 @@
 import json
 import logging
 import time
-import sys
 
 from logger.utils.timestamp import LOGGING_TIME_FORMAT  # noqa: E402
 

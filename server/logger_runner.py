@@ -41,7 +41,6 @@ import multiprocessing
 import os
 import pprint
 import signal
-import sys
 import time
 
 from importlib import reload

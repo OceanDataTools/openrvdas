@@ -2,7 +2,6 @@
 
 import logging
 import re
-import sys
 
 from logger.transforms.transform import Transform  # noqa: E402
 

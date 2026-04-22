@@ -3,7 +3,6 @@
 record have changed from the previous value.
 """
 
-import sys
 
 from logger.transforms.transform import Transform  # noqa: E402
 

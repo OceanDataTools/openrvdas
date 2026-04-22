@@ -2,7 +2,6 @@
 """Strip undesired characters out of a record."""
 
 import logging
-import sys
 
 from logger.transforms.transform import Transform  # noqa: E402
 

@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import logging
-import sys
 
 from threading import Lock
 from xml.sax.handler import ContentHandler

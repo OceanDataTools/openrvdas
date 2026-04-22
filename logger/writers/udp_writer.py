@@ -4,7 +4,6 @@ import errno
 import logging
 import socket
 import struct
-import sys
 
 from typing import Union
 

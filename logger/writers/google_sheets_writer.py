@@ -14,7 +14,6 @@ from google.oauth2.service_account import Credentials
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials as UserCredentials
 import os
-import sys
 
 
 from logger.utils.das_record import DASRecord  # noqa: E402

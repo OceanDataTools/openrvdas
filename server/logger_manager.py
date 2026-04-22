@@ -8,13 +8,10 @@ import multiprocessing
 import os
 import signal
 import socket  # to get hostname
-import sys
 import threading
 import time
 
 from importlib import reload
-
-# Add the openrvdas components onto sys.path
 
 # Imports for running CachedDataServer
 from server.cached_data_server import CachedDataServer  # noqa: E402

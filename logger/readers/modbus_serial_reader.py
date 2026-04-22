@@ -41,7 +41,6 @@ Dependencies
 """
 
 import logging
-import sys
 import yaml
 import time
 from threading import Lock

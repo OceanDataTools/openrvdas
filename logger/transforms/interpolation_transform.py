@@ -3,7 +3,6 @@
 """
 
 import logging
-import sys
 import bisect
 
 from math import degrees, radians, sin, cos, atan2

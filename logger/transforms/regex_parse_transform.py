@@ -9,7 +9,6 @@ injection to the underlying RegexParser.
 The architecture parallels ParseTransform, which wraps RecordParser.
 """
 
-import sys
 from typing import Union, Dict, List
 
 

@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import logging
-import sys
 
 from logger.utils.das_record import DASRecord  # noqa: E402
 

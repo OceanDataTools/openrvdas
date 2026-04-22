@@ -3,7 +3,6 @@
 """
 
 import logging
-import sys
 import time
 
 from logger.utils.das_record import DASRecord  # noqa: E402

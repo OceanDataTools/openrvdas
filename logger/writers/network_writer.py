@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import logging
-import sys
 
 from logger.writers.writer import Writer  # noqa: E402
 

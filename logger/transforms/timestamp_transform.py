@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import logging
-import sys
 
 from logger.utils import timestamp  # noqa: E402
 from logger.utils.nmea_timestamp import NMEATimestampExtractor  # noqa: E402

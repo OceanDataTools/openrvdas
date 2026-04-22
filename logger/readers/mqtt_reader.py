@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import logging
-import sys
 from queue import Queue
 
 # Don't barf if they don't have redis installed. Only complain if

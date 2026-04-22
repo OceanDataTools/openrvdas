@@ -27,7 +27,6 @@ TODO: Allow wildcarding field selection, so client can specify 'S330*,Knud*'
 
 """
 import logging
-import sys
 
 from logger.utils.das_record import DASRecord  # noqa: E402
 

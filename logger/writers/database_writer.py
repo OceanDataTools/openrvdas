@@ -2,7 +2,6 @@
 
 import logging
 import pprint
-import sys
 import time
 
 from typing import Union

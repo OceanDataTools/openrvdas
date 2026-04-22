@@ -745,6 +745,12 @@ function setup_python_packages {
     fi
 
     venv/bin/python venv/bin/pip3 install -r utils/requirements.txt
+
+    # Register the package so that direct script invocation works without
+    # sys.path hacks (requires pyproject.toml, present from v2.x onwards).
+    if [ -f pyproject.toml ]; then
+        venv/bin/python venv/bin/pip3 install -e .
+    fi
 }
 
 ###########################################################################

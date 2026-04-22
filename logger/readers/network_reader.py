@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import logging
-import sys
 
 from logger.readers.reader import Reader  # noqa: E402
 

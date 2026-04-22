@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import shutil
-import sys
 
 from logger.utils.das_record import DASRecord  # noqa: E402
 from logger.writers.writer import Writer  # noqa: E402

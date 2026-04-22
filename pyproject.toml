@@ -29,6 +29,22 @@ dependencies = [
   "websockets"
 ]
 
+[project.optional-dependencies]
+mysql = [
+  "mysqlclient",
+  "mysql-connector"
+]
+redis = [
+  "redis"
+]
+mqtt = [
+  "paho-mqtt"
+]
+dev = [
+  "pytest",
+  "pdoc>=14.0.0"
+]
+
 [project.urls]
 Homepage = "https://openrvdas.org/"
 Repository = "https://github.com/OceanDataTools/openrvdas"

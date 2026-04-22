@@ -25,7 +25,6 @@ used elsewhere.
 import logging
 import importlib
 import inspect
-import sys
 
 # For efficient checksum code
 from functools import reduce

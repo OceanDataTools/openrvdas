@@ -4,7 +4,6 @@
 import asyncio
 import logging
 import ssl
-import sys
 import threading
 import time
 import inspect

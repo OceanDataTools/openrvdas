@@ -2,7 +2,6 @@
 
 import logging
 import re
-import sys
 
 from logger.utils import timestamp  # noqa: E402
 from logger.writers.writer import Writer  # noqa: E402

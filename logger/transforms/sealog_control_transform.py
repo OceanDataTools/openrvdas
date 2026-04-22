@@ -33,7 +33,6 @@ How to setup the logger:
           allowed_prefixes:
             - 'set_active_mode '
 """
-import sys
 import logging
 
 from typing import Union

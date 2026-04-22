@@ -2,7 +2,6 @@
 
 import argparse
 import logging
-import sys
 import time
 
 from logger.readers.text_file_reader import TextFileReader  # noqa: E402

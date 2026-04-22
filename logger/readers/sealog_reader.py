@@ -7,7 +7,6 @@ import ssl
 import json
 import threading
 import time
-import sys
 import websockets
 
 from logger.utils.das_record import DASRecord  # noqa: E402
