@@ -4,7 +4,6 @@ import os
 import json
 import logging
 import re
-import sys
 import math
 from datetime import datetime, timedelta, timezone
 

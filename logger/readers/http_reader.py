@@ -74,7 +74,6 @@ safe for use in multi-threaded environments.
 """
 
 import threading
-import sys
 import time
 import logging
 import json

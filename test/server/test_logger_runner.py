@@ -2,13 +2,11 @@
 
 import logging
 import os
-import sys
 import tempfile
 import time
 import unittest
 import warnings
 
-sys.path.append('.')
 from logger.readers.text_file_reader import TextFileReader  # noqa: E402
 from logger.writers.text_file_writer import TextFileWriter  # noqa: E402
 from server.logger_runner import LoggerRunner  # noqa: E402

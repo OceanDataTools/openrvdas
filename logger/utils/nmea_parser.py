@@ -6,7 +6,6 @@
 import glob
 import logging
 import re
-import sys
 
 from logger.utils import read_config  # noqa: E402
 from logger.utils.das_record import DASRecord  # noqa: E402

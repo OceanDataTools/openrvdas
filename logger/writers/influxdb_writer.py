@@ -2,7 +2,6 @@
 
 import time
 import logging
-import sys
 from typing import Union
 try:
     import urllib3

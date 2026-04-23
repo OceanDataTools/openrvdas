@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import sys
 
 from logger.transforms.transform import Transform  # noqa: E402
 

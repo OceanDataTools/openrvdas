@@ -2,11 +2,8 @@
 """Test the InterpolationTransform class.
 """
 import logging
-import sys
 import unittest
-from os.path import dirname, realpath
 
-sys.path.append(dirname(dirname(dirname(dirname(realpath(__file__))))))
 from logger.transforms.interpolation_transform import InterpolationTransform  # noqa: E402
 from logger.utils.das_record import DASRecord  # noqa: E402
 

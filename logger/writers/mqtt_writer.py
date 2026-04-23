@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import logging
-import sys
 
 # Don't barf if they don't have paho mqtt installed. Only complain if
 # they actually try to use it, below. If it *is* installed, check which

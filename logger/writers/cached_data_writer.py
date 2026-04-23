@@ -4,7 +4,6 @@ import asyncio
 import json
 import logging
 import ssl
-import sys
 import threading
 
 from typing import Union

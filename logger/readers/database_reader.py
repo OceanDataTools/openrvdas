@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import logging
-import sys
 import time
 
 from logger.readers.reader import TimestampedReader  # noqa: E402

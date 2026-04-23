@@ -11,7 +11,6 @@ import datetime
 import json
 import logging
 import pprint
-import sys
 
 try:
     import parse

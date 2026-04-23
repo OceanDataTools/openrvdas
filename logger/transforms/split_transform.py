@@ -2,7 +2,6 @@
 """Split a single record at a delimiter string, into an array of records."""
 
 import logging
-import sys
 
 from logger.transforms.transform import Transform  # noqa: E402
 

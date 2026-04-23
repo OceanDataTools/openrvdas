@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
 
 import logging
-import sys
 import unittest
 import time
 
-sys.path.append('.')
 from logger.transforms.transform import Transform
 from logger.transforms.prefix_transform import PrefixTransform
 from logger.writers.writer import Writer

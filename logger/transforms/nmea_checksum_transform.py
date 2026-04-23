@@ -1,5 +1,4 @@
 import logging
-import sys
 # For efficient checksum code
 from functools import reduce
 from operator import xor

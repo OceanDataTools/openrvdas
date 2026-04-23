@@ -33,10 +33,6 @@ import atexit
 import logging
 import os
 import readline
-import sys
-
-
-# Add the openrvdas components onto sys.path
 from logger.utils.stderr_logging import DEFAULT_LOGGING_FORMAT   # noqa: E402
 from server.server_api_command_line import ServerAPICommandLine  # noqa: E402
 

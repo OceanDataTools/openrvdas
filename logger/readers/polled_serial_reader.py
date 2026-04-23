@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import logging
-import sys
 import time
 from itertools import cycle
 

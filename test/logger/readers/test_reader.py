@@ -1,13 +1,8 @@
 #!/usr/bin/env python3
 
-import sys
 import unittest
-import threading
-import queue
 import time
-from os.path import dirname, realpath
 
-sys.path.append(dirname(dirname(dirname(dirname(realpath(__file__))))))
 from logger.readers.reader import Reader
 from logger.writers.writer import Writer
 

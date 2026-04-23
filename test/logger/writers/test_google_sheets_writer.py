@@ -3,14 +3,15 @@
 import unittest
 import logging
 from unittest.mock import Mock, patch
-import sys
 
-# Add the parent directory to sys.path to import the GoogleSheetsWriter
-sys.path.append('.')
-from logger.writers.google_sheets_writer import GoogleSheetsWriter  # noqa: E402
+from logger.writers.google_sheets_writer import GoogleSheetsWriter, GOOGLE_SHEETS_ENABLED  # noqa: E402
 from logger.utils.das_record import DASRecord  # noqa: E402
 
 
+@unittest.skipUnless(GOOGLE_SHEETS_ENABLED,
+                     'Google API packages not installed; '
+                     'run: pip install google-api-python-client '
+                     'google-auth-httplib2 google-auth-oauthlib')
 class TestGoogleSheetsWriter(unittest.TestCase):
     """Test cases for GoogleSheetsWriter class."""
 

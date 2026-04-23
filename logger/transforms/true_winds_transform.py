@@ -24,7 +24,6 @@ readings?).
 """
 
 import logging
-import sys
 import time
 
 from pprint import pformat

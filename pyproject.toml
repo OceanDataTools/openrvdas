@@ -29,6 +29,27 @@ dependencies = [
   "websockets"
 ]
 
+[project.optional-dependencies]
+google = [
+  "google-api-python-client",
+  "google-auth-httplib2",
+  "google-auth-oauthlib"
+]
+mysql = [
+  "mysqlclient",
+  "mysql-connector"
+]
+redis = [
+  "redis"
+]
+mqtt = [
+  "paho-mqtt"
+]
+dev = [
+  "pytest",
+  "pdoc>=14.0.0"
+]
+
 [project.urls]
 Homepage = "https://openrvdas.org/"
 Repository = "https://github.com/OceanDataTools/openrvdas"
@@ -78,3 +99,6 @@ exclude = [
 
 [tool.setuptools.package-data]
 django_gui = ["static/**/*", "templates/**/*"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]

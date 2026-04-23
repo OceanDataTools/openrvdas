@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import logging
-import sys
 
 # Don't freak out if pyserial isn't installed - unless they actually
 # try to instantiate a SerialReader

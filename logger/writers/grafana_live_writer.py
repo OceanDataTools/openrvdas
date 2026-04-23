@@ -23,7 +23,6 @@ the following order of priority:
 """
 
 import logging
-import sys
 import json
 import time
 import threading

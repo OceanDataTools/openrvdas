@@ -7,7 +7,6 @@ providing the Transform interface for use in listener pipelines.
 
 import copy
 import logging
-import sys
 from typing import Union
 
 

@@ -3,7 +3,6 @@
 import getpass
 import smtplib
 import socket
-import sys
 import threading
 import time
 

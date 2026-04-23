@@ -29,7 +29,6 @@ digest_record() are called, but with the default of quiet=False.
 """
 import inspect
 import logging
-import sys
 import threading
 import queue
 from typing import get_args

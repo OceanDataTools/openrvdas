@@ -6,7 +6,6 @@ import datetime
 import logging
 import re
 import pprint
-import sys
 import time
 
 

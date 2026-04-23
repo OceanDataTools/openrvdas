@@ -2,7 +2,6 @@
 
 import logging
 import socket
-import sys
 
 from typing import Union
 

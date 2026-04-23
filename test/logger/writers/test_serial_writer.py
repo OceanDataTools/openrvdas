@@ -3,7 +3,6 @@
 import fcntl
 import logging
 import os
-import sys
 import tty
 import tempfile
 import time
@@ -11,7 +10,6 @@ import threading
 import unittest
 import warnings
 
-sys.path.append('.')
 from logger.readers.serial_reader import SerialReader  # noqa: E402
 from logger.writers.serial_writer import SerialWriter  # noqa: E402
 

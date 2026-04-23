@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import sys
 
 from logger.utils.das_record import DASRecord  # noqa: E402
 from logger.utils import nmea_parser  # noqa: E402

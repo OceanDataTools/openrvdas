@@ -23,7 +23,6 @@ as the start of a shell variable and may muck up your match.
 """
 import parse
 import pprint
-import sys
 
 # Append openrvdas root to syspath prior to importing openrvdas modules
 

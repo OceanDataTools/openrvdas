@@ -4,7 +4,6 @@ from django_gui.settings import FILECHOOSER_DIRS
 from django_gui.settings import WEBSOCKET_DATA_SERVER
 import json
 import logging
-import sys
 
 from json import JSONDecodeError
 from os import listdir
@@ -16,7 +15,7 @@ from django.http import HttpResponse
 
 
 # Read in JSON with comments
-from logger.utils.read_config import parse, read_config, expand_cruise_definition  # noqa: E402
+from logger.utils.read_config import read_config, expand_cruise_definition  # noqa: E402
 
 
 ############################

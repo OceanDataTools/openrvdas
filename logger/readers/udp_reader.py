@@ -2,7 +2,6 @@
 
 import logging
 import socket
-import sys
 
 from logger.readers.reader import Reader  # noqa: E402
 
