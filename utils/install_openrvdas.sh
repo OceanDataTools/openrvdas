@@ -1419,6 +1419,16 @@ fi
 read -p "OpenRVDAS install root? ($DEFAULT_INSTALL_ROOT) " INSTALL_ROOT
 INSTALL_ROOT=${INSTALL_ROOT:-$DEFAULT_INSTALL_ROOT}
 echo "Install root will be '$INSTALL_ROOT'"
+
+# Update SSL defaults to reflect the actual install root. Only recompute if
+# the value still matches the auto-generated pattern; custom paths are left alone.
+if [[ "$DEFAULT_SSL_CRT_LOCATION" == */openrvdas/openrvdas.crt ]]; then
+    DEFAULT_SSL_CRT_LOCATION=${INSTALL_ROOT}/openrvdas/openrvdas.crt
+fi
+if [[ "$DEFAULT_SSL_KEY_LOCATION" == */openrvdas/openrvdas.key ]]; then
+    DEFAULT_SSL_KEY_LOCATION=${INSTALL_ROOT}/openrvdas/openrvdas.key
+fi
+
 if [[ "$INSTALL_ROOT" == /home/* ]]; then
     echo
     echo "WARNING: Installing under a home directory can cause nginx to fail"
