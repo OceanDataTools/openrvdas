@@ -2,10 +2,7 @@
 """Split a single record at a delimiter string, into an array of records."""
 
 import logging
-import sys
 
-from os.path import dirname, realpath
-sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.transforms.transform import Transform  # noqa: E402
 
 

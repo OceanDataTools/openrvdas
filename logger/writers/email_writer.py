@@ -3,14 +3,11 @@
 import getpass
 import smtplib
 import socket
-import sys
 import threading
 import time
 
 from email.message import EmailMessage
 
-from os.path import dirname, realpath
-sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
 from logger.writers.writer import Writer  # noqa: E402
 

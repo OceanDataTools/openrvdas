@@ -71,7 +71,6 @@ import logging
 import os
 import os.path
 import re
-import sys
 import threading
 import time
 
@@ -91,7 +90,6 @@ except ModuleNotFoundError:
     raise ModuleNotFoundError('CachedDataServer requires websockets module.\n'
                               'Please run "pip3 install websockets".')
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from logger.utils.stderr_logging import StdErrLoggingHandler, DEFAULT_LOGGING_FORMAT  # noqa: E402
 from logger.utils.das_record import DASRecord                 # noqa: E402
 

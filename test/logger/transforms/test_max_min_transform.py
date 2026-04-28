@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 
 import logging
-import sys
 import unittest
 
-sys.path.append('.')
 from logger.transforms.max_min_transform import MaxMinTransform  # noqa: E402
 from logger.utils.das_record import DASRecord  # noqa: E402
 

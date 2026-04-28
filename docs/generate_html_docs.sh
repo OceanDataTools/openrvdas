@@ -20,6 +20,10 @@ TEMPLATE_DIR="$SCRIPT_DIR/pdoc_templates"
 
 cd "$REPO_ROOT"
 
+# Ensure bare imports (e.g. from logger.xxx import yyy) resolve when running
+# under an installed-package context where only openrvdas.* names are registered.
+export PYTHONPATH="${PYTHONPATH:+${PYTHONPATH}:}${REPO_ROOT}"
+
 # Activate venv if present and pdoc not already on PATH
 if ! command -v pdoc &>/dev/null; then
     if [[ -f "$REPO_ROOT/venv/bin/activate" ]]; then

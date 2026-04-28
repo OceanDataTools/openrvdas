@@ -4,7 +4,6 @@
 import asyncio
 import logging
 import ssl
-import sys
 import threading
 import time
 import inspect
@@ -12,9 +11,7 @@ import inspect
 from typing import Union
 from urllib.parse import urlparse
 
-from os.path import dirname, realpath
 
-sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.writers.writer import Writer  # noqa E402
 
 try:

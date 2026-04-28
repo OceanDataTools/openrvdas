@@ -25,14 +25,11 @@ used elsewhere.
 import logging
 import importlib
 import inspect
-import sys
 
 # For efficient checksum code
 from functools import reduce
 from operator import xor
 
-from os.path import dirname, realpath
-sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.transforms.transform import Transform  # noqa: E402
 
 

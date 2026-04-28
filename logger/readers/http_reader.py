@@ -74,7 +74,6 @@ safe for use in multi-threaded environments.
 """
 
 import threading
-import sys
 import time
 import logging
 import json
@@ -82,8 +81,6 @@ import json
 from urllib.request import Request, urlopen
 from urllib.error import HTTPError, URLError
 
-from os.path import dirname, realpath
-sys.path.append(dirname(dirname(dirname(dirname(realpath(__file__))))))
 from logger.readers.reader import Reader  # noqa: E402
 
 

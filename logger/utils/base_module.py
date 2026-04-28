@@ -29,13 +29,10 @@ digest_record() are called, but with the default of quiet=False.
 """
 import inspect
 import logging
-import sys
 import threading
 import queue
 from typing import get_args
 
-from os.path import dirname, realpath
-sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.utils.das_record import DASRecord  # noqa E402
 
 

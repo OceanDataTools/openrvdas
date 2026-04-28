@@ -11,7 +11,6 @@ import datetime
 import json
 import logging
 import pprint
-import sys
 
 try:
     import parse
@@ -20,8 +19,6 @@ except ImportError:
     PARSE_INSTALLED = False
 
 # Append openrvdas root to syspath prior to importing openrvdas modules
-from os.path import dirname, realpath
-sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.utils.das_record import DASRecord  # noqa: E402
 from logger.utils.read_config import load_definitions  # noqa: E402
 from logger.utils.das_record import collect_metadata_for_fields  # noqa: E402

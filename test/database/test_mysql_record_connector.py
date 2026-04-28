@@ -4,11 +4,8 @@
 
 import logging
 import random
-import sys
 import unittest
 
-from os.path import dirname, realpath
-sys.path.append(dirname(dirname(realpath(__file__))))
 from logger.utils.record_parser import RecordParser  # noqa: E402
 
 try:

@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import os
-import sys
 import socket
 import tempfile
 import atexit
@@ -8,8 +7,6 @@ import threading
 from typing import Optional, Dict
 
 # Add parent directory to path
-from os.path import dirname, realpath
-sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.readers.reader import Reader  # noqa: E402
 
 # Global reference counter for channels

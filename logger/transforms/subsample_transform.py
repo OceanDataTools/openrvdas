@@ -3,11 +3,8 @@
 """
 
 import logging
-import sys
 import time
 
-from os.path import dirname, realpath
-sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.utils.das_record import DASRecord  # noqa: E402
 from logger.utils.subsample import subsample  # noqa: E402
 from logger.transforms.derived_data_transform import DerivedDataTransform  # noqa: E402
