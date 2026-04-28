@@ -64,6 +64,45 @@ says to
        - submit new data to the cache (an alternative way to get data
          in without the same record size limits of a UDP packet).
 ```
+
+HTTP GET interface (requires websockets >= 12):
+
+In addition to the WebSocket API, the server accepts plain HTTP GET
+requests on the same port. This allows shell scripts and other simple
+tools to retrieve the latest cached values without implementing a
+WebSocket handshake:
+
+```
+   GET /fields
+       Returns a JSON object listing all field names currently in cache:
+       {"fields": ["field_1", "field_2", ...]}
+
+       Example:
+         curl http://localhost:8766/fields
+
+   GET /latest/<field_1>[,<field_2>,...]
+       Returns the most recent cached timestamp and value for each
+       requested field as a JSON object:
+       {"field_1": {"timestamp": 1555468528.452, "value": 21.3},
+        "field_2": {"timestamp": 1555468530.001, "value": "A"},
+        "field_3": null}   <- null when the field is not in cache
+
+       Example (single field):
+         curl http://localhost:8766/latest/S330Lat
+
+       Example (multiple fields):
+         curl http://localhost:8766/latest/S330Lat,S330Lon,MwxAirTemp
+```
+
+All other plain HTTP requests receive 400 Bad Request. WebSocket
+connections are unaffected. On systems with websockets < 12 the HTTP
+routes are unavailable and behaviour is unchanged.
+
+CAUTION: HTTP GET requests run inside the same asyncio event loop as
+all WebSocket connections. Occasional queries (e.g. populating an elog
+entry on demand) are fine. High-frequency polling will delay WebSocket
+data delivery to connected clients; use the WebSocket subscription API
+for any use case requiring frequent or continuous updates.
 """
 import asyncio
 import json
@@ -833,6 +872,9 @@ class CachedDataServer:
     DASRecord or a simple dict. It also establishes a websocket server
     on the specified port and serves the cached values to clients that
     connect via a websocket.
+
+    WebSocket API:
+
     The server listens for two types of requests:
     1. If the request is the string "variables", return a list of the
        names of the variables the server has in cache and is able to
@@ -861,6 +903,28 @@ class CachedDataServer:
     (timestamp, value) tuples that have come in since the previous
     request. It will continue this behavior indefinitely, waiting for a
     "ready" request and sending updates.
+
+    HTTP GET API (requires websockets >= 12):
+
+    Plain HTTP GET requests are also accepted on the same port, allowing
+    simple tools to retrieve the latest cached value for one or more
+    fields without a WebSocket handshake:
+
+      GET /fields
+          Returns {"fields": ["field_1", "field_2", ...]}
+
+      GET /latest/<field_1>[,<field_2>,...]
+          Returns {"field_1": {"timestamp": T, "value": V}, ...}
+          Fields not present in the cache are returned as null.
+
+    CAUTION: HTTP GET requests are handled inside the same asyncio event
+    loop that drives all WebSocket connections. Each request briefly
+    acquires the cache's threading lock, blocking the loop for the
+    duration of the lookup. For occasional one-off queries (e.g. populating
+    an elog entry) this is negligible. High-frequency polling from scripts
+    or automated tools will delay WebSocket data delivery to all connected
+    clients. Use the WebSocket subscription API for any use case that
+    requires frequent or continuous updates.
     """
 
     ############################
