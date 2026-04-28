@@ -512,6 +512,11 @@ class WebSocketConnection:
         # regardless of how many there are, or whether we've sent it before.
         field_timestamps = {}
 
+        # Output format requested by the client; set by a subscribe message.
+        # Default matches the subscribe handler's own default so a 'ready'
+        # received before any 'subscribe' degrades gracefully.
+        requested_format = 'field_dict'
+
         interval = self.interval  # Use the default interval, uh, by default
 
         while not self.quit_flag:
