@@ -1,0 +1,104 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "openrvdas"
+version = "0.1.0"
+description = "Open Research Vessel Data Acquisition System"
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+authors = [
+  { name = "OpenRVDAS Contributors" }
+]
+dependencies = [
+  "PyYAML",
+  "django",
+  "djangorestframework",
+  "drf-spectacular[sidecar]",
+  "geopandas",
+  "influxdb_client",
+  "parse",
+  "psutil",
+  "pyModbusTCP",
+  "pyserial",
+  "setproctitle",
+  "shapely",
+  "uwsgi",
+  "websockets"
+]
+
+[project.optional-dependencies]
+google = [
+  "google-api-python-client",
+  "google-auth-httplib2",
+  "google-auth-oauthlib"
+]
+mysql = [
+  "mysqlclient",
+  "mysql-connector"
+]
+redis = [
+  "redis"
+]
+mqtt = [
+  "paho-mqtt"
+]
+dev = [
+  "pytest",
+  "pdoc>=14.0.0"
+]
+
+[project.urls]
+Homepage = "https://openrvdas.org/"
+Repository = "https://github.com/OceanDataTools/openrvdas"
+
+[project.scripts]
+listen = "openrvdas_cli:listen"
+simple_listener = "openrvdas_cli:simple_listener"
+logger_manager = "openrvdas_cli:logger_manager"
+logger_runner = "openrvdas_cli:logger_runner"
+logger_supervisor = "openrvdas_cli:logger_supervisor"
+lmcmd = "openrvdas_cli:lmcmd"
+cached_data_server = "openrvdas_cli:cached_data_server"
+websocket_server = "openrvdas_cli:websocket_server"
+server_api_command_line = "openrvdas_cli:server_api_command_line"
+read_config = "openrvdas_cli:read_config"
+validate_config = "openrvdas_cli:validate_config"
+simulate_data = "openrvdas_cli:simulate_data"
+simulate_network = "openrvdas_cli:simulate_network"
+simulate_serial = "openrvdas_cli:simulate_serial"
+check_parse_format = "openrvdas_cli:check_parse_format"
+cruise_config_generator = "openrvdas_cli:cruise_config_generator"
+git_info = "openrvdas_cli:git_info"
+openrvdas_manage = "openrvdas_cli:openrvdas_manage"
+
+[tool.setuptools]
+py-modules = ["openrvdas_cli", "manage"]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = [
+  "database*",
+  "django_gui*",
+  "logger*",
+  "server*",
+  "utils*"
+]
+exclude = [
+  "test*",
+  "docs*",
+  "display*",
+  "local*",
+  "contrib*",
+  "raspberrypi*",
+  "scripts*"
+]
+
+[tool.setuptools.package-data]
+django_gui = ["static/**/*", "templates/**/*"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]

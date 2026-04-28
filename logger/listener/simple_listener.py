@@ -2,11 +2,8 @@
 
 import argparse
 import logging
-import sys
 import time
 
-from os.path import dirname, realpath
-sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.readers.text_file_reader import TextFileReader  # noqa: E402
 from logger.transforms.prefix_transform import PrefixTransform  # noqa: E402
 from logger.transforms.timestamp_transform import TimestampTransform  # noqa: E402

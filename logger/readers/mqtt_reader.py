@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import logging
-import sys
 from queue import Queue
 
 # Don't barf if they don't have redis installed. Only complain if
@@ -20,8 +19,6 @@ try:
 except ModuleNotFoundError:
     PAHO_ENABLED = False
 
-from os.path import dirname, realpath
-sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.readers.reader import Reader  # noqa: E402
 
 

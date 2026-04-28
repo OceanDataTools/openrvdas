@@ -41,7 +41,6 @@ import multiprocessing
 import os
 import pprint
 import signal
-import sys
 import time
 
 from importlib import reload
@@ -49,8 +48,6 @@ from logging.handlers import RotatingFileHandler
 from setproctitle import setproctitle
 
 # Add the openrvdas/ directory to module search path
-from os.path import dirname, realpath
-sys.path.append(dirname(dirname(realpath(__file__))))
 from logger.utils.read_config import read_config  # noqa: E402
 from logger.utils.stderr_logging import DEFAULT_LOGGING_FORMAT  # noqa: E402
 from logger.listener.listen import ListenerFromLoggerConfig  # noqa: E402

@@ -6,10 +6,7 @@
 import glob
 import logging
 import re
-import sys
 
-from os.path import dirname, realpath
-sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.utils import read_config  # noqa: E402
 from logger.utils.das_record import DASRecord  # noqa: E402
 from logger.utils.timestamp import timestamp, TIME_FORMAT  # noqa: E402

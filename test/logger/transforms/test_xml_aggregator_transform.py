@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 
 import logging
-import sys
 import unittest
 
-sys.path.append('.')
 from logger.transforms.xml_aggregator_transform import XMLAggregatorTransform  # noqa: E402
 
 ################################################################################

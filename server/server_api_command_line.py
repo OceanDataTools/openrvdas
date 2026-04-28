@@ -21,10 +21,7 @@ import pprint
 import readline
 import signal
 import socket  # to get hostname
-import sys
 
-from os.path import dirname, realpath
-sys.path.append(dirname(dirname(realpath(__file__))))
 from logger.utils.read_config import read_config, expand_cruise_definition  # noqa: E402
 from server.server_api import ServerAPI  # noqa: E402
 

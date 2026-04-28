@@ -16,11 +16,8 @@ for wind_mast_stbd (see test/sikuliaq/skq_ports.txt for a table of the
 instrument to port mappings active during cruise SKQ201822.
 """
 import logging
-import sys
 import threading
 
-from os.path import dirname, realpath
-sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.readers.logfile_reader import LogfileReader  # noqa: E402
 from logger.transforms.slice_transform import SliceTransform  # noqa: E402
 from logger.transforms.timestamp_transform import TimestampTransform  # noqa: E402

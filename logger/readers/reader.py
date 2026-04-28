@@ -3,10 +3,7 @@
 Abstract base class for data Readers.
 """
 
-import sys
-from os.path import dirname, realpath
 
-sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.utils.base_module import BaseModule   # noqa: E402
 
 

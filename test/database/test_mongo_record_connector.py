@@ -4,10 +4,8 @@
 
 import logging
 import random
-import sys
 import unittest
 
-sys.path.append('.')
 from logger.utils.nmea_parser import NMEAParser  # noqa: E402
 
 try:

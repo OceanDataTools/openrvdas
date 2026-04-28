@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
 
 import logging
-import sys
 import tempfile
 import unittest
 
 from os.path import exists
 
-sys.path.append('.')
 from logger.utils.das_record import DASRecord  # noqa: E402
 from logger.writers.logfile_writer import LogfileWriter  # noqa: E402
 

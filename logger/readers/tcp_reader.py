@@ -3,10 +3,7 @@
 import logging
 import mmap
 import socket
-import sys
 
-from os.path import dirname, realpath
-sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.readers.reader import Reader  # noqa: E402
 
 # the size of each recv() call in read_to_eol()

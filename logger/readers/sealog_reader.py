@@ -7,11 +7,8 @@ import ssl
 import json
 import threading
 import time
-import sys
-from os.path import dirname, realpath
 import websockets
 
-sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.utils.das_record import DASRecord  # noqa: E402
 from logger.utils.timestamp import timestamp  # noqa: E402
 

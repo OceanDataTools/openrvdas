@@ -12,8 +12,6 @@ import pprint
 import sys
 import time
 
-from os.path import dirname, realpath
-sys.path.append(dirname(dirname(realpath(__file__))))
 
 from server.server_api import ServerAPI  # noqa: E402
 

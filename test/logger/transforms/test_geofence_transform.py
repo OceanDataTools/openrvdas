@@ -4,12 +4,10 @@
 
 import logging
 import os
-import sys
 import tempfile
 import time
 import unittest
 
-sys.path.append('.')
 from logger.utils.das_record import DASRecord  # noqa: E402
 from logger.transforms.geofence_transform import GeofenceTransform  # noqa: E402
 

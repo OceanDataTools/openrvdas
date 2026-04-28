@@ -23,7 +23,7 @@ import argparse
 import glob
 import os
 import sys
-from typing import Dict, List, Any, Optional, Tuple
+from typing import Dict, List, Any, Tuple
 
 try:
     import yaml

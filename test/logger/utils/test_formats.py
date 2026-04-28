@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 
-import sys
 import unittest
 
-sys.path.append('.')
 from logger.utils import formats  # noqa: E402
 
 
