@@ -1031,9 +1031,17 @@ vacuum          = true
 EOF
 
     # Make vassal directory and copy symlink in
-    [ -e $ETC_HOME/uwsgi/vassals ] || mkdir -p $ETC_HOME/uwsgi/vassals
+    [ -e $ETC_HOME/uwsgi/vassals ] || sudo mkdir -p $ETC_HOME/uwsgi/vassals
     sudo ln -sf ${INSTALL_ROOT}/openrvdas/django_gui/openrvdas_uwsgi.ini \
           $ETC_HOME/uwsgi/vassals/
+
+    # If installing under a home directory, nginx (running as www-data) cannot
+    # traverse the path to the uwsgi socket unless the home dir has o+x.
+    if [[ "$INSTALL_ROOT" == /home/* ]]; then
+        HOME_DIR=$(echo "$INSTALL_ROOT" | cut -d'/' -f1-3)
+        echo "Adding world-execute permission to $HOME_DIR so nginx can reach the uwsgi socket."
+        sudo chmod o+x "$HOME_DIR"
+    fi
 }
 
 ###########################################################################
@@ -1411,6 +1419,26 @@ fi
 read -p "OpenRVDAS install root? ($DEFAULT_INSTALL_ROOT) " INSTALL_ROOT
 INSTALL_ROOT=${INSTALL_ROOT:-$DEFAULT_INSTALL_ROOT}
 echo "Install root will be '$INSTALL_ROOT'"
+
+# Update SSL defaults to reflect the actual install root. Only recompute if
+# the value still matches the auto-generated pattern; custom paths are left alone.
+if [[ "$DEFAULT_SSL_CRT_LOCATION" == */openrvdas/openrvdas.crt ]]; then
+    DEFAULT_SSL_CRT_LOCATION=${INSTALL_ROOT}/openrvdas/openrvdas.crt
+fi
+if [[ "$DEFAULT_SSL_KEY_LOCATION" == */openrvdas/openrvdas.key ]]; then
+    DEFAULT_SSL_KEY_LOCATION=${INSTALL_ROOT}/openrvdas/openrvdas.key
+fi
+
+if [[ "$INSTALL_ROOT" == /home/* ]]; then
+    echo
+    echo "WARNING: Installing under a home directory can cause nginx to fail"
+    echo "with 'Permission denied' when connecting to the uwsgi socket."
+    echo "Home directories typically have permissions that block nginx (which"
+    echo "runs as www-data) from traversing the path to the socket file."
+    echo "The recommended install location is /opt."
+    echo "If you continue, the installer will add world-execute permission to"
+    echo "the home directory to allow nginx to traverse it."
+fi
 echo
 read -p "Repository to install from? ($DEFAULT_OPENRVDAS_REPO) " OPENRVDAS_REPO
 OPENRVDAS_REPO=${OPENRVDAS_REPO:-$DEFAULT_OPENRVDAS_REPO}
