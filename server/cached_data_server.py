@@ -965,33 +965,81 @@ class CachedDataServer:
             try:
                 extra_kwargs = {}
                 if _WEBSOCKETS_HAS_HTTP11:
-                    # Intercept plain HTTP requests (e.g. nginx health checks or
-                    # mis-routed probes) before the library raises InvalidUpgrade
-                    # at ERROR level. Log at DEBUG and return 200 instead.
+                    # Handle plain HTTP GET requests on the WebSocket port.
+                    # Supports two routes for simple data retrieval without a
+                    # full WebSocket handshake (see issue #367):
+                    #
+                    #   GET /fields
+                    #       Returns JSON list of all cached field names.
+                    #       Example: {"fields": ["Temp", "Pressure", ...]}
+                    #
+                    #   GET /latest/<field1>[,<field2>,...]
+                    #       Returns the most recent timestamp+value for each
+                    #       requested field.
+                    #       Example: {"Temp": {"timestamp": 1234567890.0,
+                    #                          "value": 21.3},
+                    #                 "Pressure": null}   <- null if not cached
+                    #
+                    # All other non-WebSocket requests receive a 400 response.
+                    # Proxy warnings are preserved from the original handler.
                     async def _handle_non_ws_request(connection, request):
                         upgrade = request.headers.get('Upgrade', '')
-                        if upgrade.lower() != 'websocket':
-                            via = request.headers.get('Via', '')
-                            if via:
-                                logging.warning(
-                                    'WebSocket upgrade on port %d was blocked by an HTTP '
-                                    'proxy (Via: %s) which stripped the Upgrade header. '
-                                    'WebSocket connections cannot be established through '
-                                    'this proxy. Fix: enable SSL/WSS, configure the proxy '
-                                    'to pass WebSocket upgrades, or bypass the proxy for '
-                                    'this host.',
-                                    self.port, via)
-                            else:
-                                logging.debug(
-                                    'Plain HTTP request on WebSocket port %d '
-                                    '(Upgrade header missing or wrong value: %r). '
-                                    'Check nginx proxy_set_header Upgrade config.',
-                                    self.port, upgrade or '<none>')
+                        if upgrade.lower() == 'websocket':
+                            return None  # let normal WebSocket upgrade proceed
+
+                        via = request.headers.get('Via', '')
+                        if via:
+                            logging.warning(
+                                'WebSocket upgrade on port %d was blocked by an HTTP '
+                                'proxy (Via: %s) which stripped the Upgrade header. '
+                                'WebSocket connections cannot be established through '
+                                'this proxy. Fix: enable SSL/WSS, configure the proxy '
+                                'to pass WebSocket upgrades, or bypass the proxy for '
+                                'this host.',
+                                self.port, via)
+
+                        path = request.path
+
+                        if path == '/fields':
+                            body = json.dumps(
+                                {'fields': sorted(self.cache.keys())}
+                            ).encode()
                             return _WsResponse(
                                 200, 'OK',
-                                _WsHeaders([('Content-Type', 'text/plain')]),
-                                b'WebSocket server\n')
-                        return None
+                                _WsHeaders([('Content-Type', 'application/json')]),
+                                body)
+
+                        if path.startswith('/latest/'):
+                            field_names = path[len('/latest/'):].split(',')
+                            result = {}
+                            with self.cache.data_lock:
+                                for field in field_names:
+                                    entries = self.cache.data.get(field)
+                                    if entries:
+                                        timestamp, value = entries[-1]
+                                        result[field] = {
+                                            'timestamp': timestamp,
+                                            'value': value,
+                                        }
+                                    else:
+                                        result[field] = None
+                            body = json.dumps(result).encode()
+                            return _WsResponse(
+                                200, 'OK',
+                                _WsHeaders([('Content-Type', 'application/json')]),
+                                body)
+
+                        logging.debug(
+                            'Plain HTTP request on WebSocket port %d '
+                            '(path %r is not a recognised CDS HTTP route). '
+                            'Check nginx proxy_set_header Upgrade config.',
+                            self.port, path)
+                        return _WsResponse(
+                            400, 'Bad Request',
+                            _WsHeaders([('Content-Type', 'text/plain')]),
+                            b'Expected a WebSocket upgrade or a recognised CDS '
+                            b'HTTP route (/fields, /latest/<field,...>)\n')
+
                     extra_kwargs['process_request'] = _handle_non_ws_request
 
                 self.websocket_server = await websockets.serve(
