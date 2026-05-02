@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-''
+'''
 ModBusSerialReader
 ==================
 
@@ -41,7 +41,6 @@ Dependencies
 """
 
 import logging
-import sys
 import yaml
 import time
 from threading import Lock
@@ -53,8 +52,6 @@ try:
 except ModuleNotFoundError:
     MODBUS_MODULE_FOUND = False
 
-from os.path import dirname, realpath
-sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.readers.reader import Reader  # noqa
 
 

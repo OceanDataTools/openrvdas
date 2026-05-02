@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import logging
-import sys
 
 from typing import Union
 
@@ -13,8 +12,6 @@ try:
 except ModuleNotFoundError:
     SERIAL_MODULE_FOUND = False
 
-from os.path import dirname, realpath
-sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.writers.writer import Writer  # noqa: E402
 
 
@@ -26,7 +23,7 @@ class SerialWriter(Writer):
     def __init__(self,  port, baudrate=9600, bytesize=8, parity='N',
                  stopbits=1, timeout=None, xonxoff=False, rtscts=False,
                  write_timeout=None, dsrdtr=False, inter_byte_timeout=None,
-                 exclusive=None, eol='\n', *kwargs):
+                 exclusive=None, eol='\n', **kwargs):
         """
         By default, the SerialWriter write records to the specified serial port encoded by UTF-8
         and will ignore non unicode characters it encounters. These defaults may be changed by
@@ -61,10 +58,6 @@ class SerialWriter(Writer):
                                         exclusive=exclusive)
         except serial.SerialException as e:
             raise serial.SerialException(f'Failed to open serial port {port}: {e}')
-
-        self.encoding = encoding
-        self.encoding_errors = encoding_errors
-        self.quiet = quiet
 
         # 'eol' comes in as a (probably escaped) string. We need to
         # unescape it, which means converting to bytes and back.

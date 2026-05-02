@@ -4,12 +4,10 @@
 
 import logging
 import pprint
-import sys
 import time
 import unittest
 import warnings
 
-sys.path.append('.')
 from logger.utils.nmea_parser import NMEAParser  # noqa: E402
 
 GYR1_RECORDS = """gyr1 2017-11-10T01:00:06.739Z $HEHDT,143.7,T*2E

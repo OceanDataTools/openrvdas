@@ -1,9 +1,6 @@
 import unittest
 from unittest import mock
-import sys
-from os.path import dirname, realpath
 
-sys.path.append(dirname(dirname(dirname(dirname(realpath(__file__))))))
 
 from logger.transforms.regex_parse_transform import RegexParseTransform  # noqa: E402
 from logger.utils.das_record import DASRecord  # noqa: E402

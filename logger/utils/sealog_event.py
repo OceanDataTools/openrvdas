@@ -1,12 +1,9 @@
 #!/usr/bin/env python3
 
-import sys
 import json
 import pprint
 from typing import Union, Optional
 
-from os.path import dirname, realpath
-sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.utils.timestamp import time_str  # noqa:E402
 from logger.utils.das_record import DASRecord  # noqa: E402
 

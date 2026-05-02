@@ -23,7 +23,6 @@ the following order of priority:
 """
 
 import logging
-import sys
 import json
 import time
 import threading
@@ -33,9 +32,7 @@ import urllib.error
 import os
 from typing import Union
 from urllib.parse import quote
-from os.path import dirname, realpath
 
-sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.utils.das_record import DASRecord  # noqa: E402
 from logger.writers.writer import Writer  # noqa: E402
 

@@ -3,17 +3,39 @@
 # OpenRVDAS is available as open source under the MIT License at
 #   https:/github.com/oceandatatools/openrvdas
 #
-# This script installs and configures OpenRVDAS to run.  It
-# is designed to be run as root. It should take a (relatively) clean
-# Linux/MacOS installation and install and configure all the components
-# to run the full OpenRVDAS system.
+# This script installs and configures OpenRVDAS to run.  It should
+# take a (relatively) clean Linux/MacOS installation and install and
+# configure all the components to run the full OpenRVDAS system. It
+# may be run as any user with sudo privileges; it will invoke sudo
+# internally for operations that require elevated permissions.
 #
-# It should be re-run whenever the code has been refresh. Preferably
-# by first running 'git pull' to get the latest copy of the script,
-# and then running 'utils/build_openrvdas_centos7.sh' to run that
-# script.
+# INVOCATION
 #
-# The script has been designed to be idempotent, that is, if can be
+# Option 1 - run directly from a local clone:
+#
+#   git clone https://github.com/oceandatatools/openrvdas
+#   cd openrvdas
+#   bash utils/install_openrvdas.sh
+#
+# Option 2 - download and run without cloning first. Must use 'bash',
+# not 'sh', as the script uses bash-specific syntax. Note: piping
+# directly to bash (curl ... | bash) does NOT work because bash reads
+# ahead from stdin, making interactive prompts unreliable. Download
+# the script first, then run it:
+#
+#   curl -fsSL https://raw.githubusercontent.com/oceandatatools/openrvdas/dev/utils/install_openrvdas.sh -o /tmp/install_openrvdas.sh
+#   bash /tmp/install_openrvdas.sh
+#
+# If it detects that it is running inside an existing clone it will
+# offer to use that clone's location as the install root instead of
+# the default (/opt).
+#
+# It should be re-run after 'git pull' to pick up new dependencies,
+# updated config templates, or service definition changes. Ordinary
+# code edits (Python files, YAML configs) do not require re-running
+# the script — just restart the relevant supervisor processes.
+#
+# The script has been designed to be idempotent, that is, it can be
 # run over again with no ill effects.
 #
 # If you have selected "yes" to running OpenRVDAS as a service then,
@@ -39,7 +61,7 @@
 PREFERENCES_FILE='.install_openrvdas_preferences'
 
 # Define this here, even though it's just for MacOS, so that it's defined
-# when it's referenced down in install_packages, and doesn't have to
+# when it's referenced down in install_prereqs, and doesn't have to
 # be defined twice.
 
 ###########################################################################
@@ -48,10 +70,17 @@ function exit_gracefully {
     echo Exiting.
 
     # Try deactivating virtual environment, if it's active
-    if [ -n "$INSTALL_ROOT" ];then
-        deactivate
+    if [ -n "$VIRTUAL_ENV" ]; then
+        # Check if the deactivate function or command is available
+        if command -v deactivate >/dev/null 2>&1; then
+            echo "Deactivating current virtual environment: $VIRTUAL_ENV"
+            deactivate
+        fi
     fi
-    return -1 2> /dev/null || exit -1  # exit correctly if sourced/bashed
+    # 'return' only exits the immediate function, so callers nested inside
+    # other functions would silently continue. Use 'exit' unconditionally so
+    # errors always stop the script regardless of call depth.
+    exit 1
 }
 
 #########################################################################
@@ -248,7 +277,11 @@ function set_default_variables {
     DEFAULT_SSL_CRT_LOCATION=${DEFAULT_INSTALL_ROOT}/openrvdas/openrvdas.crt
     DEFAULT_SSL_KEY_LOCATION=${DEFAULT_INSTALL_ROOT}/openrvdas/openrvdas.key
 
-    DEFAULT_RVDAS_USER=rvdas
+    if [ "${OS_TYPE:-}" == 'MacOS' ]; then
+        DEFAULT_RVDAS_USER=${SUDO_USER:-$USER}
+    else
+        DEFAULT_RVDAS_USER=rvdas
+    fi
 
     DEFAULT_INSTALL_FIREWALLD=no
     DEFAULT_OPENRVDAS_AUTOSTART=yes
@@ -262,10 +295,9 @@ function set_default_variables {
     DEFAULT_SUPERVISORD_WEBINTERFACE_AUTH=no
     DEFAULT_SUPERVISORD_WEBINTERFACE_PORT=9001
 
-    DEFAULT_INSTALL_DOC_MARKDOWN=no
-
     # Read in the preferences file, if it exists, to overwrite the defaults.
     if [ -e $PREFERENCES_FILE ]; then
+        echo
         echo "#####################################################################"
         echo Reading pre-saved defaults from "$PREFERENCES_FILE"
         source $PREFERENCES_FILE
@@ -309,8 +341,6 @@ DEFAULT_RUN_SIMULATE_NBP=$RUN_SIMULATE_NBP
 DEFAULT_SUPERVISORD_WEBINTERFACE=$SUPERVISORD_WEBINTERFACE
 DEFAULT_SUPERVISORD_WEBINTERFACE_AUTH=$SUPERVISORD_WEBINTERFACE_AUTH
 DEFAULT_SUPERVISORD_WEBINTERFACE_PORT=$SUPERVISORD_WEBINTERFACE_PORT
-
-DEFAULT_INSTALL_DOC_MARKDOWN=$INSTALL_DOC_MARKDOWN
 EOF
 }
 
@@ -332,12 +362,12 @@ function set_hostname {
     # If we're on CentOS/RHEL
     elif [ $OS_TYPE == 'CentOS' ]; then
         sudo hostnamectl set-hostname $HOSTNAME
-        sudo echo "HOSTNAME=$HOSTNAME" > /etc/sysconfig/network  || echo "Unable to update /etc/sysconfig/network"
+        echo "HOSTNAME=$HOSTNAME" | sudo tee /etc/sysconfig/network > /dev/null || echo "Unable to update /etc/sysconfig/network"
 
     # Ubuntu/Debian
     elif [ $OS_TYPE == 'Ubuntu' ]; then
         sudo hostnamectl set-hostname $HOSTNAME
-        sudo echo $HOSTNAME > /etc/hostname || echo "Unable to update /etc/hostname"
+        echo $HOSTNAME | sudo tee /etc/hostname > /dev/null || echo "Unable to update /etc/hostname"
     fi
 
     ETC_HOSTS_LINE="127.0.1.1	$HOSTNAME"
@@ -345,7 +375,7 @@ function set_hostname {
         echo Hostname already in /etc/hosts
     else
         echo Skipping adding to /etc/hosts
-        sudo echo "$ETC_HOSTS_LINE" >> /etc/hosts || echo "Unable to update /etc/hosts"
+        echo "$ETC_HOSTS_LINE" | sudo tee -a /etc/hosts > /dev/null || echo "Unable to update /etc/hosts"
     fi
 }
 
@@ -362,7 +392,7 @@ function create_user {
         # MacOS
         if [ $OS_TYPE == 'MacOS' ]; then
           echo No such pre-existing user: $RVDAS.
-          echo On MacOS, must install for pre-existing user. Exiting.
+          echo On MacOS, must install for pre-existing user.
           exit_gracefully
 
         # CentOS/RHEL
@@ -392,28 +422,80 @@ function create_user {
     fi
 }
 
+# Function to check if Command Line Tools are installed
+function is_xcode_installed {
+    # Check if a valid developer directory is found using xcode-select -p
+    if xcode-select -p &>/dev/null; then
+        # Check if the directory actually exists and is executable
+        if [ -d "$(xcode-select -p)" ] && [ -x "$(xcode-select -p)" ]; then
+            return 0 # Installed
+        fi
+    fi
+    return 1 # Not installed
+}
+
 ###########################################################################
 ###########################################################################
 # Install and configure required packages
-function install_packages {
+function install_prereqs {
 
     # MacOS
     if [ $OS_TYPE == 'MacOS' ]; then
-        # Install Homebrew - note: reinstalling is idempotent
-        echo 'Installing XCode Tools'
-        xcode-select --install || echo "XCode Tools already installed"
-        pushd /tmp
-        HOMEBREW_VERSION=4.5.13
-        HOMEBREW_TARGET=Homebrew-${HOMEBREW_VERSION}.pkg
-        HOMEBREW_PATH=https://github.com/Homebrew/brew/releases/download/${HOMEBREW_VERSION}/${HOMEBREW_TARGET}
+        # Loop until the Xcode tools are installed
+        if is_xcode_installed; then
+            echo "Xcode Command Line Tools already installed"
+        fi
+        while ! is_xcode_installed; do
+            echo "Installing the Xcode Command Line Tools..."
+            # Request installation (this brings up a GUI prompt)
+            xcode-select --install
 
-        curl -O -L ${HOMEBREW_PATH}
+            echo " "
+            read -p "After the Xcode installation completes, please press ENTER to continue..."
+            echo " "
+        done
 
-        # The -target / specifies that the package should be installed on the root volume.
-        sudo installer -pkg ${HOMEBREW_TARGET} -target /
-        popd
+        # Determine Homebrew prefix from architecture. Abort on unknown
+        # architectures rather than guessing a prefix that may be wrong.
+        ARCHITECTURE=$(uname -m)
+        if [ "$ARCHITECTURE" = "arm64" ]; then
+            HOMEBREW_PREFIX='/opt/homebrew'
+        elif [ "$ARCHITECTURE" = "x86_64" ]; then
+            HOMEBREW_PREFIX='/usr/local'
+        else
+            echo "ERROR: Unsupported architecture '$ARCHITECTURE'. Cannot determine Homebrew prefix."
+            exit_gracefully
+        fi
 
-        brew install python git nginx supervisor
+        # Install Homebrew using the official installer, downloaded first
+        # to avoid the curl|bash stdin problem. NONINTERACTIVE=1 suppresses
+        # all prompts.
+        if [ -f "${HOMEBREW_PREFIX}/bin/brew" ]; then
+            echo "Homebrew already installed"
+        else
+            echo "Installing Homebrew..."
+            HOMEBREW_INSTALL=/tmp/install_homebrew.sh
+            curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh \
+                -o "$HOMEBREW_INSTALL"
+            NONINTERACTIVE=1 bash "$HOMEBREW_INSTALL"
+            rm -f "$HOMEBREW_INSTALL"
+        fi
+
+        # Ensure brew is in PATH for this shell session and future terminals.
+        if ! command -v brew &> /dev/null; then
+            eval "$(${HOMEBREW_PREFIX}/bin/brew shellenv)"
+            HOMEBREW_SHELLENV="eval \"\$(${HOMEBREW_PREFIX}/bin/brew shellenv)\""
+            ZPROFILE_PATH=~/.zprofile
+            if [ ! -f "$ZPROFILE_PATH" ] || ! grep -qF "$HOMEBREW_SHELLENV" "$ZPROFILE_PATH"; then
+                echo "$HOMEBREW_SHELLENV" >> "$ZPROFILE_PATH"
+            fi
+            echo "Note: run 'source ~/.zprofile' after this script to use brew in future terminals."
+        fi
+        brew --version
+
+        # HOMEBREW_NO_AUTO_UPDATE prevents mid-install updates that cause
+        # bottle checksum mismatches.
+        env HOMEBREW_NO_AUTO_UPDATE=1 brew install python@3.12 git nginx supervisor
 
         #brew upgrade openssh nginx supervisor || echo Upgraded packages
         #brew link --overwrite python || echo Linking Python
@@ -508,8 +590,14 @@ function install_packages {
 
     # Ubuntu/Debian
     elif [ $OS_TYPE == 'Ubuntu' ]; then
+        # Repair any interrupted dpkg state before running apt, otherwise apt
+        # will refuse to proceed with an error.
+        sudo DEBIAN_FRONTEND=noninteractive dpkg --configure -a
         sudo apt-get update
-        sudo apt install -y git nginx libreadline-dev \
+        # DEBIAN_FRONTEND=noninteractive suppresses interactive configuration
+        # dialogs (e.g. openssh-server) that cannot be answered when stdin is
+        # a pipe (curl | bash) or a non-interactive session.
+        sudo DEBIAN_FRONTEND=noninteractive apt install -y git nginx libreadline-dev \
             python3-dev python3-pip python3-venv libsqlite3-dev \
             openssh-server supervisor libssl-dev
     fi
@@ -543,14 +631,25 @@ function install_openrvdas {
 
     if [ -e openrvdas/.git ] ; then   # If we've already got an installation
       cd openrvdas
-      git pull
-      git checkout $OPENRVDAS_BRANCH
+      # Ensure origin points to the requested repo (may differ on re-installs)
+      echo "Fetching branch '$OPENRVDAS_BRANCH' from $OPENRVDAS_REPO"
+      git remote set-url origin "$OPENRVDAS_REPO"
+      git fetch origin "$OPENRVDAS_BRANCH"
+      # Try local branch first; if not found, try tracking the remote branch
+      if ! git checkout "$OPENRVDAS_BRANCH" 2>/dev/null && \
+         ! git checkout -b "$OPENRVDAS_BRANCH" "origin/$OPENRVDAS_BRANCH" 2>/dev/null ; then
+        echo "ERROR: Branch '$OPENRVDAS_BRANCH' not found in $OPENRVDAS_REPO"
+        exit_gracefully
+      fi
       git pull
     else                              # If we don't already have an installation
       sudo rm -rf openrvdas           # in case there's a non-git dir there
       sudo mkdir openrvdas
       sudo chown ${RVDAS_USER} openrvdas
-      git clone -b $OPENRVDAS_BRANCH $OPENRVDAS_REPO
+      if ! git clone -b "$OPENRVDAS_BRANCH" "$OPENRVDAS_REPO" ; then
+        echo "ERROR: Failed to clone branch '$OPENRVDAS_BRANCH' from $OPENRVDAS_REPO"
+        exit_gracefully
+      fi
       cd openrvdas
     fi
 
@@ -602,7 +701,28 @@ function setup_python_packages {
 
     echo "Creating virtual environment"
     cd $INSTALL_ROOT/openrvdas
-    python3 -m venv $VENV_PATH
+    # On macOS we install python@3.12 explicitly (uWSGI doesn't support 3.14+).
+    # python@3.12 is keg-only in Homebrew so it is not in PATH; use the opt path.
+    if [ "${OS_TYPE:-}" == 'MacOS' ]; then
+        PYTHON_BIN="${HOMEBREW_PREFIX}/opt/python@3.12/bin/python3.12"
+        if [ ! -x "$PYTHON_BIN" ]; then
+            echo "ERROR: python@3.12 not found at $PYTHON_BIN. Please run: brew install python@3.12"
+            exit_gracefully
+        fi
+    else
+        PYTHON_BIN=python3
+    fi
+
+    # If an existing venv was built with a different Python, recreate it.
+    if [ -d "$VENV_PATH" ]; then
+        VENV_PYTHON="$VENV_PATH/bin/python3"
+        if [ -x "$VENV_PYTHON" ] && ! "$VENV_PYTHON" -c "import sys; assert sys.executable.startswith('$(dirname $PYTHON_BIN)')" 2>/dev/null; then
+            echo "Existing venv uses a different Python; recreating..."
+            rm -rf "$VENV_PATH"
+        fi
+    fi
+
+    $PYTHON_BIN -m venv "$VENV_PATH"
     source $VENV_PATH/bin/activate  # activate virtual environment
 
     echo "Installing Python packages - please enter sudo password if prompted."
@@ -614,7 +734,23 @@ function setup_python_packages {
     venv/bin/python venv/bin/pip3 install \
       --trusted-host pypi.org --trusted-host files.pythonhosted.org \
       wheel
+
+    # On macOS ARM, uWSGI's build system can pick up a stale x86_64 OpenSSL
+    # from /usr/local. Point it at Homebrew's arm64 OpenSSL explicitly.
+    if [ "${OS_TYPE:-}" == 'MacOS' ]; then
+        OPENSSL_PREFIX="${HOMEBREW_PREFIX}/opt/openssl@3"
+        export LDFLAGS="-L${OPENSSL_PREFIX}/lib ${LDFLAGS:-}"
+        export CPPFLAGS="-I${OPENSSL_PREFIX}/include ${CPPFLAGS:-}"
+        export PKG_CONFIG_PATH="${OPENSSL_PREFIX}/lib/pkgconfig:${PKG_CONFIG_PATH:-}"
+    fi
+
     venv/bin/python venv/bin/pip3 install -r utils/requirements.txt
+
+    # Register the package so that direct script invocation works without
+    # sys.path hacks (requires pyproject.toml, present from v2.x onwards).
+    if [ -f pyproject.toml ]; then
+        venv/bin/python venv/bin/pip3 install -e .
+    fi
 }
 
 ###########################################################################
@@ -625,8 +761,8 @@ function setup_nginx {
     # CentOS/RHEL or Debian/Ubuntu
     if [ $OS_TYPE == 'CentOS' ] || [ $OS_TYPE == 'Ubuntu' ]; then
         # Disable because we're going to run it via supervisor
-        systemctl stop nginx
-        systemctl disable nginx # NGINX seems to be enabled by default?
+        sudo systemctl stop nginx
+        sudo systemctl disable nginx # NGINX seems to be enabled by default?
     fi
 
     if [ "$USE_SSL" == "yes" ]; then
@@ -636,12 +772,6 @@ function setup_nginx {
         SERVER_PROTOCOL='default_server'
         SSL_COMMENT='#'   # do comment out SSL stuff
 
-    fi
-
-    if [ $INSTALL_DOC_MARKDOWN == 'yes' ];then
-        MARKDOWN_COMMENT='' # We uncomment the Strapdown-related lines in conf
-    else
-        MARKDOWN_COMMENT='#'
     fi
 
     # Now create the nginx conf file in place and link it up
@@ -667,6 +797,13 @@ http {
     #tcp_nopush     on;
     keepalive_timeout  65;
 
+    # Map WebSocket upgrade requests so keep-alive connections are not broken
+    # when a client does not send an Upgrade header.
+    map \$http_upgrade \$connection_upgrade {
+        default upgrade;
+        ''      close;
+    }
+
     # the upstream component nginx needs to connect to
     upstream django {
         server unix://${INSTALL_ROOT}/openrvdas/django_gui/openrvdas.sock; # for a file socket
@@ -682,8 +819,12 @@ http {
         # Section will be commented out if we're not using SSL
         ${SSL_COMMENT}ssl_certificate     $SSL_CRT_LOCATION;
         ${SSL_COMMENT}ssl_certificate_key $SSL_KEY_LOCATION;
-        ${SSL_COMMENT}ssl_protocols       TLSv1 TLSv1.1 TLSv1.2;
-        ${SSL_COMMENT}ssl_ciphers         HIGH:!aNULL:!MD5;
+        ${SSL_COMMENT}ssl_protocols       TLSv1.2 TLSv1.3;
+        ${SSL_COMMENT}ssl_ciphers         ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA256;
+        ${SSL_COMMENT}ssl_prefer_server_ciphers on;
+        ${SSL_COMMENT}ssl_session_cache   shared:SSL:10m;
+        ${SSL_COMMENT}ssl_session_timeout 1d;
+        ${SSL_COMMENT}add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
 
         # max upload size
         client_max_body_size 75M;   # adjust to taste
@@ -714,15 +855,6 @@ http {
             alias ${INSTALL_ROOT}/openrvdas/docs; # project doc files
             autoindex on;
         }
-        # Added by KPed so Markdown renders in the browser
-        # See https://gist.github.com/shukebeta/b7435d02892cb2ad2b9c8d56572adb2b
-        ${MARKDOWN_COMMENT}location ~ /.*\.md {
-        ${MARKDOWN_COMMENT}    root /opt/openrvdas;
-        ${MARKDOWN_COMMENT}    default_type text/html;
-        ${MARKDOWN_COMMENT}    charset UTF-8;
-        ${MARKDOWN_COMMENT}    add_before_body /static/StrapDown.js/prepend;
-        ${MARKDOWN_COMMENT}    add_after_body /static/StrapDown.js/postpend;
-        ${MARKDOWN_COMMENT}}
 
         # Internally, Cached Data Server operates on port 8766; we proxy
         # it externally, serve cached data server at $SERVER_PORT/cds-ws
@@ -730,7 +862,7 @@ http {
             proxy_pass http://localhost:8766;
             proxy_http_version 1.1;
             proxy_set_header Upgrade \$http_upgrade;
-            proxy_set_header Connection "Upgrade";
+            proxy_set_header Connection \$connection_upgrade;
             proxy_set_header Host \$host;
         }
 
@@ -740,6 +872,16 @@ http {
             include     ${INSTALL_ROOT}/openrvdas/django_gui/uwsgi_params;
         }
     }
+
+$(if [ "$USE_SSL" == "yes" ]; then cat <<REDIRECT
+    # Redirect HTTP to HTTPS when SSL is enabled
+    server {
+        listen      *:${NONSSL_SERVER_PORT} default_server;
+        server_name _;
+        return 301 https://\$host\$request_uri;
+    }
+REDIRECT
+fi)
 }
 EOF
 
@@ -751,11 +893,54 @@ EOF
 function setup_ssl_certificate {
     echo "Certificate will be placed in ${SSL_CRT_LOCATION}"
     echo "Key will be placed in ${SSL_KEY_LOCATION}"
-    echo "Please answer the following prompts to continue:"
     echo
-    openssl req \
-       -newkey rsa:2048 -nodes -keyout ${SSL_KEY_LOCATION} \
-       -x509 -days 365 -out ${SSL_CRT_LOCATION}
+
+    # Build SAN list: always include hostname, localhost and loopback
+    local SAN_LIST="DNS:${HOSTNAME},DNS:localhost,IP:127.0.0.1"
+    local SERVER_IP
+    SERVER_IP=$(hostname -I 2>/dev/null | awk '{print $1}')
+    if [ -n "$SERVER_IP" ] && [ "$SERVER_IP" != "127.0.0.1" ]; then
+        SAN_LIST="${SAN_LIST},IP:${SERVER_IP}"
+    fi
+
+    # Use -addext if supported (OpenSSL >= 1.1.1), otherwise fall back to a
+    # temporary config file. Both produce a cert with Subject Alternative
+    # Names, which modern browsers require.
+    if openssl req -help 2>&1 | grep -q '\-addext'; then
+        openssl req \
+            -newkey rsa:4096 -nodes -keyout "${SSL_KEY_LOCATION}" \
+            -x509 -days 3650 -out "${SSL_CRT_LOCATION}" \
+            -subj "/CN=${HOSTNAME}/O=OpenRVDAS" \
+            -addext "subjectAltName=${SAN_LIST}"
+    else
+        local OPENSSL_CNF
+        OPENSSL_CNF=$(mktemp)
+        cat > "$OPENSSL_CNF" <<SSLCNF
+[req]
+distinguished_name = req_distinguished_name
+x509_extensions    = v3_req
+prompt             = no
+
+[req_distinguished_name]
+CN = ${HOSTNAME}
+O  = OpenRVDAS
+
+[v3_req]
+subjectAltName = ${SAN_LIST}
+SSLCNF
+        openssl req \
+            -newkey rsa:4096 -nodes -keyout "${SSL_KEY_LOCATION}" \
+            -x509 -days 3650 -out "${SSL_CRT_LOCATION}" \
+            -config "$OPENSSL_CNF"
+        rm -f "$OPENSSL_CNF"
+    fi
+
+    chmod 600 "${SSL_KEY_LOCATION}"
+
+    echo
+    echo "Self-signed certificate created (valid 10 years, SAN: ${SAN_LIST})."
+    echo "Browsers will show a security warning for self-signed certificates."
+    echo "See docs/secure_websockets.md for guidance on trusting the certificate."
 }
 
 ###########################################################################
@@ -811,7 +996,7 @@ function setup_uwsgi {
 
     # MacOS
     if [ $OS_TYPE == 'MacOS' ]; then
-        ETC_HOME=/opt/homebrew/etc
+        ETC_HOME=${HOMEBREW_PREFIX}/etc
 
     # CentOS/RHEL and Ubuntu/Debian
     elif [ $OS_TYPE == 'CentOS' ] || [ $OS_TYPE == 'Ubuntu' ]; then
@@ -846,9 +1031,17 @@ vacuum          = true
 EOF
 
     # Make vassal directory and copy symlink in
-    [ -e $ETC_HOME/uwsgi/vassals ] || mkdir -p $ETC_HOME/uwsgi/vassals
+    [ -e $ETC_HOME/uwsgi/vassals ] || sudo mkdir -p $ETC_HOME/uwsgi/vassals
     sudo ln -sf ${INSTALL_ROOT}/openrvdas/django_gui/openrvdas_uwsgi.ini \
           $ETC_HOME/uwsgi/vassals/
+
+    # If installing under a home directory, nginx (running as www-data) cannot
+    # traverse the path to the uwsgi socket unless the home dir has o+x.
+    if [[ "$INSTALL_ROOT" == /home/* ]]; then
+        HOME_DIR=$(echo "$INSTALL_ROOT" | cut -d'/' -f1-3)
+        echo "Adding world-execute permission to $HOME_DIR so nginx can reach the uwsgi socket."
+        sudo chmod o+x "$HOME_DIR"
+    fi
 }
 
 ###########################################################################
@@ -895,12 +1088,12 @@ function setup_supervisor {
 
     # MacOS
     if [ $OS_TYPE == 'MacOS' ]; then
-        ETC_HOME=/opt/homebrew/etc
+        ETC_HOME=${HOMEBREW_PREFIX}/etc
         HTTP_HOST=127.0.0.1
-        NGINX_BIN=/opt/homebrew/bin/nginx
-        SUPERVISOR_DIR=/opt/homebrew/etc/supervisor.d
+        NGINX_BIN=${HOMEBREW_PREFIX}/bin/nginx
+        SUPERVISOR_DIR=${HOMEBREW_PREFIX}/etc/supervisor.d
         SUPERVISOR_SUFFIX='ini'
-        SUPERVISOR_SOCK=/opt/homebrew/var/run/supervisor.sock
+        SUPERVISOR_SOCK=${HOMEBREW_PREFIX}/var/run/supervisor.sock
         COMMENT_SOCK_OWNER=';'
         mkdir -p ${SUPERVISOR_DIR}
 
@@ -951,7 +1144,7 @@ EOF
         cat >> $TEMP_FILE <<EOF
 
 [inet_http_server]
-port=127.0.0.1:${SUPERVISORD_WEBINTERFACE_PORT}
+port=*:${SUPERVISORD_WEBINTERFACE_PORT}
 EOF
         if [ $SUPERVISORD_WEBINTERFACE_AUTH == 'yes' ]; then
             SUPERVISORD_WEBINTERFACE_HASH=`echo -n ${SUPERVISORD_WEBINTERFACE_PASS} | sha1sum | awk '{printf("{SHA}%s",$1)}'`
@@ -1082,8 +1275,8 @@ function setup_firewall {
     semanage permissive -a httpd_t
 
     # Set up the firewall and open some holes in it
-    systemctl start firewalld
-    systemctl enable firewalld
+    sudo systemctl start firewalld
+    sudo systemctl enable firewalld
 
     firewall-cmd -q --set-default-zone=public
     firewall-cmd -q --permanent --add-port=${SERVER_PORT}/tcp > /dev/null
@@ -1136,25 +1329,6 @@ function setup_firewall {
 }
 
 
-###########################################################################
-###########################################################################
-# Download and install js script to render .md documents
-function setup_markdown {
-   # Get the Strapdown.js package that will render .md files
-    STRAPDOWN_PATH=${INSTALL_ROOT}/openrvdas/static
-    git clone https://github.com/Naereen/StrapDown.js.git $STRAPDOWN_PATH/Strapdown.js
-    cat > ${STRAPDOWN_PATH}/Strapdown.js/prepend <<EOF
-<!DOCTYPE html>
-<html>
-<xmp theme='cyborg' style='display:none;'t>
-EOF
-    cat > ${STRAPDOWN_PATH}/Strapdown.js/postpend <<EOF
-<!DOCTYPE html>
-</xmp>
-<script src='/static/StrapDown.js/strapdown.js'></script>
-</html>
-EOF
-}
 
 ###########################################################################
 ###########################################################################
@@ -1163,20 +1337,54 @@ EOF
 # Start of actual script
 ###########################################################################
 ###########################################################################
-echo
-echo "OpenRVDAS configuration script"
-
-# Read from the preferences file in $PREFERENCES_FILE, if it exists
-set_default_variables
 
 # Set OS_TYPE to either MacOS, CentOS or Ubuntu
 get_os_type
+
+# On MacOS, Homebrew cannot run as root, so the script must not be
+# invoked as root or via sudo.
+if [ "$OS_TYPE" == 'MacOS' ] && [ "$EUID" -eq 0 ]; then
+    echo "ERROR: On MacOS this script must not be run as root or via sudo."
+    echo "Please run as a regular user: bash utils/install_openrvdas.sh"
+    exit 1
+fi
+
+# Verify sudo access and keep credentials alive throughout the install.
+# This allows the script to run as any user with sudo privileges rather
+# than requiring the entire script to be run as root.
+if [ "$EUID" -ne 0 ]; then
+    echo "This script requires sudo for some operations. Please enter your password if prompted."
+    if ! sudo -v; then
+        echo "ERROR: Could not obtain sudo privileges. Exiting."
+        exit 1
+    fi
+    # Refresh sudo credentials every 60 seconds in the background so
+    # long-running steps (e.g. package installs, pip) don't time out.
+    ( while true; do sudo -n true; sleep 60; kill -0 "$$" 2>/dev/null || exit; done ) &
+    SUDO_KEEPALIVE_PID=$!
+    trap 'kill "$SUDO_KEEPALIVE_PID" 2>/dev/null' EXIT
+fi
 
 # Set creation mask so that everything we install is, by default,
 # world readable/executable.
 umask 022
 
+#########################################################################
+#########################################################################
+# Install prerequisite packages
 echo "#####################################################################"
+echo "Installing prerequisite packages..."
+echo
+install_prereqs
+
+# Read from the preferences file in $PREFERENCES_FILE, if it exists
+set_default_variables
+
+echo
+echo "#####################################################################"
+echo "OpenRVDAS configuration script"
+echo
+
 # We don't set hostname on MacOS
 if [ $OS_TYPE != 'MacOS' ]; then
     read -p "Name to assign to host ($DEFAULT_HOSTNAME)? " HOSTNAME
@@ -1186,9 +1394,51 @@ if [ $OS_TYPE != 'MacOS' ]; then
     set_hostname $HOSTNAME
 fi
 
+# Check whether this script is being run from inside an existing openrvdas clone.
+SCRIPT_GIT_ROOT=$(git -C "$(dirname "$(realpath "$0")")" rev-parse --show-toplevel 2>/dev/null || true)
+if [ -n "$SCRIPT_GIT_ROOT" ] && [ "$(basename "$SCRIPT_GIT_ROOT")" = "openrvdas" ]; then
+    CLONE_PARENT=$(dirname "$SCRIPT_GIT_ROOT")
+    echo "This script appears to be running from an existing openrvdas clone at:"
+    echo "  $SCRIPT_GIT_ROOT"
+    echo
+    echo "You can either:"
+    echo "  1) Use this existing clone (install root: $CLONE_PARENT)"
+    echo "  2) Install to the standard location (install root: $DEFAULT_INSTALL_ROOT)"
+    echo
+    read -p "Use existing clone at $SCRIPT_GIT_ROOT? (yes/no) [yes] " USE_EXISTING_CLONE
+    USE_EXISTING_CLONE=${USE_EXISTING_CLONE:-yes}
+    if [ "$USE_EXISTING_CLONE" = "yes" ]; then
+        DEFAULT_INSTALL_ROOT=$CLONE_PARENT
+        echo "Using existing clone — install root set to '$DEFAULT_INSTALL_ROOT'"
+    else
+        echo "Proceeding with standard install root '$DEFAULT_INSTALL_ROOT'"
+    fi
+    echo
+fi
+
 read -p "OpenRVDAS install root? ($DEFAULT_INSTALL_ROOT) " INSTALL_ROOT
 INSTALL_ROOT=${INSTALL_ROOT:-$DEFAULT_INSTALL_ROOT}
 echo "Install root will be '$INSTALL_ROOT'"
+
+# Update SSL defaults to reflect the actual install root. Only recompute if
+# the value still matches the auto-generated pattern; custom paths are left alone.
+if [[ "$DEFAULT_SSL_CRT_LOCATION" == */openrvdas/openrvdas.crt ]]; then
+    DEFAULT_SSL_CRT_LOCATION=${INSTALL_ROOT}/openrvdas/openrvdas.crt
+fi
+if [[ "$DEFAULT_SSL_KEY_LOCATION" == */openrvdas/openrvdas.key ]]; then
+    DEFAULT_SSL_KEY_LOCATION=${INSTALL_ROOT}/openrvdas/openrvdas.key
+fi
+
+if [[ "$INSTALL_ROOT" == /home/* ]]; then
+    echo
+    echo "WARNING: Installing under a home directory can cause nginx to fail"
+    echo "with 'Permission denied' when connecting to the uwsgi socket."
+    echo "Home directories typically have permissions that block nginx (which"
+    echo "runs as www-data) from traversing the path to the socket file."
+    echo "The recommended install location is /opt."
+    echo "If you continue, the installer will add world-execute permission to"
+    echo "the home directory to allow nginx to traverse it."
+fi
 echo
 read -p "Repository to install from? ($DEFAULT_OPENRVDAS_REPO) " OPENRVDAS_REPO
 OPENRVDAS_REPO=${OPENRVDAS_REPO:-$DEFAULT_OPENRVDAS_REPO}
@@ -1394,24 +1644,11 @@ if [ $SUPERVISORD_WEBINTERFACE == 'yes' ]; then
     fi
 fi
 echo
-echo "#####################################################################"
-echo "This script can install Strapdown.js so that the .md files in"
-echo "the /docs directory are rendered properly."
-echo
-yes_no "Do you want to install Strapdown.js?" $DEFAULT_INSTALL_DOC_MARKDOWN
-INSTALL_DOC_MARKDOWN=$YES_NO_RESULT
 
 #########################################################################
 #########################################################################
 # Save defaults in a preferences file for the next time we run.
 save_default_variables
-
-#########################################################################
-#########################################################################
-# Install packages
-echo "#####################################################################"
-echo "Installing required packages from repository..."
-install_packages
 
 #########################################################################
 #########################################################################
@@ -1525,54 +1762,38 @@ if [ $INSTALL_FIREWALLD == 'yes' ]; then
     setup_firewall
 fi
 
-###########################################################################
-###########################################################################
-# Download and install js script to render .md documents
-if [ $INSTALL_DOC_MARKDOWN == 'yes' ]; then
-    setup_markdown
-fi
 
 echo
 echo "#########################################################################"
 echo "Restarting services: supervisor"
-    # If we're on MacOS
-    if [ $OS_TYPE == 'MacOS' ]; then
-        #sudo mkdir -p /usr/local/var/run/
-        #sudo chown $RVDAS_USER /usr/local/var/run
-        #sudo chgrp $RVDAS_GROUP /usr/local/var/run
+# If we're on MacOS
+if [ $OS_TYPE == 'MacOS' ]; then
+    brew services restart supervisor
 
-        echo "NOTE: on MacOS, supervisord will not be started automatically."
-        echo "To run it, try"
-        echo "brew services run supervisor"
-        #echo "    sudo /opt/openrvdas/venv/bin/supervisord \\"
-        #echo "       -c /usr/local/etc/supervisord.conf"
-        #echo
-        read -p "Hit return to continue. " DUMMY_VAR
-        
-    # Linux
-    elif [ $OS_TYPE == 'CentOS' ] || [ $OS_TYPE == 'Ubuntu' ]; then
-        sudo mkdir -p /var/run/supervisor/
-        sudo chgrp $RVDAS_GROUP /var/run/supervisor
+# Linux
+elif [ $OS_TYPE == 'CentOS' ] || [ $OS_TYPE == 'Ubuntu' ]; then
+    sudo mkdir -p /var/run/supervisor/
+    sudo chgrp $RVDAS_GROUP /var/run/supervisor
 
-        # CentOS/RHEL
-        if [ $OS_TYPE == 'CentOS' ]; then
-            sudo systemctl enable supervisord
-            sudo systemctl restart supervisord
-        else # Ubuntu/Debian
-            sudo systemctl enable supervisor
-            sudo systemctl restart supervisor
-        fi
-
-        if [[ "$INSTALL_GUI" == "yes" ]];then
-            # Previous installations used nginx and uwsgi as a service. We need to
-            # disable them if they're running.
-            echo Disabling legacy services
-            sudo systemctl stop nginx 2> /dev/null || echo "nginx not running"
-            sudo systemctl disable nginx 2> /dev/null || echo "nginx disabled"
-            sudo systemctl stop uwsgi 2> /dev/null || echo "uwsgi not running"
-            sudo systemctl disable uwsgi 2> /dev/null || echo "uwsgi disabled"
-        fi
+    # CentOS/RHEL
+    if [ $OS_TYPE == 'CentOS' ]; then
+        sudo systemctl enable supervisord
+        sudo systemctl restart supervisord
+    else # Ubuntu/Debian
+        sudo systemctl enable supervisor
+        sudo systemctl restart supervisor
     fi
+
+    if [[ "$INSTALL_GUI" == "yes" ]];then
+        # Previous installations used nginx and uwsgi as a service. We need to
+        # disable them if they're running.
+        echo Disabling legacy services
+        sudo systemctl stop nginx 2> /dev/null || echo "nginx not running"
+        sudo systemctl disable nginx 2> /dev/null || echo "nginx disabled"
+        sudo systemctl stop uwsgi 2> /dev/null || echo "uwsgi not running"
+        sudo systemctl disable uwsgi 2> /dev/null || echo "uwsgi disabled"
+    fi
+fi
 
 # Deactivate the virtual environment - we'll be calling all relevant
 # binaries using their venv paths, so don't need it.
@@ -1581,4 +1802,10 @@ deactivate
 echo
 echo "#########################################################################"
 echo "Installation complete - happy logging!"
+echo
+echo "OpenRVDAS has been installed to:"
+echo "  ${INSTALL_ROOT}/openrvdas"
+echo
+echo "To activate the virtual environment in a new terminal, run:"
+echo "  source ${INSTALL_ROOT}/openrvdas/venv/bin/activate"
 echo

@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 
 import logging
-import sys
 import unittest
 
-sys.path.append('.')
 from logger.transforms.value_filter_transform import ValueFilterTransform  # noqa: E402
 from logger.transforms.parse_transform import ParseTransform  # noqa: E402
 

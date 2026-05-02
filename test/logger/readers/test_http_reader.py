@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
 
-import sys
 import time
 import unittest
 from unittest.mock import patch, MagicMock
 from urllib.error import HTTPError
 
-sys.path.append('.')
 from logger.readers.http_reader import HTTPReader  # noqa: E402
 
 

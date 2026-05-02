@@ -9,10 +9,8 @@ Python implementation by David Pablo Cohn (david.cohn@gmail.com)
 """
 
 import logging
-import sys
 import unittest
 
-sys.path.append('.')
 from logger.utils.truewinds.truew import truew  # noqa: E402
 
 CRSE = [0.0, 0.0, 0.0, 0.0, 180.0, 90.0, 90.0, 225.0, 270.0, 0.0]

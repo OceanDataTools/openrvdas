@@ -1,0 +1,42 @@
+name: Update API Docs
+
+on:
+  push:
+    branches: [dev]
+    paths:
+      - 'logger/**/*.py'
+      - 'server/**/*.py'
+      - 'docs/generate_html_docs.sh'
+      - 'docs/pdoc_templates/**'
+      - 'docs/requirements-docs.txt'
+
+jobs:
+  build-docs:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r docs/requirements-docs.txt
+
+      - name: Generate docs
+        run: bash docs/generate_html_docs.sh
+
+      - name: Open PR with updated docs
+        uses: peter-evans/create-pull-request@v7
+        with:
+          commit-message: "docs: regenerate API docs [skip ci]"
+          branch: docs/auto-update
+          delete-branch: true
+          title: "docs: regenerate API docs"
+          body: "Automated API documentation update triggered by source changes."
+          base: dev
+          reviewers: davidpablocohn

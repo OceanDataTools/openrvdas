@@ -2,12 +2,10 @@
 
 import logging
 import io
-import sys
 import tempfile
 import unittest
 from unittest.mock import patch
 
-sys.path.append('.')
 from logger.writers.file_writer import FileWriter  # noqa: E402
 
 SAMPLE_DATA = ['f1 line 1',

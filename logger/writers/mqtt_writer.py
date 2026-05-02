@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import logging
-import sys
 
 # Don't barf if they don't have paho mqtt installed. Only complain if
 # they actually try to use it, below. If it *is* installed, check which
@@ -20,8 +19,6 @@ try:
 except ModuleNotFoundError:
     PAHO_ENABLED = False
 
-from os.path import dirname, realpath
-sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.writers.writer import Writer  # noqa: E402
 
 

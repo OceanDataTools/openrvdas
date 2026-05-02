@@ -8,11 +8,9 @@ Or: python -m pytest test/django_gui/test_api_views.py
 
 import django
 import os
-import sys
 import unittest
 from unittest import mock
 
-sys.path.append('.')
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'django_gui.settings')
 django.setup()
 

@@ -3,13 +3,11 @@
 ScreenWriter is doing what we think it should be doing. But it only
 causes a mess if run as part of the test suite."""
 import logging
-import sys
 import time
 import unittest
 
 from unittest.mock import patch
 import io
-sys.path.append('.')
 from logger.utils.record_parser import RecordParser  # noqa: E402
 from logger.writers.record_screen_writer import RecordScreenWriter  # noqa: E402
 

@@ -50,11 +50,8 @@ writers:
 ```
 """
 import logging
-import sys
 import time
 
-from os.path import dirname, realpath
-sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
 from logger.writers.writer import Writer  # noqa: E402
 from server.server_api_command_line import ServerAPICommandLine  # noqa: E402

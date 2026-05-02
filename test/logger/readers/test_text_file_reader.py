@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
 
 import logging
-import sys
 import tempfile
 import threading
 import time
 import unittest
 import warnings
 
-sys.path.append('.')
 from logger.readers.text_file_reader import TextFileReader  # noqa: E402
 
 SAMPLE_DATA = {

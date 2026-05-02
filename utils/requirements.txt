@@ -31,3 +31,8 @@ djangorestframework
 #includes the swagger ui css and javascript
 drf-spectacular[sidecar]
 
+# For testing
+pytest
+
+# For generating API documentation (see docs/generate_html_docs.sh)
+pdoc>=14.0.0
