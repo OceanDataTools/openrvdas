@@ -70,95 +70,92 @@ openrvdas<wbr>.<a href="./../../logger.html">logger</a><wbr>.<a href="./../trans
 
                         <div class="pdoc-code codehilite"><pre><span></span><span id="L-1"><a href="#L-1"><span class="linenos"> 1</span></a><span class="ch">#!/usr/bin/env python3</span>
 </span><span id="L-2"><a href="#L-2"><span class="linenos"> 2</span></a>
-</span><span id="L-3"><a href="#L-3"><span class="linenos"> 3</span></a><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
-</span><span id="L-4"><a href="#L-4"><span class="linenos"> 4</span></a>
-</span><span id="L-5"><a href="#L-5"><span class="linenos"> 5</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">os.path</span><span class="w"> </span><span class="kn">import</span> <span class="n">dirname</span><span class="p">,</span> <span class="n">realpath</span>
-</span><span id="L-6"><a href="#L-6"><span class="linenos"> 6</span></a><span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dirname</span><span class="p">(</span><span class="n">dirname</span><span class="p">(</span><span class="n">dirname</span><span class="p">(</span><span class="n">realpath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)))))</span>
-</span><span id="L-7"><a href="#L-7"><span class="linenos"> 7</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">logger.transforms.transform</span><span class="w"> </span><span class="kn">import</span> <span class="n">Transform</span>  <span class="c1"># noqa: E402</span>
-</span><span id="L-8"><a href="#L-8"><span class="linenos"> 8</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">logger.utils.das_record</span><span class="w"> </span><span class="kn">import</span> <span class="n">DASRecord</span>  <span class="c1"># noqa: E402</span>
-</span><span id="L-9"><a href="#L-9"><span class="linenos"> 9</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">logger.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">record_parser</span>  <span class="c1"># noqa: E402</span>
-</span><span id="L-10"><a href="#L-10"><span class="linenos">10</span></a>
-</span><span id="L-11"><a href="#L-11"><span class="linenos">11</span></a>
-</span><span id="L-12"><a href="#L-12"><span class="linenos">12</span></a><span class="c1">################################################################################</span>
-</span><span id="L-13"><a href="#L-13"><span class="linenos">13</span></a><span class="k">class</span><span class="w"> </span><span class="nc">ParseTransform</span><span class="p">(</span><span class="n">Transform</span><span class="p">):</span>
-</span><span id="L-14"><a href="#L-14"><span class="linenos">14</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse a &quot;&lt;data_id&gt; &lt;timestamp&gt; &lt;message&gt;&quot; record and return</span>
-</span><span id="L-15"><a href="#L-15"><span class="linenos">15</span></a><span class="sd">    corresponding dict of values (or JSON or DASRecord if specified).&quot;&quot;&quot;</span>
-</span><span id="L-16"><a href="#L-16"><span class="linenos">16</span></a>
-</span><span id="L-17"><a href="#L-17"><span class="linenos">17</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record_format</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">field_patterns</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span id="L-18"><a href="#L-18"><span class="linenos">18</span></a>                 <span class="n">definition_path</span><span class="o">=</span><span class="n">record_parser</span><span class="o">.</span><span class="n">DEFAULT_DEFINITION_PATH</span><span class="p">,</span>
-</span><span id="L-19"><a href="#L-19"><span class="linenos">19</span></a>                 <span class="n">return_json</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">return_das_record</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-</span><span id="L-20"><a href="#L-20"><span class="linenos">20</span></a>                 <span class="n">metadata_interval</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">strip_unprintable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">quiet</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-</span><span id="L-21"><a href="#L-21"><span class="linenos">21</span></a>                 <span class="n">prepend_data_id</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39;:&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-</span><span id="L-22"><a href="#L-22"><span class="linenos">22</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="L-23"><a href="#L-23"><span class="linenos">23</span></a><span class="sd">        ```</span>
-</span><span id="L-24"><a href="#L-24"><span class="linenos">24</span></a><span class="sd">        record_format</span>
-</span><span id="L-25"><a href="#L-25"><span class="linenos">25</span></a><span class="sd">                If not None, a custom record format to use for parsing records.</span>
-</span><span id="L-26"><a href="#L-26"><span class="linenos">26</span></a><span class="sd">                The default, defined in logger/utils/record_parser.py, is</span>
-</span><span id="L-27"><a href="#L-27"><span class="linenos">27</span></a><span class="sd">                &#39;{data_id:w} {timestamp:ti} {field_string}&#39;.</span>
-</span><span id="L-28"><a href="#L-28"><span class="linenos">28</span></a>
-</span><span id="L-29"><a href="#L-29"><span class="linenos">29</span></a><span class="sd">        field_patterns</span>
-</span><span id="L-30"><a href="#L-30"><span class="linenos">30</span></a><span class="sd">                If not None, a list of parse patterns to be tried instead</span>
-</span><span id="L-31"><a href="#L-31"><span class="linenos">31</span></a><span class="sd">                of looking for device definitions along the definition path.</span>
-</span><span id="L-32"><a href="#L-32"><span class="linenos">32</span></a>
-</span><span id="L-33"><a href="#L-33"><span class="linenos">33</span></a><span class="sd">        metadata</span>
-</span><span id="L-34"><a href="#L-34"><span class="linenos">34</span></a><span class="sd">                If field_patterns is not None, the metadata to send along with</span>
-</span><span id="L-35"><a href="#L-35"><span class="linenos">35</span></a><span class="sd">                data records.</span>
-</span><span id="L-36"><a href="#L-36"><span class="linenos">36</span></a>
-</span><span id="L-37"><a href="#L-37"><span class="linenos">37</span></a><span class="sd">        definition_path</span>
-</span><span id="L-38"><a href="#L-38"><span class="linenos">38</span></a><span class="sd">                Wildcarded path matching YAML definitions for devices. Used</span>
-</span><span id="L-39"><a href="#L-39"><span class="linenos">39</span></a><span class="sd">                only if &#39;field_patterns&#39; is None</span>
-</span><span id="L-40"><a href="#L-40"><span class="linenos">40</span></a>
-</span><span id="L-41"><a href="#L-41"><span class="linenos">41</span></a><span class="sd">        return_json</span>
-</span><span id="L-42"><a href="#L-42"><span class="linenos">42</span></a><span class="sd">                Return a JSON-encoded representation of the dict</span>
-</span><span id="L-43"><a href="#L-43"><span class="linenos">43</span></a><span class="sd">                instead of a dict itself.</span>
+</span><span id="L-3"><a href="#L-3"><span class="linenos"> 3</span></a>
+</span><span id="L-4"><a href="#L-4"><span class="linenos"> 4</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">logger.transforms.transform</span><span class="w"> </span><span class="kn">import</span> <span class="n">Transform</span>  <span class="c1"># noqa: E402</span>
+</span><span id="L-5"><a href="#L-5"><span class="linenos"> 5</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">logger.utils.das_record</span><span class="w"> </span><span class="kn">import</span> <span class="n">DASRecord</span>  <span class="c1"># noqa: E402</span>
+</span><span id="L-6"><a href="#L-6"><span class="linenos"> 6</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">logger.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">record_parser</span>  <span class="c1"># noqa: E402</span>
+</span><span id="L-7"><a href="#L-7"><span class="linenos"> 7</span></a>
+</span><span id="L-8"><a href="#L-8"><span class="linenos"> 8</span></a>
+</span><span id="L-9"><a href="#L-9"><span class="linenos"> 9</span></a><span class="c1">################################################################################</span>
+</span><span id="L-10"><a href="#L-10"><span class="linenos">10</span></a><span class="k">class</span><span class="w"> </span><span class="nc">ParseTransform</span><span class="p">(</span><span class="n">Transform</span><span class="p">):</span>
+</span><span id="L-11"><a href="#L-11"><span class="linenos">11</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse a &quot;&lt;data_id&gt; &lt;timestamp&gt; &lt;message&gt;&quot; record and return</span>
+</span><span id="L-12"><a href="#L-12"><span class="linenos">12</span></a><span class="sd">    corresponding dict of values (or JSON or DASRecord if specified).&quot;&quot;&quot;</span>
+</span><span id="L-13"><a href="#L-13"><span class="linenos">13</span></a>
+</span><span id="L-14"><a href="#L-14"><span class="linenos">14</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record_format</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">field_patterns</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span id="L-15"><a href="#L-15"><span class="linenos">15</span></a>                 <span class="n">definition_path</span><span class="o">=</span><span class="n">record_parser</span><span class="o">.</span><span class="n">DEFAULT_DEFINITION_PATH</span><span class="p">,</span>
+</span><span id="L-16"><a href="#L-16"><span class="linenos">16</span></a>                 <span class="n">return_json</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">return_das_record</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+</span><span id="L-17"><a href="#L-17"><span class="linenos">17</span></a>                 <span class="n">metadata_interval</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">strip_unprintable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">quiet</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+</span><span id="L-18"><a href="#L-18"><span class="linenos">18</span></a>                 <span class="n">prepend_data_id</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39;:&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</span><span id="L-19"><a href="#L-19"><span class="linenos">19</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="L-20"><a href="#L-20"><span class="linenos">20</span></a><span class="sd">        ```</span>
+</span><span id="L-21"><a href="#L-21"><span class="linenos">21</span></a><span class="sd">        record_format</span>
+</span><span id="L-22"><a href="#L-22"><span class="linenos">22</span></a><span class="sd">                If not None, a custom record format to use for parsing records.</span>
+</span><span id="L-23"><a href="#L-23"><span class="linenos">23</span></a><span class="sd">                The default, defined in logger/utils/record_parser.py, is</span>
+</span><span id="L-24"><a href="#L-24"><span class="linenos">24</span></a><span class="sd">                &#39;{data_id:w} {timestamp:ti} {field_string}&#39;.</span>
+</span><span id="L-25"><a href="#L-25"><span class="linenos">25</span></a>
+</span><span id="L-26"><a href="#L-26"><span class="linenos">26</span></a><span class="sd">        field_patterns</span>
+</span><span id="L-27"><a href="#L-27"><span class="linenos">27</span></a><span class="sd">                If not None, a list of parse patterns to be tried instead</span>
+</span><span id="L-28"><a href="#L-28"><span class="linenos">28</span></a><span class="sd">                of looking for device definitions along the definition path.</span>
+</span><span id="L-29"><a href="#L-29"><span class="linenos">29</span></a>
+</span><span id="L-30"><a href="#L-30"><span class="linenos">30</span></a><span class="sd">        metadata</span>
+</span><span id="L-31"><a href="#L-31"><span class="linenos">31</span></a><span class="sd">                If field_patterns is not None, the metadata to send along with</span>
+</span><span id="L-32"><a href="#L-32"><span class="linenos">32</span></a><span class="sd">                data records.</span>
+</span><span id="L-33"><a href="#L-33"><span class="linenos">33</span></a>
+</span><span id="L-34"><a href="#L-34"><span class="linenos">34</span></a><span class="sd">        definition_path</span>
+</span><span id="L-35"><a href="#L-35"><span class="linenos">35</span></a><span class="sd">                Wildcarded path matching YAML definitions for devices. Used</span>
+</span><span id="L-36"><a href="#L-36"><span class="linenos">36</span></a><span class="sd">                only if &#39;field_patterns&#39; is None</span>
+</span><span id="L-37"><a href="#L-37"><span class="linenos">37</span></a>
+</span><span id="L-38"><a href="#L-38"><span class="linenos">38</span></a><span class="sd">        return_json</span>
+</span><span id="L-39"><a href="#L-39"><span class="linenos">39</span></a><span class="sd">                Return a JSON-encoded representation of the dict</span>
+</span><span id="L-40"><a href="#L-40"><span class="linenos">40</span></a><span class="sd">                instead of a dict itself.</span>
+</span><span id="L-41"><a href="#L-41"><span class="linenos">41</span></a>
+</span><span id="L-42"><a href="#L-42"><span class="linenos">42</span></a><span class="sd">        return_das_record</span>
+</span><span id="L-43"><a href="#L-43"><span class="linenos">43</span></a><span class="sd">                Return a DASRecord object.</span>
 </span><span id="L-44"><a href="#L-44"><span class="linenos">44</span></a>
-</span><span id="L-45"><a href="#L-45"><span class="linenos">45</span></a><span class="sd">        return_das_record</span>
-</span><span id="L-46"><a href="#L-46"><span class="linenos">46</span></a><span class="sd">                Return a DASRecord object.</span>
-</span><span id="L-47"><a href="#L-47"><span class="linenos">47</span></a>
-</span><span id="L-48"><a href="#L-48"><span class="linenos">48</span></a><span class="sd">        metadata_interval</span>
-</span><span id="L-49"><a href="#L-49"><span class="linenos">49</span></a><span class="sd">                If not None, include the description, units and other metadata</span>
-</span><span id="L-50"><a href="#L-50"><span class="linenos">50</span></a><span class="sd">                pertaining to each field in the returned record if those data</span>
-</span><span id="L-51"><a href="#L-51"><span class="linenos">51</span></a><span class="sd">                haven&#39;t been returned in the last metadata_interval seconds.</span>
-</span><span id="L-52"><a href="#L-52"><span class="linenos">52</span></a>
-</span><span id="L-53"><a href="#L-53"><span class="linenos">53</span></a><span class="sd">        strip_unprintable</span>
-</span><span id="L-54"><a href="#L-54"><span class="linenos">54</span></a><span class="sd">                Strip out and ignore any leading or trailing non-printable binary</span>
-</span><span id="L-55"><a href="#L-55"><span class="linenos">55</span></a><span class="sd">                characters in the string to be parsed.</span>
-</span><span id="L-56"><a href="#L-56"><span class="linenos">56</span></a>
-</span><span id="L-57"><a href="#L-57"><span class="linenos">57</span></a><span class="sd">        quiet - if not False, don&#39;t complain when unable to parse a record.</span>
+</span><span id="L-45"><a href="#L-45"><span class="linenos">45</span></a><span class="sd">        metadata_interval</span>
+</span><span id="L-46"><a href="#L-46"><span class="linenos">46</span></a><span class="sd">                If not None, include the description, units and other metadata</span>
+</span><span id="L-47"><a href="#L-47"><span class="linenos">47</span></a><span class="sd">                pertaining to each field in the returned record if those data</span>
+</span><span id="L-48"><a href="#L-48"><span class="linenos">48</span></a><span class="sd">                haven&#39;t been returned in the last metadata_interval seconds.</span>
+</span><span id="L-49"><a href="#L-49"><span class="linenos">49</span></a>
+</span><span id="L-50"><a href="#L-50"><span class="linenos">50</span></a><span class="sd">        strip_unprintable</span>
+</span><span id="L-51"><a href="#L-51"><span class="linenos">51</span></a><span class="sd">                Strip out and ignore any leading or trailing non-printable binary</span>
+</span><span id="L-52"><a href="#L-52"><span class="linenos">52</span></a><span class="sd">                characters in the string to be parsed.</span>
+</span><span id="L-53"><a href="#L-53"><span class="linenos">53</span></a>
+</span><span id="L-54"><a href="#L-54"><span class="linenos">54</span></a><span class="sd">        quiet - if not False, don&#39;t complain when unable to parse a record.</span>
+</span><span id="L-55"><a href="#L-55"><span class="linenos">55</span></a>
+</span><span id="L-56"><a href="#L-56"><span class="linenos">56</span></a><span class="sd">        prepend_data_id</span>
+</span><span id="L-57"><a href="#L-57"><span class="linenos">57</span></a><span class="sd">                If true prepend the instrument data_id to field_names in the record.</span>
 </span><span id="L-58"><a href="#L-58"><span class="linenos">58</span></a>
-</span><span id="L-59"><a href="#L-59"><span class="linenos">59</span></a><span class="sd">        prepend_data_id</span>
-</span><span id="L-60"><a href="#L-60"><span class="linenos">60</span></a><span class="sd">                If true prepend the instrument data_id to field_names in the record.</span>
-</span><span id="L-61"><a href="#L-61"><span class="linenos">61</span></a>
-</span><span id="L-62"><a href="#L-62"><span class="linenos">62</span></a><span class="sd">        delimiter</span>
-</span><span id="L-63"><a href="#L-63"><span class="linenos">63</span></a><span class="sd">                The string to insert between data_id and field_name when prepend_data_id is true.</span>
-</span><span id="L-64"><a href="#L-64"><span class="linenos">64</span></a><span class="sd">                Defaults to &#39;:&#39;.</span>
-</span><span id="L-65"><a href="#L-65"><span class="linenos">65</span></a><span class="sd">                Not used if prepend_data_id is false.</span>
-</span><span id="L-66"><a href="#L-66"><span class="linenos">66</span></a>
-</span><span id="L-67"><a href="#L-67"><span class="linenos">67</span></a><span class="sd">        ```</span>
-</span><span id="L-68"><a href="#L-68"><span class="linenos">68</span></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="L-69"><a href="#L-69"><span class="linenos">69</span></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>  <span class="c1"># processes &#39;quiet&#39; and type hints</span>
-</span><span id="L-70"><a href="#L-70"><span class="linenos">70</span></a>
-</span><span id="L-71"><a href="#L-71"><span class="linenos">71</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">parser</span> <span class="o">=</span> <span class="n">record_parser</span><span class="o">.</span><span class="n">RecordParser</span><span class="p">(</span>
-</span><span id="L-72"><a href="#L-72"><span class="linenos">72</span></a>            <span class="n">record_format</span><span class="o">=</span><span class="n">record_format</span><span class="p">,</span>
-</span><span id="L-73"><a href="#L-73"><span class="linenos">73</span></a>            <span class="n">field_patterns</span><span class="o">=</span><span class="n">field_patterns</span><span class="p">,</span>
-</span><span id="L-74"><a href="#L-74"><span class="linenos">74</span></a>            <span class="n">metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">,</span>
-</span><span id="L-75"><a href="#L-75"><span class="linenos">75</span></a>            <span class="n">definition_path</span><span class="o">=</span><span class="n">definition_path</span><span class="p">,</span>
-</span><span id="L-76"><a href="#L-76"><span class="linenos">76</span></a>            <span class="n">return_json</span><span class="o">=</span><span class="n">return_json</span><span class="p">,</span>
-</span><span id="L-77"><a href="#L-77"><span class="linenos">77</span></a>            <span class="n">return_das_record</span><span class="o">=</span><span class="n">return_das_record</span><span class="p">,</span>
-</span><span id="L-78"><a href="#L-78"><span class="linenos">78</span></a>            <span class="n">metadata_interval</span><span class="o">=</span><span class="n">metadata_interval</span><span class="p">,</span>
-</span><span id="L-79"><a href="#L-79"><span class="linenos">79</span></a>            <span class="n">strip_unprintable</span><span class="o">=</span><span class="n">strip_unprintable</span><span class="p">,</span>
-</span><span id="L-80"><a href="#L-80"><span class="linenos">80</span></a>            <span class="n">quiet</span><span class="o">=</span><span class="n">quiet</span><span class="p">,</span>
-</span><span id="L-81"><a href="#L-81"><span class="linenos">81</span></a>            <span class="n">prepend_data_id</span><span class="o">=</span><span class="n">prepend_data_id</span><span class="p">,</span>
-</span><span id="L-82"><a href="#L-82"><span class="linenos">82</span></a>            <span class="n">delimiter</span><span class="o">=</span><span class="n">delimiter</span><span class="p">)</span>
-</span><span id="L-83"><a href="#L-83"><span class="linenos">83</span></a>
-</span><span id="L-84"><a href="#L-84"><span class="linenos">84</span></a>    <span class="c1">############################</span>
-</span><span id="L-85"><a href="#L-85"><span class="linenos">85</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DASRecord</span><span class="p">:</span>
-</span><span id="L-86"><a href="#L-86"><span class="linenos">86</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Parse record and return DASRecord.&quot;&quot;&quot;</span>
-</span><span id="L-87"><a href="#L-87"><span class="linenos">87</span></a>        <span class="c1"># See if it&#39;s something we can process, and if not, try digesting</span>
-</span><span id="L-88"><a href="#L-88"><span class="linenos">88</span></a>        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">can_process_record</span><span class="p">(</span><span class="n">record</span><span class="p">):</span>  <span class="c1"># inherited from BaseModule()</span>
-</span><span id="L-89"><a href="#L-89"><span class="linenos">89</span></a>            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">digest_record</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>  <span class="c1"># inherited from BaseModule()</span>
-</span><span id="L-90"><a href="#L-90"><span class="linenos">90</span></a>
-</span><span id="L-91"><a href="#L-91"><span class="linenos">91</span></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">parse_record</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+</span><span id="L-59"><a href="#L-59"><span class="linenos">59</span></a><span class="sd">        delimiter</span>
+</span><span id="L-60"><a href="#L-60"><span class="linenos">60</span></a><span class="sd">                The string to insert between data_id and field_name when prepend_data_id is true.</span>
+</span><span id="L-61"><a href="#L-61"><span class="linenos">61</span></a><span class="sd">                Defaults to &#39;:&#39;.</span>
+</span><span id="L-62"><a href="#L-62"><span class="linenos">62</span></a><span class="sd">                Not used if prepend_data_id is false.</span>
+</span><span id="L-63"><a href="#L-63"><span class="linenos">63</span></a>
+</span><span id="L-64"><a href="#L-64"><span class="linenos">64</span></a><span class="sd">        ```</span>
+</span><span id="L-65"><a href="#L-65"><span class="linenos">65</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="L-66"><a href="#L-66"><span class="linenos">66</span></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>  <span class="c1"># processes &#39;quiet&#39; and type hints</span>
+</span><span id="L-67"><a href="#L-67"><span class="linenos">67</span></a>
+</span><span id="L-68"><a href="#L-68"><span class="linenos">68</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">parser</span> <span class="o">=</span> <span class="n">record_parser</span><span class="o">.</span><span class="n">RecordParser</span><span class="p">(</span>
+</span><span id="L-69"><a href="#L-69"><span class="linenos">69</span></a>            <span class="n">record_format</span><span class="o">=</span><span class="n">record_format</span><span class="p">,</span>
+</span><span id="L-70"><a href="#L-70"><span class="linenos">70</span></a>            <span class="n">field_patterns</span><span class="o">=</span><span class="n">field_patterns</span><span class="p">,</span>
+</span><span id="L-71"><a href="#L-71"><span class="linenos">71</span></a>            <span class="n">metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">,</span>
+</span><span id="L-72"><a href="#L-72"><span class="linenos">72</span></a>            <span class="n">definition_path</span><span class="o">=</span><span class="n">definition_path</span><span class="p">,</span>
+</span><span id="L-73"><a href="#L-73"><span class="linenos">73</span></a>            <span class="n">return_json</span><span class="o">=</span><span class="n">return_json</span><span class="p">,</span>
+</span><span id="L-74"><a href="#L-74"><span class="linenos">74</span></a>            <span class="n">return_das_record</span><span class="o">=</span><span class="n">return_das_record</span><span class="p">,</span>
+</span><span id="L-75"><a href="#L-75"><span class="linenos">75</span></a>            <span class="n">metadata_interval</span><span class="o">=</span><span class="n">metadata_interval</span><span class="p">,</span>
+</span><span id="L-76"><a href="#L-76"><span class="linenos">76</span></a>            <span class="n">strip_unprintable</span><span class="o">=</span><span class="n">strip_unprintable</span><span class="p">,</span>
+</span><span id="L-77"><a href="#L-77"><span class="linenos">77</span></a>            <span class="n">quiet</span><span class="o">=</span><span class="n">quiet</span><span class="p">,</span>
+</span><span id="L-78"><a href="#L-78"><span class="linenos">78</span></a>            <span class="n">prepend_data_id</span><span class="o">=</span><span class="n">prepend_data_id</span><span class="p">,</span>
+</span><span id="L-79"><a href="#L-79"><span class="linenos">79</span></a>            <span class="n">delimiter</span><span class="o">=</span><span class="n">delimiter</span><span class="p">)</span>
+</span><span id="L-80"><a href="#L-80"><span class="linenos">80</span></a>
+</span><span id="L-81"><a href="#L-81"><span class="linenos">81</span></a>    <span class="c1">############################</span>
+</span><span id="L-82"><a href="#L-82"><span class="linenos">82</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DASRecord</span><span class="p">:</span>
+</span><span id="L-83"><a href="#L-83"><span class="linenos">83</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Parse record and return DASRecord.&quot;&quot;&quot;</span>
+</span><span id="L-84"><a href="#L-84"><span class="linenos">84</span></a>        <span class="c1"># See if it&#39;s something we can process, and if not, try digesting</span>
+</span><span id="L-85"><a href="#L-85"><span class="linenos">85</span></a>        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">can_process_record</span><span class="p">(</span><span class="n">record</span><span class="p">):</span>  <span class="c1"># inherited from BaseModule()</span>
+</span><span id="L-86"><a href="#L-86"><span class="linenos">86</span></a>            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">digest_record</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>  <span class="c1"># inherited from BaseModule()</span>
+</span><span id="L-87"><a href="#L-87"><span class="linenos">87</span></a>
+</span><span id="L-88"><a href="#L-88"><span class="linenos">88</span></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">parse_record</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
 </span></pre></div>
 
 
@@ -174,85 +171,85 @@ openrvdas<wbr>.<a href="./../../logger.html">logger</a><wbr>.<a href="./../trans
 
     </div>
     <a class="headerlink" href="#ParseTransform"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="ParseTransform-14"><a href="#ParseTransform-14"><span class="linenos">14</span></a><span class="k">class</span><span class="w"> </span><span class="nc">ParseTransform</span><span class="p">(</span><span class="n">Transform</span><span class="p">):</span>
-</span><span id="ParseTransform-15"><a href="#ParseTransform-15"><span class="linenos">15</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse a &quot;&lt;data_id&gt; &lt;timestamp&gt; &lt;message&gt;&quot; record and return</span>
-</span><span id="ParseTransform-16"><a href="#ParseTransform-16"><span class="linenos">16</span></a><span class="sd">    corresponding dict of values (or JSON or DASRecord if specified).&quot;&quot;&quot;</span>
-</span><span id="ParseTransform-17"><a href="#ParseTransform-17"><span class="linenos">17</span></a>
-</span><span id="ParseTransform-18"><a href="#ParseTransform-18"><span class="linenos">18</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record_format</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">field_patterns</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span id="ParseTransform-19"><a href="#ParseTransform-19"><span class="linenos">19</span></a>                 <span class="n">definition_path</span><span class="o">=</span><span class="n">record_parser</span><span class="o">.</span><span class="n">DEFAULT_DEFINITION_PATH</span><span class="p">,</span>
-</span><span id="ParseTransform-20"><a href="#ParseTransform-20"><span class="linenos">20</span></a>                 <span class="n">return_json</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">return_das_record</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-</span><span id="ParseTransform-21"><a href="#ParseTransform-21"><span class="linenos">21</span></a>                 <span class="n">metadata_interval</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">strip_unprintable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">quiet</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-</span><span id="ParseTransform-22"><a href="#ParseTransform-22"><span class="linenos">22</span></a>                 <span class="n">prepend_data_id</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39;:&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-</span><span id="ParseTransform-23"><a href="#ParseTransform-23"><span class="linenos">23</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="ParseTransform-24"><a href="#ParseTransform-24"><span class="linenos">24</span></a><span class="sd">        ```</span>
-</span><span id="ParseTransform-25"><a href="#ParseTransform-25"><span class="linenos">25</span></a><span class="sd">        record_format</span>
-</span><span id="ParseTransform-26"><a href="#ParseTransform-26"><span class="linenos">26</span></a><span class="sd">                If not None, a custom record format to use for parsing records.</span>
-</span><span id="ParseTransform-27"><a href="#ParseTransform-27"><span class="linenos">27</span></a><span class="sd">                The default, defined in logger/utils/record_parser.py, is</span>
-</span><span id="ParseTransform-28"><a href="#ParseTransform-28"><span class="linenos">28</span></a><span class="sd">                &#39;{data_id:w} {timestamp:ti} {field_string}&#39;.</span>
-</span><span id="ParseTransform-29"><a href="#ParseTransform-29"><span class="linenos">29</span></a>
-</span><span id="ParseTransform-30"><a href="#ParseTransform-30"><span class="linenos">30</span></a><span class="sd">        field_patterns</span>
-</span><span id="ParseTransform-31"><a href="#ParseTransform-31"><span class="linenos">31</span></a><span class="sd">                If not None, a list of parse patterns to be tried instead</span>
-</span><span id="ParseTransform-32"><a href="#ParseTransform-32"><span class="linenos">32</span></a><span class="sd">                of looking for device definitions along the definition path.</span>
-</span><span id="ParseTransform-33"><a href="#ParseTransform-33"><span class="linenos">33</span></a>
-</span><span id="ParseTransform-34"><a href="#ParseTransform-34"><span class="linenos">34</span></a><span class="sd">        metadata</span>
-</span><span id="ParseTransform-35"><a href="#ParseTransform-35"><span class="linenos">35</span></a><span class="sd">                If field_patterns is not None, the metadata to send along with</span>
-</span><span id="ParseTransform-36"><a href="#ParseTransform-36"><span class="linenos">36</span></a><span class="sd">                data records.</span>
-</span><span id="ParseTransform-37"><a href="#ParseTransform-37"><span class="linenos">37</span></a>
-</span><span id="ParseTransform-38"><a href="#ParseTransform-38"><span class="linenos">38</span></a><span class="sd">        definition_path</span>
-</span><span id="ParseTransform-39"><a href="#ParseTransform-39"><span class="linenos">39</span></a><span class="sd">                Wildcarded path matching YAML definitions for devices. Used</span>
-</span><span id="ParseTransform-40"><a href="#ParseTransform-40"><span class="linenos">40</span></a><span class="sd">                only if &#39;field_patterns&#39; is None</span>
-</span><span id="ParseTransform-41"><a href="#ParseTransform-41"><span class="linenos">41</span></a>
-</span><span id="ParseTransform-42"><a href="#ParseTransform-42"><span class="linenos">42</span></a><span class="sd">        return_json</span>
-</span><span id="ParseTransform-43"><a href="#ParseTransform-43"><span class="linenos">43</span></a><span class="sd">                Return a JSON-encoded representation of the dict</span>
-</span><span id="ParseTransform-44"><a href="#ParseTransform-44"><span class="linenos">44</span></a><span class="sd">                instead of a dict itself.</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="ParseTransform-11"><a href="#ParseTransform-11"><span class="linenos">11</span></a><span class="k">class</span><span class="w"> </span><span class="nc">ParseTransform</span><span class="p">(</span><span class="n">Transform</span><span class="p">):</span>
+</span><span id="ParseTransform-12"><a href="#ParseTransform-12"><span class="linenos">12</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse a &quot;&lt;data_id&gt; &lt;timestamp&gt; &lt;message&gt;&quot; record and return</span>
+</span><span id="ParseTransform-13"><a href="#ParseTransform-13"><span class="linenos">13</span></a><span class="sd">    corresponding dict of values (or JSON or DASRecord if specified).&quot;&quot;&quot;</span>
+</span><span id="ParseTransform-14"><a href="#ParseTransform-14"><span class="linenos">14</span></a>
+</span><span id="ParseTransform-15"><a href="#ParseTransform-15"><span class="linenos">15</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record_format</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">field_patterns</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span id="ParseTransform-16"><a href="#ParseTransform-16"><span class="linenos">16</span></a>                 <span class="n">definition_path</span><span class="o">=</span><span class="n">record_parser</span><span class="o">.</span><span class="n">DEFAULT_DEFINITION_PATH</span><span class="p">,</span>
+</span><span id="ParseTransform-17"><a href="#ParseTransform-17"><span class="linenos">17</span></a>                 <span class="n">return_json</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">return_das_record</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+</span><span id="ParseTransform-18"><a href="#ParseTransform-18"><span class="linenos">18</span></a>                 <span class="n">metadata_interval</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">strip_unprintable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">quiet</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+</span><span id="ParseTransform-19"><a href="#ParseTransform-19"><span class="linenos">19</span></a>                 <span class="n">prepend_data_id</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39;:&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</span><span id="ParseTransform-20"><a href="#ParseTransform-20"><span class="linenos">20</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="ParseTransform-21"><a href="#ParseTransform-21"><span class="linenos">21</span></a><span class="sd">        ```</span>
+</span><span id="ParseTransform-22"><a href="#ParseTransform-22"><span class="linenos">22</span></a><span class="sd">        record_format</span>
+</span><span id="ParseTransform-23"><a href="#ParseTransform-23"><span class="linenos">23</span></a><span class="sd">                If not None, a custom record format to use for parsing records.</span>
+</span><span id="ParseTransform-24"><a href="#ParseTransform-24"><span class="linenos">24</span></a><span class="sd">                The default, defined in logger/utils/record_parser.py, is</span>
+</span><span id="ParseTransform-25"><a href="#ParseTransform-25"><span class="linenos">25</span></a><span class="sd">                &#39;{data_id:w} {timestamp:ti} {field_string}&#39;.</span>
+</span><span id="ParseTransform-26"><a href="#ParseTransform-26"><span class="linenos">26</span></a>
+</span><span id="ParseTransform-27"><a href="#ParseTransform-27"><span class="linenos">27</span></a><span class="sd">        field_patterns</span>
+</span><span id="ParseTransform-28"><a href="#ParseTransform-28"><span class="linenos">28</span></a><span class="sd">                If not None, a list of parse patterns to be tried instead</span>
+</span><span id="ParseTransform-29"><a href="#ParseTransform-29"><span class="linenos">29</span></a><span class="sd">                of looking for device definitions along the definition path.</span>
+</span><span id="ParseTransform-30"><a href="#ParseTransform-30"><span class="linenos">30</span></a>
+</span><span id="ParseTransform-31"><a href="#ParseTransform-31"><span class="linenos">31</span></a><span class="sd">        metadata</span>
+</span><span id="ParseTransform-32"><a href="#ParseTransform-32"><span class="linenos">32</span></a><span class="sd">                If field_patterns is not None, the metadata to send along with</span>
+</span><span id="ParseTransform-33"><a href="#ParseTransform-33"><span class="linenos">33</span></a><span class="sd">                data records.</span>
+</span><span id="ParseTransform-34"><a href="#ParseTransform-34"><span class="linenos">34</span></a>
+</span><span id="ParseTransform-35"><a href="#ParseTransform-35"><span class="linenos">35</span></a><span class="sd">        definition_path</span>
+</span><span id="ParseTransform-36"><a href="#ParseTransform-36"><span class="linenos">36</span></a><span class="sd">                Wildcarded path matching YAML definitions for devices. Used</span>
+</span><span id="ParseTransform-37"><a href="#ParseTransform-37"><span class="linenos">37</span></a><span class="sd">                only if &#39;field_patterns&#39; is None</span>
+</span><span id="ParseTransform-38"><a href="#ParseTransform-38"><span class="linenos">38</span></a>
+</span><span id="ParseTransform-39"><a href="#ParseTransform-39"><span class="linenos">39</span></a><span class="sd">        return_json</span>
+</span><span id="ParseTransform-40"><a href="#ParseTransform-40"><span class="linenos">40</span></a><span class="sd">                Return a JSON-encoded representation of the dict</span>
+</span><span id="ParseTransform-41"><a href="#ParseTransform-41"><span class="linenos">41</span></a><span class="sd">                instead of a dict itself.</span>
+</span><span id="ParseTransform-42"><a href="#ParseTransform-42"><span class="linenos">42</span></a>
+</span><span id="ParseTransform-43"><a href="#ParseTransform-43"><span class="linenos">43</span></a><span class="sd">        return_das_record</span>
+</span><span id="ParseTransform-44"><a href="#ParseTransform-44"><span class="linenos">44</span></a><span class="sd">                Return a DASRecord object.</span>
 </span><span id="ParseTransform-45"><a href="#ParseTransform-45"><span class="linenos">45</span></a>
-</span><span id="ParseTransform-46"><a href="#ParseTransform-46"><span class="linenos">46</span></a><span class="sd">        return_das_record</span>
-</span><span id="ParseTransform-47"><a href="#ParseTransform-47"><span class="linenos">47</span></a><span class="sd">                Return a DASRecord object.</span>
-</span><span id="ParseTransform-48"><a href="#ParseTransform-48"><span class="linenos">48</span></a>
-</span><span id="ParseTransform-49"><a href="#ParseTransform-49"><span class="linenos">49</span></a><span class="sd">        metadata_interval</span>
-</span><span id="ParseTransform-50"><a href="#ParseTransform-50"><span class="linenos">50</span></a><span class="sd">                If not None, include the description, units and other metadata</span>
-</span><span id="ParseTransform-51"><a href="#ParseTransform-51"><span class="linenos">51</span></a><span class="sd">                pertaining to each field in the returned record if those data</span>
-</span><span id="ParseTransform-52"><a href="#ParseTransform-52"><span class="linenos">52</span></a><span class="sd">                haven&#39;t been returned in the last metadata_interval seconds.</span>
-</span><span id="ParseTransform-53"><a href="#ParseTransform-53"><span class="linenos">53</span></a>
-</span><span id="ParseTransform-54"><a href="#ParseTransform-54"><span class="linenos">54</span></a><span class="sd">        strip_unprintable</span>
-</span><span id="ParseTransform-55"><a href="#ParseTransform-55"><span class="linenos">55</span></a><span class="sd">                Strip out and ignore any leading or trailing non-printable binary</span>
-</span><span id="ParseTransform-56"><a href="#ParseTransform-56"><span class="linenos">56</span></a><span class="sd">                characters in the string to be parsed.</span>
-</span><span id="ParseTransform-57"><a href="#ParseTransform-57"><span class="linenos">57</span></a>
-</span><span id="ParseTransform-58"><a href="#ParseTransform-58"><span class="linenos">58</span></a><span class="sd">        quiet - if not False, don&#39;t complain when unable to parse a record.</span>
+</span><span id="ParseTransform-46"><a href="#ParseTransform-46"><span class="linenos">46</span></a><span class="sd">        metadata_interval</span>
+</span><span id="ParseTransform-47"><a href="#ParseTransform-47"><span class="linenos">47</span></a><span class="sd">                If not None, include the description, units and other metadata</span>
+</span><span id="ParseTransform-48"><a href="#ParseTransform-48"><span class="linenos">48</span></a><span class="sd">                pertaining to each field in the returned record if those data</span>
+</span><span id="ParseTransform-49"><a href="#ParseTransform-49"><span class="linenos">49</span></a><span class="sd">                haven&#39;t been returned in the last metadata_interval seconds.</span>
+</span><span id="ParseTransform-50"><a href="#ParseTransform-50"><span class="linenos">50</span></a>
+</span><span id="ParseTransform-51"><a href="#ParseTransform-51"><span class="linenos">51</span></a><span class="sd">        strip_unprintable</span>
+</span><span id="ParseTransform-52"><a href="#ParseTransform-52"><span class="linenos">52</span></a><span class="sd">                Strip out and ignore any leading or trailing non-printable binary</span>
+</span><span id="ParseTransform-53"><a href="#ParseTransform-53"><span class="linenos">53</span></a><span class="sd">                characters in the string to be parsed.</span>
+</span><span id="ParseTransform-54"><a href="#ParseTransform-54"><span class="linenos">54</span></a>
+</span><span id="ParseTransform-55"><a href="#ParseTransform-55"><span class="linenos">55</span></a><span class="sd">        quiet - if not False, don&#39;t complain when unable to parse a record.</span>
+</span><span id="ParseTransform-56"><a href="#ParseTransform-56"><span class="linenos">56</span></a>
+</span><span id="ParseTransform-57"><a href="#ParseTransform-57"><span class="linenos">57</span></a><span class="sd">        prepend_data_id</span>
+</span><span id="ParseTransform-58"><a href="#ParseTransform-58"><span class="linenos">58</span></a><span class="sd">                If true prepend the instrument data_id to field_names in the record.</span>
 </span><span id="ParseTransform-59"><a href="#ParseTransform-59"><span class="linenos">59</span></a>
-</span><span id="ParseTransform-60"><a href="#ParseTransform-60"><span class="linenos">60</span></a><span class="sd">        prepend_data_id</span>
-</span><span id="ParseTransform-61"><a href="#ParseTransform-61"><span class="linenos">61</span></a><span class="sd">                If true prepend the instrument data_id to field_names in the record.</span>
-</span><span id="ParseTransform-62"><a href="#ParseTransform-62"><span class="linenos">62</span></a>
-</span><span id="ParseTransform-63"><a href="#ParseTransform-63"><span class="linenos">63</span></a><span class="sd">        delimiter</span>
-</span><span id="ParseTransform-64"><a href="#ParseTransform-64"><span class="linenos">64</span></a><span class="sd">                The string to insert between data_id and field_name when prepend_data_id is true.</span>
-</span><span id="ParseTransform-65"><a href="#ParseTransform-65"><span class="linenos">65</span></a><span class="sd">                Defaults to &#39;:&#39;.</span>
-</span><span id="ParseTransform-66"><a href="#ParseTransform-66"><span class="linenos">66</span></a><span class="sd">                Not used if prepend_data_id is false.</span>
-</span><span id="ParseTransform-67"><a href="#ParseTransform-67"><span class="linenos">67</span></a>
-</span><span id="ParseTransform-68"><a href="#ParseTransform-68"><span class="linenos">68</span></a><span class="sd">        ```</span>
-</span><span id="ParseTransform-69"><a href="#ParseTransform-69"><span class="linenos">69</span></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="ParseTransform-70"><a href="#ParseTransform-70"><span class="linenos">70</span></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>  <span class="c1"># processes &#39;quiet&#39; and type hints</span>
-</span><span id="ParseTransform-71"><a href="#ParseTransform-71"><span class="linenos">71</span></a>
-</span><span id="ParseTransform-72"><a href="#ParseTransform-72"><span class="linenos">72</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">parser</span> <span class="o">=</span> <span class="n">record_parser</span><span class="o">.</span><span class="n">RecordParser</span><span class="p">(</span>
-</span><span id="ParseTransform-73"><a href="#ParseTransform-73"><span class="linenos">73</span></a>            <span class="n">record_format</span><span class="o">=</span><span class="n">record_format</span><span class="p">,</span>
-</span><span id="ParseTransform-74"><a href="#ParseTransform-74"><span class="linenos">74</span></a>            <span class="n">field_patterns</span><span class="o">=</span><span class="n">field_patterns</span><span class="p">,</span>
-</span><span id="ParseTransform-75"><a href="#ParseTransform-75"><span class="linenos">75</span></a>            <span class="n">metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">,</span>
-</span><span id="ParseTransform-76"><a href="#ParseTransform-76"><span class="linenos">76</span></a>            <span class="n">definition_path</span><span class="o">=</span><span class="n">definition_path</span><span class="p">,</span>
-</span><span id="ParseTransform-77"><a href="#ParseTransform-77"><span class="linenos">77</span></a>            <span class="n">return_json</span><span class="o">=</span><span class="n">return_json</span><span class="p">,</span>
-</span><span id="ParseTransform-78"><a href="#ParseTransform-78"><span class="linenos">78</span></a>            <span class="n">return_das_record</span><span class="o">=</span><span class="n">return_das_record</span><span class="p">,</span>
-</span><span id="ParseTransform-79"><a href="#ParseTransform-79"><span class="linenos">79</span></a>            <span class="n">metadata_interval</span><span class="o">=</span><span class="n">metadata_interval</span><span class="p">,</span>
-</span><span id="ParseTransform-80"><a href="#ParseTransform-80"><span class="linenos">80</span></a>            <span class="n">strip_unprintable</span><span class="o">=</span><span class="n">strip_unprintable</span><span class="p">,</span>
-</span><span id="ParseTransform-81"><a href="#ParseTransform-81"><span class="linenos">81</span></a>            <span class="n">quiet</span><span class="o">=</span><span class="n">quiet</span><span class="p">,</span>
-</span><span id="ParseTransform-82"><a href="#ParseTransform-82"><span class="linenos">82</span></a>            <span class="n">prepend_data_id</span><span class="o">=</span><span class="n">prepend_data_id</span><span class="p">,</span>
-</span><span id="ParseTransform-83"><a href="#ParseTransform-83"><span class="linenos">83</span></a>            <span class="n">delimiter</span><span class="o">=</span><span class="n">delimiter</span><span class="p">)</span>
-</span><span id="ParseTransform-84"><a href="#ParseTransform-84"><span class="linenos">84</span></a>
-</span><span id="ParseTransform-85"><a href="#ParseTransform-85"><span class="linenos">85</span></a>    <span class="c1">############################</span>
-</span><span id="ParseTransform-86"><a href="#ParseTransform-86"><span class="linenos">86</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DASRecord</span><span class="p">:</span>
-</span><span id="ParseTransform-87"><a href="#ParseTransform-87"><span class="linenos">87</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Parse record and return DASRecord.&quot;&quot;&quot;</span>
-</span><span id="ParseTransform-88"><a href="#ParseTransform-88"><span class="linenos">88</span></a>        <span class="c1"># See if it&#39;s something we can process, and if not, try digesting</span>
-</span><span id="ParseTransform-89"><a href="#ParseTransform-89"><span class="linenos">89</span></a>        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">can_process_record</span><span class="p">(</span><span class="n">record</span><span class="p">):</span>  <span class="c1"># inherited from BaseModule()</span>
-</span><span id="ParseTransform-90"><a href="#ParseTransform-90"><span class="linenos">90</span></a>            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">digest_record</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>  <span class="c1"># inherited from BaseModule()</span>
-</span><span id="ParseTransform-91"><a href="#ParseTransform-91"><span class="linenos">91</span></a>
-</span><span id="ParseTransform-92"><a href="#ParseTransform-92"><span class="linenos">92</span></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">parse_record</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+</span><span id="ParseTransform-60"><a href="#ParseTransform-60"><span class="linenos">60</span></a><span class="sd">        delimiter</span>
+</span><span id="ParseTransform-61"><a href="#ParseTransform-61"><span class="linenos">61</span></a><span class="sd">                The string to insert between data_id and field_name when prepend_data_id is true.</span>
+</span><span id="ParseTransform-62"><a href="#ParseTransform-62"><span class="linenos">62</span></a><span class="sd">                Defaults to &#39;:&#39;.</span>
+</span><span id="ParseTransform-63"><a href="#ParseTransform-63"><span class="linenos">63</span></a><span class="sd">                Not used if prepend_data_id is false.</span>
+</span><span id="ParseTransform-64"><a href="#ParseTransform-64"><span class="linenos">64</span></a>
+</span><span id="ParseTransform-65"><a href="#ParseTransform-65"><span class="linenos">65</span></a><span class="sd">        ```</span>
+</span><span id="ParseTransform-66"><a href="#ParseTransform-66"><span class="linenos">66</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="ParseTransform-67"><a href="#ParseTransform-67"><span class="linenos">67</span></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>  <span class="c1"># processes &#39;quiet&#39; and type hints</span>
+</span><span id="ParseTransform-68"><a href="#ParseTransform-68"><span class="linenos">68</span></a>
+</span><span id="ParseTransform-69"><a href="#ParseTransform-69"><span class="linenos">69</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">parser</span> <span class="o">=</span> <span class="n">record_parser</span><span class="o">.</span><span class="n">RecordParser</span><span class="p">(</span>
+</span><span id="ParseTransform-70"><a href="#ParseTransform-70"><span class="linenos">70</span></a>            <span class="n">record_format</span><span class="o">=</span><span class="n">record_format</span><span class="p">,</span>
+</span><span id="ParseTransform-71"><a href="#ParseTransform-71"><span class="linenos">71</span></a>            <span class="n">field_patterns</span><span class="o">=</span><span class="n">field_patterns</span><span class="p">,</span>
+</span><span id="ParseTransform-72"><a href="#ParseTransform-72"><span class="linenos">72</span></a>            <span class="n">metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">,</span>
+</span><span id="ParseTransform-73"><a href="#ParseTransform-73"><span class="linenos">73</span></a>            <span class="n">definition_path</span><span class="o">=</span><span class="n">definition_path</span><span class="p">,</span>
+</span><span id="ParseTransform-74"><a href="#ParseTransform-74"><span class="linenos">74</span></a>            <span class="n">return_json</span><span class="o">=</span><span class="n">return_json</span><span class="p">,</span>
+</span><span id="ParseTransform-75"><a href="#ParseTransform-75"><span class="linenos">75</span></a>            <span class="n">return_das_record</span><span class="o">=</span><span class="n">return_das_record</span><span class="p">,</span>
+</span><span id="ParseTransform-76"><a href="#ParseTransform-76"><span class="linenos">76</span></a>            <span class="n">metadata_interval</span><span class="o">=</span><span class="n">metadata_interval</span><span class="p">,</span>
+</span><span id="ParseTransform-77"><a href="#ParseTransform-77"><span class="linenos">77</span></a>            <span class="n">strip_unprintable</span><span class="o">=</span><span class="n">strip_unprintable</span><span class="p">,</span>
+</span><span id="ParseTransform-78"><a href="#ParseTransform-78"><span class="linenos">78</span></a>            <span class="n">quiet</span><span class="o">=</span><span class="n">quiet</span><span class="p">,</span>
+</span><span id="ParseTransform-79"><a href="#ParseTransform-79"><span class="linenos">79</span></a>            <span class="n">prepend_data_id</span><span class="o">=</span><span class="n">prepend_data_id</span><span class="p">,</span>
+</span><span id="ParseTransform-80"><a href="#ParseTransform-80"><span class="linenos">80</span></a>            <span class="n">delimiter</span><span class="o">=</span><span class="n">delimiter</span><span class="p">)</span>
+</span><span id="ParseTransform-81"><a href="#ParseTransform-81"><span class="linenos">81</span></a>
+</span><span id="ParseTransform-82"><a href="#ParseTransform-82"><span class="linenos">82</span></a>    <span class="c1">############################</span>
+</span><span id="ParseTransform-83"><a href="#ParseTransform-83"><span class="linenos">83</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DASRecord</span><span class="p">:</span>
+</span><span id="ParseTransform-84"><a href="#ParseTransform-84"><span class="linenos">84</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Parse record and return DASRecord.&quot;&quot;&quot;</span>
+</span><span id="ParseTransform-85"><a href="#ParseTransform-85"><span class="linenos">85</span></a>        <span class="c1"># See if it&#39;s something we can process, and if not, try digesting</span>
+</span><span id="ParseTransform-86"><a href="#ParseTransform-86"><span class="linenos">86</span></a>        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">can_process_record</span><span class="p">(</span><span class="n">record</span><span class="p">):</span>  <span class="c1"># inherited from BaseModule()</span>
+</span><span id="ParseTransform-87"><a href="#ParseTransform-87"><span class="linenos">87</span></a>            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">digest_record</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>  <span class="c1"># inherited from BaseModule()</span>
+</span><span id="ParseTransform-88"><a href="#ParseTransform-88"><span class="linenos">88</span></a>
+</span><span id="ParseTransform-89"><a href="#ParseTransform-89"><span class="linenos">89</span></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">parse_record</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
 </span></pre></div>
 
 
@@ -271,72 +268,72 @@ corresponding dict of values (or JSON or DASRecord if specified).</p>
 
     </div>
     <a class="headerlink" href="#ParseTransform.__init__"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="ParseTransform.__init__-18"><a href="#ParseTransform.__init__-18"><span class="linenos">18</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record_format</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">field_patterns</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span id="ParseTransform.__init__-19"><a href="#ParseTransform.__init__-19"><span class="linenos">19</span></a>                 <span class="n">definition_path</span><span class="o">=</span><span class="n">record_parser</span><span class="o">.</span><span class="n">DEFAULT_DEFINITION_PATH</span><span class="p">,</span>
-</span><span id="ParseTransform.__init__-20"><a href="#ParseTransform.__init__-20"><span class="linenos">20</span></a>                 <span class="n">return_json</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">return_das_record</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-</span><span id="ParseTransform.__init__-21"><a href="#ParseTransform.__init__-21"><span class="linenos">21</span></a>                 <span class="n">metadata_interval</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">strip_unprintable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">quiet</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-</span><span id="ParseTransform.__init__-22"><a href="#ParseTransform.__init__-22"><span class="linenos">22</span></a>                 <span class="n">prepend_data_id</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39;:&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-</span><span id="ParseTransform.__init__-23"><a href="#ParseTransform.__init__-23"><span class="linenos">23</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="ParseTransform.__init__-24"><a href="#ParseTransform.__init__-24"><span class="linenos">24</span></a><span class="sd">        ```</span>
-</span><span id="ParseTransform.__init__-25"><a href="#ParseTransform.__init__-25"><span class="linenos">25</span></a><span class="sd">        record_format</span>
-</span><span id="ParseTransform.__init__-26"><a href="#ParseTransform.__init__-26"><span class="linenos">26</span></a><span class="sd">                If not None, a custom record format to use for parsing records.</span>
-</span><span id="ParseTransform.__init__-27"><a href="#ParseTransform.__init__-27"><span class="linenos">27</span></a><span class="sd">                The default, defined in logger/utils/record_parser.py, is</span>
-</span><span id="ParseTransform.__init__-28"><a href="#ParseTransform.__init__-28"><span class="linenos">28</span></a><span class="sd">                &#39;{data_id:w} {timestamp:ti} {field_string}&#39;.</span>
-</span><span id="ParseTransform.__init__-29"><a href="#ParseTransform.__init__-29"><span class="linenos">29</span></a>
-</span><span id="ParseTransform.__init__-30"><a href="#ParseTransform.__init__-30"><span class="linenos">30</span></a><span class="sd">        field_patterns</span>
-</span><span id="ParseTransform.__init__-31"><a href="#ParseTransform.__init__-31"><span class="linenos">31</span></a><span class="sd">                If not None, a list of parse patterns to be tried instead</span>
-</span><span id="ParseTransform.__init__-32"><a href="#ParseTransform.__init__-32"><span class="linenos">32</span></a><span class="sd">                of looking for device definitions along the definition path.</span>
-</span><span id="ParseTransform.__init__-33"><a href="#ParseTransform.__init__-33"><span class="linenos">33</span></a>
-</span><span id="ParseTransform.__init__-34"><a href="#ParseTransform.__init__-34"><span class="linenos">34</span></a><span class="sd">        metadata</span>
-</span><span id="ParseTransform.__init__-35"><a href="#ParseTransform.__init__-35"><span class="linenos">35</span></a><span class="sd">                If field_patterns is not None, the metadata to send along with</span>
-</span><span id="ParseTransform.__init__-36"><a href="#ParseTransform.__init__-36"><span class="linenos">36</span></a><span class="sd">                data records.</span>
-</span><span id="ParseTransform.__init__-37"><a href="#ParseTransform.__init__-37"><span class="linenos">37</span></a>
-</span><span id="ParseTransform.__init__-38"><a href="#ParseTransform.__init__-38"><span class="linenos">38</span></a><span class="sd">        definition_path</span>
-</span><span id="ParseTransform.__init__-39"><a href="#ParseTransform.__init__-39"><span class="linenos">39</span></a><span class="sd">                Wildcarded path matching YAML definitions for devices. Used</span>
-</span><span id="ParseTransform.__init__-40"><a href="#ParseTransform.__init__-40"><span class="linenos">40</span></a><span class="sd">                only if &#39;field_patterns&#39; is None</span>
-</span><span id="ParseTransform.__init__-41"><a href="#ParseTransform.__init__-41"><span class="linenos">41</span></a>
-</span><span id="ParseTransform.__init__-42"><a href="#ParseTransform.__init__-42"><span class="linenos">42</span></a><span class="sd">        return_json</span>
-</span><span id="ParseTransform.__init__-43"><a href="#ParseTransform.__init__-43"><span class="linenos">43</span></a><span class="sd">                Return a JSON-encoded representation of the dict</span>
-</span><span id="ParseTransform.__init__-44"><a href="#ParseTransform.__init__-44"><span class="linenos">44</span></a><span class="sd">                instead of a dict itself.</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="ParseTransform.__init__-15"><a href="#ParseTransform.__init__-15"><span class="linenos">15</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record_format</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">field_patterns</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span id="ParseTransform.__init__-16"><a href="#ParseTransform.__init__-16"><span class="linenos">16</span></a>                 <span class="n">definition_path</span><span class="o">=</span><span class="n">record_parser</span><span class="o">.</span><span class="n">DEFAULT_DEFINITION_PATH</span><span class="p">,</span>
+</span><span id="ParseTransform.__init__-17"><a href="#ParseTransform.__init__-17"><span class="linenos">17</span></a>                 <span class="n">return_json</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">return_das_record</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+</span><span id="ParseTransform.__init__-18"><a href="#ParseTransform.__init__-18"><span class="linenos">18</span></a>                 <span class="n">metadata_interval</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">strip_unprintable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">quiet</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+</span><span id="ParseTransform.__init__-19"><a href="#ParseTransform.__init__-19"><span class="linenos">19</span></a>                 <span class="n">prepend_data_id</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39;:&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</span><span id="ParseTransform.__init__-20"><a href="#ParseTransform.__init__-20"><span class="linenos">20</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="ParseTransform.__init__-21"><a href="#ParseTransform.__init__-21"><span class="linenos">21</span></a><span class="sd">        ```</span>
+</span><span id="ParseTransform.__init__-22"><a href="#ParseTransform.__init__-22"><span class="linenos">22</span></a><span class="sd">        record_format</span>
+</span><span id="ParseTransform.__init__-23"><a href="#ParseTransform.__init__-23"><span class="linenos">23</span></a><span class="sd">                If not None, a custom record format to use for parsing records.</span>
+</span><span id="ParseTransform.__init__-24"><a href="#ParseTransform.__init__-24"><span class="linenos">24</span></a><span class="sd">                The default, defined in logger/utils/record_parser.py, is</span>
+</span><span id="ParseTransform.__init__-25"><a href="#ParseTransform.__init__-25"><span class="linenos">25</span></a><span class="sd">                &#39;{data_id:w} {timestamp:ti} {field_string}&#39;.</span>
+</span><span id="ParseTransform.__init__-26"><a href="#ParseTransform.__init__-26"><span class="linenos">26</span></a>
+</span><span id="ParseTransform.__init__-27"><a href="#ParseTransform.__init__-27"><span class="linenos">27</span></a><span class="sd">        field_patterns</span>
+</span><span id="ParseTransform.__init__-28"><a href="#ParseTransform.__init__-28"><span class="linenos">28</span></a><span class="sd">                If not None, a list of parse patterns to be tried instead</span>
+</span><span id="ParseTransform.__init__-29"><a href="#ParseTransform.__init__-29"><span class="linenos">29</span></a><span class="sd">                of looking for device definitions along the definition path.</span>
+</span><span id="ParseTransform.__init__-30"><a href="#ParseTransform.__init__-30"><span class="linenos">30</span></a>
+</span><span id="ParseTransform.__init__-31"><a href="#ParseTransform.__init__-31"><span class="linenos">31</span></a><span class="sd">        metadata</span>
+</span><span id="ParseTransform.__init__-32"><a href="#ParseTransform.__init__-32"><span class="linenos">32</span></a><span class="sd">                If field_patterns is not None, the metadata to send along with</span>
+</span><span id="ParseTransform.__init__-33"><a href="#ParseTransform.__init__-33"><span class="linenos">33</span></a><span class="sd">                data records.</span>
+</span><span id="ParseTransform.__init__-34"><a href="#ParseTransform.__init__-34"><span class="linenos">34</span></a>
+</span><span id="ParseTransform.__init__-35"><a href="#ParseTransform.__init__-35"><span class="linenos">35</span></a><span class="sd">        definition_path</span>
+</span><span id="ParseTransform.__init__-36"><a href="#ParseTransform.__init__-36"><span class="linenos">36</span></a><span class="sd">                Wildcarded path matching YAML definitions for devices. Used</span>
+</span><span id="ParseTransform.__init__-37"><a href="#ParseTransform.__init__-37"><span class="linenos">37</span></a><span class="sd">                only if &#39;field_patterns&#39; is None</span>
+</span><span id="ParseTransform.__init__-38"><a href="#ParseTransform.__init__-38"><span class="linenos">38</span></a>
+</span><span id="ParseTransform.__init__-39"><a href="#ParseTransform.__init__-39"><span class="linenos">39</span></a><span class="sd">        return_json</span>
+</span><span id="ParseTransform.__init__-40"><a href="#ParseTransform.__init__-40"><span class="linenos">40</span></a><span class="sd">                Return a JSON-encoded representation of the dict</span>
+</span><span id="ParseTransform.__init__-41"><a href="#ParseTransform.__init__-41"><span class="linenos">41</span></a><span class="sd">                instead of a dict itself.</span>
+</span><span id="ParseTransform.__init__-42"><a href="#ParseTransform.__init__-42"><span class="linenos">42</span></a>
+</span><span id="ParseTransform.__init__-43"><a href="#ParseTransform.__init__-43"><span class="linenos">43</span></a><span class="sd">        return_das_record</span>
+</span><span id="ParseTransform.__init__-44"><a href="#ParseTransform.__init__-44"><span class="linenos">44</span></a><span class="sd">                Return a DASRecord object.</span>
 </span><span id="ParseTransform.__init__-45"><a href="#ParseTransform.__init__-45"><span class="linenos">45</span></a>
-</span><span id="ParseTransform.__init__-46"><a href="#ParseTransform.__init__-46"><span class="linenos">46</span></a><span class="sd">        return_das_record</span>
-</span><span id="ParseTransform.__init__-47"><a href="#ParseTransform.__init__-47"><span class="linenos">47</span></a><span class="sd">                Return a DASRecord object.</span>
-</span><span id="ParseTransform.__init__-48"><a href="#ParseTransform.__init__-48"><span class="linenos">48</span></a>
-</span><span id="ParseTransform.__init__-49"><a href="#ParseTransform.__init__-49"><span class="linenos">49</span></a><span class="sd">        metadata_interval</span>
-</span><span id="ParseTransform.__init__-50"><a href="#ParseTransform.__init__-50"><span class="linenos">50</span></a><span class="sd">                If not None, include the description, units and other metadata</span>
-</span><span id="ParseTransform.__init__-51"><a href="#ParseTransform.__init__-51"><span class="linenos">51</span></a><span class="sd">                pertaining to each field in the returned record if those data</span>
-</span><span id="ParseTransform.__init__-52"><a href="#ParseTransform.__init__-52"><span class="linenos">52</span></a><span class="sd">                haven&#39;t been returned in the last metadata_interval seconds.</span>
-</span><span id="ParseTransform.__init__-53"><a href="#ParseTransform.__init__-53"><span class="linenos">53</span></a>
-</span><span id="ParseTransform.__init__-54"><a href="#ParseTransform.__init__-54"><span class="linenos">54</span></a><span class="sd">        strip_unprintable</span>
-</span><span id="ParseTransform.__init__-55"><a href="#ParseTransform.__init__-55"><span class="linenos">55</span></a><span class="sd">                Strip out and ignore any leading or trailing non-printable binary</span>
-</span><span id="ParseTransform.__init__-56"><a href="#ParseTransform.__init__-56"><span class="linenos">56</span></a><span class="sd">                characters in the string to be parsed.</span>
-</span><span id="ParseTransform.__init__-57"><a href="#ParseTransform.__init__-57"><span class="linenos">57</span></a>
-</span><span id="ParseTransform.__init__-58"><a href="#ParseTransform.__init__-58"><span class="linenos">58</span></a><span class="sd">        quiet - if not False, don&#39;t complain when unable to parse a record.</span>
+</span><span id="ParseTransform.__init__-46"><a href="#ParseTransform.__init__-46"><span class="linenos">46</span></a><span class="sd">        metadata_interval</span>
+</span><span id="ParseTransform.__init__-47"><a href="#ParseTransform.__init__-47"><span class="linenos">47</span></a><span class="sd">                If not None, include the description, units and other metadata</span>
+</span><span id="ParseTransform.__init__-48"><a href="#ParseTransform.__init__-48"><span class="linenos">48</span></a><span class="sd">                pertaining to each field in the returned record if those data</span>
+</span><span id="ParseTransform.__init__-49"><a href="#ParseTransform.__init__-49"><span class="linenos">49</span></a><span class="sd">                haven&#39;t been returned in the last metadata_interval seconds.</span>
+</span><span id="ParseTransform.__init__-50"><a href="#ParseTransform.__init__-50"><span class="linenos">50</span></a>
+</span><span id="ParseTransform.__init__-51"><a href="#ParseTransform.__init__-51"><span class="linenos">51</span></a><span class="sd">        strip_unprintable</span>
+</span><span id="ParseTransform.__init__-52"><a href="#ParseTransform.__init__-52"><span class="linenos">52</span></a><span class="sd">                Strip out and ignore any leading or trailing non-printable binary</span>
+</span><span id="ParseTransform.__init__-53"><a href="#ParseTransform.__init__-53"><span class="linenos">53</span></a><span class="sd">                characters in the string to be parsed.</span>
+</span><span id="ParseTransform.__init__-54"><a href="#ParseTransform.__init__-54"><span class="linenos">54</span></a>
+</span><span id="ParseTransform.__init__-55"><a href="#ParseTransform.__init__-55"><span class="linenos">55</span></a><span class="sd">        quiet - if not False, don&#39;t complain when unable to parse a record.</span>
+</span><span id="ParseTransform.__init__-56"><a href="#ParseTransform.__init__-56"><span class="linenos">56</span></a>
+</span><span id="ParseTransform.__init__-57"><a href="#ParseTransform.__init__-57"><span class="linenos">57</span></a><span class="sd">        prepend_data_id</span>
+</span><span id="ParseTransform.__init__-58"><a href="#ParseTransform.__init__-58"><span class="linenos">58</span></a><span class="sd">                If true prepend the instrument data_id to field_names in the record.</span>
 </span><span id="ParseTransform.__init__-59"><a href="#ParseTransform.__init__-59"><span class="linenos">59</span></a>
-</span><span id="ParseTransform.__init__-60"><a href="#ParseTransform.__init__-60"><span class="linenos">60</span></a><span class="sd">        prepend_data_id</span>
-</span><span id="ParseTransform.__init__-61"><a href="#ParseTransform.__init__-61"><span class="linenos">61</span></a><span class="sd">                If true prepend the instrument data_id to field_names in the record.</span>
-</span><span id="ParseTransform.__init__-62"><a href="#ParseTransform.__init__-62"><span class="linenos">62</span></a>
-</span><span id="ParseTransform.__init__-63"><a href="#ParseTransform.__init__-63"><span class="linenos">63</span></a><span class="sd">        delimiter</span>
-</span><span id="ParseTransform.__init__-64"><a href="#ParseTransform.__init__-64"><span class="linenos">64</span></a><span class="sd">                The string to insert between data_id and field_name when prepend_data_id is true.</span>
-</span><span id="ParseTransform.__init__-65"><a href="#ParseTransform.__init__-65"><span class="linenos">65</span></a><span class="sd">                Defaults to &#39;:&#39;.</span>
-</span><span id="ParseTransform.__init__-66"><a href="#ParseTransform.__init__-66"><span class="linenos">66</span></a><span class="sd">                Not used if prepend_data_id is false.</span>
-</span><span id="ParseTransform.__init__-67"><a href="#ParseTransform.__init__-67"><span class="linenos">67</span></a>
-</span><span id="ParseTransform.__init__-68"><a href="#ParseTransform.__init__-68"><span class="linenos">68</span></a><span class="sd">        ```</span>
-</span><span id="ParseTransform.__init__-69"><a href="#ParseTransform.__init__-69"><span class="linenos">69</span></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="ParseTransform.__init__-70"><a href="#ParseTransform.__init__-70"><span class="linenos">70</span></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>  <span class="c1"># processes &#39;quiet&#39; and type hints</span>
-</span><span id="ParseTransform.__init__-71"><a href="#ParseTransform.__init__-71"><span class="linenos">71</span></a>
-</span><span id="ParseTransform.__init__-72"><a href="#ParseTransform.__init__-72"><span class="linenos">72</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">parser</span> <span class="o">=</span> <span class="n">record_parser</span><span class="o">.</span><span class="n">RecordParser</span><span class="p">(</span>
-</span><span id="ParseTransform.__init__-73"><a href="#ParseTransform.__init__-73"><span class="linenos">73</span></a>            <span class="n">record_format</span><span class="o">=</span><span class="n">record_format</span><span class="p">,</span>
-</span><span id="ParseTransform.__init__-74"><a href="#ParseTransform.__init__-74"><span class="linenos">74</span></a>            <span class="n">field_patterns</span><span class="o">=</span><span class="n">field_patterns</span><span class="p">,</span>
-</span><span id="ParseTransform.__init__-75"><a href="#ParseTransform.__init__-75"><span class="linenos">75</span></a>            <span class="n">metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">,</span>
-</span><span id="ParseTransform.__init__-76"><a href="#ParseTransform.__init__-76"><span class="linenos">76</span></a>            <span class="n">definition_path</span><span class="o">=</span><span class="n">definition_path</span><span class="p">,</span>
-</span><span id="ParseTransform.__init__-77"><a href="#ParseTransform.__init__-77"><span class="linenos">77</span></a>            <span class="n">return_json</span><span class="o">=</span><span class="n">return_json</span><span class="p">,</span>
-</span><span id="ParseTransform.__init__-78"><a href="#ParseTransform.__init__-78"><span class="linenos">78</span></a>            <span class="n">return_das_record</span><span class="o">=</span><span class="n">return_das_record</span><span class="p">,</span>
-</span><span id="ParseTransform.__init__-79"><a href="#ParseTransform.__init__-79"><span class="linenos">79</span></a>            <span class="n">metadata_interval</span><span class="o">=</span><span class="n">metadata_interval</span><span class="p">,</span>
-</span><span id="ParseTransform.__init__-80"><a href="#ParseTransform.__init__-80"><span class="linenos">80</span></a>            <span class="n">strip_unprintable</span><span class="o">=</span><span class="n">strip_unprintable</span><span class="p">,</span>
-</span><span id="ParseTransform.__init__-81"><a href="#ParseTransform.__init__-81"><span class="linenos">81</span></a>            <span class="n">quiet</span><span class="o">=</span><span class="n">quiet</span><span class="p">,</span>
-</span><span id="ParseTransform.__init__-82"><a href="#ParseTransform.__init__-82"><span class="linenos">82</span></a>            <span class="n">prepend_data_id</span><span class="o">=</span><span class="n">prepend_data_id</span><span class="p">,</span>
-</span><span id="ParseTransform.__init__-83"><a href="#ParseTransform.__init__-83"><span class="linenos">83</span></a>            <span class="n">delimiter</span><span class="o">=</span><span class="n">delimiter</span><span class="p">)</span>
+</span><span id="ParseTransform.__init__-60"><a href="#ParseTransform.__init__-60"><span class="linenos">60</span></a><span class="sd">        delimiter</span>
+</span><span id="ParseTransform.__init__-61"><a href="#ParseTransform.__init__-61"><span class="linenos">61</span></a><span class="sd">                The string to insert between data_id and field_name when prepend_data_id is true.</span>
+</span><span id="ParseTransform.__init__-62"><a href="#ParseTransform.__init__-62"><span class="linenos">62</span></a><span class="sd">                Defaults to &#39;:&#39;.</span>
+</span><span id="ParseTransform.__init__-63"><a href="#ParseTransform.__init__-63"><span class="linenos">63</span></a><span class="sd">                Not used if prepend_data_id is false.</span>
+</span><span id="ParseTransform.__init__-64"><a href="#ParseTransform.__init__-64"><span class="linenos">64</span></a>
+</span><span id="ParseTransform.__init__-65"><a href="#ParseTransform.__init__-65"><span class="linenos">65</span></a><span class="sd">        ```</span>
+</span><span id="ParseTransform.__init__-66"><a href="#ParseTransform.__init__-66"><span class="linenos">66</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="ParseTransform.__init__-67"><a href="#ParseTransform.__init__-67"><span class="linenos">67</span></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>  <span class="c1"># processes &#39;quiet&#39; and type hints</span>
+</span><span id="ParseTransform.__init__-68"><a href="#ParseTransform.__init__-68"><span class="linenos">68</span></a>
+</span><span id="ParseTransform.__init__-69"><a href="#ParseTransform.__init__-69"><span class="linenos">69</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">parser</span> <span class="o">=</span> <span class="n">record_parser</span><span class="o">.</span><span class="n">RecordParser</span><span class="p">(</span>
+</span><span id="ParseTransform.__init__-70"><a href="#ParseTransform.__init__-70"><span class="linenos">70</span></a>            <span class="n">record_format</span><span class="o">=</span><span class="n">record_format</span><span class="p">,</span>
+</span><span id="ParseTransform.__init__-71"><a href="#ParseTransform.__init__-71"><span class="linenos">71</span></a>            <span class="n">field_patterns</span><span class="o">=</span><span class="n">field_patterns</span><span class="p">,</span>
+</span><span id="ParseTransform.__init__-72"><a href="#ParseTransform.__init__-72"><span class="linenos">72</span></a>            <span class="n">metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">,</span>
+</span><span id="ParseTransform.__init__-73"><a href="#ParseTransform.__init__-73"><span class="linenos">73</span></a>            <span class="n">definition_path</span><span class="o">=</span><span class="n">definition_path</span><span class="p">,</span>
+</span><span id="ParseTransform.__init__-74"><a href="#ParseTransform.__init__-74"><span class="linenos">74</span></a>            <span class="n">return_json</span><span class="o">=</span><span class="n">return_json</span><span class="p">,</span>
+</span><span id="ParseTransform.__init__-75"><a href="#ParseTransform.__init__-75"><span class="linenos">75</span></a>            <span class="n">return_das_record</span><span class="o">=</span><span class="n">return_das_record</span><span class="p">,</span>
+</span><span id="ParseTransform.__init__-76"><a href="#ParseTransform.__init__-76"><span class="linenos">76</span></a>            <span class="n">metadata_interval</span><span class="o">=</span><span class="n">metadata_interval</span><span class="p">,</span>
+</span><span id="ParseTransform.__init__-77"><a href="#ParseTransform.__init__-77"><span class="linenos">77</span></a>            <span class="n">strip_unprintable</span><span class="o">=</span><span class="n">strip_unprintable</span><span class="p">,</span>
+</span><span id="ParseTransform.__init__-78"><a href="#ParseTransform.__init__-78"><span class="linenos">78</span></a>            <span class="n">quiet</span><span class="o">=</span><span class="n">quiet</span><span class="p">,</span>
+</span><span id="ParseTransform.__init__-79"><a href="#ParseTransform.__init__-79"><span class="linenos">79</span></a>            <span class="n">prepend_data_id</span><span class="o">=</span><span class="n">prepend_data_id</span><span class="p">,</span>
+</span><span id="ParseTransform.__init__-80"><a href="#ParseTransform.__init__-80"><span class="linenos">80</span></a>            <span class="n">delimiter</span><span class="o">=</span><span class="n">delimiter</span><span class="p">)</span>
 </span></pre></div>
 
 
@@ -410,13 +407,13 @@ delimiter
 
     </div>
     <a class="headerlink" href="#ParseTransform.transform"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="ParseTransform.transform-86"><a href="#ParseTransform.transform-86"><span class="linenos">86</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DASRecord</span><span class="p">:</span>
-</span><span id="ParseTransform.transform-87"><a href="#ParseTransform.transform-87"><span class="linenos">87</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Parse record and return DASRecord.&quot;&quot;&quot;</span>
-</span><span id="ParseTransform.transform-88"><a href="#ParseTransform.transform-88"><span class="linenos">88</span></a>        <span class="c1"># See if it&#39;s something we can process, and if not, try digesting</span>
-</span><span id="ParseTransform.transform-89"><a href="#ParseTransform.transform-89"><span class="linenos">89</span></a>        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">can_process_record</span><span class="p">(</span><span class="n">record</span><span class="p">):</span>  <span class="c1"># inherited from BaseModule()</span>
-</span><span id="ParseTransform.transform-90"><a href="#ParseTransform.transform-90"><span class="linenos">90</span></a>            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">digest_record</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>  <span class="c1"># inherited from BaseModule()</span>
-</span><span id="ParseTransform.transform-91"><a href="#ParseTransform.transform-91"><span class="linenos">91</span></a>
-</span><span id="ParseTransform.transform-92"><a href="#ParseTransform.transform-92"><span class="linenos">92</span></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">parse_record</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="ParseTransform.transform-83"><a href="#ParseTransform.transform-83"><span class="linenos">83</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DASRecord</span><span class="p">:</span>
+</span><span id="ParseTransform.transform-84"><a href="#ParseTransform.transform-84"><span class="linenos">84</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Parse record and return DASRecord.&quot;&quot;&quot;</span>
+</span><span id="ParseTransform.transform-85"><a href="#ParseTransform.transform-85"><span class="linenos">85</span></a>        <span class="c1"># See if it&#39;s something we can process, and if not, try digesting</span>
+</span><span id="ParseTransform.transform-86"><a href="#ParseTransform.transform-86"><span class="linenos">86</span></a>        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">can_process_record</span><span class="p">(</span><span class="n">record</span><span class="p">):</span>  <span class="c1"># inherited from BaseModule()</span>
+</span><span id="ParseTransform.transform-87"><a href="#ParseTransform.transform-87"><span class="linenos">87</span></a>            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">digest_record</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>  <span class="c1"># inherited from BaseModule()</span>
+</span><span id="ParseTransform.transform-88"><a href="#ParseTransform.transform-88"><span class="linenos">88</span></a>
+</span><span id="ParseTransform.transform-89"><a href="#ParseTransform.transform-89"><span class="linenos">89</span></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">parse_record</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
 </span></pre></div>
 
 
