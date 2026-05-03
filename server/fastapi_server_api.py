@@ -7,7 +7,7 @@ from typing import Any, Dict
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(realpath(__file__))))
 from server.server_api import ServerAPI  # noqa: E402
-from web_backend.async_fastapi_server_api import AsyncFastAPIServerAPI  # adjust import
+from web_backend.fastapi_server_api import FastAPIServerAPI as AsyncFastAPIServerAPI  # adjust import
 
 class FastAPIServerAPI(ServerAPI):
     """
