@@ -2,11 +2,7 @@
 
 import logging
 import socket
-<<<<<<< HEAD
-=======
-import sys
 import struct
->>>>>>> cd2d034 (Move to using socket.IPADDR_ANY as the fallback interface for multicast read, and remove redundant IP_MULTICAST_IF sockopt)
 
 from logger.readers.reader import Reader  # noqa: E402
 
