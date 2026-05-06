@@ -61,21 +61,18 @@ openrvdas<wbr>.<a href="./../../logger.html">logger</a><wbr>.<a href="./../trans
 
                         <div class="pdoc-code codehilite"><pre><span></span><span id="L-1"><a href="#L-1"><span class="linenos"> 1</span></a><span class="ch">#!/usr/bin/env python3</span>
 </span><span id="L-2"><a href="#L-2"><span class="linenos"> 2</span></a>
-</span><span id="L-3"><a href="#L-3"><span class="linenos"> 3</span></a><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
-</span><span id="L-4"><a href="#L-4"><span class="linenos"> 4</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">os.path</span><span class="w"> </span><span class="kn">import</span> <span class="n">dirname</span><span class="p">,</span> <span class="n">realpath</span>
-</span><span id="L-5"><a href="#L-5"><span class="linenos"> 5</span></a><span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dirname</span><span class="p">(</span><span class="n">dirname</span><span class="p">(</span><span class="n">dirname</span><span class="p">(</span><span class="n">realpath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)))))</span>
+</span><span id="L-3"><a href="#L-3"><span class="linenos"> 3</span></a>
+</span><span id="L-4"><a href="#L-4"><span class="linenos"> 4</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">logger.transforms.transform</span><span class="w"> </span><span class="kn">import</span> <span class="n">Transform</span>  <span class="c1"># noqa: E402</span>
+</span><span id="L-5"><a href="#L-5"><span class="linenos"> 5</span></a>
 </span><span id="L-6"><a href="#L-6"><span class="linenos"> 6</span></a>
-</span><span id="L-7"><a href="#L-7"><span class="linenos"> 7</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">logger.transforms.transform</span><span class="w"> </span><span class="kn">import</span> <span class="n">Transform</span>  <span class="c1"># noqa: E402</span>
-</span><span id="L-8"><a href="#L-8"><span class="linenos"> 8</span></a>
-</span><span id="L-9"><a href="#L-9"><span class="linenos"> 9</span></a>
-</span><span id="L-10"><a href="#L-10"><span class="linenos">10</span></a><span class="c1">################################################################################</span>
-</span><span id="L-11"><a href="#L-11"><span class="linenos">11</span></a><span class="k">class</span><span class="w"> </span><span class="nc">DerivedDataTransform</span><span class="p">(</span><span class="n">Transform</span><span class="p">):</span>
-</span><span id="L-12"><a href="#L-12"><span class="linenos">12</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Trivial base class for derived data transforms. Derived data</span>
-</span><span id="L-13"><a href="#L-13"><span class="linenos">13</span></a><span class="sd">    transforms used to have some complicated invocation process to make</span>
-</span><span id="L-14"><a href="#L-14"><span class="linenos">14</span></a><span class="sd">    them more efficient, but we&#39;ve opted to make them just like any</span>
-</span><span id="L-15"><a href="#L-15"><span class="linenos">15</span></a><span class="sd">    other transform for simplicity.</span>
-</span><span id="L-16"><a href="#L-16"><span class="linenos">16</span></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="L-17"><a href="#L-17"><span class="linenos">17</span></a>    <span class="k">pass</span>
+</span><span id="L-7"><a href="#L-7"><span class="linenos"> 7</span></a><span class="c1">################################################################################</span>
+</span><span id="L-8"><a href="#L-8"><span class="linenos"> 8</span></a><span class="k">class</span><span class="w"> </span><span class="nc">DerivedDataTransform</span><span class="p">(</span><span class="n">Transform</span><span class="p">):</span>
+</span><span id="L-9"><a href="#L-9"><span class="linenos"> 9</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Trivial base class for derived data transforms. Derived data</span>
+</span><span id="L-10"><a href="#L-10"><span class="linenos">10</span></a><span class="sd">    transforms used to have some complicated invocation process to make</span>
+</span><span id="L-11"><a href="#L-11"><span class="linenos">11</span></a><span class="sd">    them more efficient, but we&#39;ve opted to make them just like any</span>
+</span><span id="L-12"><a href="#L-12"><span class="linenos">12</span></a><span class="sd">    other transform for simplicity.</span>
+</span><span id="L-13"><a href="#L-13"><span class="linenos">13</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="L-14"><a href="#L-14"><span class="linenos">14</span></a>    <span class="k">pass</span>
 </span></pre></div>
 
 
@@ -91,13 +88,13 @@ openrvdas<wbr>.<a href="./../../logger.html">logger</a><wbr>.<a href="./../trans
 
     </div>
     <a class="headerlink" href="#DerivedDataTransform"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="DerivedDataTransform-12"><a href="#DerivedDataTransform-12"><span class="linenos">12</span></a><span class="k">class</span><span class="w"> </span><span class="nc">DerivedDataTransform</span><span class="p">(</span><span class="n">Transform</span><span class="p">):</span>
-</span><span id="DerivedDataTransform-13"><a href="#DerivedDataTransform-13"><span class="linenos">13</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Trivial base class for derived data transforms. Derived data</span>
-</span><span id="DerivedDataTransform-14"><a href="#DerivedDataTransform-14"><span class="linenos">14</span></a><span class="sd">    transforms used to have some complicated invocation process to make</span>
-</span><span id="DerivedDataTransform-15"><a href="#DerivedDataTransform-15"><span class="linenos">15</span></a><span class="sd">    them more efficient, but we&#39;ve opted to make them just like any</span>
-</span><span id="DerivedDataTransform-16"><a href="#DerivedDataTransform-16"><span class="linenos">16</span></a><span class="sd">    other transform for simplicity.</span>
-</span><span id="DerivedDataTransform-17"><a href="#DerivedDataTransform-17"><span class="linenos">17</span></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="DerivedDataTransform-18"><a href="#DerivedDataTransform-18"><span class="linenos">18</span></a>    <span class="k">pass</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="DerivedDataTransform-9"><a href="#DerivedDataTransform-9"><span class="linenos"> 9</span></a><span class="k">class</span><span class="w"> </span><span class="nc">DerivedDataTransform</span><span class="p">(</span><span class="n">Transform</span><span class="p">):</span>
+</span><span id="DerivedDataTransform-10"><a href="#DerivedDataTransform-10"><span class="linenos">10</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Trivial base class for derived data transforms. Derived data</span>
+</span><span id="DerivedDataTransform-11"><a href="#DerivedDataTransform-11"><span class="linenos">11</span></a><span class="sd">    transforms used to have some complicated invocation process to make</span>
+</span><span id="DerivedDataTransform-12"><a href="#DerivedDataTransform-12"><span class="linenos">12</span></a><span class="sd">    them more efficient, but we&#39;ve opted to make them just like any</span>
+</span><span id="DerivedDataTransform-13"><a href="#DerivedDataTransform-13"><span class="linenos">13</span></a><span class="sd">    other transform for simplicity.</span>
+</span><span id="DerivedDataTransform-14"><a href="#DerivedDataTransform-14"><span class="linenos">14</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="DerivedDataTransform-15"><a href="#DerivedDataTransform-15"><span class="linenos">15</span></a>    <span class="k">pass</span>
 </span></pre></div>
 
 
