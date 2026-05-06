@@ -2,6 +2,7 @@
 
 import logging
 import socket
+import struct
 
 from logger.readers.reader import Reader  # noqa: E402
 
@@ -93,14 +94,6 @@ class UDPReader(Reader):
         if mc_group:
             # resolve once in constructor
             mc_group = socket.gethostbyname(mc_group)
-            if not interface:
-                # multicast needs to specify interface to use, so let's pick a
-                # sane default
-                #
-                # NOTE: This means hostname cannot be an alias to localhost, or
-                #       you won't be able to send IGMP packets correctly.
-                #
-                self.interface = socket.gethostbyname(socket.gethostname())
 
         self.mc_group = mc_group
 
@@ -154,8 +147,6 @@ class UDPReader(Reader):
                                 "specify the interface to use by passing its IP address as the "
                                 "`interface` parameter.  (You can ignore this message if you're "
                                 "actually just doing loopback testing.)")
-            sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_IF,
-                            socket.inet_aton(self.interface))
 
             # join the group via IGMP
             #
@@ -164,11 +155,21 @@ class UDPReader(Reader):
             #       could use struct.pack("4s4s", ...) to create a struct to
             #       pass into setsockopt()
             #
-            sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP,
-                            socket.inet_aton(self.mc_group) + socket.inet_aton(self.interface))
+            if self.interface:
+                sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP,
+                                socket.inet_aton(self.mc_group) + socket.inet_aton(self.interface))
+            else:
+                mreq = struct.pack("4sl", socket.inet_aton(self.mc_group), socket.INADDR_ANY)
+                sock.setsockopt(
+                    socket.IPPROTO_IP, 
+                    socket.IP_ADD_MEMBERSHIP, 
+                    mreq
+                )
 
-            # bind to mc_group:port
-            sock.bind((self.mc_group, self.port))
+
+            # bind
+            # don't need to specify mc_group address because we have already joined above
+            sock.bind(('', self.port))
 
         else:
             # broadcast or unicast, bind to specificed interface
