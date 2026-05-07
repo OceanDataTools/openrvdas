@@ -85,19 +85,19 @@ class LoggerSupervisor:
 
     ###################
     def _check_loggers(self):
-        logging.info('Checking loggers...')
+        logging.debug('Checking loggers...')
         with self.logger_map_lock:
             for logger, runner in self.logger_runner_map.items():
                 if not runner.is_runnable():
-                    logging.info('%s - okay; not runnable', logger)
+                    logging.debug('%s - okay; not runnable', logger)
                     continue
 
                 if runner.is_alive():
-                    logging.info('%s - okay; running', logger)
+                    logging.debug('%s - okay; running', logger)
                     continue
 
                 if runner.is_failed():
-                    logging.info('%s - failed', logger)
+                    logging.debug('%s - failed', logger)
                     continue
 
                 # If we're here, runner is runnable is not running, and hasn't
