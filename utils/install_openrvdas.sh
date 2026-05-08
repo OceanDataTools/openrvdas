@@ -290,6 +290,7 @@ function set_default_variables {
     DEFAULT_RUN_SIMULATE_NBP=no
 
     DEFAULT_UI_TYPE=django
+    DEFAULT_EXPOSE_API_DOCS=no
 
     DEFAULT_SUPERVISORD_WEBINTERFACE=no
     DEFAULT_SUPERVISORD_WEBINTERFACE_AUTH=no
@@ -334,6 +335,7 @@ DEFAULT_INSTALL_FIREWALLD=$INSTALL_FIREWALLD
 DEFAULT_OPENRVDAS_AUTOSTART=$OPENRVDAS_AUTOSTART
 
 DEFAULT_UI_TYPE=$UI_TYPE
+DEFAULT_EXPOSE_API_DOCS=$EXPOSE_API_DOCS
 
 DEFAULT_INSTALL_SIMULATE_NBP=$INSTALL_SIMULATE_NBP
 DEFAULT_RUN_SIMULATE_NBP=$RUN_SIMULATE_NBP
@@ -975,6 +977,18 @@ http {
             proxy_set_header Host \$host;
         }
 
+$(if [ "$EXPOSE_API_DOCS" == "yes" ]; then cat <<APIDOCS
+        # FastAPI OpenAPI docs (optional - disabled by default)
+        location ~ ^/(docs|redoc|openapi.json)(/.*)?$ {
+            proxy_pass http://127.0.0.1:8000;
+            proxy_http_version 1.1;
+            proxy_set_header Host \$host;
+            proxy_set_header X-Real-IP \$remote_addr;
+            proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto \$scheme;
+        }
+APIDOCS
+fi)
         # SPA fallback - all other requests serve index.html
         location / {
             try_files \$uri \$uri/ /index.html;
@@ -1023,23 +1037,26 @@ function setup_new_ui_backend {
     BACKEND_DIR=${INSTALL_ROOT}/openrvdas/web_backend
     BACKEND_VENV=${BACKEND_DIR}/.venv
 
-    echo "Creating virtual environment for web backend..."
-    python3 -m venv "$BACKEND_VENV"
-    "$BACKEND_VENV/bin/pip" install --upgrade pip --quiet
-    "$BACKEND_VENV/bin/pip" install \
-        --trusted-host pypi.org --trusted-host files.pythonhosted.org \
-        -r "$BACKEND_DIR/requirements.txt"
+    if [ "$USE_SSL" == "yes" ]; then
+        FRONTEND_URL="https://${HOSTNAME}"
+    else
+        FRONTEND_URL="http://${HOSTNAME}"
+    fi
 
     # Create .env only if it doesn't already exist
     if [ ! -f "${BACKEND_DIR}/.env" ]; then
         echo "Creating web backend .env..."
         SECRET_KEY=$(python3 -c "import secrets; print(secrets.token_urlsafe(32))")
-        if [ "$USE_SSL" == "yes" ]; then
-            FRONTEND_URL="https://${HOSTNAME}"
-        else
-            FRONTEND_URL="http://${HOSTNAME}"
-        fi
 
+        echo
+        read -p "Initial admin username for web UI? (admin) " WEB_ADMIN_USER
+        WEB_ADMIN_USER=${WEB_ADMIN_USER:-admin}
+        read -s -p "Initial admin password for web UI? " WEB_ADMIN_PASS
+        echo
+        WEB_ADMIN_PASS=${WEB_ADMIN_PASS:-admin}
+
+        # Bootstrap credentials are included so Alembic's init migration can
+        # seed the admin account; they are stripped out after migrations run.
         cat > "${BACKEND_DIR}/.env" <<EOF
 DATABASE_URL=sqlite+aiosqlite://${BACKEND_DIR}/db.sqlite3
 SECRET_KEY=${SECRET_KEY}
@@ -1049,8 +1066,8 @@ FRONTEND_URL=${FRONTEND_URL}
 CACHED_DATA_SERVER_HOST=localhost
 CACHED_DATA_SERVER_PORT=8766
 ENVIRONMENT=Production
-DEFAULT_ADMIN_USERNAME=admin
-DEFAULT_ADMIN_PASSWORD=admin
+DEFAULT_ADMIN_USERNAME=${WEB_ADMIN_USER}
+DEFAULT_ADMIN_PASSWORD=${WEB_ADMIN_PASS}
 DEFAULT_ADMIN_FULLNAME=Administrator
 DEFAULT_ADMIN_EMAIL=admin@example.com
 EOF
@@ -1059,9 +1076,24 @@ EOF
         echo "Web backend .env already exists, skipping."
     fi
 
+    echo "Creating web backend virtual environment..."
+    python3 -m venv "$BACKEND_VENV"
+    "$BACKEND_VENV/bin/pip" install --upgrade pip --quiet
+    "$BACKEND_VENV/bin/pip" install \
+        --trusted-host pypi.org --trusted-host files.pythonhosted.org \
+        -r "$BACKEND_DIR/requirements.txt"
+
     echo "Running database migrations..."
     cd "$BACKEND_DIR"
     "$BACKEND_VENV/bin/alembic" upgrade head
+
+    # Strip bootstrap credentials now that the DB is seeded
+    sed -i -e '/^DEFAULT_ADMIN_USERNAME=/d' \
+           -e '/^DEFAULT_ADMIN_PASSWORD=/d' \
+           -e '/^DEFAULT_ADMIN_FULLNAME=/d' \
+           -e '/^DEFAULT_ADMIN_EMAIL=/d' \
+           "${BACKEND_DIR}/.env"
+
     cd ${INSTALL_ROOT}/openrvdas
 }
 
@@ -1073,15 +1105,9 @@ function setup_new_ui_frontend {
 
     install_nodejs
 
-    if [ "$USE_SSL" == "yes" ]; then
-        API_BASE_URL="https://${HOSTNAME}/api/v1"
-    else
-        API_BASE_URL="http://${HOSTNAME}/api/v1"
-    fi
-
     echo "Writing web frontend .env..."
     cat > "${FRONTEND_DIR}/.env" <<EOF
-VITE_SERVER_API_BASE_URL=${API_BASE_URL}
+VITE_SERVER_API_BASE_URL=
 VITE_DEFAULT_THEME=dark
 VITE_ALLOW_SELF_REGISTER=true
 VITE_LAYOUT=topnav
@@ -1854,7 +1880,7 @@ echo
 echo "#####################################################################"
 echo "OpenRVDAS includes two web-based console options:"
 echo "  django - Classic Django UI (stable, full-featured)"
-echo "  react  - New React/FastAPI UI (modern, recommended)"
+echo "  react  - New React/FastAPI UI (experimental)"
 echo "  none   - No web UI (headless / portability mode)"
 echo
 read -p "Which web UI would you like to install? (django/react/none) [$DEFAULT_UI_TYPE] " UI_TYPE_INPUT
@@ -1866,6 +1892,19 @@ case "$UI_TYPE" in
     *)                 UI_TYPE=django ;;
 esac
 echo "Web UI: $UI_TYPE"
+
+if [ "$UI_TYPE" == "react" ]; then
+    echo
+    echo "#####################################################################"
+    echo "The React UI's FastAPI backend provides an OpenAPI documentation"
+    echo "interface at /docs and /redoc. These are useful for development and"
+    echo "debugging, but expose your API surface publicly with no authentication."
+    echo
+    yes_no "Expose FastAPI OpenAPI docs (/docs, /redoc) via nginx? " $DEFAULT_EXPOSE_API_DOCS
+    EXPOSE_API_DOCS=$YES_NO_RESULT
+else
+    EXPOSE_API_DOCS=no
+fi
 
 #########################################################################
 # Enable Supervisor web-interface?
