@@ -1011,22 +1011,33 @@ EOF
 
 ###########################################################################
 ###########################################################################
-# Install Node.js if not already present
+# Install Node.js >= MIN_NODE_MAJOR if not already present or too old
+MIN_NODE_MAJOR=20
 function install_nodejs {
+    local need_install=true
     if command -v node &>/dev/null; then
-        echo "Node.js already installed: $(node --version)"
-        return
+        local current_major
+        current_major=$(node --version | sed 's/v\([0-9]*\).*/\1/')
+        if [ "$current_major" -ge "$MIN_NODE_MAJOR" ]; then
+            echo "Node.js already installed: $(node --version)"
+            need_install=false
+        else
+            echo "Node.js $(node --version) is too old (need >= v${MIN_NODE_MAJOR}), upgrading..."
+        fi
+    else
+        echo "Node.js not found, installing..."
     fi
 
-    echo "Installing Node.js..."
-    if [ $OS_TYPE == 'MacOS' ]; then
-        env HOMEBREW_NO_AUTO_UPDATE=1 brew install node
-    elif [ $OS_TYPE == 'Ubuntu' ]; then
-        curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
-        sudo DEBIAN_FRONTEND=noninteractive apt install -y nodejs
-    elif [ $OS_TYPE == 'CentOS' ]; then
-        curl -fsSL https://rpm.nodesource.com/setup_lts.x | sudo bash -
-        sudo yum install -y nodejs
+    if [ "$need_install" = true ]; then
+        if [ $OS_TYPE == 'MacOS' ]; then
+            env HOMEBREW_NO_AUTO_UPDATE=1 brew install node
+        elif [ $OS_TYPE == 'Ubuntu' ]; then
+            curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+            sudo DEBIAN_FRONTEND=noninteractive apt install -y nodejs
+        elif [ $OS_TYPE == 'CentOS' ]; then
+            curl -fsSL https://rpm.nodesource.com/setup_lts.x | sudo bash -
+            sudo yum install -y nodejs
+        fi
     fi
 }
 
