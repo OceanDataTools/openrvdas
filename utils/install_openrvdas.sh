@@ -291,6 +291,7 @@ function set_default_variables {
 
     DEFAULT_UI_TYPE=django
     DEFAULT_EXPOSE_API_DOCS=no
+    DEFAULT_WEB_ADMIN_USER=
 
     DEFAULT_SUPERVISORD_WEBINTERFACE=no
     DEFAULT_SUPERVISORD_WEBINTERFACE_AUTH=no
@@ -336,6 +337,7 @@ DEFAULT_OPENRVDAS_AUTOSTART=$OPENRVDAS_AUTOSTART
 
 DEFAULT_UI_TYPE=$UI_TYPE
 DEFAULT_EXPOSE_API_DOCS=$EXPOSE_API_DOCS
+DEFAULT_WEB_ADMIN_USER=$WEB_ADMIN_USER
 
 DEFAULT_INSTALL_SIMULATE_NBP=$INSTALL_SIMULATE_NBP
 DEFAULT_RUN_SIMULATE_NBP=$RUN_SIMULATE_NBP
@@ -1062,13 +1064,6 @@ function setup_new_ui_backend {
         echo "Creating web backend .env..."
         SECRET_KEY=$(python3 -c "import secrets; print(secrets.token_urlsafe(32))")
 
-        echo
-        read -p "Initial admin username for web UI? ($RVDAS_USER) " WEB_ADMIN_USER
-        WEB_ADMIN_USER=${WEB_ADMIN_USER:-$RVDAS_USER}
-        read -s -p "Initial admin password for web UI? " WEB_ADMIN_PASS
-        echo
-        WEB_ADMIN_PASS=${WEB_ADMIN_PASS:-admin}
-
         # Bootstrap credentials are included so Alembic's init migration can
         # seed the admin account; they are stripped out after migrations run.
         cat > "${BACKEND_DIR}/.env" <<EOF
@@ -1204,10 +1199,7 @@ SSLCNF
 function setup_django {
     # Expect the following shell variables to be appropriately set:
     # RVDAS_USER - valid userid
-
-    echo
-    read -p "OpenRVDAS database password for user $RVDAS_USER? ($RVDAS_USER) " RVDAS_DATABASE_PASSWORD
-    RVDAS_DATABASE_PASSWORD=${RVDAS_DATABASE_PASSWORD:-$RVDAS_USER}
+    # RVDAS_DATABASE_PASSWORD - string to use for Django/database password
 
     cd ${INSTALL_ROOT}/openrvdas
     source ${INSTALL_ROOT}/openrvdas/venv/bin/activate
@@ -1785,6 +1777,10 @@ else
     RVDAS_GROUP=$RVDAS_USER
 fi
 
+echo
+read -p "OpenRVDAS database password for user $RVDAS_USER? ($RVDAS_USER) " RVDAS_DATABASE_PASSWORD
+RVDAS_DATABASE_PASSWORD=${RVDAS_DATABASE_PASSWORD:-$RVDAS_USER}
+
 #########################################################################
 #########################################################################
 echo
@@ -1934,8 +1930,19 @@ if [ "$UI_TYPE" == "react" ]; then
     echo
     yes_no "Expose FastAPI OpenAPI docs (/docs, /redoc) via nginx? " $DEFAULT_EXPOSE_API_DOCS
     EXPOSE_API_DOCS=$YES_NO_RESULT
+
+    echo
+    echo "#####################################################################"
+    echo "Initial admin account for the React web UI:"
+    read -p "  Admin username? (${DEFAULT_WEB_ADMIN_USER:-$RVDAS_USER}) " WEB_ADMIN_USER
+    WEB_ADMIN_USER=${WEB_ADMIN_USER:-${DEFAULT_WEB_ADMIN_USER:-$RVDAS_USER}}
+    read -s -p "  Admin password? " WEB_ADMIN_PASS
+    echo
+    WEB_ADMIN_PASS=${WEB_ADMIN_PASS:-admin}
 else
     EXPOSE_API_DOCS=no
+    WEB_ADMIN_USER=
+    WEB_ADMIN_PASS=
 fi
 
 #########################################################################
