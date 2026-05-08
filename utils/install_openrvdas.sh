@@ -2062,20 +2062,6 @@ echo "Initializing Django database..."
 setup_django
 
 # Connect uWSGI with our project installation
-echo
-echo "#####################################################################"
-echo "Creating OpenRVDAS-specific uWSGI/ownership files"
-
-# Make everything accessible to nginx
-sudo chmod 755 ${INSTALL_ROOT}/openrvdas
-sudo chown -R ${RVDAS_USER} ${INSTALL_ROOT}/openrvdas
-sudo chgrp -R ${RVDAS_GROUP} ${INSTALL_ROOT}/openrvdas
-
-# Create openrvdas log and tmp directories
-sudo mkdir -p /var/log/openrvdas /var/tmp/openrvdas
-sudo chown $RVDAS_USER /var/log/openrvdas /var/tmp/openrvdas
-sudo chgrp $RVDAS_GROUP /var/log/openrvdas /var/tmp/openrvdas
-
 #########################################################################
 #########################################################################
 # Set up React/FastAPI UI (react mode only)
@@ -2090,6 +2076,20 @@ if [[ "$UI_TYPE" == "react" ]];then
     echo "Building React web frontend..."
     setup_new_ui_frontend
 fi
+
+echo
+echo "#####################################################################"
+echo "Setting ownership of OpenRVDAS files"
+
+# Make everything accessible to nginx
+sudo chmod 755 ${INSTALL_ROOT}/openrvdas
+sudo chown -R ${RVDAS_USER} ${INSTALL_ROOT}/openrvdas
+sudo chgrp -R ${RVDAS_GROUP} ${INSTALL_ROOT}/openrvdas
+
+# Create openrvdas log and tmp directories
+sudo mkdir -p /var/log/openrvdas /var/tmp/openrvdas
+sudo chown $RVDAS_USER /var/log/openrvdas /var/tmp/openrvdas
+sudo chgrp $RVDAS_GROUP /var/log/openrvdas /var/tmp/openrvdas
 
 echo
 echo "#####################################################################"
