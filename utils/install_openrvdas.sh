@@ -1097,6 +1097,13 @@ EOF
         --trusted-host pypi.org --trusted-host files.pythonhosted.org \
         -r "$BACKEND_DIR/requirements.txt"
 
+    # Install packages needed by async_fastapi_server_api into the main venv
+    # so logger_manager can import them when using --database fastapi.
+    echo "Installing FastAPI dependencies into main OpenRVDAS venv..."
+    "${INSTALL_ROOT}/openrvdas/venv/bin/pip" install --quiet \
+        --trusted-host pypi.org --trusted-host files.pythonhosted.org \
+        "fastapi>=0.135.0" "sqlalchemy>=2.0" "aiosqlite>=0.22" "greenlet>=3.2"
+
     echo "Running database migrations..."
     cd "$BACKEND_DIR"
     "$BACKEND_VENV/bin/alembic" upgrade head
