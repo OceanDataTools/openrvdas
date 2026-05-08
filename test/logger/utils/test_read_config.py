@@ -1425,17 +1425,276 @@ loggers:
             self.assertEqual(result["modes"]["mode2"]["logger1"], "logger1-config2")
             self.assertEqual(result["modes"]["mode2"]["logger2"], "logger2-config2")
 
-    if __name__ == "__main__":
-        import argparse
-        import logging
 
-        parser = argparse.ArgumentParser()
-        parser.add_argument('-v', '--verbosity', dest='verbosity', default=0, action='count',
-                            help='Increase output verbosity')
-        args = parser.parse_args()
 
-        LOG_LEVELS = {0: logging.WARNING, 1: logging.INFO, 2: logging.DEBUG}
-        args.verbosity = min(args.verbosity, max(LOG_LEVELS))
-        logging.getLogger().setLevel(LOG_LEVELS[args.verbosity])
+class TestExpandModesValidation(unittest.TestCase):
+    """Tests for expand_modes, including the dict-mode config existence check."""
 
-        unittest.main(warnings='ignore')
+    def setUp(self):
+        self.valid_input = {
+            "loggers": {
+                "lgr1": {"configs": ["lgr1-off", "lgr1-on"]},
+                "lgr2": {"configs": ["lgr2-off", "lgr2-on"]},
+            },
+            "configs": {
+                "lgr1-off": {}, "lgr1-on": {},
+                "lgr2-off": {}, "lgr2-on": {},
+            },
+            "modes": {
+                "off": {"lgr1": "lgr1-off", "lgr2": "lgr2-off"},
+                "on":  {"lgr1": "lgr1-on",  "lgr2": "lgr2-on"},
+            },
+        }
+
+    def test_valid_dict_modes_pass(self):
+        """Dict-format modes with valid config refs should not raise or collect errors."""
+        errors = []
+        read_config.expand_modes(self.valid_input, errors=errors)
+        self.assertEqual(errors, [])
+
+    def test_dict_mode_nonexistent_config_raises(self):
+        """Dict-format mode referencing a missing config raises without an errors list."""
+        bad = copy.deepcopy(self.valid_input)
+        bad["modes"]["off"]["lgr1"] = "lgr1-TYPO"
+        with self.assertRaises(ValueError) as ctx:
+            read_config.expand_modes(bad)
+        self.assertIn("not found in top-level configs", str(ctx.exception))
+
+    def test_dict_mode_nonexistent_config_collected(self):
+        """Dict-format mode referencing a missing config is collected with errors list."""
+        bad = copy.deepcopy(self.valid_input)
+        bad["modes"]["off"]["lgr1"] = "lgr1-TYPO"
+        errors = []
+        read_config.expand_modes(bad, errors=errors)
+        self.assertEqual(len(errors), 1)
+        self.assertIn("lgr1-TYPO", errors[0])
+        self.assertIn("not found in top-level configs", errors[0])
+
+    def test_list_mode_nonexistent_config_raises(self):
+        """List-format mode referencing a missing config raises without an errors list."""
+        bad = {
+            "loggers": {"lgr1": {"configs": ["lgr1-off"]}},
+            "configs": {"lgr1-off": {}},
+            "modes": {"off": ["nonexistent-config"]},
+        }
+        with self.assertRaises(ValueError) as ctx:
+            read_config.expand_modes(bad)
+        self.assertIn("No logger found for", str(ctx.exception))
+
+    def test_list_mode_nonexistent_config_collected(self):
+        """List-format mode referencing a missing config is collected with errors list."""
+        bad = {
+            "loggers": {"lgr1": {"configs": ["lgr1-off"]}},
+            "configs": {"lgr1-off": {}},
+            "modes": {"off": ["nonexistent-config"]},
+        }
+        errors = []
+        read_config.expand_modes(bad, errors=errors)
+        self.assertGreater(len(errors), 0)
+        self.assertIn("No logger found for", errors[0])
+
+    def test_incomplete_list_mode_raises(self):
+        """List mode missing a logger config raises without an errors list."""
+        bad = copy.deepcopy(self.valid_input)
+        bad["modes"]["off"] = ["lgr1-off"]  # lgr2 has no config
+        with self.assertRaises(ValueError) as ctx:
+            read_config.expand_modes(bad)
+        self.assertIn("No config defined for", str(ctx.exception))
+
+    def test_incomplete_list_mode_collected(self):
+        """List mode missing a logger config is collected with errors list."""
+        bad = copy.deepcopy(self.valid_input)
+        bad["modes"]["off"] = ["lgr1-off"]  # lgr2 has no config
+        errors = []
+        read_config.expand_modes(bad, errors=errors)
+        self.assertGreater(len(errors), 0)
+        self.assertTrue(any("No config defined for" in e for e in errors))
+
+    def test_invalid_mode_type_raises(self):
+        """Non-dict, non-list mode value raises without an errors list."""
+        bad = copy.deepcopy(self.valid_input)
+        bad["modes"]["bad"] = "not_a_dict_or_list"
+        with self.assertRaises(ValueError) as ctx:
+            read_config.expand_modes(bad)
+        self.assertIn("must be either dict or list", str(ctx.exception))
+
+    def test_invalid_mode_type_collected(self):
+        """Non-dict, non-list mode value is collected with errors list."""
+        bad = copy.deepcopy(self.valid_input)
+        bad["modes"]["bad"] = "not_a_dict_or_list"
+        errors = []
+        read_config.expand_modes(bad, errors=errors)
+        self.assertEqual(len(errors), 1)
+        self.assertIn("must be either dict or list", errors[0])
+
+    def test_missing_loggers_key_always_raises(self):
+        """Fatal: missing loggers key raises even with an errors list."""
+        errors = []
+        with self.assertRaises(ValueError):
+            read_config.expand_modes({"configs": {}}, errors=errors)
+
+    def test_missing_configs_key_always_raises(self):
+        """Fatal: missing configs key raises even with an errors list."""
+        errors = []
+        with self.assertRaises(ValueError):
+            read_config.expand_modes({"loggers": {}}, errors=errors)
+
+
+class TestExpandLoggerDefinitionsErrorCollection(unittest.TestCase):
+    """Tests for the errors parameter on expand_logger_definitions."""
+
+    def test_referenced_config_missing_raises(self):
+        """Referenced config not in top-level configs raises without errors list."""
+        bad = {
+            "loggers": {"lgr": {"configs": ["lgr-off", "lgr-MISSING"]}},
+            "configs": {"lgr-off": {}},
+        }
+        with self.assertRaises(ValueError) as ctx:
+            read_config.expand_logger_definitions(bad)
+        self.assertIn("lgr-MISSING", str(ctx.exception))
+
+    def test_referenced_config_missing_collected(self):
+        """Referenced config not in top-level configs is collected with errors list."""
+        bad = {
+            "loggers": {"lgr": {"configs": ["lgr-off", "lgr-MISSING"]}},
+            "configs": {"lgr-off": {}},
+        }
+        errors = []
+        read_config.expand_logger_definitions(bad, errors=errors)
+        self.assertEqual(len(errors), 1)
+        self.assertIn("lgr-MISSING", errors[0])
+
+    def test_missing_loggers_key_always_raises(self):
+        """Fatal: missing loggers key raises even with an errors list."""
+        errors = []
+        with self.assertRaises(ValueError):
+            read_config.expand_logger_definitions({}, errors=errors)
+
+
+class TestExpandTemplatesErrorCollection(unittest.TestCase):
+    """Tests for the errors parameter on expand_templates."""
+
+    def test_missing_logger_template_raises(self):
+        """Missing logger template raises without errors list."""
+        cfg = {
+            "logger_templates": {},
+            "loggers": {"lgr": {"logger_template": "nonexistent"}},
+        }
+        with self.assertRaises(ValueError) as ctx:
+            read_config.expand_templates(cfg)
+        self.assertIn("nonexistent", str(ctx.exception))
+
+    def test_missing_logger_template_collected(self):
+        """Missing logger template is collected with errors list."""
+        cfg = {
+            "logger_templates": {},
+            "loggers": {"lgr": {"logger_template": "nonexistent"}},
+        }
+        errors = []
+        read_config.expand_templates(cfg, errors=errors)
+        self.assertGreater(len(errors), 0)
+        self.assertIn("nonexistent", errors[0])
+
+    def test_missing_config_template_raises(self):
+        """Missing config template raises without errors list."""
+        cfg = {
+            "config_templates": {},
+            "loggers": {
+                "lgr": {"configs": {"net": {"config_template": "nonexistent"}}}
+            },
+        }
+        with self.assertRaises(ValueError) as ctx:
+            read_config.expand_templates(cfg)
+        self.assertIn("nonexistent", str(ctx.exception))
+
+    def test_missing_config_template_collected(self):
+        """Missing config template is collected with errors list."""
+        cfg = {
+            "config_templates": {},
+            "loggers": {
+                "lgr": {"configs": {"net": {"config_template": "nonexistent"}}}
+            },
+        }
+        errors = []
+        read_config.expand_templates(cfg, errors=errors)
+        self.assertGreater(len(errors), 0)
+        self.assertIn("nonexistent", errors[0])
+
+
+class TestExpandCruiseDefinitionErrors(unittest.TestCase):
+    """Integration tests for expand_cruise_definition error collection."""
+
+    def test_fatal_error_raises_with_errors_list(self):
+        """Fatal structural errors raise even when an errors list is provided."""
+        errors = []
+        with self.assertRaises(ValueError):
+            read_config.expand_cruise_definition({"cruise": {}}, errors=errors)
+
+    def test_nonfatal_errors_collected(self):
+        """Per-item errors (bad template ref) are collected instead of raising."""
+        cfg = {
+            "cruise": {"id": "test"},
+            "loggers": {
+                "ok_logger": {"configs": {"off": {}}},
+                "bad_logger": {"logger_template": "nonexistent_template"},
+            },
+            "configs": {},
+        }
+        errors = []
+        read_config.expand_cruise_definition(cfg, errors=errors)
+        self.assertGreater(len(errors), 0)
+        self.assertTrue(any("nonexistent_template" in e for e in errors))
+
+    def test_dict_mode_invalid_config_collected(self):
+        """Dict-format mode referencing non-existent config is collected end-to-end."""
+        cfg = {
+            "cruise": {"id": "test"},
+            "loggers": {"lgr": {"configs": {"off": {}}}},
+            "configs": {},
+            "modes": {"off": {"lgr": "lgr-TYPO"}},
+        }
+        errors = []
+        read_config.expand_cruise_definition(cfg, errors=errors)
+        self.assertEqual(len(errors), 1)
+        self.assertIn("lgr-TYPO", errors[0])
+
+    def test_clean_config_no_errors(self):
+        """A valid config collects no errors."""
+        cfg = {
+            "cruise": {"id": "test"},
+            "loggers": {"lgr": {"configs": {"off": {}, "on": {}}}},
+            "configs": {},
+            "modes": {"off": ["lgr-off"], "on": ["lgr-on"]},
+        }
+        errors = []
+        read_config.expand_cruise_definition(cfg, errors=errors)
+        self.assertEqual(errors, [])
+
+    def test_multiple_errors_all_collected(self):
+        """Multiple per-item errors across different stages are all collected."""
+        cfg = {
+            "cruise": {"id": "test"},
+            "loggers": {
+                "lgr1": {"logger_template": "bad_tmpl_1"},
+                "lgr2": {"logger_template": "bad_tmpl_2"},
+            },
+            "configs": {},
+        }
+        errors = []
+        read_config.expand_cruise_definition(cfg, errors=errors)
+        self.assertGreaterEqual(len(errors), 2)
+
+
+if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-v', '--verbosity', dest='verbosity', default=0, action='count',
+                        help='Increase output verbosity')
+    args = parser.parse_args()
+
+    LOG_LEVELS = {0: logging.WARNING, 1: logging.INFO, 2: logging.DEBUG}
+    args.verbosity = min(args.verbosity, max(LOG_LEVELS))
+    logging.getLogger().setLevel(LOG_LEVELS[args.verbosity])
+
+    unittest.main(warnings='ignore')
