@@ -1097,7 +1097,8 @@ EOF
     echo "Installing FastAPI dependencies into main OpenRVDAS venv..."
     "${INSTALL_ROOT}/openrvdas/venv/bin/pip" install --quiet \
         --trusted-host pypi.org --trusted-host files.pythonhosted.org \
-        "fastapi>=0.135.0" "sqlalchemy>=2.0" "aiosqlite>=0.22" "greenlet>=3.2"
+        "fastapi>=0.135.0" "sqlalchemy>=2.0" "aiosqlite>=0.22" "greenlet>=3.2" \
+        "pydantic>=2.0" "pydantic-settings>=2.0"
 
     echo "Running database migrations..."
     cd "$BACKEND_DIR"
