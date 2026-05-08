@@ -644,6 +644,7 @@ function install_openrvdas {
         exit_gracefully
       fi
       git pull
+      git submodule update --init --recursive
     else                              # If we don't already have an installation
       sudo rm -rf openrvdas           # in case there's a non-git dir there
       sudo mkdir openrvdas
@@ -653,6 +654,7 @@ function install_openrvdas {
         exit_gracefully
       fi
       cd openrvdas
+      git submodule update --init --recursive
     fi
 
     # Copy widget settings into place and customize for this machine
@@ -666,7 +668,6 @@ function install_openrvdas {
     # routines can make the modifications they need to it.
     cp database/settings.py.dist database/settings.py
     sed -i -e "s/DEFAULT_DATABASE_USER = 'rvdas'/DEFAULT_DATABASE_USER = '${RVDAS_USER}'/g" database/settings.py
-    sed -i -e "s/DEFAULT_DATABASE_PASSWORD = 'rvdas'/DEFAULT_DATABASE_PASSWORD = '${RVDAS_DATABASE_PASSWORD}'/g" database/settings.py
 }
 
 ###########################################################################
@@ -1060,8 +1061,8 @@ function setup_new_ui_backend {
         SECRET_KEY=$(python3 -c "import secrets; print(secrets.token_urlsafe(32))")
 
         echo
-        read -p "Initial admin username for web UI? (admin) " WEB_ADMIN_USER
-        WEB_ADMIN_USER=${WEB_ADMIN_USER:-admin}
+        read -p "Initial admin username for web UI? ($RVDAS_USER) " WEB_ADMIN_USER
+        WEB_ADMIN_USER=${WEB_ADMIN_USER:-$RVDAS_USER}
         read -s -p "Initial admin password for web UI? " WEB_ADMIN_PASS
         echo
         WEB_ADMIN_PASS=${WEB_ADMIN_PASS:-admin}
@@ -1194,10 +1195,17 @@ SSLCNF
 function setup_django {
     # Expect the following shell variables to be appropriately set:
     # RVDAS_USER - valid userid
-    # RVDAS_DATABASE_PASSWORD - string to use for Django password
+
+    echo
+    read -p "OpenRVDAS database password for user $RVDAS_USER? ($RVDAS_USER) " RVDAS_DATABASE_PASSWORD
+    RVDAS_DATABASE_PASSWORD=${RVDAS_DATABASE_PASSWORD:-$RVDAS_USER}
 
     cd ${INSTALL_ROOT}/openrvdas
     source ${INSTALL_ROOT}/openrvdas/venv/bin/activate
+
+    # Apply database password to the shared database settings module
+    sed -i -e "s/DEFAULT_DATABASE_PASSWORD = 'rvdas'/DEFAULT_DATABASE_PASSWORD = '${RVDAS_DATABASE_PASSWORD}'/g" database/settings.py
+
     cp django_gui/settings.py.dist django_gui/settings.py
     sed -i -e "s/WEBSOCKET_PROTOCOL = 'ws'/WEBSOCKET_PROTOCOL = '${WEBSOCKET_PROTOCOL}'/g" django_gui/settings.py
     sed -i -e "s/WEBSOCKET_PORT = 80/WEBSOCKET_PORT = ${SERVER_PORT}/g" django_gui/settings.py
@@ -1761,9 +1769,6 @@ else
     RVDAS_GROUP=$RVDAS_USER
 fi
 
-read -p "Django/database password to use for user $RVDAS_USER? ($RVDAS_USER) " RVDAS_DATABASE_PASSWORD
-RVDAS_DATABASE_PASSWORD=${RVDAS_DATABASE_PASSWORD:-$RVDAS_USER}
-
 #########################################################################
 #########################################################################
 echo
@@ -2025,13 +2030,11 @@ fi
 
 #########################################################################
 #########################################################################
-# Set up Django database (always needed — logger_manager uses Django ORM)
+# Set up Django database (always needed — logger_manager uses Django ORM
+# regardless of which web UI is selected)
 echo
 echo "#########################################################################"
 echo "Initializing Django database..."
-# Expect the following shell variables to be appropriately set:
-# RVDAS_USER - valid userid
-# RVDAS_DATABASE_PASSWORD - string to use for Django password
 setup_django
 
 # Connect uWSGI with our project installation
