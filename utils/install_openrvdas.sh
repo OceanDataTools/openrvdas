@@ -1418,10 +1418,17 @@ EOF
 
     #######################################################
     # Write out the Logger Manager file
+    # Use fastapi database backend when React UI is selected so logger_manager
+    # shares the same SQLite DB as the FastAPI backend.
+    if [[ "$UI_TYPE" == "react" ]]; then
+        LOGGER_MANAGER_DATABASE=fastapi
+    else
+        LOGGER_MANAGER_DATABASE=django
+    fi
     cat > $TEMP_FILE <<EOF
 ; Supervisor configurations for LoggerManager
 [program:logger_manager]
-command=${VENV_BIN}/python server/logger_manager.py --database django --data_server_websocket :8766 -v -V --no-console
+command=${VENV_BIN}/python server/logger_manager.py --database ${LOGGER_MANAGER_DATABASE} --data_server_websocket :8766 -v -V --no-console
 environment=PATH="${VENV_BIN}:/usr/bin:/usr/local/bin"
 directory=${INSTALL_ROOT}/openrvdas
 autostart=$AUTOSTART
