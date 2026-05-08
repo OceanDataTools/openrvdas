@@ -644,7 +644,8 @@ function install_openrvdas {
         exit_gracefully
       fi
       git pull
-      git submodule update --init --recursive
+      git config --global --add safe.directory '*'
+      git submodule update --init
     else                              # If we don't already have an installation
       sudo rm -rf openrvdas           # in case there's a non-git dir there
       sudo mkdir openrvdas
@@ -654,7 +655,8 @@ function install_openrvdas {
         exit_gracefully
       fi
       cd openrvdas
-      git submodule update --init --recursive
+      git config --global --add safe.directory '*'
+      git submodule update --init
     fi
 
     # Copy widget settings into place and customize for this machine
