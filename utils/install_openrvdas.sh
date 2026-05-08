@@ -289,7 +289,7 @@ function set_default_variables {
     DEFAULT_INSTALL_SIMULATE_NBP=no
     DEFAULT_RUN_SIMULATE_NBP=no
 
-    DEFAULT_INSTALL_GUI=yes
+    DEFAULT_UI_TYPE=django
 
     DEFAULT_SUPERVISORD_WEBINTERFACE=no
     DEFAULT_SUPERVISORD_WEBINTERFACE_AUTH=no
@@ -333,7 +333,7 @@ DEFAULT_RVDAS_USER=$RVDAS_USER
 DEFAULT_INSTALL_FIREWALLD=$INSTALL_FIREWALLD
 DEFAULT_OPENRVDAS_AUTOSTART=$OPENRVDAS_AUTOSTART
 
-DEFAULT_INSTALL_GUI=$INSTALL_GUI
+DEFAULT_UI_TYPE=$UI_TYPE
 
 DEFAULT_INSTALL_SIMULATE_NBP=$INSTALL_SIMULATE_NBP
 DEFAULT_RUN_SIMULATE_NBP=$RUN_SIMULATE_NBP
@@ -771,9 +771,19 @@ function setup_nginx {
     else
         SERVER_PROTOCOL='default_server'
         SSL_COMMENT='#'   # do comment out SSL stuff
-
     fi
 
+    if [[ "$UI_TYPE" == "react" ]]; then
+        setup_nginx_react
+    else
+        setup_nginx_django
+    fi
+}
+
+###########################################################################
+###########################################################################
+# Write the nginx config for the Django UI
+function setup_nginx_django {
     # Now create the nginx conf file in place and link it up
     cat > $INSTALL_ROOT/openrvdas/django_gui/openrvdas_nginx.conf<<EOF
 # openrvdas_nginx.conf
@@ -885,6 +895,204 @@ fi)
 }
 EOF
 
+}
+
+###########################################################################
+###########################################################################
+# Write the nginx config for the React/FastAPI UI
+function setup_nginx_react {
+    REACT_NGINX_CONF=$INSTALL_ROOT/openrvdas/web_frontend/openrvdas_nginx.conf
+
+    if [ $OS_TYPE == 'MacOS' ]; then
+        NGINX_ETC_HOME=${HOMEBREW_PREFIX}/etc
+    else
+        NGINX_ETC_HOME=/etc
+    fi
+
+    cat > $REACT_NGINX_CONF<<EOF
+# openrvdas_nginx.conf - React/FastAPI UI
+
+worker_processes  auto;
+events {
+    worker_connections  1024;
+}
+
+http {
+    include       ${NGINX_ETC_HOME}/nginx/mime.types;
+    default_type  application/octet-stream;
+
+    sendfile        on;
+    keepalive_timeout  65;
+
+    map \$http_upgrade \$connection_upgrade {
+        default upgrade;
+        ''      close;
+    }
+
+    server {
+        listen      *:${SERVER_PORT} ${SERVER_PROTOCOL};
+        server_name _;
+        charset     utf-8;
+
+        ${SSL_COMMENT}ssl_certificate     $SSL_CRT_LOCATION;
+        ${SSL_COMMENT}ssl_certificate_key $SSL_KEY_LOCATION;
+        ${SSL_COMMENT}ssl_protocols       TLSv1.2 TLSv1.3;
+        ${SSL_COMMENT}ssl_ciphers         ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA256;
+        ${SSL_COMMENT}ssl_prefer_server_ciphers on;
+        ${SSL_COMMENT}ssl_session_cache   shared:SSL:10m;
+        ${SSL_COMMENT}ssl_session_timeout 1d;
+        ${SSL_COMMENT}add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+
+        client_max_body_size 75M;
+
+        root ${INSTALL_ROOT}/openrvdas/web_frontend/dist;
+        index index.html;
+
+        # Static assets - long cache
+        location /assets/ {
+            expires 1y;
+            add_header Cache-Control "public, immutable";
+        }
+
+        # Proxy FastAPI (including WebSocket upgrades)
+        location /api/v1/ {
+            proxy_pass http://127.0.0.1:8000;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade \$http_upgrade;
+            proxy_set_header Connection \$connection_upgrade;
+            proxy_set_header Host \$host;
+            proxy_set_header X-Real-IP \$remote_addr;
+            proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto \$scheme;
+        }
+
+        # CachedDataServer WebSocket proxy
+        location /cds-ws {
+            proxy_pass http://localhost:8766;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade \$http_upgrade;
+            proxy_set_header Connection \$connection_upgrade;
+            proxy_set_header Host \$host;
+        }
+
+        # SPA fallback - all other requests serve index.html
+        location / {
+            try_files \$uri \$uri/ /index.html;
+        }
+    }
+
+$(if [ "$USE_SSL" == "yes" ]; then cat <<REDIRECT
+    # Redirect HTTP to HTTPS when SSL is enabled
+    server {
+        listen      *:${NONSSL_SERVER_PORT} default_server;
+        server_name _;
+        return 301 https://\$host\$request_uri;
+    }
+REDIRECT
+fi)
+}
+EOF
+
+}
+
+###########################################################################
+###########################################################################
+# Install Node.js if not already present
+function install_nodejs {
+    if command -v node &>/dev/null; then
+        echo "Node.js already installed: $(node --version)"
+        return
+    fi
+
+    echo "Installing Node.js..."
+    if [ $OS_TYPE == 'MacOS' ]; then
+        env HOMEBREW_NO_AUTO_UPDATE=1 brew install node
+    elif [ $OS_TYPE == 'Ubuntu' ]; then
+        curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+        sudo DEBIAN_FRONTEND=noninteractive apt install -y nodejs
+    elif [ $OS_TYPE == 'CentOS' ]; then
+        curl -fsSL https://rpm.nodesource.com/setup_lts.x | sudo bash -
+        sudo yum install -y nodejs
+    fi
+}
+
+###########################################################################
+###########################################################################
+# Set up FastAPI web backend
+function setup_new_ui_backend {
+    BACKEND_DIR=${INSTALL_ROOT}/openrvdas/web_backend
+    BACKEND_VENV=${BACKEND_DIR}/.venv
+
+    echo "Creating virtual environment for web backend..."
+    python3 -m venv "$BACKEND_VENV"
+    "$BACKEND_VENV/bin/pip" install --upgrade pip --quiet
+    "$BACKEND_VENV/bin/pip" install \
+        --trusted-host pypi.org --trusted-host files.pythonhosted.org \
+        -r "$BACKEND_DIR/requirements.txt"
+
+    # Create .env only if it doesn't already exist
+    if [ ! -f "${BACKEND_DIR}/.env" ]; then
+        echo "Creating web backend .env..."
+        SECRET_KEY=$(python3 -c "import secrets; print(secrets.token_urlsafe(32))")
+        if [ "$USE_SSL" == "yes" ]; then
+            FRONTEND_URL="https://${HOSTNAME}"
+        else
+            FRONTEND_URL="http://${HOSTNAME}"
+        fi
+
+        cat > "${BACKEND_DIR}/.env" <<EOF
+DATABASE_URL=sqlite+aiosqlite://${BACKEND_DIR}/db.sqlite3
+SECRET_KEY=${SECRET_KEY}
+ACCESS_TOKEN_EXPIRE_MINUTES=15
+REFRESH_TOKEN_EXPIRE_DAYS=7
+FRONTEND_URL=${FRONTEND_URL}
+CACHED_DATA_SERVER_HOST=localhost
+CACHED_DATA_SERVER_PORT=8766
+ENVIRONMENT=Production
+DEFAULT_ADMIN_USERNAME=admin
+DEFAULT_ADMIN_PASSWORD=admin
+DEFAULT_ADMIN_FULLNAME=Administrator
+DEFAULT_ADMIN_EMAIL=admin@example.com
+EOF
+        echo "Web backend .env created."
+    else
+        echo "Web backend .env already exists, skipping."
+    fi
+
+    echo "Running database migrations..."
+    cd "$BACKEND_DIR"
+    "$BACKEND_VENV/bin/alembic" upgrade head
+    cd ${INSTALL_ROOT}/openrvdas
+}
+
+###########################################################################
+###########################################################################
+# Build the React frontend
+function setup_new_ui_frontend {
+    FRONTEND_DIR=${INSTALL_ROOT}/openrvdas/web_frontend
+
+    install_nodejs
+
+    if [ "$USE_SSL" == "yes" ]; then
+        API_BASE_URL="https://${HOSTNAME}/api/v1"
+    else
+        API_BASE_URL="http://${HOSTNAME}/api/v1"
+    fi
+
+    echo "Writing web frontend .env..."
+    cat > "${FRONTEND_DIR}/.env" <<EOF
+VITE_SERVER_API_BASE_URL=${API_BASE_URL}
+VITE_DEFAULT_THEME=dark
+VITE_ALLOW_SELF_REGISTER=true
+VITE_LAYOUT=topnav
+EOF
+
+    echo "Installing frontend dependencies..."
+    cd "$FRONTEND_DIR"
+    npm ci --silent
+    echo "Building frontend..."
+    npm run build
+    cd ${INSTALL_ROOT}/openrvdas
 }
 
 ###########################################################################
@@ -1053,12 +1261,16 @@ function setup_supervisor {
     # INSTALL_ROOT - path where openrvdas/ is found
     # OPENRVDAS_AUTOSTART - 'true' if we're to autostart, else 'false'
 
-    # If we're not installing the web GUI, comment out those bits of
-    # the supervisor config that run them.
-    if [[ "$INSTALL_GUI" == "yes" ]];then
-        GUI_COMMENT=''
+    # Comment out UI-specific supervisor entries based on chosen UI type.
+    if [[ "$UI_TYPE" == "django" ]]; then
+        DJANGO_GUI_COMMENT=''
+        REACT_GUI_COMMENT=';'
+    elif [[ "$UI_TYPE" == "react" ]]; then
+        DJANGO_GUI_COMMENT=';'
+        REACT_GUI_COMMENT=''
     else
-        GUI_COMMENT=';'
+        DJANGO_GUI_COMMENT=';'
+        REACT_GUI_COMMENT=';'
     fi
 
     if [[ $OS_TYPE == 'MacOS' ]];then
@@ -1122,6 +1334,7 @@ function setup_supervisor {
     LOGGER_MANAGER_FILE=$SUPERVISOR_DIR/openrvdas_logger_manager.${SUPERVISOR_SUFFIX}
     CACHED_DATA_FILE=$SUPERVISOR_DIR/openrvdas_cached_data.${SUPERVISOR_SUFFIX}
     DJANGO_FILE=$SUPERVISOR_DIR/openrvdas_django.${SUPERVISOR_SUFFIX}
+    REACT_FILE=$SUPERVISOR_DIR/openrvdas_react.${SUPERVISOR_SUFFIX}
     SIMULATE_FILE=$SUPERVISOR_DIR/openrvdas_simulate.${SUPERVISOR_SUFFIX}
 
     sudo mkdir -p $SUPERVISOR_DIR
@@ -1195,38 +1408,71 @@ EOF
 
 
     #######################################################
-    # Write out the Django GUI files, filling in variables
+    # Write out the Django GUI supervisor file
     cat > $TEMP_FILE <<EOF
 ; Supervisor configurations for Django GUI
-${GUI_COMMENT}[program:nginx]
-${GUI_COMMENT}command=${NGINX_BIN} -g 'daemon off;' -c ${INSTALL_ROOT}/openrvdas/django_gui/openrvdas_nginx.conf
-${GUI_COMMENT}directory=${INSTALL_ROOT}/openrvdas
-${GUI_COMMENT}autostart=$AUTOSTART
-${GUI_COMMENT}autorestart=true
-${GUI_COMMENT}startretries=3
-${GUI_COMMENT}killasgroup=true
-${GUI_COMMENT}stderr_logfile=/var/log/openrvdas/nginx.stderr
-${GUI_COMMENT}stderr_logfile_maxbytes=10000000 ; 10M
-${GUI_COMMENT}stderr_logfile_maxbackups=100
-${GUI_COMMENT};user=$RVDAS_USER
+${DJANGO_GUI_COMMENT}[program:nginx]
+${DJANGO_GUI_COMMENT}command=${NGINX_BIN} -g 'daemon off;' -c ${INSTALL_ROOT}/openrvdas/django_gui/openrvdas_nginx.conf
+${DJANGO_GUI_COMMENT}directory=${INSTALL_ROOT}/openrvdas
+${DJANGO_GUI_COMMENT}autostart=$AUTOSTART
+${DJANGO_GUI_COMMENT}autorestart=true
+${DJANGO_GUI_COMMENT}startretries=3
+${DJANGO_GUI_COMMENT}killasgroup=true
+${DJANGO_GUI_COMMENT}stderr_logfile=/var/log/openrvdas/nginx.stderr
+${DJANGO_GUI_COMMENT}stderr_logfile_maxbytes=10000000 ; 10M
+${DJANGO_GUI_COMMENT}stderr_logfile_maxbackups=100
+${DJANGO_GUI_COMMENT};user=$RVDAS_USER
 
-${GUI_COMMENT}[program:uwsgi]
-${GUI_COMMENT}command=${VENV_BIN}/uwsgi ${INSTALL_ROOT}/openrvdas/django_gui/openrvdas_uwsgi.ini --thunder-lock --enable-threads
-${GUI_COMMENT}stopsignal=INT
-${GUI_COMMENT}directory=${INSTALL_ROOT}/openrvdas
-${GUI_COMMENT}autostart=$AUTOSTART
-${GUI_COMMENT}autorestart=true
-${GUI_COMMENT}startretries=3
-${GUI_COMMENT}killasgroup=true
-${GUI_COMMENT}stderr_logfile=/var/log/openrvdas/uwsgi.stderr
-${GUI_COMMENT}stderr_logfile_maxbytes=10000000 ; 10M
-${GUI_COMMENT}stderr_logfile_maxbackups=100
-${GUI_COMMENT}user=$RVDAS_USER
+${DJANGO_GUI_COMMENT}[program:uwsgi]
+${DJANGO_GUI_COMMENT}command=${VENV_BIN}/uwsgi ${INSTALL_ROOT}/openrvdas/django_gui/openrvdas_uwsgi.ini --thunder-lock --enable-threads
+${DJANGO_GUI_COMMENT}stopsignal=INT
+${DJANGO_GUI_COMMENT}directory=${INSTALL_ROOT}/openrvdas
+${DJANGO_GUI_COMMENT}autostart=$AUTOSTART
+${DJANGO_GUI_COMMENT}autorestart=true
+${DJANGO_GUI_COMMENT}startretries=3
+${DJANGO_GUI_COMMENT}killasgroup=true
+${DJANGO_GUI_COMMENT}stderr_logfile=/var/log/openrvdas/uwsgi.stderr
+${DJANGO_GUI_COMMENT}stderr_logfile_maxbytes=10000000 ; 10M
+${DJANGO_GUI_COMMENT}stderr_logfile_maxbackups=100
+${DJANGO_GUI_COMMENT}user=$RVDAS_USER
 
-${GUI_COMMENT}[group:django]
-${GUI_COMMENT}programs=nginx,uwsgi
+${DJANGO_GUI_COMMENT}[group:django]
+${DJANGO_GUI_COMMENT}programs=nginx,uwsgi
 EOF
     sudo mv $TEMP_FILE $DJANGO_FILE
+
+    #######################################################
+    # Write out the React/FastAPI UI supervisor file
+    cat > $TEMP_FILE <<EOF
+; Supervisor configurations for React/FastAPI UI
+${REACT_GUI_COMMENT}[program:nginx]
+${REACT_GUI_COMMENT}command=${NGINX_BIN} -g 'daemon off;' -c ${INSTALL_ROOT}/openrvdas/web_frontend/openrvdas_nginx.conf
+${REACT_GUI_COMMENT}directory=${INSTALL_ROOT}/openrvdas
+${REACT_GUI_COMMENT}autostart=$AUTOSTART
+${REACT_GUI_COMMENT}autorestart=true
+${REACT_GUI_COMMENT}startretries=3
+${REACT_GUI_COMMENT}killasgroup=true
+${REACT_GUI_COMMENT}stderr_logfile=/var/log/openrvdas/nginx.stderr
+${REACT_GUI_COMMENT}stderr_logfile_maxbytes=10000000 ; 10M
+${REACT_GUI_COMMENT}stderr_logfile_maxbackups=100
+${REACT_GUI_COMMENT};user=$RVDAS_USER
+
+${REACT_GUI_COMMENT}[program:uvicorn]
+${REACT_GUI_COMMENT}command=${INSTALL_ROOT}/openrvdas/web_backend/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000
+${REACT_GUI_COMMENT}directory=${INSTALL_ROOT}/openrvdas/web_backend
+${REACT_GUI_COMMENT}autostart=$AUTOSTART
+${REACT_GUI_COMMENT}autorestart=true
+${REACT_GUI_COMMENT}startretries=3
+${REACT_GUI_COMMENT}killasgroup=true
+${REACT_GUI_COMMENT}stderr_logfile=/var/log/openrvdas/uvicorn.stderr
+${REACT_GUI_COMMENT}stderr_logfile_maxbytes=10000000 ; 10M
+${REACT_GUI_COMMENT}stderr_logfile_maxbackups=100
+${REACT_GUI_COMMENT}user=$RVDAS_USER
+
+${REACT_GUI_COMMENT}[group:react_ui]
+${REACT_GUI_COMMENT}programs=nginx,uvicorn
+EOF
+    sudo mv $TEMP_FILE $REACT_FILE
 
     #######################################################
     # Write out the simulator commands, filling in variables
@@ -1603,16 +1849,23 @@ fi
 
 
 #########################################################################
-# Install web console programs - nginx and uwsgi?
+# Choose web UI
 echo
 echo "#####################################################################"
-echo "The full OpenRVDAS installation includes a web-based console for loading"
-echo "and controlling loggers, but a slimmed-down version of the code may be"
-echo "installed and run without it if desired for portability or computational"
-echo "reasons."
+echo "OpenRVDAS includes two web-based console options:"
+echo "  django - Classic Django UI (stable, full-featured)"
+echo "  react  - New React/FastAPI UI (modern, recommended)"
+echo "  none   - No web UI (headless / portability mode)"
 echo
-yes_no "Install OpenRVDAS web console GUI? " $DEFAULT_INSTALL_GUI
-INSTALL_GUI=$YES_NO_RESULT
+read -p "Which web UI would you like to install? (django/react/none) [$DEFAULT_UI_TYPE] " UI_TYPE_INPUT
+UI_TYPE=${UI_TYPE_INPUT:-$DEFAULT_UI_TYPE}
+# Normalise and validate
+case "$UI_TYPE" in
+    react|React|REACT) UI_TYPE=react ;;
+    none|None|NONE)    UI_TYPE=none  ;;
+    *)                 UI_TYPE=django ;;
+esac
+echo "Web UI: $UI_TYPE"
 
 #########################################################################
 # Enable Supervisor web-interface?
@@ -1674,7 +1927,7 @@ setup_python_packages
 #########################################################################
 #########################################################################
 # Set up nginx
-if [[ "$INSTALL_GUI" == "yes" ]];then
+if [[ "$UI_TYPE" != "none" ]];then
     echo "#####################################################################"
     echo "Setting up NGINX"
     setup_nginx
@@ -1709,8 +1962,8 @@ fi
 
 #########################################################################
 #########################################################################
-# Set up uwsgi
-if [[ "$INSTALL_GUI" == "yes" ]];then
+# Set up uwsgi (Django UI only)
+if [[ "$UI_TYPE" == "django" ]];then
     echo
     echo "#####################################################################"
     echo "Setting up UWSGI"
@@ -1722,7 +1975,7 @@ fi
 
 #########################################################################
 #########################################################################
-# Set up Django database
+# Set up Django database (always needed — logger_manager uses Django ORM)
 echo
 echo "#########################################################################"
 echo "Initializing Django database..."
@@ -1734,7 +1987,7 @@ setup_django
 # Connect uWSGI with our project installation
 echo
 echo "#####################################################################"
-echo "Creating OpenRVDAS-specific uWSGI files"
+echo "Creating OpenRVDAS-specific uWSGI/ownership files"
 
 # Make everything accessible to nginx
 sudo chmod 755 ${INSTALL_ROOT}/openrvdas
@@ -1745,6 +1998,21 @@ sudo chgrp -R ${RVDAS_GROUP} ${INSTALL_ROOT}/openrvdas
 sudo mkdir -p /var/log/openrvdas /var/tmp/openrvdas
 sudo chown $RVDAS_USER /var/log/openrvdas /var/tmp/openrvdas
 sudo chgrp $RVDAS_GROUP /var/log/openrvdas /var/tmp/openrvdas
+
+#########################################################################
+#########################################################################
+# Set up React/FastAPI UI (react mode only)
+if [[ "$UI_TYPE" == "react" ]];then
+    echo
+    echo "#####################################################################"
+    echo "Setting up FastAPI web backend..."
+    setup_new_ui_backend
+
+    echo
+    echo "#####################################################################"
+    echo "Building React web frontend..."
+    setup_new_ui_frontend
+fi
 
 echo
 echo "#####################################################################"
@@ -1784,7 +2052,7 @@ elif [ $OS_TYPE == 'CentOS' ] || [ $OS_TYPE == 'Ubuntu' ]; then
         sudo systemctl restart supervisor
     fi
 
-    if [[ "$INSTALL_GUI" == "yes" ]];then
+    if [[ "$UI_TYPE" != "none" ]];then
         # Previous installations used nginx and uwsgi as a service. We need to
         # disable them if they're running.
         echo Disabling legacy services
