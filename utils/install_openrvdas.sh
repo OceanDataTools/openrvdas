@@ -1070,7 +1070,7 @@ function setup_new_ui_backend {
         # Bootstrap credentials are included so Alembic's init migration can
         # seed the admin account; they are stripped out after migrations run.
         cat > "${BACKEND_DIR}/.env" <<EOF
-DATABASE_URL=sqlite+aiosqlite://${BACKEND_DIR}/db.sqlite3
+DATABASE_URL=sqlite+aiosqlite:////${BACKEND_DIR}/db.sqlite3
 SECRET_KEY=${SECRET_KEY}
 ACCESS_TOKEN_EXPIRE_MINUTES=15
 REFRESH_TOKEN_EXPIRE_DAYS=7
