@@ -64,6 +64,45 @@ says to
        - submit new data to the cache (an alternative way to get data
          in without the same record size limits of a UDP packet).
 ```
+
+HTTP GET interface (requires websockets >= 12):
+
+In addition to the WebSocket API, the server accepts plain HTTP GET
+requests on the same port. This allows shell scripts and other simple
+tools to retrieve the latest cached values without implementing a
+WebSocket handshake:
+
+```
+   GET /fields
+       Returns a JSON object listing all field names currently in cache:
+       {"fields": ["field_1", "field_2", ...]}
+
+       Example:
+         curl http://localhost:8766/fields
+
+   GET /latest/<field_1>[,<field_2>,...]
+       Returns the most recent cached timestamp and value for each
+       requested field as a JSON object:
+       {"field_1": {"timestamp": 1555468528.452, "value": 21.3},
+        "field_2": {"timestamp": 1555468530.001, "value": "A"},
+        "field_3": null}   <- null when the field is not in cache
+
+       Example (single field):
+         curl http://localhost:8766/latest/S330Lat
+
+       Example (multiple fields):
+         curl http://localhost:8766/latest/S330Lat,S330Lon,MwxAirTemp
+```
+
+All other plain HTTP requests receive 400 Bad Request. WebSocket
+connections are unaffected. On systems with websockets < 12 the HTTP
+routes are unavailable and behaviour is unchanged.
+
+CAUTION: HTTP GET requests run inside the same asyncio event loop as
+all WebSocket connections. Occasional queries (e.g. populating an elog
+entry on demand) are fine. High-frequency polling will delay WebSocket
+data delivery to connected clients; use the WebSocket subscription API
+for any use case requiring frequent or continuous updates.
 """
 import asyncio
 import json
@@ -473,6 +512,11 @@ class WebSocketConnection:
         # regardless of how many there are, or whether we've sent it before.
         field_timestamps = {}
 
+        # Output format requested by the client; set by a subscribe message.
+        # Default matches the subscribe handler's own default so a 'ready'
+        # received before any 'subscribe' degrades gracefully.
+        requested_format = 'field_dict'
+
         interval = self.interval  # Use the default interval, uh, by default
 
         while not self.quit_flag:
@@ -833,6 +877,9 @@ class CachedDataServer:
     DASRecord or a simple dict. It also establishes a websocket server
     on the specified port and serves the cached values to clients that
     connect via a websocket.
+
+    WebSocket API:
+
     The server listens for two types of requests:
     1. If the request is the string "variables", return a list of the
        names of the variables the server has in cache and is able to
@@ -861,6 +908,28 @@ class CachedDataServer:
     (timestamp, value) tuples that have come in since the previous
     request. It will continue this behavior indefinitely, waiting for a
     "ready" request and sending updates.
+
+    HTTP GET API (requires websockets >= 12):
+
+    Plain HTTP GET requests are also accepted on the same port, allowing
+    simple tools to retrieve the latest cached value for one or more
+    fields without a WebSocket handshake:
+
+      GET /fields
+          Returns {"fields": ["field_1", "field_2", ...]}
+
+      GET /latest/<field_1>[,<field_2>,...]
+          Returns {"field_1": {"timestamp": T, "value": V}, ...}
+          Fields not present in the cache are returned as null.
+
+    CAUTION: HTTP GET requests are handled inside the same asyncio event
+    loop that drives all WebSocket connections. Each request briefly
+    acquires the cache's threading lock, blocking the loop for the
+    duration of the lookup. For occasional one-off queries (e.g. populating
+    an elog entry) this is negligible. High-frequency polling from scripts
+    or automated tools will delay WebSocket data delivery to all connected
+    clients. Use the WebSocket subscription API for any use case that
+    requires frequent or continuous updates.
     """
 
     ############################
@@ -965,33 +1034,81 @@ class CachedDataServer:
             try:
                 extra_kwargs = {}
                 if _WEBSOCKETS_HAS_HTTP11:
-                    # Intercept plain HTTP requests (e.g. nginx health checks or
-                    # mis-routed probes) before the library raises InvalidUpgrade
-                    # at ERROR level. Log at DEBUG and return 200 instead.
+                    # Handle plain HTTP GET requests on the WebSocket port.
+                    # Supports two routes for simple data retrieval without a
+                    # full WebSocket handshake (see issue #367):
+                    #
+                    #   GET /fields
+                    #       Returns JSON list of all cached field names.
+                    #       Example: {"fields": ["Temp", "Pressure", ...]}
+                    #
+                    #   GET /latest/<field1>[,<field2>,...]
+                    #       Returns the most recent timestamp+value for each
+                    #       requested field.
+                    #       Example: {"Temp": {"timestamp": 1234567890.0,
+                    #                          "value": 21.3},
+                    #                 "Pressure": null}   <- null if not cached
+                    #
+                    # All other non-WebSocket requests receive a 400 response.
+                    # Proxy warnings are preserved from the original handler.
                     async def _handle_non_ws_request(connection, request):
                         upgrade = request.headers.get('Upgrade', '')
-                        if upgrade.lower() != 'websocket':
-                            via = request.headers.get('Via', '')
-                            if via:
-                                logging.warning(
-                                    'WebSocket upgrade on port %d was blocked by an HTTP '
-                                    'proxy (Via: %s) which stripped the Upgrade header. '
-                                    'WebSocket connections cannot be established through '
-                                    'this proxy. Fix: enable SSL/WSS, configure the proxy '
-                                    'to pass WebSocket upgrades, or bypass the proxy for '
-                                    'this host.',
-                                    self.port, via)
-                            else:
-                                logging.debug(
-                                    'Plain HTTP request on WebSocket port %d '
-                                    '(Upgrade header missing or wrong value: %r). '
-                                    'Check nginx proxy_set_header Upgrade config.',
-                                    self.port, upgrade or '<none>')
+                        if upgrade.lower() == 'websocket':
+                            return None  # let normal WebSocket upgrade proceed
+
+                        via = request.headers.get('Via', '')
+                        if via:
+                            logging.warning(
+                                'WebSocket upgrade on port %d was blocked by an HTTP '
+                                'proxy (Via: %s) which stripped the Upgrade header. '
+                                'WebSocket connections cannot be established through '
+                                'this proxy. Fix: enable SSL/WSS, configure the proxy '
+                                'to pass WebSocket upgrades, or bypass the proxy for '
+                                'this host.',
+                                self.port, via)
+
+                        path = request.path
+
+                        if path == '/fields':
+                            body = json.dumps(
+                                {'fields': sorted(self.cache.keys())}
+                            ).encode()
                             return _WsResponse(
                                 200, 'OK',
-                                _WsHeaders([('Content-Type', 'text/plain')]),
-                                b'WebSocket server\n')
-                        return None
+                                _WsHeaders([('Content-Type', 'application/json')]),
+                                body)
+
+                        if path.startswith('/latest/'):
+                            field_names = path[len('/latest/'):].split(',')
+                            result = {}
+                            with self.cache.data_lock:
+                                for field in field_names:
+                                    entries = self.cache.data.get(field)
+                                    if entries:
+                                        timestamp, value = entries[-1]
+                                        result[field] = {
+                                            'timestamp': timestamp,
+                                            'value': value,
+                                        }
+                                    else:
+                                        result[field] = None
+                            body = json.dumps(result).encode()
+                            return _WsResponse(
+                                200, 'OK',
+                                _WsHeaders([('Content-Type', 'application/json')]),
+                                body)
+
+                        logging.debug(
+                            'Plain HTTP request on WebSocket port %d '
+                            '(path %r is not a recognised CDS HTTP route). '
+                            'Check nginx proxy_set_header Upgrade config.',
+                            self.port, path)
+                        return _WsResponse(
+                            400, 'Bad Request',
+                            _WsHeaders([('Content-Type', 'text/plain')]),
+                            b'Expected a WebSocket upgrade or a recognised CDS '
+                            b'HTTP route (/fields, /latest/<field,...>)\n')
+
                     extra_kwargs['process_request'] = _handle_non_ws_request
 
                 self.websocket_server = await websockets.serve(

@@ -134,59 +134,56 @@ digest_record() are called, but with the default of quiet=False.</p>
 </span><span id="L-28"><a href="#L-28"><span class="linenos">28</span></a><span class="sd">initialized, it will be done implicitly the first time can_process_record() or</span>
 </span><span id="L-29"><a href="#L-29"><span class="linenos">29</span></a><span class="sd">digest_record() are called, but with the default of quiet=False.</span>
 </span><span id="L-30"><a href="#L-30"><span class="linenos">30</span></a><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="L-31"><a href="#L-31"><span class="linenos">31</span></a><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
-</span><span id="L-32"><a href="#L-32"><span class="linenos">32</span></a>
-</span><span id="L-33"><a href="#L-33"><span class="linenos">33</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">os.path</span><span class="w"> </span><span class="kn">import</span> <span class="n">dirname</span><span class="p">,</span> <span class="n">realpath</span>
-</span><span id="L-34"><a href="#L-34"><span class="linenos">34</span></a><span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dirname</span><span class="p">(</span><span class="n">dirname</span><span class="p">(</span><span class="n">dirname</span><span class="p">(</span><span class="n">realpath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)))))</span>
-</span><span id="L-35"><a href="#L-35"><span class="linenos">35</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">logger.utils.base_module</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModule</span>  <span class="c1"># noqa: E402</span>
-</span><span id="L-36"><a href="#L-36"><span class="linenos">36</span></a>
-</span><span id="L-37"><a href="#L-37"><span class="linenos">37</span></a>
-</span><span id="L-38"><a href="#L-38"><span class="linenos">38</span></a><span class="k">class</span><span class="w"> </span><span class="nc">Writer</span><span class="p">(</span><span class="n">BaseModule</span><span class="p">):</span>
-</span><span id="L-39"><a href="#L-39"><span class="linenos">39</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="L-40"><a href="#L-40"><span class="linenos">40</span></a><span class="sd">    Base class Writer about which we know nothing else. By default the</span>
-</span><span id="L-41"><a href="#L-41"><span class="linenos">41</span></a><span class="sd">    input format is Unknown unless overridden.</span>
-</span><span id="L-42"><a href="#L-42"><span class="linenos">42</span></a>
-</span><span id="L-43"><a href="#L-43"><span class="linenos">43</span></a><span class="sd">    Passes arguments quiet, encoding and encoding_errors up to BaseModule</span>
-</span><span id="L-44"><a href="#L-44"><span class="linenos">44</span></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="L-45"><a href="#L-45"><span class="linenos">45</span></a>    <span class="c1">############################</span>
-</span><span id="L-46"><a href="#L-46"><span class="linenos">46</span></a>
-</span><span id="L-47"><a href="#L-47"><span class="linenos">47</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-</span><span id="L-48"><a href="#L-48"><span class="linenos">48</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Abstract base class for data Writers.</span>
-</span><span id="L-49"><a href="#L-49"><span class="linenos">49</span></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="L-50"><a href="#L-50"><span class="linenos">50</span></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</span><span id="L-51"><a href="#L-51"><span class="linenos">51</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_type_hints</span><span class="p">()</span>
-</span><span id="L-52"><a href="#L-52"><span class="linenos">52</span></a>
-</span><span id="L-53"><a href="#L-53"><span class="linenos">53</span></a>    <span class="c1">############################</span>
-</span><span id="L-54"><a href="#L-54"><span class="linenos">54</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_initialize_type_hints</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="L-55"><a href="#L-55"><span class="linenos">55</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot; Retrieve any type hints for child write() method so we can</span>
-</span><span id="L-56"><a href="#L-56"><span class="linenos">56</span></a><span class="sd">        check whether the type of record we&#39;ve received can be parsed</span>
-</span><span id="L-57"><a href="#L-57"><span class="linenos">57</span></a><span class="sd">        natively or not.&quot;&quot;&quot;</span>
-</span><span id="L-58"><a href="#L-58"><span class="linenos">58</span></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_initialize_type_hints</span><span class="p">(</span><span class="n">module_type</span><span class="o">=</span><span class="s1">&#39;write&#39;</span><span class="p">,</span>
-</span><span id="L-59"><a href="#L-59"><span class="linenos">59</span></a>                                       <span class="n">module_method</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="n">write</span><span class="p">)</span>
-</span><span id="L-60"><a href="#L-60"><span class="linenos">60</span></a>
-</span><span id="L-61"><a href="#L-61"><span class="linenos">61</span></a>    <span class="c1">############################</span>
-</span><span id="L-62"><a href="#L-62"><span class="linenos">62</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">):</span>
-</span><span id="L-63"><a href="#L-63"><span class="linenos">63</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Core method - write a record that we&#39;ve been passed.&quot;&quot;&quot;</span>
-</span><span id="L-64"><a href="#L-64"><span class="linenos">64</span></a>        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Class </span><span class="si">%s</span><span class="s1"> (subclass of Writer is missing &#39;</span>
-</span><span id="L-65"><a href="#L-65"><span class="linenos">65</span></a>                                  <span class="s1">&#39;implementation of write () method.&#39;</span>
-</span><span id="L-66"><a href="#L-66"><span class="linenos">66</span></a>                                  <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
-</span><span id="L-67"><a href="#L-67"><span class="linenos">67</span></a>
-</span><span id="L-68"><a href="#L-68"><span class="linenos">68</span></a>
-</span><span id="L-69"><a href="#L-69"><span class="linenos">69</span></a><span class="c1">################################################################################</span>
-</span><span id="L-70"><a href="#L-70"><span class="linenos">70</span></a><span class="k">class</span><span class="w"> </span><span class="nc">TimestampedWriter</span><span class="p">(</span><span class="n">Writer</span><span class="p">):</span>
-</span><span id="L-71"><a href="#L-71"><span class="linenos">71</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="L-72"><a href="#L-72"><span class="linenos">72</span></a><span class="sd">    A TimestampedWriter is a special case of a Writer where we</span>
-</span><span id="L-73"><a href="#L-73"><span class="linenos">73</span></a><span class="sd">    can write out the timestamp associated with a record.</span>
-</span><span id="L-74"><a href="#L-74"><span class="linenos">74</span></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="L-75"><a href="#L-75"><span class="linenos">75</span></a>
-</span><span id="L-76"><a href="#L-76"><span class="linenos">76</span></a>    <span class="c1">############################</span>
-</span><span id="L-77"><a href="#L-77"><span class="linenos">77</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-</span><span id="L-78"><a href="#L-78"><span class="linenos">78</span></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</span><span id="L-79"><a href="#L-79"><span class="linenos">79</span></a>
-</span><span id="L-80"><a href="#L-80"><span class="linenos">80</span></a>    <span class="c1">############################</span>
-</span><span id="L-81"><a href="#L-81"><span class="linenos">81</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">write_timestamp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">,</span> <span class="n">timestamp</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-</span><span id="L-82"><a href="#L-82"><span class="linenos">82</span></a>        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Abstract base class TimestampedWriter has no &#39;</span>
-</span><span id="L-83"><a href="#L-83"><span class="linenos">83</span></a>                                  <span class="s1">&#39;implementation of write_timestamp() method.&#39;</span><span class="p">)</span>
+</span><span id="L-31"><a href="#L-31"><span class="linenos">31</span></a>
+</span><span id="L-32"><a href="#L-32"><span class="linenos">32</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">logger.utils.base_module</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModule</span>  <span class="c1"># noqa: E402</span>
+</span><span id="L-33"><a href="#L-33"><span class="linenos">33</span></a>
+</span><span id="L-34"><a href="#L-34"><span class="linenos">34</span></a>
+</span><span id="L-35"><a href="#L-35"><span class="linenos">35</span></a><span class="k">class</span><span class="w"> </span><span class="nc">Writer</span><span class="p">(</span><span class="n">BaseModule</span><span class="p">):</span>
+</span><span id="L-36"><a href="#L-36"><span class="linenos">36</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="L-37"><a href="#L-37"><span class="linenos">37</span></a><span class="sd">    Base class Writer about which we know nothing else. By default the</span>
+</span><span id="L-38"><a href="#L-38"><span class="linenos">38</span></a><span class="sd">    input format is Unknown unless overridden.</span>
+</span><span id="L-39"><a href="#L-39"><span class="linenos">39</span></a>
+</span><span id="L-40"><a href="#L-40"><span class="linenos">40</span></a><span class="sd">    Passes arguments quiet, encoding and encoding_errors up to BaseModule</span>
+</span><span id="L-41"><a href="#L-41"><span class="linenos">41</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="L-42"><a href="#L-42"><span class="linenos">42</span></a>    <span class="c1">############################</span>
+</span><span id="L-43"><a href="#L-43"><span class="linenos">43</span></a>
+</span><span id="L-44"><a href="#L-44"><span class="linenos">44</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</span><span id="L-45"><a href="#L-45"><span class="linenos">45</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Abstract base class for data Writers.</span>
+</span><span id="L-46"><a href="#L-46"><span class="linenos">46</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="L-47"><a href="#L-47"><span class="linenos">47</span></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span id="L-48"><a href="#L-48"><span class="linenos">48</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_type_hints</span><span class="p">()</span>
+</span><span id="L-49"><a href="#L-49"><span class="linenos">49</span></a>
+</span><span id="L-50"><a href="#L-50"><span class="linenos">50</span></a>    <span class="c1">############################</span>
+</span><span id="L-51"><a href="#L-51"><span class="linenos">51</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_initialize_type_hints</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="L-52"><a href="#L-52"><span class="linenos">52</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot; Retrieve any type hints for child write() method so we can</span>
+</span><span id="L-53"><a href="#L-53"><span class="linenos">53</span></a><span class="sd">        check whether the type of record we&#39;ve received can be parsed</span>
+</span><span id="L-54"><a href="#L-54"><span class="linenos">54</span></a><span class="sd">        natively or not.&quot;&quot;&quot;</span>
+</span><span id="L-55"><a href="#L-55"><span class="linenos">55</span></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_initialize_type_hints</span><span class="p">(</span><span class="n">module_type</span><span class="o">=</span><span class="s1">&#39;write&#39;</span><span class="p">,</span>
+</span><span id="L-56"><a href="#L-56"><span class="linenos">56</span></a>                                       <span class="n">module_method</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="n">write</span><span class="p">)</span>
+</span><span id="L-57"><a href="#L-57"><span class="linenos">57</span></a>
+</span><span id="L-58"><a href="#L-58"><span class="linenos">58</span></a>    <span class="c1">############################</span>
+</span><span id="L-59"><a href="#L-59"><span class="linenos">59</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">):</span>
+</span><span id="L-60"><a href="#L-60"><span class="linenos">60</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Core method - write a record that we&#39;ve been passed.&quot;&quot;&quot;</span>
+</span><span id="L-61"><a href="#L-61"><span class="linenos">61</span></a>        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Class </span><span class="si">%s</span><span class="s1"> (subclass of Writer is missing &#39;</span>
+</span><span id="L-62"><a href="#L-62"><span class="linenos">62</span></a>                                  <span class="s1">&#39;implementation of write () method.&#39;</span>
+</span><span id="L-63"><a href="#L-63"><span class="linenos">63</span></a>                                  <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+</span><span id="L-64"><a href="#L-64"><span class="linenos">64</span></a>
+</span><span id="L-65"><a href="#L-65"><span class="linenos">65</span></a>
+</span><span id="L-66"><a href="#L-66"><span class="linenos">66</span></a><span class="c1">################################################################################</span>
+</span><span id="L-67"><a href="#L-67"><span class="linenos">67</span></a><span class="k">class</span><span class="w"> </span><span class="nc">TimestampedWriter</span><span class="p">(</span><span class="n">Writer</span><span class="p">):</span>
+</span><span id="L-68"><a href="#L-68"><span class="linenos">68</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="L-69"><a href="#L-69"><span class="linenos">69</span></a><span class="sd">    A TimestampedWriter is a special case of a Writer where we</span>
+</span><span id="L-70"><a href="#L-70"><span class="linenos">70</span></a><span class="sd">    can write out the timestamp associated with a record.</span>
+</span><span id="L-71"><a href="#L-71"><span class="linenos">71</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="L-72"><a href="#L-72"><span class="linenos">72</span></a>
+</span><span id="L-73"><a href="#L-73"><span class="linenos">73</span></a>    <span class="c1">############################</span>
+</span><span id="L-74"><a href="#L-74"><span class="linenos">74</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</span><span id="L-75"><a href="#L-75"><span class="linenos">75</span></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span id="L-76"><a href="#L-76"><span class="linenos">76</span></a>
+</span><span id="L-77"><a href="#L-77"><span class="linenos">77</span></a>    <span class="c1">############################</span>
+</span><span id="L-78"><a href="#L-78"><span class="linenos">78</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">write_timestamp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">,</span> <span class="n">timestamp</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+</span><span id="L-79"><a href="#L-79"><span class="linenos">79</span></a>        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Abstract base class TimestampedWriter has no &#39;</span>
+</span><span id="L-80"><a href="#L-80"><span class="linenos">80</span></a>                                  <span class="s1">&#39;implementation of write_timestamp() method.&#39;</span><span class="p">)</span>
 </span></pre></div>
 
 
@@ -202,35 +199,35 @@ digest_record() are called, but with the default of quiet=False.</p>
 
     </div>
     <a class="headerlink" href="#Writer"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="Writer-39"><a href="#Writer-39"><span class="linenos">39</span></a><span class="k">class</span><span class="w"> </span><span class="nc">Writer</span><span class="p">(</span><span class="n">BaseModule</span><span class="p">):</span>
-</span><span id="Writer-40"><a href="#Writer-40"><span class="linenos">40</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="Writer-41"><a href="#Writer-41"><span class="linenos">41</span></a><span class="sd">    Base class Writer about which we know nothing else. By default the</span>
-</span><span id="Writer-42"><a href="#Writer-42"><span class="linenos">42</span></a><span class="sd">    input format is Unknown unless overridden.</span>
-</span><span id="Writer-43"><a href="#Writer-43"><span class="linenos">43</span></a>
-</span><span id="Writer-44"><a href="#Writer-44"><span class="linenos">44</span></a><span class="sd">    Passes arguments quiet, encoding and encoding_errors up to BaseModule</span>
-</span><span id="Writer-45"><a href="#Writer-45"><span class="linenos">45</span></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="Writer-46"><a href="#Writer-46"><span class="linenos">46</span></a>    <span class="c1">############################</span>
-</span><span id="Writer-47"><a href="#Writer-47"><span class="linenos">47</span></a>
-</span><span id="Writer-48"><a href="#Writer-48"><span class="linenos">48</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-</span><span id="Writer-49"><a href="#Writer-49"><span class="linenos">49</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Abstract base class for data Writers.</span>
-</span><span id="Writer-50"><a href="#Writer-50"><span class="linenos">50</span></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="Writer-51"><a href="#Writer-51"><span class="linenos">51</span></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</span><span id="Writer-52"><a href="#Writer-52"><span class="linenos">52</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_type_hints</span><span class="p">()</span>
-</span><span id="Writer-53"><a href="#Writer-53"><span class="linenos">53</span></a>
-</span><span id="Writer-54"><a href="#Writer-54"><span class="linenos">54</span></a>    <span class="c1">############################</span>
-</span><span id="Writer-55"><a href="#Writer-55"><span class="linenos">55</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_initialize_type_hints</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="Writer-56"><a href="#Writer-56"><span class="linenos">56</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot; Retrieve any type hints for child write() method so we can</span>
-</span><span id="Writer-57"><a href="#Writer-57"><span class="linenos">57</span></a><span class="sd">        check whether the type of record we&#39;ve received can be parsed</span>
-</span><span id="Writer-58"><a href="#Writer-58"><span class="linenos">58</span></a><span class="sd">        natively or not.&quot;&quot;&quot;</span>
-</span><span id="Writer-59"><a href="#Writer-59"><span class="linenos">59</span></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_initialize_type_hints</span><span class="p">(</span><span class="n">module_type</span><span class="o">=</span><span class="s1">&#39;write&#39;</span><span class="p">,</span>
-</span><span id="Writer-60"><a href="#Writer-60"><span class="linenos">60</span></a>                                       <span class="n">module_method</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="n">write</span><span class="p">)</span>
-</span><span id="Writer-61"><a href="#Writer-61"><span class="linenos">61</span></a>
-</span><span id="Writer-62"><a href="#Writer-62"><span class="linenos">62</span></a>    <span class="c1">############################</span>
-</span><span id="Writer-63"><a href="#Writer-63"><span class="linenos">63</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">):</span>
-</span><span id="Writer-64"><a href="#Writer-64"><span class="linenos">64</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Core method - write a record that we&#39;ve been passed.&quot;&quot;&quot;</span>
-</span><span id="Writer-65"><a href="#Writer-65"><span class="linenos">65</span></a>        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Class </span><span class="si">%s</span><span class="s1"> (subclass of Writer is missing &#39;</span>
-</span><span id="Writer-66"><a href="#Writer-66"><span class="linenos">66</span></a>                                  <span class="s1">&#39;implementation of write () method.&#39;</span>
-</span><span id="Writer-67"><a href="#Writer-67"><span class="linenos">67</span></a>                                  <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="Writer-36"><a href="#Writer-36"><span class="linenos">36</span></a><span class="k">class</span><span class="w"> </span><span class="nc">Writer</span><span class="p">(</span><span class="n">BaseModule</span><span class="p">):</span>
+</span><span id="Writer-37"><a href="#Writer-37"><span class="linenos">37</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="Writer-38"><a href="#Writer-38"><span class="linenos">38</span></a><span class="sd">    Base class Writer about which we know nothing else. By default the</span>
+</span><span id="Writer-39"><a href="#Writer-39"><span class="linenos">39</span></a><span class="sd">    input format is Unknown unless overridden.</span>
+</span><span id="Writer-40"><a href="#Writer-40"><span class="linenos">40</span></a>
+</span><span id="Writer-41"><a href="#Writer-41"><span class="linenos">41</span></a><span class="sd">    Passes arguments quiet, encoding and encoding_errors up to BaseModule</span>
+</span><span id="Writer-42"><a href="#Writer-42"><span class="linenos">42</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="Writer-43"><a href="#Writer-43"><span class="linenos">43</span></a>    <span class="c1">############################</span>
+</span><span id="Writer-44"><a href="#Writer-44"><span class="linenos">44</span></a>
+</span><span id="Writer-45"><a href="#Writer-45"><span class="linenos">45</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</span><span id="Writer-46"><a href="#Writer-46"><span class="linenos">46</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Abstract base class for data Writers.</span>
+</span><span id="Writer-47"><a href="#Writer-47"><span class="linenos">47</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="Writer-48"><a href="#Writer-48"><span class="linenos">48</span></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span id="Writer-49"><a href="#Writer-49"><span class="linenos">49</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_type_hints</span><span class="p">()</span>
+</span><span id="Writer-50"><a href="#Writer-50"><span class="linenos">50</span></a>
+</span><span id="Writer-51"><a href="#Writer-51"><span class="linenos">51</span></a>    <span class="c1">############################</span>
+</span><span id="Writer-52"><a href="#Writer-52"><span class="linenos">52</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_initialize_type_hints</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="Writer-53"><a href="#Writer-53"><span class="linenos">53</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot; Retrieve any type hints for child write() method so we can</span>
+</span><span id="Writer-54"><a href="#Writer-54"><span class="linenos">54</span></a><span class="sd">        check whether the type of record we&#39;ve received can be parsed</span>
+</span><span id="Writer-55"><a href="#Writer-55"><span class="linenos">55</span></a><span class="sd">        natively or not.&quot;&quot;&quot;</span>
+</span><span id="Writer-56"><a href="#Writer-56"><span class="linenos">56</span></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_initialize_type_hints</span><span class="p">(</span><span class="n">module_type</span><span class="o">=</span><span class="s1">&#39;write&#39;</span><span class="p">,</span>
+</span><span id="Writer-57"><a href="#Writer-57"><span class="linenos">57</span></a>                                       <span class="n">module_method</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="n">write</span><span class="p">)</span>
+</span><span id="Writer-58"><a href="#Writer-58"><span class="linenos">58</span></a>
+</span><span id="Writer-59"><a href="#Writer-59"><span class="linenos">59</span></a>    <span class="c1">############################</span>
+</span><span id="Writer-60"><a href="#Writer-60"><span class="linenos">60</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">):</span>
+</span><span id="Writer-61"><a href="#Writer-61"><span class="linenos">61</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Core method - write a record that we&#39;ve been passed.&quot;&quot;&quot;</span>
+</span><span id="Writer-62"><a href="#Writer-62"><span class="linenos">62</span></a>        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Class </span><span class="si">%s</span><span class="s1"> (subclass of Writer is missing &#39;</span>
+</span><span id="Writer-63"><a href="#Writer-63"><span class="linenos">63</span></a>                                  <span class="s1">&#39;implementation of write () method.&#39;</span>
+</span><span id="Writer-64"><a href="#Writer-64"><span class="linenos">64</span></a>                                  <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
 </span></pre></div>
 
 
@@ -251,11 +248,11 @@ input format is Unknown unless overridden.</p>
 
     </div>
     <a class="headerlink" href="#Writer.__init__"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="Writer.__init__-48"><a href="#Writer.__init__-48"><span class="linenos">48</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-</span><span id="Writer.__init__-49"><a href="#Writer.__init__-49"><span class="linenos">49</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Abstract base class for data Writers.</span>
-</span><span id="Writer.__init__-50"><a href="#Writer.__init__-50"><span class="linenos">50</span></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="Writer.__init__-51"><a href="#Writer.__init__-51"><span class="linenos">51</span></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</span><span id="Writer.__init__-52"><a href="#Writer.__init__-52"><span class="linenos">52</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_type_hints</span><span class="p">()</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="Writer.__init__-45"><a href="#Writer.__init__-45"><span class="linenos">45</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</span><span id="Writer.__init__-46"><a href="#Writer.__init__-46"><span class="linenos">46</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Abstract base class for data Writers.</span>
+</span><span id="Writer.__init__-47"><a href="#Writer.__init__-47"><span class="linenos">47</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="Writer.__init__-48"><a href="#Writer.__init__-48"><span class="linenos">48</span></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span id="Writer.__init__-49"><a href="#Writer.__init__-49"><span class="linenos">49</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_type_hints</span><span class="p">()</span>
 </span></pre></div>
 
 
@@ -275,11 +272,11 @@ input format is Unknown unless overridden.</p>
 
     </div>
     <a class="headerlink" href="#Writer.write"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="Writer.write-63"><a href="#Writer.write-63"><span class="linenos">63</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">):</span>
-</span><span id="Writer.write-64"><a href="#Writer.write-64"><span class="linenos">64</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Core method - write a record that we&#39;ve been passed.&quot;&quot;&quot;</span>
-</span><span id="Writer.write-65"><a href="#Writer.write-65"><span class="linenos">65</span></a>        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Class </span><span class="si">%s</span><span class="s1"> (subclass of Writer is missing &#39;</span>
-</span><span id="Writer.write-66"><a href="#Writer.write-66"><span class="linenos">66</span></a>                                  <span class="s1">&#39;implementation of write () method.&#39;</span>
-</span><span id="Writer.write-67"><a href="#Writer.write-67"><span class="linenos">67</span></a>                                  <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="Writer.write-60"><a href="#Writer.write-60"><span class="linenos">60</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">):</span>
+</span><span id="Writer.write-61"><a href="#Writer.write-61"><span class="linenos">61</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Core method - write a record that we&#39;ve been passed.&quot;&quot;&quot;</span>
+</span><span id="Writer.write-62"><a href="#Writer.write-62"><span class="linenos">62</span></a>        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Class </span><span class="si">%s</span><span class="s1"> (subclass of Writer is missing &#39;</span>
+</span><span id="Writer.write-63"><a href="#Writer.write-63"><span class="linenos">63</span></a>                                  <span class="s1">&#39;implementation of write () method.&#39;</span>
+</span><span id="Writer.write-64"><a href="#Writer.write-64"><span class="linenos">64</span></a>                                  <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
 </span></pre></div>
 
 
@@ -300,20 +297,20 @@ input format is Unknown unless overridden.</p>
 
     </div>
     <a class="headerlink" href="#TimestampedWriter"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="TimestampedWriter-71"><a href="#TimestampedWriter-71"><span class="linenos">71</span></a><span class="k">class</span><span class="w"> </span><span class="nc">TimestampedWriter</span><span class="p">(</span><span class="n">Writer</span><span class="p">):</span>
-</span><span id="TimestampedWriter-72"><a href="#TimestampedWriter-72"><span class="linenos">72</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="TimestampedWriter-73"><a href="#TimestampedWriter-73"><span class="linenos">73</span></a><span class="sd">    A TimestampedWriter is a special case of a Writer where we</span>
-</span><span id="TimestampedWriter-74"><a href="#TimestampedWriter-74"><span class="linenos">74</span></a><span class="sd">    can write out the timestamp associated with a record.</span>
-</span><span id="TimestampedWriter-75"><a href="#TimestampedWriter-75"><span class="linenos">75</span></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="TimestampedWriter-76"><a href="#TimestampedWriter-76"><span class="linenos">76</span></a>
-</span><span id="TimestampedWriter-77"><a href="#TimestampedWriter-77"><span class="linenos">77</span></a>    <span class="c1">############################</span>
-</span><span id="TimestampedWriter-78"><a href="#TimestampedWriter-78"><span class="linenos">78</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-</span><span id="TimestampedWriter-79"><a href="#TimestampedWriter-79"><span class="linenos">79</span></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</span><span id="TimestampedWriter-80"><a href="#TimestampedWriter-80"><span class="linenos">80</span></a>
-</span><span id="TimestampedWriter-81"><a href="#TimestampedWriter-81"><span class="linenos">81</span></a>    <span class="c1">############################</span>
-</span><span id="TimestampedWriter-82"><a href="#TimestampedWriter-82"><span class="linenos">82</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">write_timestamp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">,</span> <span class="n">timestamp</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-</span><span id="TimestampedWriter-83"><a href="#TimestampedWriter-83"><span class="linenos">83</span></a>        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Abstract base class TimestampedWriter has no &#39;</span>
-</span><span id="TimestampedWriter-84"><a href="#TimestampedWriter-84"><span class="linenos">84</span></a>                                  <span class="s1">&#39;implementation of write_timestamp() method.&#39;</span><span class="p">)</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="TimestampedWriter-68"><a href="#TimestampedWriter-68"><span class="linenos">68</span></a><span class="k">class</span><span class="w"> </span><span class="nc">TimestampedWriter</span><span class="p">(</span><span class="n">Writer</span><span class="p">):</span>
+</span><span id="TimestampedWriter-69"><a href="#TimestampedWriter-69"><span class="linenos">69</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="TimestampedWriter-70"><a href="#TimestampedWriter-70"><span class="linenos">70</span></a><span class="sd">    A TimestampedWriter is a special case of a Writer where we</span>
+</span><span id="TimestampedWriter-71"><a href="#TimestampedWriter-71"><span class="linenos">71</span></a><span class="sd">    can write out the timestamp associated with a record.</span>
+</span><span id="TimestampedWriter-72"><a href="#TimestampedWriter-72"><span class="linenos">72</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="TimestampedWriter-73"><a href="#TimestampedWriter-73"><span class="linenos">73</span></a>
+</span><span id="TimestampedWriter-74"><a href="#TimestampedWriter-74"><span class="linenos">74</span></a>    <span class="c1">############################</span>
+</span><span id="TimestampedWriter-75"><a href="#TimestampedWriter-75"><span class="linenos">75</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</span><span id="TimestampedWriter-76"><a href="#TimestampedWriter-76"><span class="linenos">76</span></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span id="TimestampedWriter-77"><a href="#TimestampedWriter-77"><span class="linenos">77</span></a>
+</span><span id="TimestampedWriter-78"><a href="#TimestampedWriter-78"><span class="linenos">78</span></a>    <span class="c1">############################</span>
+</span><span id="TimestampedWriter-79"><a href="#TimestampedWriter-79"><span class="linenos">79</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">write_timestamp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">,</span> <span class="n">timestamp</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+</span><span id="TimestampedWriter-80"><a href="#TimestampedWriter-80"><span class="linenos">80</span></a>        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Abstract base class TimestampedWriter has no &#39;</span>
+</span><span id="TimestampedWriter-81"><a href="#TimestampedWriter-81"><span class="linenos">81</span></a>                                  <span class="s1">&#39;implementation of write_timestamp() method.&#39;</span><span class="p">)</span>
 </span></pre></div>
 
 
@@ -332,8 +329,8 @@ can write out the timestamp associated with a record.</p>
 
     </div>
     <a class="headerlink" href="#TimestampedWriter.__init__"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="TimestampedWriter.__init__-78"><a href="#TimestampedWriter.__init__-78"><span class="linenos">78</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-</span><span id="TimestampedWriter.__init__-79"><a href="#TimestampedWriter.__init__-79"><span class="linenos">79</span></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="TimestampedWriter.__init__-75"><a href="#TimestampedWriter.__init__-75"><span class="linenos">75</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</span><span id="TimestampedWriter.__init__-76"><a href="#TimestampedWriter.__init__-76"><span class="linenos">76</span></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </span></pre></div>
 
 
@@ -353,9 +350,9 @@ can write out the timestamp associated with a record.</p>
 
     </div>
     <a class="headerlink" href="#TimestampedWriter.write_timestamp"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="TimestampedWriter.write_timestamp-82"><a href="#TimestampedWriter.write_timestamp-82"><span class="linenos">82</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">write_timestamp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">,</span> <span class="n">timestamp</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-</span><span id="TimestampedWriter.write_timestamp-83"><a href="#TimestampedWriter.write_timestamp-83"><span class="linenos">83</span></a>        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Abstract base class TimestampedWriter has no &#39;</span>
-</span><span id="TimestampedWriter.write_timestamp-84"><a href="#TimestampedWriter.write_timestamp-84"><span class="linenos">84</span></a>                                  <span class="s1">&#39;implementation of write_timestamp() method.&#39;</span><span class="p">)</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="TimestampedWriter.write_timestamp-79"><a href="#TimestampedWriter.write_timestamp-79"><span class="linenos">79</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">write_timestamp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">,</span> <span class="n">timestamp</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+</span><span id="TimestampedWriter.write_timestamp-80"><a href="#TimestampedWriter.write_timestamp-80"><span class="linenos">80</span></a>        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Abstract base class TimestampedWriter has no &#39;</span>
+</span><span id="TimestampedWriter.write_timestamp-81"><a href="#TimestampedWriter.write_timestamp-81"><span class="linenos">81</span></a>                                  <span class="s1">&#39;implementation of write_timestamp() method.&#39;</span><span class="p">)</span>
 </span></pre></div>
 
 

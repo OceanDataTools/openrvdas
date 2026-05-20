@@ -7,10 +7,12 @@ import logging
 import tempfile
 import time
 import unittest
+import urllib.error
+import urllib.request
 import warnings
 import websockets
 
-from server.cached_data_server import CachedDataServer  # noqa: E402
+from server.cached_data_server import CachedDataServer, _WEBSOCKETS_HAS_HTTP11  # noqa: E402
 
 # Django 3 doesn't play nicely when mixing sync and async, so when we
 # try to run the Django 'manage.py test' command, it gets unhappy
@@ -330,6 +332,53 @@ class TestCachedDataServer(unittest.TestCase):
                 self.assertEqual(response['data']['field_3'][0][1], 'value_33a')
 
         asyncio.new_event_loop().run_until_complete(run_test())
+        time.sleep(1)
+
+
+    ############################
+    @unittest.skipUnless(_WEBSOCKETS_HAS_HTTP11, 'requires websockets >= 12')
+    def test_http_get(self):
+        WEBSOCKET_PORT = 8771
+        cds = CachedDataServer(port=WEBSOCKET_PORT)
+
+        ts = time.time()
+        cds.cache_record({'timestamp': ts,
+                          'fields': {'http_field_1': 'value_1',
+                                     'http_field_2': 42.0}})
+        time.sleep(0.1)  # allow server thread to start
+
+        base = 'http://localhost:%d' % WEBSOCKET_PORT
+
+        # GET /fields — returns sorted list of all cached field names
+        with urllib.request.urlopen(base + '/fields') as resp:
+            data = json.loads(resp.read())
+        self.assertEqual(data['fields'], ['http_field_1', 'http_field_2'])
+
+        # GET /latest/<field> — returns timestamp and value for a single field
+        with urllib.request.urlopen(base + '/latest/http_field_1') as resp:
+            data = json.loads(resp.read())
+        self.assertIsNotNone(data['http_field_1'])
+        self.assertEqual(data['http_field_1']['value'], 'value_1')
+        self.assertAlmostEqual(data['http_field_1']['timestamp'], ts, places=1)
+
+        # GET /latest/<field1>,<field2> — returns values for multiple fields
+        with urllib.request.urlopen(base + '/latest/http_field_1,http_field_2') as resp:
+            data = json.loads(resp.read())
+        self.assertEqual(data['http_field_1']['value'], 'value_1')
+        self.assertEqual(data['http_field_2']['value'], 42.0)
+
+        # GET /latest/<unknown> — returns null for fields not in cache
+        with urllib.request.urlopen(base + '/latest/no_such_field') as resp:
+            data = json.loads(resp.read())
+        self.assertIsNone(data['no_such_field'])
+
+        # Unknown path — returns 400 Bad Request
+        try:
+            urllib.request.urlopen(base + '/unknown')
+            self.fail('Expected HTTPError for unrecognised path')
+        except urllib.error.HTTPError as e:
+            self.assertEqual(e.code, 400)
+
         time.sleep(1)
 
 
