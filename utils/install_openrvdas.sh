@@ -1087,6 +1087,7 @@ function setup_supervisor {
         SUPERVISOR_SUFFIX='ini'
         SUPERVISOR_SOCK=${HOMEBREW_PREFIX}/var/run/supervisor.sock
         COMMENT_SOCK_OWNER=';'
+        UBUNTU_HTTP_COMMENT=''
         mkdir -p ${SUPERVISOR_DIR}
 
     # CentOS/RHEL
@@ -1098,6 +1099,7 @@ function setup_supervisor {
         SUPERVISOR_SUFFIX='ini'
         SUPERVISOR_SOCK=/var/run/supervisor/supervisor.sock
         COMMENT_SOCK_OWNER=''
+        UBUNTU_HTTP_COMMENT=''
 
     # Ubuntu/Debian
     elif [ $OS_TYPE == 'Ubuntu' ]; then
@@ -1108,6 +1110,22 @@ function setup_supervisor {
         SUPERVISOR_SUFFIX='conf'
         SUPERVISOR_SOCK=/var/run/supervisor.sock
         COMMENT_SOCK_OWNER=''
+        # [unix_http_server] must not appear in conf.d on Ubuntu — supervisor's
+        # [include] does not merge singleton sections from included files, so
+        # that block would be silently ignored or cause a parse error. The main
+        # supervisord.conf is patched directly below instead.
+        UBUNTU_HTTP_COMMENT='; '
+    fi
+
+    # Ubuntu: patch the system supervisord.conf so that socket permissions
+    # actually take effect for the rvdas group.
+    if [ $OS_TYPE == 'Ubuntu' ]; then
+        UBUNTU_SUPERVISOR_CONF=/etc/supervisor/supervisord.conf
+        if [ -f "$UBUNTU_SUPERVISOR_CONF" ]; then
+            sudo sed -i 's/chmod=0700/chmod=0770/' "$UBUNTU_SUPERVISOR_CONF"
+            sudo grep -q 'chown=nobody' "$UBUNTU_SUPERVISOR_CONF" || \
+                sudo sed -i "/chmod=0770/a chown=nobody:${RVDAS_GROUP}" "$UBUNTU_SUPERVISOR_CONF"
+        fi
     fi
 
     SUPERVISOR_FILE=$SUPERVISOR_DIR/openrvdas.${SUPERVISOR_SUFFIX}
@@ -1124,12 +1142,13 @@ function setup_supervisor {
     sudo rm -f $TEMP_FILE
 
     cat > $TEMP_FILE <<EOF
-; First, override the default socket permissions to allow user
-; $RVDAS_USER to run supervisorctl
-${MAC_COMMENT}[unix_http_server]
-${MAC_COMMENT}file=$SUPERVISOR_SOCK   ; (the path to the socket file)
-${MAC_COMMENT}chmod=0770              ; socket file mode (default 0700)
-${MAC_COMMENT}${COMMENT_SOCK_OWNER}chown=nobody:${RVDAS_GROUP}
+; Override the default socket permissions to allow user $RVDAS_USER to run
+; supervisorctl without sudo. On Ubuntu this is handled by patching the main
+; supervisord.conf directly; on CentOS/MacOS it is set here in conf.d.
+${MAC_COMMENT}${UBUNTU_HTTP_COMMENT}[unix_http_server]
+${MAC_COMMENT}${UBUNTU_HTTP_COMMENT}file=$SUPERVISOR_SOCK   ; (the path to the socket file)
+${MAC_COMMENT}${UBUNTU_HTTP_COMMENT}chmod=0770              ; socket file mode (default 0700)
+${MAC_COMMENT}${UBUNTU_HTTP_COMMENT}${COMMENT_SOCK_OWNER}chown=nobody:${RVDAS_GROUP}
 EOF
 
     if [ $SUPERVISORD_WEBINTERFACE == 'yes' ]; then
@@ -1744,11 +1763,11 @@ if [ $OS_TYPE == 'MacOS' ]; then
 
 # Linux
 elif [ $OS_TYPE == 'CentOS' ] || [ $OS_TYPE == 'Ubuntu' ]; then
-    sudo mkdir -p /var/run/supervisor/
-    sudo chgrp $RVDAS_GROUP /var/run/supervisor
-
     # CentOS/RHEL
     if [ $OS_TYPE == 'CentOS' ]; then
+        # Socket lives in a subdirectory; ensure it exists and is group-accessible
+        sudo mkdir -p /var/run/supervisor/
+        sudo chgrp $RVDAS_GROUP /var/run/supervisor
         sudo systemctl enable supervisord
         sudo systemctl restart supervisord
     else # Ubuntu/Debian
