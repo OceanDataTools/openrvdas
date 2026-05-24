@@ -501,7 +501,11 @@ function install_prereqs {
 
         # HOMEBREW_NO_AUTO_UPDATE prevents mid-install updates that cause
         # bottle checksum mismatches.
-        env HOMEBREW_NO_AUTO_UPDATE=1 brew install python@3.12 git nginx supervisor
+        env HOMEBREW_NO_AUTO_UPDATE=1 brew install python@3.12 git nginx supervisor gnu-sed
+
+        # macOS ships BSD sed; GNU sed is required for `sed -i -e` syntax used
+        # throughout this script. Prepend gnu-sed's gnubin so `sed` resolves to gsed.
+        export PATH="${HOMEBREW_PREFIX}/opt/gnu-sed/libexec/gnubin:$PATH"
 
         #brew upgrade openssh nginx supervisor || echo Upgraded packages
         #brew link --overwrite python || echo Linking Python
@@ -1718,9 +1722,11 @@ if [ "$EUID" -ne 0 ]; then
         echo "ERROR: Could not obtain sudo privileges. Exiting."
         exit 1
     fi
-    # Refresh sudo credentials every 60 seconds in the background so
+    # Refresh sudo credentials every 55 seconds in the background so
     # long-running steps (e.g. package installs, pip) don't time out.
-    ( while true; do sudo -n true; sleep 60; kill -0 "$$" 2>/dev/null || exit; done ) &
+    # Use `sudo -v -n` (validate/refresh, no prompt) so the timestamp is
+    # explicitly extended rather than just running a no-op command.
+    ( while true; do sudo -v -n 2>/dev/null; sleep 55; kill -0 "$$" 2>/dev/null || exit; done ) &
     SUDO_KEEPALIVE_PID=$!
     trap 'kill "$SUDO_KEEPALIVE_PID" 2>/dev/null' EXIT
 fi
