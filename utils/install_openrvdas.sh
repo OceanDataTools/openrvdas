@@ -499,8 +499,12 @@ function install_prereqs {
         fi
         brew --version
 
-        # HOMEBREW_NO_AUTO_UPDATE prevents mid-install updates that cause
-        # bottle checksum mismatches.
+        # Update Homebrew itself first so bottles.rb and other internals are
+        # current; stale Homebrew versions can crash on nil bottle metadata.
+        brew update
+
+        # HOMEBREW_NO_AUTO_UPDATE prevents further mid-install updates that
+        # cause bottle checksum mismatches.
         env HOMEBREW_NO_AUTO_UPDATE=1 brew install python@3.12 git nginx supervisor gnu-sed
 
         # macOS ships BSD sed; GNU sed is required for `sed -i -e` syntax used
@@ -1092,7 +1096,29 @@ EOF
     fi
 
     echo "Creating web backend virtual environment..."
-    python3 -m venv "$BACKEND_VENV"
+    # Use the same explicit Python 3.12 binary as the main venv on macOS;
+    # bare `python3` may resolve to a different version that won't produce
+    # the python3.12 symlink downstream code expects.
+    # Derive HOMEBREW_PREFIX inline in case this function runs before
+    # install_prereqs has set it in the environment.
+    if [ "${OS_TYPE:-}" == 'MacOS' ]; then
+        _BREW_PFX="${HOMEBREW_PREFIX:-$( [ "$(uname -m)" = "arm64" ] && echo /opt/homebrew || echo /usr/local )}"
+        BACKEND_PYTHON="${_BREW_PFX}/opt/python@3.12/bin/python3.12"
+    else
+        BACKEND_PYTHON=python3
+    fi
+
+    # Remove a pre-existing venv that was built with the wrong Python; trying
+    # to update it in-place produces "No such file or directory: .../python3.12".
+    if [ -d "$BACKEND_VENV" ]; then
+        VENV_PYTHON="$BACKEND_VENV/bin/python3"
+        if [ ! -x "$VENV_PYTHON" ] || ! "$VENV_PYTHON" --version 2>&1 | grep -q "3\.12"; then
+            echo "Existing backend venv uses wrong Python; recreating..."
+            rm -rf "$BACKEND_VENV"
+        fi
+    fi
+
+    "$BACKEND_PYTHON" -m venv "$BACKEND_VENV"
     "$BACKEND_VENV/bin/pip" install --upgrade pip --quiet
     "$BACKEND_VENV/bin/pip" install \
         --trusted-host pypi.org --trusted-host files.pythonhosted.org \
