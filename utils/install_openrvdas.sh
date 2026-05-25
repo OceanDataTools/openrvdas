@@ -2069,12 +2069,19 @@ if [ "$UI_TYPE" == "react" ]; then
 
     echo
     echo "#####################################################################"
-    echo "Initial admin account for the React web UI:"
-    read -p "  Admin username? (${DEFAULT_WEB_ADMIN_USER:-$RVDAS_USER}) " WEB_ADMIN_USER
-    WEB_ADMIN_USER=${WEB_ADMIN_USER:-${DEFAULT_WEB_ADMIN_USER:-$RVDAS_USER}}
-    read -s -p "  Admin password? " WEB_ADMIN_PASS
-    echo
-    WEB_ADMIN_PASS=${WEB_ADMIN_PASS:-admin}
+    if [ -f "${INSTALL_ROOT}/openrvdas/web_backend/db.sqlite3" ]; then
+        echo "React web UI database already exists; skipping admin account setup."
+        echo "Manage admin accounts via the web UI after installation."
+        WEB_ADMIN_USER=${DEFAULT_WEB_ADMIN_USER:-$RVDAS_USER}
+        WEB_ADMIN_PASS=
+    else
+        echo "Initial admin account for the React web UI:"
+        read -p "  Admin username? (${DEFAULT_WEB_ADMIN_USER:-$RVDAS_USER}) " WEB_ADMIN_USER
+        WEB_ADMIN_USER=${WEB_ADMIN_USER:-${DEFAULT_WEB_ADMIN_USER:-$RVDAS_USER}}
+        read -s -p "  Admin password? (${WEB_ADMIN_USER}) " WEB_ADMIN_PASS
+        echo
+        WEB_ADMIN_PASS=${WEB_ADMIN_PASS:-${WEB_ADMIN_USER}}
+    fi
 else
     EXPOSE_API_DOCS=no
     WEB_ADMIN_USER=
