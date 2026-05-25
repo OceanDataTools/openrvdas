@@ -1092,8 +1092,29 @@ DEFAULT_ADMIN_EMAIL=admin@example.com
 EOF
         echo "Web backend .env created."
     else
-        echo "Web backend .env already exists; updating FRONTEND_URL..."
+        echo "Web backend .env already exists; updating FRONTEND_URL and merging new keys..."
         sed -i -e "s|^FRONTEND_URL=.*|FRONTEND_URL=${FRONTEND_URL}|" "${BACKEND_DIR}/.env"
+
+        # Merge any keys added to the template since first install, skipping
+        # SECRET_KEY (must not rotate) and DEFAULT_ADMIN_* (bootstrap-only).
+        _BACKEND_DEFAULTS=$(cat <<ENVDEFAULTS
+DATABASE_URL=sqlite+aiosqlite:////${BACKEND_DIR}/db.sqlite3
+ACCESS_TOKEN_EXPIRE_MINUTES=15
+REFRESH_TOKEN_EXPIRE_DAYS=7
+FRONTEND_URL=${FRONTEND_URL}
+CACHED_DATA_SERVER_HOST=localhost
+CACHED_DATA_SERVER_PORT=8766
+ENVIRONMENT=Production
+ENVDEFAULTS
+)
+        while IFS= read -r line; do
+            [[ "$line" =~ ^[[:space:]]*$ || "$line" =~ ^# ]] && continue
+            key="${line%%=*}"
+            if ! grep -q "^${key}=" "${BACKEND_DIR}/.env"; then
+                echo "$line" >> "${BACKEND_DIR}/.env"
+                echo "  Added missing key: ${key}"
+            fi
+        done <<< "$_BACKEND_DEFAULTS"
     fi
 
     echo "Creating web backend virtual environment..."
