@@ -1154,13 +1154,21 @@ function setup_new_ui_frontend {
 
     install_nodejs
 
-    echo "Writing web frontend .env..."
-    cat > "${FRONTEND_DIR}/.env" <<EOF
-VITE_SERVER_API_BASE_URL=
-VITE_DEFAULT_THEME=dark
-VITE_ALLOW_SELF_REGISTER=true
-VITE_LAYOUT=topnav
-EOF
+    # Seed .env from .env.dist if it doesn't exist yet, then set version
+    if [ ! -f "${FRONTEND_DIR}/.env" ]; then
+        echo "Creating web frontend .env from .env.dist..."
+        cp "${FRONTEND_DIR}/.env.dist" "${FRONTEND_DIR}/.env"
+    else
+        echo "Web frontend .env already exists, preserving existing settings..."
+    fi
+
+    OPENRVDAS_VERSION=$(grep '^version' "${INSTALL_ROOT}/openrvdas/pyproject.toml" | sed 's/version = "\(.*\)"/\1/')
+    echo "Setting VITE_OPENRVDAS_VERSION=${OPENRVDAS_VERSION} in web frontend .env..."
+    if grep -q '^VITE_OPENRVDAS_VERSION=' "${FRONTEND_DIR}/.env"; then
+        sed -i -e "s|^VITE_OPENRVDAS_VERSION=.*|VITE_OPENRVDAS_VERSION=${OPENRVDAS_VERSION}|" "${FRONTEND_DIR}/.env"
+    else
+        echo "VITE_OPENRVDAS_VERSION=${OPENRVDAS_VERSION}" >> "${FRONTEND_DIR}/.env"
+    fi
 
     echo "Installing frontend dependencies..."
     cd "$FRONTEND_DIR"
