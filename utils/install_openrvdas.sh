@@ -1092,7 +1092,8 @@ DEFAULT_ADMIN_EMAIL=admin@example.com
 EOF
         echo "Web backend .env created."
     else
-        echo "Web backend .env already exists, skipping."
+        echo "Web backend .env already exists; updating FRONTEND_URL..."
+        sed -i -e "s|^FRONTEND_URL=.*|FRONTEND_URL=${FRONTEND_URL}|" "${BACKEND_DIR}/.env"
     fi
 
     echo "Creating web backend virtual environment..."
