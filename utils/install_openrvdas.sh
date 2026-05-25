@@ -1155,12 +1155,22 @@ function setup_new_ui_frontend {
 
     install_nodejs
 
-    # Seed .env from .env.dist if it doesn't exist yet, then set version
+    # Seed .env from .env.dist if it doesn't exist yet; on reinstall merge
+    # any keys present in .env.dist but missing from .env.
     if [ ! -f "${FRONTEND_DIR}/.env" ]; then
         echo "Creating web frontend .env from .env.dist..."
         cp "${FRONTEND_DIR}/.env.dist" "${FRONTEND_DIR}/.env"
     else
-        echo "Web frontend .env already exists, preserving existing settings..."
+        echo "Web frontend .env already exists; merging new keys from .env.dist..."
+        while IFS= read -r line; do
+            # Skip blank lines and comments
+            [[ "$line" =~ ^[[:space:]]*$ || "$line" =~ ^# ]] && continue
+            key="${line%%=*}"
+            if ! grep -q "^${key}=" "${FRONTEND_DIR}/.env"; then
+                echo "$line" >> "${FRONTEND_DIR}/.env"
+                echo "  Added missing key: ${key}"
+            fi
+        done < "${FRONTEND_DIR}/.env.dist"
     fi
 
     OPENRVDAS_VERSION=$(grep '^version' "${INSTALL_ROOT}/openrvdas/pyproject.toml" | sed 's/version = "\(.*\)"/\1/')
