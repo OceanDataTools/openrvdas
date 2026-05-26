@@ -780,6 +780,9 @@ function setup_nginx {
         # Disable because we're going to run it via supervisor
         sudo systemctl stop nginx
         sudo systemctl disable nginx # NGINX seems to be enabled by default?
+        # Remove default site to prevent "duplicate default server" conflicts
+        # when supervisord starts nginx with our generated full config.
+        sudo rm -f /etc/nginx/sites-enabled/default
     fi
 
     if [ "$USE_SSL" == "yes" ]; then
@@ -1520,8 +1523,9 @@ EOF
 ; Supervisor configurations for LoggerManager
 [program:logger_manager]
 command=${VENV_BIN}/python server/logger_manager.py --database ${LOGGER_MANAGER_DATABASE} --data_server_websocket :8766 -v -V --no-console
-environment=PATH="${VENV_BIN}:/usr/bin:/usr/local/bin"
+environment=PYTHONPATH="${INSTALL_ROOT}/openrvdas",PATH="${VENV_BIN}:/usr/bin:/usr/local/bin"
 directory=${INSTALL_ROOT}/openrvdas
+priority=20
 autostart=$AUTOSTART
 autorestart=true
 startretries=3
@@ -1539,7 +1543,9 @@ EOF
 ; Supervisor configurations for LoggerManager and CachedDataServer
 [program:cached_data_server]
 command=${VENV_BIN}/python server/cached_data_server.py --port 8766 --disk_cache /var/tmp/openrvdas/disk_cache --max_records 8640 -v
+environment=PYTHONPATH="${INSTALL_ROOT}/openrvdas",PATH="${VENV_BIN}:/usr/bin:/usr/local/bin"
 directory=${INSTALL_ROOT}/openrvdas
+priority=10
 autostart=$AUTOSTART
 autorestart=true
 startretries=3
@@ -1559,6 +1565,7 @@ EOF
 ${DJANGO_GUI_COMMENT}[program:nginx]
 ${DJANGO_GUI_COMMENT}command=${NGINX_BIN} -g 'daemon off;' -c ${INSTALL_ROOT}/openrvdas/django_gui/openrvdas_nginx.conf
 ${DJANGO_GUI_COMMENT}directory=${INSTALL_ROOT}/openrvdas
+${DJANGO_GUI_COMMENT}priority=30
 ${DJANGO_GUI_COMMENT}autostart=$AUTOSTART
 ${DJANGO_GUI_COMMENT}autorestart=true
 ${DJANGO_GUI_COMMENT}startretries=3
@@ -1572,6 +1579,7 @@ ${DJANGO_GUI_COMMENT}[program:uwsgi]
 ${DJANGO_GUI_COMMENT}command=${VENV_BIN}/uwsgi ${INSTALL_ROOT}/openrvdas/django_gui/openrvdas_uwsgi.ini --thunder-lock --enable-threads
 ${DJANGO_GUI_COMMENT}stopsignal=INT
 ${DJANGO_GUI_COMMENT}directory=${INSTALL_ROOT}/openrvdas
+${DJANGO_GUI_COMMENT}priority=30
 ${DJANGO_GUI_COMMENT}autostart=$AUTOSTART
 ${DJANGO_GUI_COMMENT}autorestart=true
 ${DJANGO_GUI_COMMENT}startretries=3
@@ -1593,6 +1601,7 @@ EOF
 ${REACT_GUI_COMMENT}[program:nginx]
 ${REACT_GUI_COMMENT}command=${NGINX_BIN} -g 'daemon off;' -c ${INSTALL_ROOT}/openrvdas/web_frontend/openrvdas_nginx.conf
 ${REACT_GUI_COMMENT}directory=${INSTALL_ROOT}/openrvdas
+${REACT_GUI_COMMENT}priority=30
 ${REACT_GUI_COMMENT}autostart=$AUTOSTART
 ${REACT_GUI_COMMENT}autorestart=true
 ${REACT_GUI_COMMENT}startretries=3
@@ -1605,6 +1614,7 @@ ${REACT_GUI_COMMENT};user=$RVDAS_USER
 ${REACT_GUI_COMMENT}[program:uvicorn]
 ${REACT_GUI_COMMENT}command=${INSTALL_ROOT}/openrvdas/web_backend/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000
 ${REACT_GUI_COMMENT}directory=${INSTALL_ROOT}/openrvdas/web_backend
+${REACT_GUI_COMMENT}priority=30
 ${REACT_GUI_COMMENT}autostart=$AUTOSTART
 ${REACT_GUI_COMMENT}autorestart=true
 ${REACT_GUI_COMMENT}startretries=3
