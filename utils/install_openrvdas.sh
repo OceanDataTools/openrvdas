@@ -2243,6 +2243,9 @@ fi
 echo
 echo "#########################################################################"
 echo "Initializing Django database..."
+# Expect the following shell variables to be appropriately set:
+# RVDAS_USER - valid userid
+# RVDAS_DATABASE_PASSWORD - string to use for Django password
 setup_django
 
 # Connect uWSGI with our project installation
