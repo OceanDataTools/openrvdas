@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import logging
-import sys
 import time
 import yaml
 from threading import Lock
@@ -13,8 +12,6 @@ try:
 except ModuleNotFoundError:
     MODBUS_MODULE_FOUND = False
 
-from os.path import dirname, realpath
-sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.readers.reader import Reader  # noqa
 
 

@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
 
 import logging
-import sys
 import tempfile
 import time
 import unittest
 
-sys.path.append('.')
 from logger.readers.timeout_reader import TimeoutReader  # noqa: E402
 from logger.readers.text_file_reader import TextFileReader  # noqa: E402
 

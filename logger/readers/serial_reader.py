@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import logging
-import sys
 
 # Don't freak out if pyserial isn't installed - unless they actually
 # try to instantiate a SerialReader
@@ -11,8 +10,6 @@ try:
 except ModuleNotFoundError:
     SERIAL_MODULE_FOUND = False
 
-from os.path import dirname, realpath
-sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.readers.reader import Reader  # noqa: E402
 
 

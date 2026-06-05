@@ -1,11 +1,8 @@
 #!/usr/bin/env python3
 import unittest
-import sys
-from os.path import dirname, realpath
 
 # Add the proper path so imports work as if running in the package structure
 # path: test/logger/utils/test_regex_parser.py -> root (4 levels up)
-sys.path.append(dirname(dirname(dirname(dirname(realpath(__file__))))))
 
 from logger.utils.regex_parser import RegexParser  # noqa: E402
 from logger.utils.das_record import DASRecord  # noqa: E402

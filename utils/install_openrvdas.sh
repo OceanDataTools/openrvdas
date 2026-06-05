@@ -284,6 +284,7 @@ function set_default_variables {
     fi
 
     DEFAULT_INSTALL_FIREWALLD=no
+    DEFAULT_INSTALL_UFW=no
     DEFAULT_OPENRVDAS_AUTOSTART=yes
 
     DEFAULT_INSTALL_SIMULATE_NBP=no
@@ -331,6 +332,7 @@ DEFAULT_SSL_KEY_LOCATION=$SSL_KEY_LOCATION
 DEFAULT_RVDAS_USER=$RVDAS_USER
 
 DEFAULT_INSTALL_FIREWALLD=$INSTALL_FIREWALLD
+DEFAULT_INSTALL_UFW=$INSTALL_UFW
 DEFAULT_OPENRVDAS_AUTOSTART=$OPENRVDAS_AUTOSTART
 
 DEFAULT_INSTALL_GUI=$INSTALL_GUI
@@ -745,6 +747,12 @@ function setup_python_packages {
     fi
 
     venv/bin/python venv/bin/pip3 install -r utils/requirements.txt
+
+    # Register the package so that direct script invocation works without
+    # sys.path hacks (requires pyproject.toml, present from v2.x onwards).
+    if [ -f pyproject.toml ]; then
+        venv/bin/python venv/bin/pip3 install -e .
+    fi
 }
 
 ###########################################################################
@@ -1025,9 +1033,17 @@ vacuum          = true
 EOF
 
     # Make vassal directory and copy symlink in
-    [ -e $ETC_HOME/uwsgi/vassals ] || mkdir -p $ETC_HOME/uwsgi/vassals
+    [ -e $ETC_HOME/uwsgi/vassals ] || sudo mkdir -p $ETC_HOME/uwsgi/vassals
     sudo ln -sf ${INSTALL_ROOT}/openrvdas/django_gui/openrvdas_uwsgi.ini \
           $ETC_HOME/uwsgi/vassals/
+
+    # If installing under a home directory, nginx (running as www-data) cannot
+    # traverse the path to the uwsgi socket unless the home dir has o+x.
+    if [[ "$INSTALL_ROOT" == /home/* ]]; then
+        HOME_DIR=$(echo "$INSTALL_ROOT" | cut -d'/' -f1-3)
+        echo "Adding world-execute permission to $HOME_DIR so nginx can reach the uwsgi socket."
+        sudo chmod o+x "$HOME_DIR"
+    fi
 }
 
 ###########################################################################
@@ -1081,6 +1097,7 @@ function setup_supervisor {
         SUPERVISOR_SUFFIX='ini'
         SUPERVISOR_SOCK=${HOMEBREW_PREFIX}/var/run/supervisor.sock
         COMMENT_SOCK_OWNER=';'
+        UBUNTU_HTTP_COMMENT=''
         mkdir -p ${SUPERVISOR_DIR}
 
     # CentOS/RHEL
@@ -1092,6 +1109,7 @@ function setup_supervisor {
         SUPERVISOR_SUFFIX='ini'
         SUPERVISOR_SOCK=/var/run/supervisor/supervisor.sock
         COMMENT_SOCK_OWNER=''
+        UBUNTU_HTTP_COMMENT=''
 
     # Ubuntu/Debian
     elif [ $OS_TYPE == 'Ubuntu' ]; then
@@ -1102,6 +1120,22 @@ function setup_supervisor {
         SUPERVISOR_SUFFIX='conf'
         SUPERVISOR_SOCK=/var/run/supervisor.sock
         COMMENT_SOCK_OWNER=''
+        # [unix_http_server] must not appear in conf.d on Ubuntu — supervisor's
+        # [include] does not merge singleton sections from included files, so
+        # that block would be silently ignored or cause a parse error. The main
+        # supervisord.conf is patched directly below instead.
+        UBUNTU_HTTP_COMMENT='; '
+    fi
+
+    # Ubuntu: patch the system supervisord.conf so that socket permissions
+    # actually take effect for the rvdas group.
+    if [ $OS_TYPE == 'Ubuntu' ]; then
+        UBUNTU_SUPERVISOR_CONF=/etc/supervisor/supervisord.conf
+        if [ -f "$UBUNTU_SUPERVISOR_CONF" ]; then
+            sudo sed -i 's/chmod=0700/chmod=0770/' "$UBUNTU_SUPERVISOR_CONF"
+            sudo grep -q 'chown=nobody' "$UBUNTU_SUPERVISOR_CONF" || \
+                sudo sed -i "/chmod=0770/a chown=nobody:${RVDAS_GROUP}" "$UBUNTU_SUPERVISOR_CONF"
+        fi
     fi
 
     SUPERVISOR_FILE=$SUPERVISOR_DIR/openrvdas.${SUPERVISOR_SUFFIX}
@@ -1118,19 +1152,20 @@ function setup_supervisor {
     sudo rm -f $TEMP_FILE
 
     cat > $TEMP_FILE <<EOF
-; First, override the default socket permissions to allow user
-; $RVDAS_USER to run supervisorctl
-${MAC_COMMENT}[unix_http_server]
-${MAC_COMMENT}file=$SUPERVISOR_SOCK   ; (the path to the socket file)
-${MAC_COMMENT}chmod=0770              ; socket file mode (default 0700)
-${MAC_COMMENT}${COMMENT_SOCK_OWNER}chown=nobody:${RVDAS_GROUP}
+; Override the default socket permissions to allow user $RVDAS_USER to run
+; supervisorctl without sudo. On Ubuntu this is handled by patching the main
+; supervisord.conf directly; on CentOS/MacOS it is set here in conf.d.
+${MAC_COMMENT}${UBUNTU_HTTP_COMMENT}[unix_http_server]
+${MAC_COMMENT}${UBUNTU_HTTP_COMMENT}file=$SUPERVISOR_SOCK   ; (the path to the socket file)
+${MAC_COMMENT}${UBUNTU_HTTP_COMMENT}chmod=0770              ; socket file mode (default 0700)
+${MAC_COMMENT}${UBUNTU_HTTP_COMMENT}${COMMENT_SOCK_OWNER}chown=nobody:${RVDAS_GROUP}
 EOF
 
     if [ $SUPERVISORD_WEBINTERFACE == 'yes' ]; then
         cat >> $TEMP_FILE <<EOF
 
 [inet_http_server]
-port=127.0.0.1:${SUPERVISORD_WEBINTERFACE_PORT}
+port=*:${SUPERVISORD_WEBINTERFACE_PORT}
 EOF
         if [ $SUPERVISORD_WEBINTERFACE_AUTH == 'yes' ]; then
             SUPERVISORD_WEBINTERFACE_HASH=`echo -n ${SUPERVISORD_WEBINTERFACE_PASS} | sha1sum | awk '{printf("{SHA}%s",$1)}'`
@@ -1261,11 +1296,15 @@ function setup_firewall {
     semanage permissive -a httpd_t
 
     # Set up the firewall and open some holes in it
-    sudo systemctl start firewalld
-    sudo systemctl enable firewalld
+    systemctl enable --now firewalld
 
     firewall-cmd -q --set-default-zone=public
     firewall-cmd -q --permanent --add-port=${SERVER_PORT}/tcp > /dev/null
+
+    # If SSL is enabled, also open the non-SSL port for HTTP→HTTPS redirect
+    if [ "$USE_SSL" == 'yes' ] && [ "$NONSSL_SERVER_PORT" != "$SERVER_PORT" ]; then
+        firewall-cmd -q --permanent --add-port=${NONSSL_SERVER_PORT}/tcp > /dev/null
+    fi
 
     if [ "$SUPERVISORD_WEBINTERFACE" == 'yes' ]; then
         firewall-cmd -q --permanent --add-port=${SUPERVISORD_WEBINTERFACE_PORT}/tcp > /dev/null
@@ -1289,29 +1328,64 @@ function setup_firewall {
         done
     fi
 
-    #firewall-cmd -q --permanent --add-port=80/tcp > /dev/null
-
-    #firewall-cmd -q --permanent --add-port=8001/tcp > /dev/null
-    #firewall-cmd -q --permanent --add-port=8002/tcp > /dev/null
-
-    # Supervisord ports - 9001 is default system-wide supervisor
-    # and 9002 is the captive supervisor that logger_manager uses.
-    #firewall-cmd -q --permanent --add-port=9001/tcp > /dev/null
-
-    # Websocket ports
-    #firewall-cmd -q --permanent --add-port=8765/tcp > /dev/null # status
-    #firewall-cmd -q --permanent --add-port=8766/tcp > /dev/null # data
-
-    # Our favorite UDP port for network data
-    #firewall-cmd -q --permanent --add-port=6224/udp > /dev/null
-    #firewall-cmd -q --permanent --add-port=6225/udp > /dev/null
-
-    # For unittest access
-    #firewall-cmd -q --permanent --add-port=8000/udp > /dev/null
-    #firewall-cmd -q --permanent --add-port=8001/udp > /dev/null
-    #firewall-cmd -q --permanent --add-port=8002/udp > /dev/null
     firewall-cmd -q --reload > /dev/null
     echo "Done setting SELINUX permissions"
+}
+
+
+###########################################################################
+###########################################################################
+# Ubuntu ONLY - Set up ufw and open relevant ports
+function setup_ufw {
+    if [ $OS_TYPE != 'Ubuntu' ]; then
+        echo "No ufw setup on $OS_TYPE"
+        return
+    fi
+
+    apt-get install -y ufw
+    echo "#####################################################################"
+    echo "Configuring ufw firewall..."
+
+    ufw --force reset
+    ufw default deny incoming
+    ufw default allow outgoing
+
+    # Always allow SSH to prevent lockout
+    ufw allow ssh
+
+    # Web console port
+    ufw allow ${SERVER_PORT}/tcp
+
+    # If SSL is enabled, also open the non-SSL port for HTTP->HTTPS redirect
+    if [ "$USE_SSL" == 'yes' ] && [ "$NONSSL_SERVER_PORT" != "$SERVER_PORT" ]; then
+        ufw allow ${NONSSL_SERVER_PORT}/tcp
+    fi
+
+    # Supervisord web interface
+    if [ "$SUPERVISORD_WEBINTERFACE" == 'yes' ]; then
+        ufw allow ${SUPERVISORD_WEBINTERFACE_PORT}/tcp
+    fi
+
+    if [ ! -z "$TCP_PORTS_TO_OPEN" ]; then
+        for PORT in "${TCP_PORTS_TO_OPEN[@]}"
+        do
+            PORT="$(echo -e "${PORT}" | tr -d '[:space:]')"  # trim whitespace
+            echo Opening $PORT/tcp
+            ufw allow ${PORT}/tcp
+        done
+    fi
+
+    if [ ! -z "$UDP_PORTS_TO_OPEN" ]; then
+        for PORT in "${UDP_PORTS_TO_OPEN[@]}"
+        do
+            PORT="$(echo -e "${PORT}" | tr -d '[:space:]')"  # trim whitespace
+            echo Opening $PORT/udp
+            ufw allow ${PORT}/udp
+        done
+    fi
+
+    ufw --force enable
+    echo "Done configuring ufw"
 }
 
 
@@ -1405,6 +1479,26 @@ fi
 read -p "OpenRVDAS install root? ($DEFAULT_INSTALL_ROOT) " INSTALL_ROOT
 INSTALL_ROOT=${INSTALL_ROOT:-$DEFAULT_INSTALL_ROOT}
 echo "Install root will be '$INSTALL_ROOT'"
+
+# Update SSL defaults to reflect the actual install root. Only recompute if
+# the value still matches the auto-generated pattern; custom paths are left alone.
+if [[ "$DEFAULT_SSL_CRT_LOCATION" == */openrvdas/openrvdas.crt ]]; then
+    DEFAULT_SSL_CRT_LOCATION=${INSTALL_ROOT}/openrvdas/openrvdas.crt
+fi
+if [[ "$DEFAULT_SSL_KEY_LOCATION" == */openrvdas/openrvdas.key ]]; then
+    DEFAULT_SSL_KEY_LOCATION=${INSTALL_ROOT}/openrvdas/openrvdas.key
+fi
+
+if [[ "$INSTALL_ROOT" == /home/* ]]; then
+    echo
+    echo "WARNING: Installing under a home directory can cause nginx to fail"
+    echo "with 'Permission denied' when connecting to the uwsgi socket."
+    echo "Home directories typically have permissions that block nginx (which"
+    echo "runs as www-data) from traversing the path to the socket file."
+    echo "The recommended install location is /opt."
+    echo "If you continue, the installer will add world-execute permission to"
+    echo "the home directory to allow nginx to traverse it."
+fi
 echo
 read -p "Repository to install from? ($DEFAULT_OPENRVDAS_REPO) " OPENRVDAS_REPO
 OPENRVDAS_REPO=${OPENRVDAS_REPO:-$DEFAULT_OPENRVDAS_REPO}
@@ -1526,10 +1620,45 @@ if [ $OS_TYPE == 'CentOS' ]; then
     if [ $INSTALL_FIREWALLD == 'yes' ]; then
         echo "The installation script will open port $SERVER_PORT for TCP console access."
         echo "What other ports should be opened for TCP or UDP? (enter comma-separated"
-        echo "list of numbers, or hit return to open no additional ports.)"
+        echo "list of numbers, or hit return to accept the default.)"
+        echo
+        echo "Note: OpenRVDAS uses UDP ports 6221-6226 for instrument data by default."
+        echo "If you skip these, the data pipeline will be blocked by the firewall."
         echo
         IFS=',' read -p "Additional TCP ports to open? " -a TCP_PORTS_TO_OPEN
-        IFS=',' read -p "Additional UDP ports to open? " -a UDP_PORTS_TO_OPEN
+        IFS=',' read -p "Additional UDP ports to open? (default: 6221,6222,6223,6224,6225,6226) " -a UDP_PORTS_TO_OPEN
+        if [ ${#UDP_PORTS_TO_OPEN[@]} -eq 0 ]; then
+            UDP_PORTS_TO_OPEN=(6221 6222 6223 6224 6225 6226)
+        fi
+    fi
+fi
+
+#########################################################################
+#########################################################################
+# Ubuntu only: do they want to install/configure ufw?
+INSTALL_UFW=no
+if [ $OS_TYPE == 'Ubuntu' ]; then
+    echo
+    echo "#####################################################################"
+    echo "The ufw firewall can be installed and configured to only allow access"
+    echo "to ports used by OpenRVDAS."
+    echo
+    yes_no "Install and configure ufw?" $DEFAULT_INSTALL_UFW
+    INSTALL_UFW=$YES_NO_RESULT
+
+    if [ $INSTALL_UFW == 'yes' ]; then
+        echo "The installation script will open port $SERVER_PORT for TCP console access."
+        echo "What other ports should be opened for TCP or UDP? (enter comma-separated"
+        echo "list of numbers, or hit return to accept the default.)"
+        echo
+        echo "Note: OpenRVDAS uses UDP ports 6221-6226 for instrument data by default."
+        echo "If you skip these, the data pipeline will be blocked by the firewall."
+        echo
+        IFS=',' read -p "Additional TCP ports to open? " -a TCP_PORTS_TO_OPEN
+        IFS=',' read -p "Additional UDP ports to open? (default: 6221,6222,6223,6224,6225,6226) " -a UDP_PORTS_TO_OPEN
+        if [ ${#UDP_PORTS_TO_OPEN[@]} -eq 0 ]; then
+            UDP_PORTS_TO_OPEN=(6221 6222 6223 6224 6225 6226)
+        fi
     fi
 fi
 
@@ -1726,6 +1855,10 @@ setup_supervisor
 # If we've been instructed to set up firewall, do so.
 if [ $INSTALL_FIREWALLD == 'yes' ]; then
     setup_firewall
+fi
+
+if [ $INSTALL_UFW == 'yes' ]; then
+    setup_ufw
 fi
 
 

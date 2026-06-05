@@ -2,12 +2,9 @@
 
 import logging
 import socket
-import sys
 
 from typing import Union
 
-from os.path import dirname, realpath
-sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.writers.writer import Writer  # noqa: E402
 
 

@@ -3,12 +3,10 @@
 import logging
 import signal
 import socket
-import sys
 import threading
 import time
 import unittest
 
-sys.path.append('.')
 from logger.readers.tcp_reader import TCPReader  # noqa E402
 from logger.writers.tcp_writer import TCPWriter  # noqa E402
 

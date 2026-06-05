@@ -5,7 +5,6 @@ import copy
 import io
 import logging
 import os
-import sys
 import tempfile
 import unittest
 import yaml
@@ -16,8 +15,6 @@ from unittest.mock import patch, mock_open
 LOGGING_FORMAT = '%(asctime)-15s %(filename)s:%(lineno)d %(message)s'
 logging.basicConfig(format=LOGGING_FORMAT)
 
-# Add the parent directory to sys.path to import the module correctly
-sys.path.append('.')
 from logger.utils import read_config  # noqa: E402
 
 

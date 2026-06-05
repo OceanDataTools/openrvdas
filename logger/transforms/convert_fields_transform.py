@@ -7,12 +7,9 @@ providing the Transform interface for use in listener pipelines.
 
 import copy
 import logging
-import sys
 from typing import Union
 
-from os.path import dirname, realpath
 
-sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.utils.das_record import DASRecord  # noqa: E402
 from logger.utils.convert_fields import convert_fields  # noqa: E402
 from logger.transforms.transform import Transform  # noqa: E402

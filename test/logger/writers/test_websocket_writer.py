@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
 
 import logging
-import sys
 import threading
 import time
 import unittest
-
 from os.path import dirname, realpath
 
-sys.path.append('.')
+
 from logger.writers.websocket_writer import WebsocketWriter  # noqa: E402
 from logger.readers.websocket_reader import WebsocketReader  # noqa: E402
 

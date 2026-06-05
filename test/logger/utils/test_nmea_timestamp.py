@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
 """Unit tests for NMEATimestampExtractor."""
 
-import sys
 import time
 import unittest
 from datetime import datetime, timezone
 
-sys.path.append('.')
 from logger.utils.nmea_timestamp import NMEATimestampExtractor  # noqa: E402
 
 

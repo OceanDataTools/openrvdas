@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 
 import logging
-import sys
 import unittest
 
-sys.path.append('.')
 from logger.transforms.from_json_transform import FromJSONTransform  # noqa: E402
 from logger.transforms.to_json_transform import ToJSONTransform  # noqa: E402
 from logger.utils.das_record import DASRecord  # noqa: E402

@@ -3,10 +3,8 @@
 # flake8: noqa E501  - don't worry about long lines in sample data
 
 import logging
-import sys
 import unittest
 
-sys.path.append('.')
 from logger.utils.das_record import DASRecord  # noqa: E402
 from logger.transforms.true_winds_transform import TrueWindsTransform  # noqa: E402
 from logger.transforms.parse_transform import ParseTransform  # noqa: E402

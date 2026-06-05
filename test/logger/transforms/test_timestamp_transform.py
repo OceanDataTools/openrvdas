@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 
-import sys
 import time
 import unittest
 
-sys.path.append('.')
 from logger.utils import timestamp  # noqa: E402
 from logger.transforms.timestamp_transform import TimestampTransform  # noqa: E402
 

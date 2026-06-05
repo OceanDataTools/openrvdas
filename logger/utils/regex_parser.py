@@ -6,14 +6,11 @@ import datetime
 import logging
 import re
 import pprint
-import sys
 import time
 
-from os.path import dirname, realpath
 
 
 # Append openrvdas root to syspath prior to importing openrvdas modules
-sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 
 from logger.utils.das_record import DASRecord  # noqa: E402
 from logger.utils.read_config import load_definitions  # noqa: E402

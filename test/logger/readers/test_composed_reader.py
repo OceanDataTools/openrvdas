@@ -1,15 +1,12 @@
 #!/usr/bin/env python3
 
 import logging
-import sys
 import tempfile
 import time
 import unittest
 import warnings
 
-sys.path.append('.')
 from logger.transforms.prefix_transform import PrefixTransform  # noqa: E402
-from logger.readers.reader import Reader  # noqa: E402
 from logger.readers.composed_reader import ComposedReader  # noqa: E402
 from logger.readers.text_file_reader import TextFileReader  # noqa: E402
 

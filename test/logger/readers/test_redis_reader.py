@@ -2,7 +2,6 @@
 
 import logging
 import subprocess
-import sys
 import time
 import unittest
 
@@ -14,7 +13,6 @@ try:
 except ModuleNotFoundError:
     REDIS_ENABLED = False
 
-sys.path.append('.')
 from logger.writers.redis_writer import RedisWriter  # noqa: E402
 from logger.readers.redis_reader import RedisReader  # noqa: E402
 

@@ -4,12 +4,10 @@ import logging
 import mmap
 import signal
 import socket
-import sys
 import threading
 import time
 import unittest
 
-sys.path.append('.')
 from logger.writers.udp_writer import UDPWriter  # noqa E402
 
 SAMPLE_DATA = ['f1 line 1',

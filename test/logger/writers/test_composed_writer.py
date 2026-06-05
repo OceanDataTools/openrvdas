@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
 
 import logging
-import sys
 import tempfile
 import time
 import unittest
 import warnings
 
-sys.path.append('.')
 from logger.writers.text_file_writer import TextFileWriter  # noqa: E402
 from logger.writers.composed_writer import ComposedWriter  # noqa: E402
 from logger.transforms.prefix_transform import PrefixTransform  # noqa: E402

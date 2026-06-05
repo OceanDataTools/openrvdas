@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
 
 import logging
-import sys
 import tempfile
 import threading
 import time
 import unittest
 import warnings
 
-sys.path.append('.')
 from logger.utils import timestamp  # noqa: E402
 from logger.utils.das_record import DASRecord  # noqa: E402
 from logger.readers.logfile_reader import LogfileReader  # noqa: E402

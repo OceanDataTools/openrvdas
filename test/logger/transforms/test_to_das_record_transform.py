@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
 
 import logging
-import sys
 import time
 import unittest
 
-sys.path.append('.')
 from logger.transforms.to_das_record_transform import ToDASRecordTransform  # noqa: E402
 
 

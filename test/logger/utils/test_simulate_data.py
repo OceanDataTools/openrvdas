@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import logging
-import sys
 import tempfile
 import time
 import threading
@@ -14,7 +13,6 @@ except ModuleNotFoundError:
     raise ModuleNotFoundError('Missing module "serial". Install with "pip3 '
                               'install pyserial"')
 
-sys.path.append('.')
 from logger.transforms.slice_transform import SliceTransform  # noqa: E402
 from logger.utils.simulate_data import SimSerial  # noqa: E402
 

@@ -5,11 +5,8 @@
 from database.postgresql_connector import PostgreSQLConnector
 from database.settings import POSTGRES_ENABLED
 import logging
-import sys
 import unittest
 
-from os.path import dirname, realpath
-sys.path.append(dirname(dirname(realpath(__file__))))
 from logger.utils.nmea_parser import NMEAParser  # noqa: E402
 
 # try:

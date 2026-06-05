@@ -11,11 +11,9 @@ import mailbox
 import logging
 import random
 import socket
-import sys
 import time
 import unittest
 
-sys.path.append('.')
 from logger.writers.email_writer import EmailWriter  # noqa: E402
 
 

@@ -68,21 +68,18 @@ openrvdas<wbr>.<a href="./../../logger.html">logger</a><wbr>.<a href="./../reade
                         <div class="pdoc-code codehilite"><pre><span></span><span id="L-1"><a href="#L-1"><span class="linenos"> 1</span></a><span class="ch">#!/usr/bin/env python3</span>
 </span><span id="L-2"><a href="#L-2"><span class="linenos"> 2</span></a>
 </span><span id="L-3"><a href="#L-3"><span class="linenos"> 3</span></a><span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
-</span><span id="L-4"><a href="#L-4"><span class="linenos"> 4</span></a><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
-</span><span id="L-5"><a href="#L-5"><span class="linenos"> 5</span></a>
-</span><span id="L-6"><a href="#L-6"><span class="linenos"> 6</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">os.path</span><span class="w"> </span><span class="kn">import</span> <span class="n">dirname</span><span class="p">,</span> <span class="n">realpath</span>
-</span><span id="L-7"><a href="#L-7"><span class="linenos"> 7</span></a><span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dirname</span><span class="p">(</span><span class="n">dirname</span><span class="p">(</span><span class="n">dirname</span><span class="p">(</span><span class="n">realpath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)))))</span>
-</span><span id="L-8"><a href="#L-8"><span class="linenos"> 8</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">logger.readers.reader</span><span class="w"> </span><span class="kn">import</span> <span class="n">Reader</span>  <span class="c1"># noqa: E402</span>
-</span><span id="L-9"><a href="#L-9"><span class="linenos"> 9</span></a>
-</span><span id="L-10"><a href="#L-10"><span class="linenos">10</span></a>
-</span><span id="L-11"><a href="#L-11"><span class="linenos">11</span></a><span class="k">class</span><span class="w"> </span><span class="nc">NetworkReader</span><span class="p">(</span><span class="n">Reader</span><span class="p">):</span>
-</span><span id="L-12"><a href="#L-12"><span class="linenos">12</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">network</span><span class="p">,</span> <span class="n">eol</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
-</span><span id="L-13"><a href="#L-13"><span class="linenos">13</span></a>                 <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">,</span> <span class="n">encoding_errors</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">):</span>
-</span><span id="L-14"><a href="#L-14"><span class="linenos">14</span></a>        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;NetworkReader has been replaced by TCPReader and UDPReader&quot;</span><span class="p">)</span>
-</span><span id="L-15"><a href="#L-15"><span class="linenos">15</span></a>
-</span><span id="L-16"><a href="#L-16"><span class="linenos">16</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">read</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="L-17"><a href="#L-17"><span class="linenos">17</span></a>        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;not reading anything: NetworkReader has been &quot;</span>
-</span><span id="L-18"><a href="#L-18"><span class="linenos">18</span></a>                      <span class="s2">&quot;replaced by TCPReader and UDPReader&quot;</span><span class="p">)</span>
+</span><span id="L-4"><a href="#L-4"><span class="linenos"> 4</span></a>
+</span><span id="L-5"><a href="#L-5"><span class="linenos"> 5</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">logger.readers.reader</span><span class="w"> </span><span class="kn">import</span> <span class="n">Reader</span>  <span class="c1"># noqa: E402</span>
+</span><span id="L-6"><a href="#L-6"><span class="linenos"> 6</span></a>
+</span><span id="L-7"><a href="#L-7"><span class="linenos"> 7</span></a>
+</span><span id="L-8"><a href="#L-8"><span class="linenos"> 8</span></a><span class="k">class</span><span class="w"> </span><span class="nc">NetworkReader</span><span class="p">(</span><span class="n">Reader</span><span class="p">):</span>
+</span><span id="L-9"><a href="#L-9"><span class="linenos"> 9</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">network</span><span class="p">,</span> <span class="n">eol</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+</span><span id="L-10"><a href="#L-10"><span class="linenos">10</span></a>                 <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">,</span> <span class="n">encoding_errors</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">):</span>
+</span><span id="L-11"><a href="#L-11"><span class="linenos">11</span></a>        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;NetworkReader has been replaced by TCPReader and UDPReader&quot;</span><span class="p">)</span>
+</span><span id="L-12"><a href="#L-12"><span class="linenos">12</span></a>
+</span><span id="L-13"><a href="#L-13"><span class="linenos">13</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">read</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="L-14"><a href="#L-14"><span class="linenos">14</span></a>        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;not reading anything: NetworkReader has been &quot;</span>
+</span><span id="L-15"><a href="#L-15"><span class="linenos">15</span></a>                      <span class="s2">&quot;replaced by TCPReader and UDPReader&quot;</span><span class="p">)</span>
 </span></pre></div>
 
 
@@ -98,14 +95,14 @@ openrvdas<wbr>.<a href="./../../logger.html">logger</a><wbr>.<a href="./../reade
 
     </div>
     <a class="headerlink" href="#NetworkReader"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="NetworkReader-12"><a href="#NetworkReader-12"><span class="linenos">12</span></a><span class="k">class</span><span class="w"> </span><span class="nc">NetworkReader</span><span class="p">(</span><span class="n">Reader</span><span class="p">):</span>
-</span><span id="NetworkReader-13"><a href="#NetworkReader-13"><span class="linenos">13</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">network</span><span class="p">,</span> <span class="n">eol</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
-</span><span id="NetworkReader-14"><a href="#NetworkReader-14"><span class="linenos">14</span></a>                 <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">,</span> <span class="n">encoding_errors</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">):</span>
-</span><span id="NetworkReader-15"><a href="#NetworkReader-15"><span class="linenos">15</span></a>        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;NetworkReader has been replaced by TCPReader and UDPReader&quot;</span><span class="p">)</span>
-</span><span id="NetworkReader-16"><a href="#NetworkReader-16"><span class="linenos">16</span></a>
-</span><span id="NetworkReader-17"><a href="#NetworkReader-17"><span class="linenos">17</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">read</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="NetworkReader-18"><a href="#NetworkReader-18"><span class="linenos">18</span></a>        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;not reading anything: NetworkReader has been &quot;</span>
-</span><span id="NetworkReader-19"><a href="#NetworkReader-19"><span class="linenos">19</span></a>                      <span class="s2">&quot;replaced by TCPReader and UDPReader&quot;</span><span class="p">)</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="NetworkReader-9"><a href="#NetworkReader-9"><span class="linenos"> 9</span></a><span class="k">class</span><span class="w"> </span><span class="nc">NetworkReader</span><span class="p">(</span><span class="n">Reader</span><span class="p">):</span>
+</span><span id="NetworkReader-10"><a href="#NetworkReader-10"><span class="linenos">10</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">network</span><span class="p">,</span> <span class="n">eol</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+</span><span id="NetworkReader-11"><a href="#NetworkReader-11"><span class="linenos">11</span></a>                 <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">,</span> <span class="n">encoding_errors</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">):</span>
+</span><span id="NetworkReader-12"><a href="#NetworkReader-12"><span class="linenos">12</span></a>        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;NetworkReader has been replaced by TCPReader and UDPReader&quot;</span><span class="p">)</span>
+</span><span id="NetworkReader-13"><a href="#NetworkReader-13"><span class="linenos">13</span></a>
+</span><span id="NetworkReader-14"><a href="#NetworkReader-14"><span class="linenos">14</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">read</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="NetworkReader-15"><a href="#NetworkReader-15"><span class="linenos">15</span></a>        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;not reading anything: NetworkReader has been &quot;</span>
+</span><span id="NetworkReader-16"><a href="#NetworkReader-16"><span class="linenos">16</span></a>                      <span class="s2">&quot;replaced by TCPReader and UDPReader&quot;</span><span class="p">)</span>
 </span></pre></div>
 
 
@@ -125,9 +122,9 @@ openrvdas<wbr>.<a href="./../../logger.html">logger</a><wbr>.<a href="./../reade
 
     </div>
     <a class="headerlink" href="#NetworkReader.__init__"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="NetworkReader.__init__-13"><a href="#NetworkReader.__init__-13"><span class="linenos">13</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">network</span><span class="p">,</span> <span class="n">eol</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
-</span><span id="NetworkReader.__init__-14"><a href="#NetworkReader.__init__-14"><span class="linenos">14</span></a>                 <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">,</span> <span class="n">encoding_errors</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">):</span>
-</span><span id="NetworkReader.__init__-15"><a href="#NetworkReader.__init__-15"><span class="linenos">15</span></a>        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;NetworkReader has been replaced by TCPReader and UDPReader&quot;</span><span class="p">)</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="NetworkReader.__init__-10"><a href="#NetworkReader.__init__-10"><span class="linenos">10</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">network</span><span class="p">,</span> <span class="n">eol</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+</span><span id="NetworkReader.__init__-11"><a href="#NetworkReader.__init__-11"><span class="linenos">11</span></a>                 <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">,</span> <span class="n">encoding_errors</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">):</span>
+</span><span id="NetworkReader.__init__-12"><a href="#NetworkReader.__init__-12"><span class="linenos">12</span></a>        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;NetworkReader has been replaced by TCPReader and UDPReader&quot;</span><span class="p">)</span>
 </span></pre></div>
 
 
@@ -167,9 +164,9 @@ mirror_to - Optional Writer to which all records read or transformed
 
     </div>
     <a class="headerlink" href="#NetworkReader.read"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="NetworkReader.read-17"><a href="#NetworkReader.read-17"><span class="linenos">17</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">read</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="NetworkReader.read-18"><a href="#NetworkReader.read-18"><span class="linenos">18</span></a>        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;not reading anything: NetworkReader has been &quot;</span>
-</span><span id="NetworkReader.read-19"><a href="#NetworkReader.read-19"><span class="linenos">19</span></a>                      <span class="s2">&quot;replaced by TCPReader and UDPReader&quot;</span><span class="p">)</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="NetworkReader.read-14"><a href="#NetworkReader.read-14"><span class="linenos">14</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">read</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="NetworkReader.read-15"><a href="#NetworkReader.read-15"><span class="linenos">15</span></a>        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;not reading anything: NetworkReader has been &quot;</span>
+</span><span id="NetworkReader.read-16"><a href="#NetworkReader.read-16"><span class="linenos">16</span></a>                      <span class="s2">&quot;replaced by TCPReader and UDPReader&quot;</span><span class="p">)</span>
 </span></pre></div>
 
 

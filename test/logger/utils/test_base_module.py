@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
 import logging
-import sys
 import unittest
 
 from typing import Union
 
-sys.path.append('.')
 from logger.transforms.transform import Transform  # noqa: E402
 from logger.utils.base_module import get_method_type_hints  # noqa: E402
 

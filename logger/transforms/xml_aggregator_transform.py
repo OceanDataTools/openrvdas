@@ -1,14 +1,11 @@
 #!/usr/bin/env python3
 
 import logging
-import sys
 
 from threading import Lock
 from xml.sax.handler import ContentHandler
 from xml.sax import make_parser
 
-from os.path import dirname, realpath
-sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.transforms.transform import Transform  # noqa: E402
 
 

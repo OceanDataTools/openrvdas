@@ -9,16 +9,20 @@ Author: Assistant
 License: MIT
 """
 
-from googleapiclient.discovery import build
-from google.oauth2.service_account import Credentials
-from google.auth.transport.requests import Request
-from google.oauth2.credentials import Credentials as UserCredentials
 import os
-import sys
 
-from os.path import dirname, realpath
+# Don't barf if they don't have google api packages installed. Only complain
+# if they actually try to use it, below.
+try:
+    from googleapiclient.discovery import build
+    from google.oauth2.service_account import Credentials
+    from google.auth.transport.requests import Request
+    from google.oauth2.credentials import Credentials as UserCredentials
+    GOOGLE_SHEETS_ENABLED = True
+except ModuleNotFoundError:
+    GOOGLE_SHEETS_ENABLED = False
 
-sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
+
 from logger.utils.das_record import DASRecord  # noqa: E402
 from logger.writers.writer import Writer  # noqa: E402
 
@@ -143,6 +147,13 @@ class GoogleSheetsWriter(Writer):
             ValueError: If authentication parameters are invalid
             Exception: If unable to authenticate or access the spreadsheet
         """
+        if not GOOGLE_SHEETS_ENABLED:
+            raise ModuleNotFoundError(
+                'GoogleSheetsWriter requires google-api-python-client, '
+                'google-auth-httplib2 and google-auth-oauthlib.\n'
+                'Please run: pip install google-api-python-client '
+                'google-auth-httplib2 google-auth-oauthlib'
+            )
         super().__init__(**kwargs)  # processes 'quiet', encoding and hints
 
         self.sheet_name_or_id = sheet_name_or_id

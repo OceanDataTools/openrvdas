@@ -1,13 +1,10 @@
 #!/usr/bin/env python3
 
 import logging
-import sys
 
 from typing import Union
-from os.path import dirname, realpath
 from json import JSONDecodeError
 
-sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.utils.das_record import DASRecord  # noqa: E402
 from logger.transforms.transform import Transform  # noqa: E402
 

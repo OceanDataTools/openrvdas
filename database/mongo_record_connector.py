@@ -2,10 +2,8 @@
 
 import logging
 import datetime
-import sys
 import json
 
-sys.path.append('.')
 from logger.utils.das_record import DASRecord  # noqa: E402
 
 try:

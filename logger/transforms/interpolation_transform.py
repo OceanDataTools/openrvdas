@@ -3,16 +3,13 @@
 """
 
 import logging
-import sys
 import bisect
 
 from math import degrees, radians, sin, cos, atan2
 from statistics import mean
 from typing import Union, Any
 
-from os.path import dirname, realpath
 
-sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.utils.das_record import DASRecord  # noqa: E402
 from logger.transforms.derived_data_transform import DerivedDataTransform  # noqa: E402
 

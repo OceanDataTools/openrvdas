@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import logging
-import sys
 
 # Don't barf if they don't have redis installed. Only complain if
 # they actually try to use it, below
@@ -11,8 +10,6 @@ try:
 except ModuleNotFoundError:
     REDIS_ENABLED = False
 
-from os.path import dirname, realpath
-sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.readers.reader import Reader  # noqa: E402
 
 DEFAULT_HOST = 'localhost'

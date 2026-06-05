@@ -3,12 +3,10 @@
 import logging
 import signal
 import socket
-import sys
 import threading
 import time
 import unittest
 
-sys.path.append('.')
 from logger.writers.udp_writer import UDPWriter  # noqa E402
 from logger.readers.udp_reader import UDPReader  # noqa E402
 

@@ -88,11 +88,9 @@ import logging
 import os.path
 import parse
 import pty
-import sys
 import threading
 import time
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
 from logger.readers.logfile_reader import LogfileReader  # noqa: E402
 from logger.writers.udp_writer import UDPWriter  # noqa: E402
 

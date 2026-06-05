@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
 
-import sys
 
 import unittest
 from unittest.mock import patch, MagicMock, call
 
-sys.path.append('.')
 from logger.readers.polled_serial_reader import PolledSerialReader  # noqa: E402
 
 

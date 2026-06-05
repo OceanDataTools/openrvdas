@@ -2,11 +2,9 @@
 
 import logging
 import signal
-import sys
 import threading
 import unittest
 
-sys.path.append('.')
 from logger.writers.mqtt_writer import MQTTWriter  # noqa: E402
 from logger.readers.mqtt_reader import MQTTReader  # noqa: E402
 

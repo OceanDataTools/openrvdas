@@ -2,14 +2,11 @@
 import logging
 import unittest
 import time
-import sys
 import os
 import threading
 from typing import List
 
 # Add parent directory to path
-from os.path import dirname, realpath
-sys.path.append(dirname(dirname(dirname(dirname(realpath(__file__))))))
 from logger.readers.socket_reader import SocketReader  # noqa: E402
 from logger.writers.socket_writer import SocketWriter  # noqa: E402
 

@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
 
 import logging
-import sys
 import tempfile
 import unittest
 
-sys.path.append('.')
 from logger.writers.regex_logfile_writer import RegexLogfileWriter  # noqa: E402
 
 SAMPLE_DATA = """2017-11-03T17:23:04.832875Z AAA Nel mezzo del cammin di nostra vita

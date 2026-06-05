@@ -5,13 +5,11 @@
 import json
 import logging
 import pprint
-import sys
 import tempfile
 import time
 import unittest
 import warnings
 
-sys.path.append('.')
 from logger.utils.record_parser import RecordParser  # noqa: E402
 from logger.utils.das_record import DASRecord  # noqa: E402
 

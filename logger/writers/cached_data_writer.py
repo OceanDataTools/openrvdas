@@ -4,7 +4,6 @@ import asyncio
 import json
 import logging
 import ssl
-import sys
 import threading
 
 from typing import Union
@@ -14,8 +13,6 @@ try:
 except ImportError:
     WEBSOCKETS_INSTALLED = False
 
-from os.path import dirname, realpath
-sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.writers.writer import Writer  # noqa: E402
 from logger.utils.das_record import DASRecord  # noqa: E402
 

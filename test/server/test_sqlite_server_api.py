@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
 
 import logging
-import sys
 import tempfile
 import unittest
 
-sys.path.append('.')
 from server.sqlite_server_api import SQLiteServerAPI   # noqa: E402
 
 sample_1 = {

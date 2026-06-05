@@ -3,11 +3,9 @@
 import logging
 import os.path
 import subprocess
-import sys
 import threading
 import time
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
 from logger.readers.logfile_reader import LogfileReader  # noqa: E402
 from logger.transforms.slice_transform import SliceTransform  # noqa: E402
 from logger.writers.text_file_writer import TextFileWriter  # noqa: E402
