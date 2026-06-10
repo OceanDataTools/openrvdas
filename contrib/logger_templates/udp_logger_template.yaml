@@ -26,18 +26,15 @@ logger_templates:
             port: <<reader_udp_port>>
         transforms:
         - class: TimestampTransform
+          mirror_to:
+            class: LogfileWriter
+            kwargs:
+              filebase: <<file_root>>/<<logger>>/raw/<<cruise>>_<<logger>>
+        - class: PrefixTransform
+          kwargs:
+            prefix: <<logger>>
         writers:
-        - class: LogfileWriter
+        - class: UDPWriter
           kwargs:
-            filebase: <<file_root>>/<<logger>>/raw/<<cruise>>_<<logger>>
-        - class: ComposedWriter
-          kwargs:
-            transforms:
-            - class: PrefixTransform
-              kwargs:
-                prefix: <<logger>>
-            writers:
-            - class: UDPWriter
-              kwargs:
-                port: <<raw_udp_port>>
-                destination: <<udp_destination>>
+            port: <<raw_udp_port>>
+            destination: <<udp_destination>>

@@ -164,6 +164,12 @@ class ListenerFromLoggerConfig(Listener):
         if not kwargs:
             logging.debug('No kwargs found for component {}'.format(class_name))
 
+        # Support mirror_to as a top-level sibling of 'class'/'kwargs'.
+        # mirror_to inside kwargs also works and is grandfathered.
+        mirror_to_spec = class_json.get('mirror_to')
+        if mirror_to_spec and 'mirror_to' not in kwargs:
+            kwargs['mirror_to'] = self._class_kwargs_from_config(mirror_to_spec)
+
         # Instantiate!
         logging.debug('Instantiating {}({})'.format(class_name, kwargs))
         try:
