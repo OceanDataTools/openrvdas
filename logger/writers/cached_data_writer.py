@@ -3,8 +3,10 @@
 import asyncio
 import json
 import logging
+import queue
 import ssl
 import threading
+import time
 
 from typing import Union
 try:
@@ -69,11 +71,14 @@ class CachedDataWriter(Writer):
         self.check_cert = check_cert
         self.event_loop = asyncio.new_event_loop()
 
-        # "loop" parameter removed in Ubuntu 22, but needed in earlier releases
-        try:
-            self.send_queue = asyncio.Queue(maxsize=max_backup)
-        except RuntimeError:
-            self.send_queue = asyncio.Queue(maxsize=max_backup, loop=self.event_loop)
+        # Records are queued by write() - called from arbitrary threads -
+        # and drained by the sender thread, so this must be a thread-safe
+        # queue.Queue, NOT an asyncio.Queue (which is only safe within a
+        # single event loop).
+        self.send_queue = queue.Queue(maxsize=max_backup)
+
+        # Set by close() to tell the sender thread to finish up.
+        self.quit_flag = False
 
         # Start the thread that will asynchronously pull stuff from the
         # queue and send to the websocket. Also will, if we've got our oue
@@ -95,7 +100,7 @@ class CachedDataWriter(Writer):
             """Inner async function that actually does websocket writes
             and cleanups.
             """
-            while True:
+            while not self.quit_flag:
                 logging.debug('CachedDataWriter trying to connect to '
                               + self.data_server)
                 try:
@@ -128,7 +133,9 @@ class CachedDataWriter(Writer):
                                 await ws.send(json.dumps(record))
                                 response = await ws.recv()
                                 logging.debug('received response: %s', response)
-                            except asyncio.QueueEmpty:
+                            except queue.Empty:
+                                if self.quit_flag:
+                                    return
                                 await asyncio.sleep(.2)
 
                 except BrokenPipeError:
@@ -156,6 +163,23 @@ class CachedDataWriter(Writer):
         # Now call the async process in its own event loop
         self.event_loop.run_until_complete(_async_send_records_loop(self))
         self.event_loop.close()
+
+    ############################
+    def close(self, timeout=5):
+        """Give the sender thread a bounded amount of time to deliver any
+        queued records, then tell it to quit. Without this, anything still
+        queued when the process exits is silently dropped (the sender is a
+        daemon thread).
+        """
+        end_time = time.time() + timeout
+        while not self.send_queue.empty() and time.time() < end_time:
+            time.sleep(0.1)
+
+        undelivered = self.send_queue.qsize()
+        if undelivered:
+            logging.warning('CachedDataWriter closing with %d records '
+                            'undelivered', undelivered)
+        self.quit_flag = True
 
     ############################
     def write(self, record: Union[DASRecord, dict]):
@@ -212,13 +236,14 @@ class CachedDataWriter(Writer):
                 try:
                     logging.debug('CachedDataWriter queue full - dropping oldest...')
                     self.send_queue.get_nowait()
-                except asyncio.QueueEmpty:
-                    logging.warning('CachedDataWriter queue is both full and empty?!?')
+                except queue.Empty:
+                    # Another thread emptied it in the meantime; that's fine
+                    break
 
             # Enqueue our latest record for send
             try:
                 self.send_queue.put_nowait(record)
-            except asyncio.queues.QueueFull:
+            except queue.Full:
                 logging.warning('CachedDataWriter unable to write: write queue full')
         else:
             if not self.quiet:

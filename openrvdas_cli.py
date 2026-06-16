@@ -30,10 +30,6 @@ def logger_runner() -> None:
     _run("server.logger_runner")
 
 
-def logger_supervisor() -> None:
-    _run("server.logger_supervisor")
-
-
 def lmcmd() -> None:
     _run("server.lmcmd")
 

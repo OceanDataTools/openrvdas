@@ -46,6 +46,7 @@ class TestLoggerRunner(unittest.TestCase):
 
         self.source_name = self.temp_dir_name + '/source.txt'
         self.dest_name = self.temp_dir_name + '/dest.txt'
+        self.stderr_name = self.temp_dir_name + '/logger.stderr'
 
         # Create the source file
         writer = TextFileWriter(self.source_name)
@@ -57,15 +58,33 @@ class TestLoggerRunner(unittest.TestCase):
         self.config['writers']['kwargs']['filename'] = self.dest_name
 
     ############################
+    def _wait_for(self, condition, timeout=15):
+        """Wait until condition() returns True, or fail."""
+        end_time = time.time() + timeout
+        while time.time() < end_time:
+            if condition():
+                return
+            time.sleep(0.1)
+        self.fail('Timed out waiting for condition')
+
+    ############################
+    def _dest_line_count(self):
+        if not os.path.exists(self.dest_name):
+            return 0
+        with open(self.dest_name) as f:
+            return len(f.readlines())
+
+    ############################
     def test_basic(self):
 
-        # Assure ourselves that the dest file doesn't exist yet and that
-        # we're in our default mode
+        # Assure ourselves that the dest file doesn't exist yet
         self.assertFalse(os.path.exists(self.dest_name))
 
         runner = LoggerRunner(config=self.config)
         runner.start()
-        time.sleep(1.0)
+
+        # Wait for the logger subprocess to boot and copy all lines over
+        self._wait_for(lambda: self._dest_line_count() >= len(SAMPLE_DATA))
 
         reader = TextFileReader(self.dest_name)
         for line in SAMPLE_DATA:
@@ -81,14 +100,53 @@ class TestLoggerRunner(unittest.TestCase):
         runner.quit()
         self.assertFalse(runner.is_alive())
 
-        # Try a degenerate runner
+        # Try a degenerate runner; it shouldn't even start a process
         runner = LoggerRunner(config={})
         runner.start()
-        time.sleep(1.0)
 
         self.assertFalse(runner.is_runnable())
         self.assertFalse(runner.is_alive())
         self.assertFalse(runner.is_failed())
+        runner.quit()
+
+    ############################
+    def test_stderr_capture(self):
+        """The runner should capture a failing logger's stderr and deliver
+        it to both the stderr file and the callback - even though the
+        process is already dead by the time we look."""
+        bad_config = {
+            'name': 'bad_logger',
+            'readers': {
+                'class': 'NoSuchReaderClass',
+                'kwargs': {}
+            },
+            'writers': {
+                'class': 'TextFileWriter',
+                'kwargs': {'filename': self.dest_name}
+            }
+        }
+        callback_lines = []
+        runner = LoggerRunner(config=bad_config,
+                              name='bad_logger',
+                              stderr_filename=self.stderr_name,
+                              stderr_callback=callback_lines.append)
+        runner.start()
+
+        # Process should die on its own, complaining as it goes
+        self._wait_for(lambda: not runner.is_alive())
+
+        # The relay should deliver the complaint to both destinations,
+        # despite the process being dead.
+        self._wait_for(lambda: len(callback_lines) > 0)
+        self._wait_for(lambda: os.path.exists(self.stderr_name)
+                       and os.path.getsize(self.stderr_name) > 0)
+
+        stderr_text = '\n'.join(callback_lines)
+        self.assertIn('NoSuchReaderClass', stderr_text)
+        with open(self.stderr_name) as f:
+            self.assertIn('NoSuchReaderClass', f.read())
+
+        runner.quit()
 
 
 ################################################################################
