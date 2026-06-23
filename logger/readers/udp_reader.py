@@ -2,7 +2,6 @@
 
 import logging
 import socket
-import struct
 
 from logger.readers.reader import Reader  # noqa: E402
 
@@ -68,6 +67,13 @@ class UDPReader(Reader):
         """
         super().__init__(**kwargs)
 
+        # resolve interface once in constructor
+        if interface:
+            interface = socket.inet_aton(socket.gethostbyname(interface))
+        else:
+            interface = socket.inet_aton('0.0.0.0')
+        self.interface = interface
+
         # make sure user passed in `port`
         #
         # NOTE: We want the order of the arguments to consistently be (ip,
@@ -85,13 +91,6 @@ class UDPReader(Reader):
         if mc_group:
             mc_group = socket.inet_aton(socket.gethostbyname(mc_group))
         self.mc_group = mc_group
-
-        # resolve interface once in constructor
-        if interface:
-            interface = socket.inet_aton(socket.gethostbyname(interface))
-        else:
-            interface = socket.INADDR_ANY if self.mc_group else socket.inet_aton('0.0.0.0')
-        self.interface = interface
 
         self.reuseaddr = reuseaddr
         self.reuseport = reuseport
@@ -145,6 +144,12 @@ class UDPReader(Reader):
                                 "actually just doing loopback testing.)")
 
             # join the group via IGMP
+            #
+            # NOTE: Since these are both already encoded as binary by
+            #       inet_aton(), we can just concatenate them.  Alternatively,
+            #       could use struct.pack("4s4s", ...) to create a struct to
+            #       pass into setsockopt()
+            #
             sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP,
                             self.mc_group + self.interface)
 
