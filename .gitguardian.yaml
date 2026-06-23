@@ -1,0 +1,16 @@
+# GitGuardian / ggshield configuration
+# https://docs.gitguardian.com/ggshield-docs/reference/config-file
+#
+# NOTE: This file is honored by ggshield (CLI, GitHub Action, pre-commit
+# hook). GitGuardian's dashboard GitHub App does not read it; dashboard
+# alerts must be ignored from the GitGuardian dashboard.
+version: 2
+
+secret:
+  ignored_matches:
+    # "rvdas" is the default placeholder database password shipped in
+    # database/settings.py. utils/install_openrvdas.sh rewrites it with the
+    # operator-supplied password at install time, so it is not a real
+    # credential. See OceanDataTools/openrvdas#576 (GitGuardian id 23771063).
+    - name: "OpenRVDAS default DB password placeholder (rvdas)"
+      match: rvdas
