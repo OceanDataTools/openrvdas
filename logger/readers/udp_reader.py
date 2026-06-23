@@ -44,9 +44,7 @@ class UDPReader(Reader):
         """
         ```
         interface    IP (or resolvable name) of interface to listen on.  None or ''
-                     will listen on INADDR_ANY (all interfaces).  If joining a
-                     multicast group and None or '' specified, this will default
-                     to whatever the system's hostname resolves to.  This IP should
+                     will listen on INADDR_ANY (all interfaces). This IP should
                      not be on the loopback network (OK for testing, but won't work
                      in the real world).
 
@@ -70,13 +68,6 @@ class UDPReader(Reader):
         """
         super().__init__(**kwargs)
 
-        if interface:
-            # resolve once in constructor
-            interface = socket.gethostbyname(interface)
-        else:
-            interface = ''
-        self.interface = interface
-
         # make sure user passed in `port`
         #
         # NOTE: We want the order of the arguments to consistently be (ip,
@@ -90,12 +81,17 @@ class UDPReader(Reader):
         # make sure port gets stored as an int, even if passed in as a string
         self.port = int(port)
 
-        # prep multicast parameters
+        # resolve mc_group once in constructor
         if mc_group:
-            # resolve once in constructor
-            mc_group = socket.gethostbyname(mc_group)
-
+            mc_group = socket.inet_aton(socket.gethostbyname(mc_group))
         self.mc_group = mc_group
+
+        # resolve interface once in constructor
+        if interface:
+            interface = socket.inet_aton(socket.gethostbyname(interface))
+        else:
+            interface = socket.INADDR_ANY if self.mc_group else socket.inet_aton('0.0.0.0')
+        self.interface = interface
 
         self.reuseaddr = reuseaddr
         self.reuseport = reuseport
@@ -140,7 +136,7 @@ class UDPReader(Reader):
             #       never leave the system, and you never actually join the
             #       group.
             #
-            if self.interface.startswith('127.') and not self.this_is_a_test:
+            if socket.inet_ntoa(self.interface).startswith('127.') and not self.this_is_a_test:
                 logging.warning("Can't use loopback device for joining multicast groups.  Make "
                                 "sure your system's hostname does NOT resolve to something in "
                                 "the 127.0.0.0/8 address block (e.g., localhost, 127.0.0.1), or "
@@ -149,31 +145,15 @@ class UDPReader(Reader):
                                 "actually just doing loopback testing.)")
 
             # join the group via IGMP
-            #
-            # NOTE: Since these are both already encoded as binary by
-            #       inet_aton(), we can just concatenate them.  Alternatively,
-            #       could use struct.pack("4s4s", ...) to create a struct to
-            #       pass into setsockopt()
-            #
-            if self.interface:
-                sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP,
-                                socket.inet_aton(self.mc_group) + socket.inet_aton(self.interface))
-            else:
-                mreq = struct.pack("4sl", socket.inet_aton(self.mc_group), socket.INADDR_ANY)
-                sock.setsockopt(
-                    socket.IPPROTO_IP, 
-                    socket.IP_ADD_MEMBERSHIP, 
-                    mreq
-                )
+            sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP,
+                            self.mc_group + self.interface)
 
-
-            # bind
-            # don't need to specify mc_group address because we have already joined above
-            sock.bind(('', self.port))
+            # multicast, bind to mc_group
+            sock.bind((socket.inet_ntoa(self.mc_group), self.port))
 
         else:
             # broadcast or unicast, bind to specificed interface
-            sock.bind((self.interface, self.port))
+            sock.bind((socket.inet_ntoa(self.interface), self.port))
 
         return sock
 
