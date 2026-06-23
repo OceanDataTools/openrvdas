@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
 import logging
+import random
+import string
 from queue import Queue
 
 # Don't barf if they don't have redis installed. Only complain if
@@ -28,7 +30,7 @@ class MQTTReader(Reader):
     Read messages from an mqtt broker
     """
 
-    def __init__(self, broker, channel, client_name,
+    def __init__(self, broker, channel, client_name=None,
                  port=1883, clean_start=None,
                  qos=0, return_as_bytes=False, **kwargs):
         """
@@ -37,6 +39,10 @@ class MQTTReader(Reader):
 
         broker       MQTT broker to connect, broker format[###.###.#.#]
         channel      MQTT channel to read from, channel format[@broker/path_of_subscripton]
+        client_name  Prefix used for `client_id` when connecting to broker.  The `client_id`
+                     must be unique for each broker connection, so a random string will be
+                     appended to the provided `client_name`.  If None, a random ID is
+                     generated for you.
         port         broker port, typically 1883
         clean_start  Request new session on first connection. Options: True, False,
                        or the default of mqtt.MQTT_CLEAN_START_FIRST_ONLY
@@ -96,7 +102,15 @@ class MQTTReader(Reader):
 
         self.broker = broker
         self.channel = channel
-        self.client_name = client_name
+        if client_name:
+            # If user supplied `client_name`, append random chars to it to
+            # attempt to ensure we have a unique `client_id`.
+            rand_id = ''.join(random.choices(string.ascii_lowercase+string.digits, k=6))
+            self.client_id = f'{client_name}-{rand_id}'
+        else:
+            # If None is specified, the underlying mqtt library generates a
+            # unique id for you.
+            self.client_id = None
         self.port = port
         if clean_start is None:
             clean_start = mqtt.MQTT_CLEAN_START_FIRST_ONLY
@@ -107,9 +121,9 @@ class MQTTReader(Reader):
 
         try:
             if USE_VERSION_FLAG:
-                self.client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_name)
+                self.client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, self.client_id)
             else:
-                self.client = mqtt.Client(client_name)
+                self.client = mqtt.Client(self.client_id)
 
             self.client.on_connect = on_connect
             self.client.on_message = on_message
