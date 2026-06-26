@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 
 import logging
-import logging.handlers
 import time
-import traceback
 
 
 from logger.readers.composed_reader import ComposedReader  # noqa: E402
@@ -22,8 +20,8 @@ class Listener:
     """
     ############################
 
-    def __init__(self, readers=[], transforms=[], writers=[], stderr_writers=[],
-                 host_id='', interval=0, name=None):
+    def __init__(self, readers=None, transforms=None, writers=None,
+                 stderr_writers=None, host_id='', interval=0, name=None):
         """listener = Listener(readers, transforms=[], writers=[],
                             interval=0)
 
@@ -33,8 +31,11 @@ class Listener:
 
         writers        A single Writer or a list of zero or more Writers
 
-        stderr_writers A single Writer or a list of zero or more Writers to which
-                       the logger's stderr should be written.
+        stderr_writers Accepted for backward compatibility, but not used by
+                       Listener itself. (stderr routing is handled by the
+                       caller, e.g. listen.py when building from a config.)
+
+        host_id        Accepted for backward compatibility, but not used.
 
         interval       How long to sleep before reading sequential records
 
@@ -54,6 +55,13 @@ class Listener:
         to exit.
         """
         logging.info('Instantiating %s logger', name or 'unnamed')
+
+        # Normalize None -> [] here rather than via mutable default args.
+        # (Passing None on to ComposedReader/ComposedWriter would be wrapped
+        # as the single-element list [None], so normalize before delegating.)
+        readers = readers if readers is not None else []
+        transforms = transforms if transforms is not None else []
+        writers = writers if writers is not None else []
 
         ###########
         # Create readers, writers, etc.
@@ -82,16 +90,25 @@ class Listener:
         """
         logging.info('Running %s', self.name)
 
-        if not self.reader and not self.writer:
+        # If we have neither readers nor writers, there's nothing to do.
+        if not self.reader.readers and not self.writer.writers:
             logging.info('No readers or writers defined - exiting.')
             return
 
-        record = ''
         try:
-            while not self.quit_signalled and record is not None:
+            while not self.quit_signalled:
                 record = self.reader.read()
                 self.last_read = time.time()
                 logging.debug('ComposedReader read: "%s"', record)
+
+                # ComposedReader returns None once all readers have hit EOF.
+                # Exit immediately - don't write, and don't sleep out the
+                # interval before noticing we're done.
+                if record is None:
+                    break
+
+                # An empty record ('') is not EOF: skip the write but still
+                # honor the inter-read interval below.
                 if record:
                     self.writer.write(record)
 
@@ -103,7 +120,6 @@ class Listener:
         except KeyboardInterrupt:
             logging.info('Listener %s received KeyboardInterrupt - exiting.',
                          self.name or '')
-        except Exception as e:
-            logging.info('Listener %s received exception: %s',
-                         self.name, traceback.format_exc())
-            raise e
+        except Exception:
+            logging.exception('Listener %s received exception:', self.name)
+            raise

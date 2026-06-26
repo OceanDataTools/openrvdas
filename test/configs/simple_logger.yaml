@@ -33,4 +33,3 @@ writers:
   # will write to stdout
 
 interval: 0.2
-check_format: false
