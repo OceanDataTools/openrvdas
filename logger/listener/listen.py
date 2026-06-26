@@ -39,6 +39,7 @@ own output:
 """
 import argparse
 import importlib
+import inspect
 import logging
 import pprint
 import re
@@ -62,10 +63,23 @@ class ListenerFromLoggerConfig(Listener):
     def __init__(self, config, log_level=None):
         """Create a Listener from a Python config dict."""
 
-        if not type(config) is dict:
+        if not isinstance(config, dict):
             raise ValueError('ListenerFromLoggerConfig expects config of type '
                              '"dict" but received one of type "%s": %s'
                              % (type(config), str(config)))
+
+        # Work on a shallow copy so we never mutate the caller's config dict.
+        config = dict(config)
+
+        # Handle 'stderr_writers' at the top level only: instantiate the
+        # specified writers and route this logger's stderr to them. We pop it
+        # here so it is handled exactly once (rather than being re-examined
+        # inside the recursive kwarg parsing) and is not forwarded on to the
+        # Listener constructor.
+        stderr_writers_spec = config.pop('stderr_writers', None)
+        if stderr_writers_spec:
+            stderr_writers = self._class_kwargs_from_config(stderr_writers_spec)
+            logging.getLogger().addHandler(StdErrLoggingHandler(stderr_writers))
 
         # Extract keyword args from config and instantiate.
         logging.debug('ListenerFromLoggerConfig instantiating logger '
@@ -76,32 +90,30 @@ class ListenerFromLoggerConfig(Listener):
             config_name = config.get('name', 'unknown logger')
             raise ValueError('Config for %s: %s' % (config_name, e))
 
+        # Drop any top-level keys the Listener constructor doesn't accept
+        # (e.g. the deprecated 'check_format'), warning rather than crashing.
+        # Listener has an explicit signature with no **kwargs, so an unknown
+        # key would otherwise raise TypeError.
+        valid_keys = set(inspect.signature(Listener.__init__).parameters) - {'self'}
+        for key in [k for k in kwargs if k not in valid_keys]:
+            logging.warning('Ignoring unknown/deprecated config key "%s"', key)
+            del kwargs[key]
+
         super().__init__(**kwargs)
 
     ############################
     def _kwargs_from_config(self, config_dict):
-        """Parse a kwargs from a JSON string, making exceptions for keywords
-        'readers', 'transforms', and 'writers' as internal class references."""
+        """Parse kwargs from a config dict, making exceptions for keywords
+        'readers', 'transforms', and 'writers' (and their singular/mirror
+        variants) as internal class references."""
         if not config_dict:
             return {}
 
-        if not type(config_dict) is dict:
+        if not isinstance(config_dict, dict):
             raise ValueError('Received config dict of type "%s" (instead of dict)'
                              % type(config_dict))
 
-        # First we pull out the 'stderr_writers' spec as a special case so
-        # that we can catch and properly route stderr output from
-        # parsing/creation of the other keyword args.
         kwargs = {}
-        stderr_writers_spec = config_dict.get('stderr_writers')
-        if stderr_writers_spec:
-            stderr_writers = self._class_kwargs_from_config(stderr_writers_spec)
-            logging.getLogger().addHandler(StdErrLoggingHandler(stderr_writers))
-
-            # We've already initialized the logger for stderr_writers, so
-            # *don't* pass that arg on, or things will get logged twice.
-            del config_dict['stderr_writers']
-
         for key, value in config_dict.items():
             # Declaration of readers, transforms and writers. Note that the
             # singular "reader" is a special case for TimeoutReader that
@@ -230,7 +242,8 @@ class ListenerFromLoggerConfigFile(ListenerFromLoggerConfig):
 
 
 ################################################################################
-if __name__ == '__main__':
+def build_arg_parser():
+    """Construct the argparse.ArgumentParser for the listen.py CLI."""
     parser = argparse.ArgumentParser(
         epilog='Note that arguments are parsed and applied IN ORDER, so if you '
         'want a flag like --tail to be applied to a reader, or --slice_separator '
@@ -525,26 +538,48 @@ if __name__ == '__main__':
                         default=0, action='count',
                         help='Increase output verbosity')
 
-    parsed_args = parser.parse_args()
+    return parser
 
-    ############################
-    # Set up logging before we do any other argument parsing (so that we
-    # can log problems with argument parsing).
 
+################################################################################
+def setup_logging(verbosity):
+    """Configure root logging for the CLI from a -v count."""
     LOG_LEVELS = {0: logging.WARNING, 1: logging.INFO, 2: logging.DEBUG}
-    log_level = LOG_LEVELS[min(parsed_args.verbosity, max(LOG_LEVELS))]
+    log_level = LOG_LEVELS[min(verbosity, max(LOG_LEVELS))]
     logging.getLogger().setLevel(log_level)
 
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(STDERR_FORMATTER)
     logging.root.handlers = [console_handler]
 
-    ############################
-    # If --config_file/--config_string present, create Listener from
-    # config file/string. If not, manually parse and create from all
-    # other arguments on command line.
 
-    # 1. Resolve positional argument if present
+################################################################################
+def parse_addr_list(spec, flag, parser):
+    """Parse a comma-separated list of '[host:]port' specs into a list of
+    (host, port) tuples. 'host' defaults to '' when omitted (i.e. for a bare
+    'port'). Calls parser.error() on malformed input.
+
+    Used for --tcp/--udp/--write_tcp/--write_udp, whose address grammar is
+    identical.
+    """
+    result = []
+    for addr_str in spec.split(','):
+        addr = addr_str.split(':')
+        if len(addr) > 2:
+            parser.error('Format error for %s argument. Format should be '
+                         '[host:]port[,...]' % flag)
+        if len(addr) < 2:
+            addr.insert(0, '')
+        result.append((addr[0], int(addr[1])))
+    return result
+
+
+################################################################################
+def listener_from_config_args(argv, parser, parsed_args):
+    """Build a Listener from --config_file/--config_string. Enforces that no
+    other (non -v) arguments were given alongside the config argument.
+    Returns the Listener, or None if no config argument was supplied."""
+    # Resolve positional config-file argument, if present.
     if parsed_args.config_file_positional:
         if parsed_args.config_file:
             parser.error('You may not specify both a positional config file and --config_file')
@@ -553,351 +588,355 @@ if __name__ == '__main__':
     if parsed_args.config_file and parsed_args.config_string:
         parser.error('You may not specify both --config_file and --config_string')
 
-    if parsed_args.config_file or parsed_args.config_string:
-        # Ensure that no other flags have been specified.
-        i = 1
-        while i < len(sys.argv):
-            if sys.argv[i] in ['-v', '--verbosity']:
-                i += 1
-            elif '--config_file'.find(sys.argv[i]) == 0:
-                i += 2
-            elif '--config_string'.find(sys.argv[i]) == 0:
-                i += 2
-            elif sys.argv[i] == parsed_args.config_file:
-                # If the positional argument matches the config file, skip it
-                i += 1
-            else:
-                parser.error('When --config_file or --config_string are '
-                             'specified, no other command line args except -v, '
-                             'may be used: '
-                             '{}'.format(sys.argv[i]))
+    if not (parsed_args.config_file or parsed_args.config_string):
+        return None
 
-        # Read config file or JSON string and instantiate.
-        if parsed_args.config_file:
-            listener = ListenerFromLoggerConfigFile(parsed_args.config_file)
+    # Ensure that no other flags have been specified.
+    i = 1
+    while i < len(argv):
+        if argv[i] in ['-v', '--verbosity']:
+            i += 1
+        elif '--config_file'.find(argv[i]) == 0:
+            i += 2
+        elif '--config_string'.find(argv[i]) == 0:
+            i += 2
+        elif argv[i] == parsed_args.config_file:
+            # If the positional argument matches the config file, skip it
+            i += 1
         else:
-            listener = ListenerFromLoggerConfigString(parsed_args.config_string)
+            parser.error('When --config_file or --config_string are '
+                         'specified, no other command line args except -v, '
+                         'may be used: '
+                         '{}'.format(argv[i]))
 
-    # If not --config, go parse all those crazy command line arguments manually
-    else:
-        ############################
-        # Where we'll store our components
-        readers = []
-        transforms = []
-        writers = []
-        stderr_writers = []
+    # Read config file or JSON string and instantiate.
+    if parsed_args.config_file:
+        return ListenerFromLoggerConfigFile(parsed_args.config_file)
+    return ListenerFromLoggerConfigString(parsed_args.config_string)
 
-        ############################
-        # Parse args out. We do this in a rather non-standard way to use the
-        # order of args on the command line to determine the order of our
-        # transforms. Specifically: break command line up into sections that
-        # end with the next '-'-prefixed argument (excluding the empty
-        # argument '-' and arguments starting with a negative number),
-        # and process those sections sequentially, adding
-        # them to the 'args' namespace as we go.
-        #
-        # So
-        #
-        #    listen.py  -v 1 2 3 -w -x - -y -4 -1,1 -z
-        #
-        # will be processed in five chunks:
-        #
-        #    ['-v', '1', '2', '3']
-        #    ['-w']
-        #    ['-x', '-']
-        #    ['-y', '-4', '-1,1']
-        #    ['-z']
-        #
-        #
-        # Functionally, it means that
-        #
-        #    --transform_a <params_a> --transform_b <params_b>
-        #
-        # will push transform_a into the transform list before transform_b,
-        # (meaning it will be applied to records first), while
-        #
-        #    --transform_b <params_b> --transform_a <params_a>
-        #
-        # will do the opposite. It also means that repeating a transform on
-        # the command line will apply it twice. Repetitions of readers or
-        # writers will create multiple instances but, since readers and
-        # writers are applied in parallel, ordering is irrelevant.
 
-        arg_start = arg_end = 1   # start at beginning of args, minus script name;
-        all_args = None           # initial namespace is empty
-
-        # Loop while we have args left
-        while arg_end <= len(sys.argv):
-
-            arg_start = arg_end
-            arg_end += 1
-
-            # Get everything up to, but not including, the next arg beginning with '-'
-            # that isn't a plain '-' or something numeric.
-            while arg_end < len(sys.argv):
-                next_arg = sys.argv[arg_end]
-                if next_arg.find('-') == 0:
-                    if next_arg != '-' and not re.match(r'^-\d', next_arg):  # noqa: W605
-                        break
-                arg_end += 1
-
-            # We have our next set of arguments - parse them
-            arg_list = sys.argv[arg_start:arg_end]
-            logging.debug('next set of command line arguments: %s', arg_list)
-
-            # These are just the new values
-            new_args = parser.parse_args(arg_list)
-
-            # We also want to accumulate old arguments so that we have access
-            # to flags that have been previously set.
-            all_args = parser.parse_args(arg_list, all_args)
-
-            logging.debug('namespace of all command-line args so far: %s', all_args)
-
-            ##########################
-            # Now go through new_args and see what they want us to do. Draw
-            # on all_args for the previously-set options that a reader,
-            # transform or writer might need.
-
-            ##########################
-            # Readers
-            if new_args.file:
-                for filename in new_args.file.split(','):
-                    readers.append(TextFileReader(
-                        file_spec=filename, tail=all_args.tail,
-                        refresh_file_spec=all_args.refresh_file_spec))
-
-            if new_args.network:
-                encoding = parsed_args.encoding
-                for addr in new_args.network.split(','):
-                    readers.append(NetworkReader(network=addr, encoding=encoding))
-
-            if new_args.tcp:
-                eol = all_args.network_eol
-                encoding = parsed_args.encoding
-                for addr_str in new_args.tcp.split(','):
-                    addr = addr_str.split(':')
-                    if len(addr) > 2:
-                        parser.error('Format error for --tcp argument. Format '
-                                     'should be [source:]port,[,...]')
-                    if len(addr) < 2:
-                        addr.insert(0, '')
-                    source = addr[0]
-                    port = int(addr[1])
-                    readers.append(TCPReader(source, port, eol=eol, encoding=encoding))
-
-            if new_args.udp:
-                encoding = parsed_args.encoding
-                for addr_str in new_args.udp.split(','):
-                    addr = addr_str.split(':')
-                    if len(addr) > 2:
-                        parser.error('Format error for --udp argument. Format '
-                                     'should be [source:]port[,...]')
-                    if len(addr) < 2:
-                        addr.insert(0, '')
-                    source = addr[0]
-                    port = int(addr[1])
-                    readers.append(UDPReader(source, port, encoding=encoding))
-
-            if new_args.redis:
-                for channel in new_args.redis.split(','):
-                    readers.append(RedisReader(channel=channel))
-
-            if new_args.logfile:
-                for filebase in new_args.logfile.split(','):
-                    readers.append(LogfileReader(
-                        filebase=filebase, use_timestamps=all_args.logfile_use_timestamps,
-                        time_format=all_args.time_format,
-                        refresh_file_spec=all_args.refresh_file_spec))
-
-            if new_args.cached_data_server:
-                fields = new_args.cached_data_server
-                server = None
-                if fields.find('@') > 0:
-                    fields, server = fields.split('@')
-                subscription = {'fields': {f: {'seconds': 0} for f in fields.split(',')}}
-                if server:
-                    readers.append(CachedDataReader(subscription=subscription,
-                                                    data_server=server))
-                else:
-                    readers.append(CachedDataReader(subscription=subscription))
-
-            # For each comma-separated spec, parse out values for
-            # user@host:database:data_id[:message_type]. We count on
-            # --database_password having been specified somewhere.
-            if new_args.database:
-                password = all_args.database_password
-                (user, host_db) = new_args.database.split('@')
-                (host, database) = host_db.split(':', maxsplit=1)
-                if ':' in database:
-                    (database, fields) = database.split(':')
-                else:
-                    fields = None
-                readers.append(DatabaseReader(fields=fields,
-                                              database=database, host=host,
-                                              user=user, password=password))
-
-            # SerialReader is a little more complicated than other readers
-            # because it can take so many parameters. Use the kwargs trick to
-            # pass them all in.
-            if new_args.serial:
-                kwargs = {}
-                for pair in new_args.serial.split(','):
-                    (key, value) = pair.split('=')
-                    kwargs[key] = value
-                readers.append(SerialReader(**kwargs))
-
-            ##########################
-            # Transforms
-            if new_args.slice:
-                transforms.append(SliceTransform(new_args.slice,
-                                                 all_args.slice_separator))
-            if new_args.nmea:
-                transforms.append(NMEATransform(new_args.nmea))
-            if new_args.timestamp:
-                transforms.append(TimestampTransform(time_format=all_args.time_format))
-            if new_args.prefix:
-                transforms.append(PrefixTransform(new_args.prefix))
-            if new_args.extract:
-                transforms.append(ExtractFieldTransform(new_args.extract))
-            if new_args.regex_filter:
-                transforms.append(RegexFilterTransform(new_args.regex_filter))
-            if new_args.qc_filter:
-                transforms.append(QCFilterTransform(new_args.qc_filter))
-            if new_args.parse_nmea:
-                transforms.append(
-                    ParseNMEATransform(
-                        message_path=all_args.parse_nmea_message_path,
-                        sensor_path=all_args.parse_nmea_sensor_path,
-                        sensor_model_path=all_args.parse_nmea_sensor_model_path,
-                        time_format=all_args.time_format)
-                )
-            if new_args.parse:
-                transforms.append(
-                    ParseTransform(
-                        definition_path=all_args.parse_definition_path,
-                        return_json=all_args.parse_to_json,
-                        return_das_record=all_args.parse_to_das_record)
-                )
-            if new_args.aggregate_xml:
-                transforms.append(XMLAggregatorTransform(new_args.aggregate_xml))
-
-            if new_args.max_min:
-                transforms.append(MaxMinTransform())
-
-            if new_args.count:
-                transforms.append(CountTransform())
-
-            if new_args.to_json:
-                transforms.append(ToJSONTransform())
-
-            if new_args.to_json_pretty:
-                transforms.append(ToJSONTransform(pretty=True))
-
-            if new_args.from_json:
-                transforms.append(FromJSONTransform())
-
-            if new_args.from_json_to_das_record:
-                transforms.append(FromJSONTransform(das_record=True))
-
-            if new_args.to_das_record:
-                transforms.append(
-                    ToDASRecordTransform(field_name=new_args.to_das_record))
-
-            ##########################
-            # Writers
-            if new_args.write_file:
-                encoding = parsed_args.encoding
-                for filename in new_args.write_file.split(','):
-                    if filename == '-':
-                        filename = None
-                    writers.append(FileWriter(filename=filename, encoding=encoding))
-
-            if new_args.write_logfile:
-                writers.append(LogfileWriter(filebase=new_args.write_logfile))
-
-            if new_args.write_network:
-                eol = all_args.network_eol
-                encoding = parsed_args.encoding
-                for addr in new_args.write_network.split(','):
-                    writers.append(NetworkWriter(network=addr, eol=eol, encoding=encoding))
-
-            if new_args.write_tcp:
-                eol = all_args.network_eol
-                encoding = parsed_args.encoding
-                for addr_str in new_args.write_tcp.split(','):
-                    addr = addr_str.split(':')
-                    if len(addr) > 2:
-                        parser.error('Format err for --write_tcp argument. Format '
-                                     'should be [destination:]port[,...]')
-                    if len(addr) < 2:
-                        addr.insert(0, '')
-                    dest = addr[0]
-                    port = int(addr[1])
-                    writers.append(TCPWriter(dest, port, eol=eol, encoding=encoding))
-
-            if new_args.write_udp:
-                eol = all_args.network_eol
-                encoding = parsed_args.encoding
-                for addr_str in new_args.write_udp.split(','):
-                    addr = addr_str.split(':')
-                    if len(addr) > 2:
-                        parser.error('Format error for --write_udp argument. Format '
-                                     'should be [destination:]port[,...]')
-                    if len(addr) < 2:
-                        addr.insert(0, '')
-                    dest = addr[0]
-                    port = int(addr[1])
-                    writers.append(UDPWriter(dest, port, eol=eol, encoding=encoding))
-
-            # SerialWriter is a little more complicated than other readers
-            # because it can take so many parameters. Use the kwargs trick to
-            # pass them all in.
-            if new_args.write_serial:
-                kwargs = {}
-                for pair in new_args.write_serial.split(','):
-                    (key, value) = pair.split('=')
-                    kwargs[key] = value
-                writers.append(SerialWriter(**kwargs))
-
-            if new_args.write_redis:
-                for channel in new_args.write_redis.split(','):
-                    writers.append(RedisWriter(channel=channel))
-
-            if new_args.write_record_screen:
-                writers.append(RecordScreenWriter())
-
-            if new_args.write_database:
-                password = all_args.database_password
-                # Parse out values for user@host:database. We count on
-                # --database_password having been specified somewhere.
-                (user, host_db) = new_args.write_database.split('@')
-                (host, database) = host_db.split(':')
-                writers.append(DatabaseWriter(database=database, host=host,
-                                              user=user, password=password))
-
-            if new_args.write_cached_data_server:
-                data_server = new_args.write_cached_data_server
-                writers.append(CachedDataWriter(data_server=data_server))
-
-        if all_args.check_format:
-            logging.warning('Argument --check_format is deprecated and no longer '
-                            'serves any function.')
-        ##########################
-        # If we don't have any readers, read from stdin, if we don't have
-        # any writers, write to stdout.
-        if not readers:
-            readers.append(TextFileReader())
-        if not writers:
-            writers.append(FileWriter())
-
-        ##########################
-        # Now that we've got our readers, transforms and writers defined,
-        # create the Listener.
-        listener = Listener(readers=readers, transforms=transforms, writers=writers,
-                            stderr_writers=stderr_writers,
-                            interval=all_args.interval)
+################################################################################
+def listener_from_cli_args(argv, parser, parsed_args):  # noqa: C901
+    """Build a Listener by parsing the readers/transforms/writers from the
+    command line. Arguments are processed IN ORDER (see the parser epilog) so
+    that transform ordering follows command-line ordering."""
+    ############################
+    # Where we'll store our components
+    readers = []
+    transforms = []
+    writers = []
+    stderr_writers = []
 
     ############################
-    # Whichever way we created the listener, run it.
+    # Parse args out. We do this in a rather non-standard way to use the
+    # order of args on the command line to determine the order of our
+    # transforms. Specifically: break command line up into sections that
+    # end with the next '-'-prefixed argument (excluding the empty
+    # argument '-' and arguments starting with a negative number),
+    # and process those sections sequentially, adding
+    # them to the 'args' namespace as we go.
+    #
+    # So
+    #
+    #    listen.py  -v 1 2 3 -w -x - -y -4 -1,1 -z
+    #
+    # will be processed in five chunks:
+    #
+    #    ['-v', '1', '2', '3']
+    #    ['-w']
+    #    ['-x', '-']
+    #    ['-y', '-4', '-1,1']
+    #    ['-z']
+    #
+    #
+    # Functionally, it means that
+    #
+    #    --transform_a <params_a> --transform_b <params_b>
+    #
+    # will push transform_a into the transform list before transform_b,
+    # (meaning it will be applied to records first), while
+    #
+    #    --transform_b <params_b> --transform_a <params_a>
+    #
+    # will do the opposite. It also means that repeating a transform on
+    # the command line will apply it twice. Repetitions of readers or
+    # writers will create multiple instances but, since readers and
+    # writers are applied in parallel, ordering is irrelevant.
+
+    arg_start = arg_end = 1   # start at beginning of args, minus script name;
+    all_args = None           # initial namespace is empty
+
+    # Loop while we have args left
+    while arg_end <= len(argv):
+
+        arg_start = arg_end
+        arg_end += 1
+
+        # Get everything up to, but not including, the next arg beginning with '-'
+        # that isn't a plain '-' or something numeric.
+        while arg_end < len(argv):
+            next_arg = argv[arg_end]
+            if next_arg.find('-') == 0:
+                if next_arg != '-' and not re.match(r'^-\d', next_arg):  # noqa: W605
+                    break
+            arg_end += 1
+
+        # We have our next set of arguments - parse them
+        arg_list = argv[arg_start:arg_end]
+        logging.debug('next set of command line arguments: %s', arg_list)
+
+        # These are just the new values
+        new_args = parser.parse_args(arg_list)
+
+        # We also want to accumulate old arguments so that we have access
+        # to flags that have been previously set.
+        all_args = parser.parse_args(arg_list, all_args)
+
+        logging.debug('namespace of all command-line args so far: %s', all_args)
+
+        ##########################
+        # Now go through new_args and see what they want us to do. Draw
+        # on all_args for the previously-set options that a reader,
+        # transform or writer might need.
+
+        ##########################
+        # Readers
+        if new_args.file:
+            for filename in new_args.file.split(','):
+                readers.append(TextFileReader(
+                    file_spec=filename, tail=all_args.tail,
+                    refresh_file_spec=all_args.refresh_file_spec))
+
+        if new_args.network:
+            encoding = parsed_args.encoding
+            for addr in new_args.network.split(','):
+                readers.append(NetworkReader(network=addr, encoding=encoding))
+
+        if new_args.tcp:
+            eol = all_args.network_eol
+            encoding = parsed_args.encoding
+            for source, port in parse_addr_list(new_args.tcp, '--tcp', parser):
+                readers.append(TCPReader(source, port, eol=eol, encoding=encoding))
+
+        if new_args.udp:
+            encoding = parsed_args.encoding
+            for source, port in parse_addr_list(new_args.udp, '--udp', parser):
+                readers.append(UDPReader(source, port, encoding=encoding))
+
+        if new_args.redis:
+            for channel in new_args.redis.split(','):
+                readers.append(RedisReader(channel=channel))
+
+        if new_args.logfile:
+            for filebase in new_args.logfile.split(','):
+                readers.append(LogfileReader(
+                    filebase=filebase, use_timestamps=all_args.logfile_use_timestamps,
+                    time_format=all_args.time_format,
+                    refresh_file_spec=all_args.refresh_file_spec))
+
+        if new_args.cached_data_server:
+            fields = new_args.cached_data_server
+            server = None
+            if fields.find('@') > 0:
+                fields, server = fields.split('@')
+            subscription = {'fields': {f: {'seconds': 0} for f in fields.split(',')}}
+            if server:
+                readers.append(CachedDataReader(subscription=subscription,
+                                                data_server=server))
+            else:
+                readers.append(CachedDataReader(subscription=subscription))
+
+        # For each comma-separated spec, parse out values for
+        # user@host:database:data_id[:message_type]. We count on
+        # --database_password having been specified somewhere.
+        if new_args.database:
+            password = all_args.database_password
+            (user, host_db) = new_args.database.split('@')
+            (host, database) = host_db.split(':', maxsplit=1)
+            if ':' in database:
+                (database, fields) = database.split(':')
+            else:
+                fields = None
+            readers.append(DatabaseReader(fields=fields,
+                                          database=database, host=host,
+                                          user=user, password=password))
+
+        # SerialReader is a little more complicated than other readers
+        # because it can take so many parameters. Use the kwargs trick to
+        # pass them all in.
+        if new_args.serial:
+            kwargs = {}
+            for pair in new_args.serial.split(','):
+                (key, value) = pair.split('=')
+                kwargs[key] = value
+            readers.append(SerialReader(**kwargs))
+
+        ##########################
+        # Transforms
+        if new_args.slice:
+            transforms.append(SliceTransform(new_args.slice,
+                                             all_args.slice_separator))
+        if new_args.nmea:
+            transforms.append(NMEATransform(new_args.nmea))
+        if new_args.timestamp:
+            transforms.append(TimestampTransform(time_format=all_args.time_format))
+        if new_args.prefix:
+            transforms.append(PrefixTransform(new_args.prefix))
+        if new_args.extract:
+            transforms.append(ExtractFieldTransform(new_args.extract))
+        if new_args.regex_filter:
+            transforms.append(RegexFilterTransform(new_args.regex_filter))
+        if new_args.qc_filter:
+            transforms.append(QCFilterTransform(new_args.qc_filter))
+        if new_args.parse_nmea:
+            transforms.append(
+                ParseNMEATransform(
+                    message_path=all_args.parse_nmea_message_path,
+                    sensor_path=all_args.parse_nmea_sensor_path,
+                    sensor_model_path=all_args.parse_nmea_sensor_model_path,
+                    time_format=all_args.time_format)
+            )
+        if new_args.parse:
+            transforms.append(
+                ParseTransform(
+                    definition_path=all_args.parse_definition_path,
+                    return_json=all_args.parse_to_json,
+                    return_das_record=all_args.parse_to_das_record)
+            )
+        if new_args.aggregate_xml:
+            transforms.append(XMLAggregatorTransform(new_args.aggregate_xml))
+
+        if new_args.max_min:
+            transforms.append(MaxMinTransform())
+
+        if new_args.count:
+            transforms.append(CountTransform())
+
+        if new_args.to_json:
+            transforms.append(ToJSONTransform())
+
+        if new_args.to_json_pretty:
+            transforms.append(ToJSONTransform(pretty=True))
+
+        if new_args.from_json:
+            transforms.append(FromJSONTransform())
+
+        if new_args.from_json_to_das_record:
+            transforms.append(FromJSONTransform(das_record=True))
+
+        if new_args.to_das_record:
+            transforms.append(
+                ToDASRecordTransform(field_name=new_args.to_das_record))
+
+        ##########################
+        # Writers
+        if new_args.write_file:
+            encoding = parsed_args.encoding
+            for filename in new_args.write_file.split(','):
+                if filename == '-':
+                    filename = None
+                writers.append(FileWriter(filename=filename, encoding=encoding))
+
+        if new_args.write_logfile:
+            writers.append(LogfileWriter(filebase=new_args.write_logfile))
+
+        if new_args.write_network:
+            eol = all_args.network_eol
+            encoding = parsed_args.encoding
+            for addr in new_args.write_network.split(','):
+                writers.append(NetworkWriter(network=addr, eol=eol, encoding=encoding))
+
+        if new_args.write_tcp:
+            eol = all_args.network_eol
+            encoding = parsed_args.encoding
+            for dest, port in parse_addr_list(new_args.write_tcp, '--write_tcp', parser):
+                writers.append(TCPWriter(dest, port, eol=eol, encoding=encoding))
+
+        if new_args.write_udp:
+            eol = all_args.network_eol
+            encoding = parsed_args.encoding
+            for dest, port in parse_addr_list(new_args.write_udp, '--write_udp', parser):
+                writers.append(UDPWriter(dest, port, eol=eol, encoding=encoding))
+
+        # SerialWriter is a little more complicated than other readers
+        # because it can take so many parameters. Use the kwargs trick to
+        # pass them all in.
+        if new_args.write_serial:
+            kwargs = {}
+            for pair in new_args.write_serial.split(','):
+                (key, value) = pair.split('=')
+                kwargs[key] = value
+            writers.append(SerialWriter(**kwargs))
+
+        if new_args.write_redis:
+            for channel in new_args.write_redis.split(','):
+                writers.append(RedisWriter(channel=channel))
+
+        if new_args.write_record_screen:
+            writers.append(RecordScreenWriter())
+
+        if new_args.write_database:
+            password = all_args.database_password
+            # Parse out values for user@host:database. We count on
+            # --database_password having been specified somewhere.
+            (user, host_db) = new_args.write_database.split('@')
+            (host, database) = host_db.split(':')
+            writers.append(DatabaseWriter(database=database, host=host,
+                                          user=user, password=password))
+
+        if new_args.write_cached_data_server:
+            data_server = new_args.write_cached_data_server
+            writers.append(CachedDataWriter(data_server=data_server))
+
+    if all_args.check_format:
+        logging.warning('Argument --check_format is deprecated and no longer '
+                        'serves any function.')
+    ##########################
+    # If we don't have any readers, read from stdin, if we don't have
+    # any writers, write to stdout.
+    if not readers:
+        readers.append(TextFileReader())
+    if not writers:
+        writers.append(FileWriter())
+
+    ##########################
+    # Now that we've got our readers, transforms and writers defined,
+    # create the Listener.
+    return Listener(readers=readers, transforms=transforms, writers=writers,
+                    stderr_writers=stderr_writers,
+                    interval=all_args.interval)
+
+
+################################################################################
+def build_listener(argv, parser, parsed_args=None):
+    """Build a Listener from a full argv (including the program name at
+    argv[0]), choosing the config-file/string path or the manual command-line
+    path. parsed_args, if supplied, is reused to avoid re-parsing."""
+    if parsed_args is None:
+        parsed_args = parser.parse_args(argv[1:])
+    listener = listener_from_config_args(argv, parser, parsed_args)
+    if listener is None:
+        listener = listener_from_cli_args(argv, parser, parsed_args)
+    return listener
+
+
+################################################################################
+def main(argv=None):
+    """CLI entry point. argv defaults to sys.argv and includes the program
+    name at argv[0]."""
+    argv = list(sys.argv) if argv is None else list(argv)
+    parser = build_arg_parser()
+
+    # Set up logging before we do any other argument parsing (so that we
+    # can log problems with argument parsing).
+    parsed_args = parser.parse_args(argv[1:])
+    setup_logging(parsed_args.verbosity)
+
+    # Whichever way we create the listener, run it.
+    listener = build_listener(argv, parser, parsed_args)
     listener.run()
+
+
+################################################################################
+if __name__ == '__main__':
+    main()
