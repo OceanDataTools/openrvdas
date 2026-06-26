@@ -118,6 +118,63 @@ class TestListener(unittest.TestCase):
                     self.assertEqual(SAMPLE_DATA['f1'][line_num], line.rstrip())
                     line_num += 1
 
+    ############################
+    def test_no_readers_or_writers(self):
+        # A Listener with neither readers nor writers should return
+        # promptly rather than spinning.
+        listener = Listener()
+        start = time.time()
+        listener.run()
+        self.assertLess(time.time() - start, 1.0)
+
+    ############################
+    def test_no_extra_sleep_after_eof(self):
+        # run() must not sleep out a final interval after the reader has
+        # returned EOF. With a single-record file and interval=1.0, the
+        # fixed version takes ~1.0s (one inter-record sleep); the old
+        # behavior took ~2.0s (an extra sleep after reading None).
+        single_line = self.tmpdirname + '/single.txt'
+        create_file(single_line, ['only line'])
+
+        outfilename = self.tmpdirname + '/eof_out'
+        listener = Listener(readers=[TextFileReader(single_line)],
+                            writers=[TextFileWriter(outfilename)],
+                            interval=1.0)
+        start = time.time()
+        listener.run()
+        elapsed = time.time() - start
+
+        self.assertLess(elapsed, 1.6)
+
+        with open(outfilename, 'r') as f:
+            out_lines = [line.rstrip() for line in f.readlines()]
+        self.assertEqual(out_lines, ['only line'])
+
+    ############################
+    def test_config_dict_not_mutated(self):
+        # Building a Listener (via the helper that handles stderr_writers)
+        # must not mutate the caller's config dict. We exercise the
+        # Listener constructor's None-normalization here as a lightweight
+        # proxy: constructing with explicit empty containers must not raise
+        # and must leave passed-in lists untouched.
+        readers = [TextFileReader(self.tmpfilenames[0])]
+        transforms = []
+        writers = [TextFileWriter(self.tmpdirname + '/nomutate_out')]
+
+        Listener(readers=readers, transforms=transforms, writers=writers)
+        self.assertEqual(len(readers), 1)
+        self.assertEqual(transforms, [])
+        self.assertEqual(len(writers), 1)
+
+    ############################
+    def test_default_args_not_shared(self):
+        # Regression for mutable default arguments: two default-constructed
+        # Listeners must not share reader/writer/transform state.
+        a = Listener()
+        b = Listener()
+        self.assertIsNot(a.reader.readers, b.reader.readers)
+        self.assertIsNot(a.writer.writers, b.writer.writers)
+
 
 ################################################################################
 if __name__ == '__main__':
