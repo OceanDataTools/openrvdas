@@ -1657,6 +1657,36 @@ EOF
 
 ###########################################################################
 ###########################################################################
+# CentOS/RHEL ONLY - Configure SELinux for OpenRVDAS services
+function setup_selinux {
+    if [ $OS_TYPE == 'MacOS' ] || [ $OS_TYPE == 'Ubuntu' ]; then
+        return
+    fi
+
+    echo "#####################################################################"
+    echo "Configuring SELinux permissions for OpenRVDAS"
+
+    # The old way of enabling things...
+    # (sed -i -e 's/SELINUX=enforcing/SELINUX=permissive/g' /etc/selinux/config) || echo UNABLE TO UPDATE SELINUX! Continuing...
+
+    # Allow the web server process to make outbound network connections (needed
+    # for uWSGI/FastAPI to reach the CachedDataServer and other services).
+    setsebool -P nis_enabled 1
+    setsebool -P use_nfs_home_dirs 1
+    setsebool -P httpd_can_network_connect 1
+    semanage permissive -a httpd_t
+
+    # Label the CachedDataServer's fixed port so httpd_t can connect to it.
+    # Port 8766 is the universal CDS port across all OpenRVDAS installations.
+    semanage port -a -t http_port_t -p tcp 8766 2>/dev/null || \
+        semanage port -m -t http_port_t -p tcp 8766
+
+    echo "Done configuring SELinux permissions"
+}
+
+
+###########################################################################
+###########################################################################
 # CentOS/RHEL ONLY - Set up firewall daemon and open relevant ports
 function setup_firewall {
     if [ $OS_TYPE == 'MacOS' ] || [ $OS_TYPE == 'Ubuntu' ]; then
@@ -1667,17 +1697,8 @@ function setup_firewall {
     # All this is CentOS/RHEL only
     yum install -y firewalld
     echo "#####################################################################"
-    echo "Setting SELINUX permissions and firewall ports"
+    echo "Setting up firewall ports"
     echo "This could take a while..."
-
-    # The old way of enabling things...
-    # (sed -i -e 's/SELINUX=enforcing/SELINUX=permissive/g' /etc/selinux/config) || echo UNABLE TO UPDATE SELINUX! Continuing...
-
-    # The new way of more selectively enabling things
-    setsebool -P nis_enabled 1
-    setsebool -P use_nfs_home_dirs 1
-    setsebool -P httpd_can_network_connect 1
-    semanage permissive -a httpd_t
 
     # Set up the firewall and open some holes in it
     systemctl enable --now firewalld
@@ -1713,7 +1734,7 @@ function setup_firewall {
     fi
 
     firewall-cmd -q --reload > /dev/null
-    echo "Done setting SELINUX permissions"
+    echo "Done setting up firewall"
 }
 
 
@@ -2293,6 +2314,11 @@ setup_supervisor
 
 #########################################################################
 #########################################################################
+# CentOS/RHEL: always configure SELinux regardless of firewall choice.
+if [ $OS_TYPE == 'CentOS' ]; then
+    setup_selinux
+fi
+
 # If we've been instructed to set up firewall, do so.
 if [ $INSTALL_FIREWALLD == 'yes' ]; then
     setup_firewall
