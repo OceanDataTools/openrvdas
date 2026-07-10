@@ -625,7 +625,10 @@ function install_openrvdas {
     if [ ! -e openrvdas ]; then
       echo "Making openrvdas directory."
       sudo mkdir openrvdas
-      sudo chown ${RVDAS_USER} openrvdas
+      # Give the directory to the invoking user for now so the git/cp/sed
+      # operations below can run unprivileged; the end of this script hands
+      # the whole tree to ${RVDAS_USER}.
+      sudo chown $(id -un) openrvdas
     fi
 
     # If FIPS is active, we need this to prevent it from complaining
@@ -633,6 +636,10 @@ function install_openrvdas {
 
     if [ -e openrvdas/.git ] ; then   # If we've already got an installation
       cd openrvdas
+      # A previous run will have left the tree owned by ${RVDAS_USER}; take
+      # ownership so the git/cp/sed operations below can run as the invoking
+      # user. The end of this script hands everything back to ${RVDAS_USER}.
+      sudo chown -R $(id -un) .
       # Ensure origin points to the requested repo (may differ on re-installs)
       echo "Fetching branch '$OPENRVDAS_BRANCH' from $OPENRVDAS_REPO"
       git remote set-url origin "$OPENRVDAS_REPO"
@@ -647,7 +654,10 @@ function install_openrvdas {
     else                              # If we don't already have an installation
       sudo rm -rf openrvdas           # in case there's a non-git dir there
       sudo mkdir openrvdas
-      sudo chown ${RVDAS_USER} openrvdas
+      # Owned by the invoking user so 'git clone' (run unprivileged, below)
+      # can write into it; the end of this script hands the whole tree to
+      # ${RVDAS_USER}.
+      sudo chown $(id -un) openrvdas
       if ! git clone -b "$OPENRVDAS_BRANCH" "$OPENRVDAS_REPO" ; then
         echo "ERROR: Failed to clone branch '$OPENRVDAS_BRANCH' from $OPENRVDAS_REPO"
         exit_gracefully
