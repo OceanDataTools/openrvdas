@@ -177,8 +177,8 @@ function get_os_type {
                 exit_gracefully
             fi
 
-        # CentOS/RHEL
-        elif [[ ! -z `grep "NAME=\"CentOS Stream\"" /etc/os-release` ]] || [[ ! -z `grep "NAME=\"CentOS Linux\"" /etc/os-release` ]] || [[ ! -z `grep "NAME=\"Red Hat Enterprise Linux\"" /etc/os-release` ]]  || [[ ! -z `grep "NAME=\"Rocky Linux\"" /etc/os-release` ]];then
+        # CentOS/RHEL/AlmaLinux
+        elif [[ ! -z `grep "NAME=\"CentOS Stream\"" /etc/os-release` ]] || [[ ! -z `grep "NAME=\"CentOS Linux\"" /etc/os-release` ]] || [[ ! -z `grep "NAME=\"Red Hat Enterprise Linux\"" /etc/os-release` ]]  || [[ ! -z `grep "NAME=\"Rocky Linux\"" /etc/os-release` ]] || [[ ! -z `grep "NAME=\"AlmaLinux\"" /etc/os-release` ]];then
             OS_TYPE=CentOS
             if [[ ! -z `grep "VERSION_ID=\"7" /etc/os-release` ]];then
                 OS_VERSION=7
@@ -186,6 +186,8 @@ function get_os_type {
                 OS_VERSION=8
             elif [[ ! -z `grep "VERSION_ID=\"9" /etc/os-release` ]];then
                 OS_VERSION=9
+            elif [[ ! -z `grep "VERSION_ID=\"10" /etc/os-release` ]];then
+                OS_VERSION=10
             # Rocky Linux uses different format in /etc/os-release
             elif [[ ! -z `grep "VERSION=\"7" /etc/os-release` ]];then
                 OS_VERSION=7
@@ -193,8 +195,10 @@ function get_os_type {
                 OS_VERSION=8
             elif [[ ! -z `grep "VERSION=\"9" /etc/os-release` ]];then
                 OS_VERSION=9
+            elif [[ ! -z `grep "VERSION=\"10" /etc/os-release` ]];then
+                OS_VERSION=10
             else
-                echo "Sorry - unknown CentOS/RHEL Version! - exiting."
+                echo "Sorry - unknown CentOS/RHEL/AlmaLinux Version! - exiting."
                 exit_gracefully
             fi
         else
@@ -290,7 +294,9 @@ function set_default_variables {
     DEFAULT_INSTALL_SIMULATE_NBP=no
     DEFAULT_RUN_SIMULATE_NBP=no
 
-    DEFAULT_INSTALL_GUI=yes
+    DEFAULT_UI_TYPE=django
+    DEFAULT_EXPOSE_API_DOCS=no
+    DEFAULT_WEB_ADMIN_USER=
 
     DEFAULT_SUPERVISORD_WEBINTERFACE=no
     DEFAULT_SUPERVISORD_WEBINTERFACE_AUTH=no
@@ -335,7 +341,9 @@ DEFAULT_INSTALL_FIREWALLD=$INSTALL_FIREWALLD
 DEFAULT_INSTALL_UFW=$INSTALL_UFW
 DEFAULT_OPENRVDAS_AUTOSTART=$OPENRVDAS_AUTOSTART
 
-DEFAULT_INSTALL_GUI=$INSTALL_GUI
+DEFAULT_UI_TYPE=$UI_TYPE
+DEFAULT_EXPOSE_API_DOCS=$EXPOSE_API_DOCS
+DEFAULT_WEB_ADMIN_USER=$WEB_ADMIN_USER
 
 DEFAULT_INSTALL_SIMULATE_NBP=$INSTALL_SIMULATE_NBP
 DEFAULT_RUN_SIMULATE_NBP=$RUN_SIMULATE_NBP
@@ -495,9 +503,17 @@ function install_prereqs {
         fi
         brew --version
 
-        # HOMEBREW_NO_AUTO_UPDATE prevents mid-install updates that cause
-        # bottle checksum mismatches.
-        env HOMEBREW_NO_AUTO_UPDATE=1 brew install python@3.12 git nginx supervisor
+        # Update Homebrew itself first so bottles.rb and other internals are
+        # current; stale Homebrew versions can crash on nil bottle metadata.
+        brew update
+
+        # HOMEBREW_NO_AUTO_UPDATE prevents further mid-install updates that
+        # cause bottle checksum mismatches.
+        env HOMEBREW_NO_AUTO_UPDATE=1 brew install python@3.12 git nginx supervisor gnu-sed
+
+        # macOS ships BSD sed; GNU sed is required for `sed -i -e` syntax used
+        # throughout this script. Prepend gnu-sed's gnubin so `sed` resolves to gsed.
+        export PATH="${HOMEBREW_PREFIX}/opt/gnu-sed/libexec/gnubin:$PATH"
 
         #brew upgrade openssh nginx supervisor || echo Upgraded packages
         #brew link --overwrite python || echo Linking Python
@@ -582,7 +598,7 @@ function install_prereqs {
                 sudo ln -s -f /usr/local/bin/pip3.8 /usr/local/bin/pip3
                 popd
             fi
-        elif [ $OS_VERSION == '8' ] || [ $OS_VERSION == '9' ]; then
+        elif [ $OS_VERSION == '8' ] || [ $OS_VERSION == '9' ] || [ $OS_VERSION == '10' ]; then
             sudo yum install -y python3 python3-devel
         else
             echo "Install error: unknown OS_VERSION should have been caught earlier?!?"
@@ -651,6 +667,8 @@ function install_openrvdas {
         exit_gracefully
       fi
       git pull
+      git config --global --add safe.directory '*'
+      git submodule update --init
     else                              # If we don't already have an installation
       sudo rm -rf openrvdas           # in case there's a non-git dir there
       sudo mkdir openrvdas
@@ -663,6 +681,8 @@ function install_openrvdas {
         exit_gracefully
       fi
       cd openrvdas
+      git config --global --add safe.directory '*'
+      git submodule update --init
     fi
 
     # Copy widget settings into place and customize for this machine
@@ -676,7 +696,6 @@ function install_openrvdas {
     # routines can make the modifications they need to it.
     cp database/settings.py.dist database/settings.py
     sed -i -e "s/DEFAULT_DATABASE_USER = 'rvdas'/DEFAULT_DATABASE_USER = '${RVDAS_USER}'/g" database/settings.py
-    sed -i -e "s/DEFAULT_DATABASE_PASSWORD = 'rvdas'/DEFAULT_DATABASE_PASSWORD = '${RVDAS_DATABASE_PASSWORD}'/g" database/settings.py
 }
 
 ###########################################################################
@@ -775,6 +794,9 @@ function setup_nginx {
         # Disable because we're going to run it via supervisor
         sudo systemctl stop nginx
         sudo systemctl disable nginx # NGINX seems to be enabled by default?
+        # Remove default site to prevent "duplicate default server" conflicts
+        # when supervisord starts nginx with our generated full config.
+        sudo rm -f /etc/nginx/sites-enabled/default
     fi
 
     if [ "$USE_SSL" == "yes" ]; then
@@ -783,9 +805,19 @@ function setup_nginx {
     else
         SERVER_PROTOCOL='default_server'
         SSL_COMMENT='#'   # do comment out SSL stuff
-
     fi
 
+    if [[ "$UI_TYPE" == "react" ]]; then
+        setup_nginx_react
+    else
+        setup_nginx_django
+    fi
+}
+
+###########################################################################
+###########################################################################
+# Write the nginx config for the Django UI
+function setup_nginx_django {
     # Now create the nginx conf file in place and link it up
     cat > $INSTALL_ROOT/openrvdas/django_gui/openrvdas_nginx.conf<<EOF
 # openrvdas_nginx.conf
@@ -901,6 +933,302 @@ EOF
 
 ###########################################################################
 ###########################################################################
+# Write the nginx config for the React/FastAPI UI
+function setup_nginx_react {
+    REACT_NGINX_CONF=$INSTALL_ROOT/openrvdas/web_frontend/openrvdas_nginx.conf
+
+    if [ $OS_TYPE == 'MacOS' ]; then
+        NGINX_ETC_HOME=${HOMEBREW_PREFIX}/etc
+    else
+        NGINX_ETC_HOME=/etc
+    fi
+
+    cat > $REACT_NGINX_CONF<<EOF
+# openrvdas_nginx.conf - React/FastAPI UI
+
+worker_processes  auto;
+events {
+    worker_connections  1024;
+}
+
+http {
+    include       ${NGINX_ETC_HOME}/nginx/mime.types;
+    default_type  application/octet-stream;
+
+    sendfile        on;
+    keepalive_timeout  65;
+
+    map \$http_upgrade \$connection_upgrade {
+        default upgrade;
+        ''      close;
+    }
+
+    server {
+        listen      *:${SERVER_PORT} ${SERVER_PROTOCOL};
+        server_name _;
+        charset     utf-8;
+
+        ${SSL_COMMENT}ssl_certificate     $SSL_CRT_LOCATION;
+        ${SSL_COMMENT}ssl_certificate_key $SSL_KEY_LOCATION;
+        ${SSL_COMMENT}ssl_protocols       TLSv1.2 TLSv1.3;
+        ${SSL_COMMENT}ssl_ciphers         ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA256;
+        ${SSL_COMMENT}ssl_prefer_server_ciphers on;
+        ${SSL_COMMENT}ssl_session_cache   shared:SSL:10m;
+        ${SSL_COMMENT}ssl_session_timeout 1d;
+        ${SSL_COMMENT}add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+
+        client_max_body_size 75M;
+
+        root ${INSTALL_ROOT}/openrvdas/web_frontend/dist;
+        index index.html;
+
+        # Static assets - long cache
+        location /assets/ {
+            expires 1y;
+            add_header Cache-Control "public, immutable";
+        }
+
+        # Proxy FastAPI (including WebSocket upgrades)
+        location /api/v1/ {
+            proxy_pass http://127.0.0.1:8000;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade \$http_upgrade;
+            proxy_set_header Connection \$connection_upgrade;
+            proxy_set_header Host \$host;
+            proxy_set_header X-Real-IP \$remote_addr;
+            proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto \$scheme;
+        }
+
+        # CachedDataServer WebSocket proxy
+        location /cds-ws {
+            proxy_pass http://localhost:8766;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade \$http_upgrade;
+            proxy_set_header Connection \$connection_upgrade;
+            proxy_set_header Host \$host;
+        }
+
+$(if [ "$EXPOSE_API_DOCS" == "yes" ]; then cat <<APIDOCS
+        # FastAPI OpenAPI docs (optional - disabled by default)
+        location ~ ^/(docs|redoc|openapi.json)(/.*)?$ {
+            proxy_pass http://127.0.0.1:8000;
+            proxy_http_version 1.1;
+            proxy_set_header Host \$host;
+            proxy_set_header X-Real-IP \$remote_addr;
+            proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto \$scheme;
+        }
+APIDOCS
+fi)
+        # SPA fallback - all other requests serve index.html
+        location / {
+            try_files \$uri \$uri/ /index.html;
+        }
+    }
+
+$(if [ "$USE_SSL" == "yes" ]; then cat <<REDIRECT
+    # Redirect HTTP to HTTPS when SSL is enabled
+    server {
+        listen      *:${NONSSL_SERVER_PORT} default_server;
+        server_name _;
+        return 301 https://\$host\$request_uri;
+    }
+REDIRECT
+fi)
+}
+EOF
+
+}
+
+###########################################################################
+###########################################################################
+# Install Node.js >= MIN_NODE_MAJOR if not already present or too old
+MIN_NODE_MAJOR=20
+function install_nodejs {
+    local need_install=true
+    if command -v node &>/dev/null; then
+        local current_major
+        current_major=$(node --version | sed 's/v\([0-9]*\).*/\1/')
+        if [ "$current_major" -ge "$MIN_NODE_MAJOR" ]; then
+            echo "Node.js already installed: $(node --version)"
+            need_install=false
+        else
+            echo "Node.js $(node --version) is too old (need >= v${MIN_NODE_MAJOR}), upgrading..."
+        fi
+    else
+        echo "Node.js not found, installing..."
+    fi
+
+    if [ "$need_install" = true ]; then
+        if [ $OS_TYPE == 'MacOS' ]; then
+            env HOMEBREW_NO_AUTO_UPDATE=1 brew install node
+        elif [ $OS_TYPE == 'Ubuntu' ]; then
+            curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+            sudo DEBIAN_FRONTEND=noninteractive apt install -y nodejs
+        elif [ $OS_TYPE == 'CentOS' ]; then
+            curl -fsSL https://rpm.nodesource.com/setup_lts.x | sudo bash -
+            sudo yum install -y nodejs
+        fi
+    fi
+}
+
+###########################################################################
+###########################################################################
+# Set up FastAPI web backend
+function setup_new_ui_backend {
+    BACKEND_DIR=${INSTALL_ROOT}/openrvdas/web_backend
+    BACKEND_VENV=${BACKEND_DIR}/.venv
+
+    if [ "$USE_SSL" == "yes" ]; then
+        FRONTEND_URL="https://${HOSTNAME}"
+    else
+        FRONTEND_URL="http://${HOSTNAME}"
+    fi
+
+    # Create .env only if it doesn't already exist
+    if [ ! -f "${BACKEND_DIR}/.env" ]; then
+        echo "Creating web backend .env..."
+        SECRET_KEY=$(python3 -c "import secrets; print(secrets.token_urlsafe(32))")
+
+        # Bootstrap credentials are included so Alembic's init migration can
+        # seed the admin account; they are stripped out after migrations run.
+        cat > "${BACKEND_DIR}/.env" <<EOF
+DATABASE_URL=sqlite+aiosqlite:////${BACKEND_DIR}/db.sqlite3
+SECRET_KEY=${SECRET_KEY}
+ACCESS_TOKEN_EXPIRE_MINUTES=15
+REFRESH_TOKEN_EXPIRE_DAYS=7
+FRONTEND_URL=${FRONTEND_URL}
+CACHED_DATA_SERVER_HOST=localhost
+CACHED_DATA_SERVER_PORT=8766
+ENVIRONMENT=Production
+DEFAULT_ADMIN_USERNAME=${WEB_ADMIN_USER}
+DEFAULT_ADMIN_PASSWORD=${WEB_ADMIN_PASS}
+DEFAULT_ADMIN_FULLNAME=Administrator
+DEFAULT_ADMIN_EMAIL=admin@example.com
+EOF
+        echo "Web backend .env created."
+    else
+        echo "Web backend .env already exists; updating FRONTEND_URL and merging new keys..."
+        sed -i -e "s|^FRONTEND_URL=.*|FRONTEND_URL=${FRONTEND_URL}|" "${BACKEND_DIR}/.env"
+
+        # Merge any keys added to the template since first install, skipping
+        # SECRET_KEY (must not rotate) and DEFAULT_ADMIN_* (bootstrap-only).
+        _BACKEND_DEFAULTS=$(cat <<ENVDEFAULTS
+DATABASE_URL=sqlite+aiosqlite:////${BACKEND_DIR}/db.sqlite3
+ACCESS_TOKEN_EXPIRE_MINUTES=15
+REFRESH_TOKEN_EXPIRE_DAYS=7
+FRONTEND_URL=${FRONTEND_URL}
+CACHED_DATA_SERVER_HOST=localhost
+CACHED_DATA_SERVER_PORT=8766
+ENVIRONMENT=Production
+ENVDEFAULTS
+)
+        while IFS= read -r line; do
+            [[ "$line" =~ ^[[:space:]]*$ || "$line" =~ ^# ]] && continue
+            key="${line%%=*}"
+            if ! grep -q "^${key}=" "${BACKEND_DIR}/.env"; then
+                echo "$line" >> "${BACKEND_DIR}/.env"
+                echo "  Added missing key: ${key}"
+            fi
+        done <<< "$_BACKEND_DEFAULTS"
+    fi
+
+    echo "Creating web backend virtual environment..."
+    # Use the same explicit Python 3.12 binary as the main venv on macOS;
+    # bare `python3` may resolve to a different version that won't produce
+    # the python3.12 symlink downstream code expects.
+    # Derive HOMEBREW_PREFIX inline in case this function runs before
+    # install_prereqs has set it in the environment.
+    if [ "${OS_TYPE:-}" == 'MacOS' ]; then
+        _BREW_PFX="${HOMEBREW_PREFIX:-$( [ "$(uname -m)" = "arm64" ] && echo /opt/homebrew || echo /usr/local )}"
+        BACKEND_PYTHON="${_BREW_PFX}/opt/python@3.12/bin/python3.12"
+    else
+        BACKEND_PYTHON=python3
+    fi
+
+    # Remove a pre-existing venv that was built with the wrong Python; trying
+    # to update it in-place produces "No such file or directory: .../python3.12".
+    if [ -d "$BACKEND_VENV" ]; then
+        VENV_PYTHON="$BACKEND_VENV/bin/python3"
+        if [ ! -x "$VENV_PYTHON" ] || ! "$VENV_PYTHON" --version 2>&1 | grep -q "3\.12"; then
+            echo "Existing backend venv uses wrong Python; recreating..."
+            rm -rf "$BACKEND_VENV"
+        fi
+    fi
+
+    "$BACKEND_PYTHON" -m venv "$BACKEND_VENV"
+    "$BACKEND_VENV/bin/pip" install --upgrade pip --quiet
+    "$BACKEND_VENV/bin/pip" install \
+        --trusted-host pypi.org --trusted-host files.pythonhosted.org \
+        -r "$BACKEND_DIR/requirements.txt"
+
+    # Install packages needed by async_fastapi_server_api into the main venv
+    # so logger_manager can import them when using --database fastapi.
+    echo "Installing FastAPI dependencies into main OpenRVDAS venv..."
+    "${INSTALL_ROOT}/openrvdas/venv/bin/pip" install --quiet \
+        --trusted-host pypi.org --trusted-host files.pythonhosted.org \
+        "fastapi>=0.135.0" "sqlalchemy>=2.0" "aiosqlite>=0.22" "greenlet>=3.2" \
+        "pydantic>=2.0" "pydantic-settings>=2.0"
+
+    echo "Running database migrations..."
+    cd "$BACKEND_DIR"
+    "$BACKEND_VENV/bin/alembic" upgrade head
+
+    # Strip bootstrap credentials now that the DB is seeded
+    sed -i -e '/^DEFAULT_ADMIN_USERNAME=/d' \
+           -e '/^DEFAULT_ADMIN_PASSWORD=/d' \
+           -e '/^DEFAULT_ADMIN_FULLNAME=/d' \
+           -e '/^DEFAULT_ADMIN_EMAIL=/d' \
+           "${BACKEND_DIR}/.env"
+
+    cd ${INSTALL_ROOT}/openrvdas
+}
+
+###########################################################################
+###########################################################################
+# Build the React frontend
+function setup_new_ui_frontend {
+    FRONTEND_DIR=${INSTALL_ROOT}/openrvdas/web_frontend
+
+    install_nodejs
+
+    # Seed .env from .env.dist if it doesn't exist yet; on reinstall merge
+    # any keys present in .env.dist but missing from .env.
+    if [ ! -f "${FRONTEND_DIR}/.env" ]; then
+        echo "Creating web frontend .env from .env.dist..."
+        cp "${FRONTEND_DIR}/.env.dist" "${FRONTEND_DIR}/.env"
+    else
+        echo "Web frontend .env already exists; merging new keys from .env.dist..."
+        while IFS= read -r line; do
+            # Skip blank lines and comments
+            [[ "$line" =~ ^[[:space:]]*$ || "$line" =~ ^# ]] && continue
+            key="${line%%=*}"
+            if ! grep -q "^${key}=" "${FRONTEND_DIR}/.env"; then
+                echo "$line" >> "${FRONTEND_DIR}/.env"
+                echo "  Added missing key: ${key}"
+            fi
+        done < "${FRONTEND_DIR}/.env.dist"
+    fi
+
+    OPENRVDAS_VERSION=$(grep '^version' "${INSTALL_ROOT}/openrvdas/pyproject.toml" | sed 's/version = "\(.*\)"/\1/')
+    echo "Setting VITE_OPENRVDAS_VERSION=${OPENRVDAS_VERSION} in web frontend .env..."
+    if grep -q '^VITE_OPENRVDAS_VERSION=' "${FRONTEND_DIR}/.env"; then
+        sed -i -e "s|^VITE_OPENRVDAS_VERSION=.*|VITE_OPENRVDAS_VERSION=${OPENRVDAS_VERSION}|" "${FRONTEND_DIR}/.env"
+    else
+        echo "VITE_OPENRVDAS_VERSION=${OPENRVDAS_VERSION}" >> "${FRONTEND_DIR}/.env"
+    fi
+
+    echo "Installing frontend dependencies..."
+    cd "$FRONTEND_DIR"
+    npm ci --silent
+    echo "Building frontend..."
+    npm run build
+    cd ${INSTALL_ROOT}/openrvdas
+}
+
+###########################################################################
+###########################################################################
 # Set up certificate files, if requested
 function setup_ssl_certificate {
     echo "Certificate will be placed in ${SSL_CRT_LOCATION}"
@@ -961,10 +1289,14 @@ SSLCNF
 function setup_django {
     # Expect the following shell variables to be appropriately set:
     # RVDAS_USER - valid userid
-    # RVDAS_DATABASE_PASSWORD - string to use for Django password
+    # RVDAS_DATABASE_PASSWORD - string to use for Django/database password
 
     cd ${INSTALL_ROOT}/openrvdas
     source ${INSTALL_ROOT}/openrvdas/venv/bin/activate
+
+    # Apply database password to the shared database settings module
+    sed -i -e "s/DEFAULT_DATABASE_PASSWORD = 'rvdas'/DEFAULT_DATABASE_PASSWORD = '${RVDAS_DATABASE_PASSWORD}'/g" database/settings.py
+
     cp django_gui/settings.py.dist django_gui/settings.py
     sed -i -e "s/WEBSOCKET_PROTOCOL = 'ws'/WEBSOCKET_PROTOCOL = '${WEBSOCKET_PROTOCOL}'/g" django_gui/settings.py
     sed -i -e "s/WEBSOCKET_PORT = 80/WEBSOCKET_PORT = ${SERVER_PORT}/g" django_gui/settings.py
@@ -1065,12 +1397,16 @@ function setup_supervisor {
     # INSTALL_ROOT - path where openrvdas/ is found
     # OPENRVDAS_AUTOSTART - 'true' if we're to autostart, else 'false'
 
-    # If we're not installing the web GUI, comment out those bits of
-    # the supervisor config that run them.
-    if [[ "$INSTALL_GUI" == "yes" ]];then
-        GUI_COMMENT=''
+    # Comment out UI-specific supervisor entries based on chosen UI type.
+    if [[ "$UI_TYPE" == "django" ]]; then
+        DJANGO_GUI_COMMENT=''
+        REACT_GUI_COMMENT=';'
+    elif [[ "$UI_TYPE" == "react" ]]; then
+        DJANGO_GUI_COMMENT=';'
+        REACT_GUI_COMMENT=''
     else
-        GUI_COMMENT=';'
+        DJANGO_GUI_COMMENT=';'
+        REACT_GUI_COMMENT=';'
     fi
 
     if [[ $OS_TYPE == 'MacOS' ]];then
@@ -1152,6 +1488,7 @@ function setup_supervisor {
     LOGGER_MANAGER_FILE=$SUPERVISOR_DIR/openrvdas_logger_manager.${SUPERVISOR_SUFFIX}
     CACHED_DATA_FILE=$SUPERVISOR_DIR/openrvdas_cached_data.${SUPERVISOR_SUFFIX}
     DJANGO_FILE=$SUPERVISOR_DIR/openrvdas_django.${SUPERVISOR_SUFFIX}
+    REACT_FILE=$SUPERVISOR_DIR/openrvdas_react.${SUPERVISOR_SUFFIX}
     SIMULATE_FILE=$SUPERVISOR_DIR/openrvdas_simulate.${SUPERVISOR_SUFFIX}
 
     sudo mkdir -p $SUPERVISOR_DIR
@@ -1189,12 +1526,20 @@ EOF
 
     #######################################################
     # Write out the Logger Manager file
+    # Use fastapi database backend when React UI is selected so logger_manager
+    # shares the same SQLite DB as the FastAPI backend.
+    if [[ "$UI_TYPE" == "react" ]]; then
+        LOGGER_MANAGER_DATABASE=fastapi
+    else
+        LOGGER_MANAGER_DATABASE=django
+    fi
     cat > $TEMP_FILE <<EOF
 ; Supervisor configurations for LoggerManager
 [program:logger_manager]
-command=${VENV_BIN}/python server/logger_manager.py --database django --data_server_websocket :8766 -v -V --no-console
-environment=PATH="${VENV_BIN}:/usr/bin:/usr/local/bin"
+command=${VENV_BIN}/python server/logger_manager.py --database ${LOGGER_MANAGER_DATABASE} --data_server_websocket :8766 -v -V --no-console
+environment=PYTHONPATH="${INSTALL_ROOT}/openrvdas",PATH="${VENV_BIN}:/usr/bin:/usr/local/bin"
 directory=${INSTALL_ROOT}/openrvdas
+priority=20
 autostart=$AUTOSTART
 autorestart=true
 startretries=3
@@ -1212,7 +1557,9 @@ EOF
 ; Supervisor configurations for LoggerManager and CachedDataServer
 [program:cached_data_server]
 command=${VENV_BIN}/python server/cached_data_server.py --port 8766 --disk_cache /var/tmp/openrvdas/disk_cache --max_records 8640 -v
+environment=PYTHONPATH="${INSTALL_ROOT}/openrvdas",PATH="${VENV_BIN}:/usr/bin:/usr/local/bin"
 directory=${INSTALL_ROOT}/openrvdas
+priority=10
 autostart=$AUTOSTART
 autorestart=true
 startretries=3
@@ -1226,38 +1573,75 @@ EOF
 
 
     #######################################################
-    # Write out the Django GUI files, filling in variables
+    # Write out the Django GUI supervisor file
     cat > $TEMP_FILE <<EOF
 ; Supervisor configurations for Django GUI
-${GUI_COMMENT}[program:nginx]
-${GUI_COMMENT}command=${NGINX_BIN} -g 'daemon off;' -c ${INSTALL_ROOT}/openrvdas/django_gui/openrvdas_nginx.conf
-${GUI_COMMENT}directory=${INSTALL_ROOT}/openrvdas
-${GUI_COMMENT}autostart=$AUTOSTART
-${GUI_COMMENT}autorestart=true
-${GUI_COMMENT}startretries=3
-${GUI_COMMENT}killasgroup=true
-${GUI_COMMENT}stderr_logfile=/var/log/openrvdas/nginx.stderr
-${GUI_COMMENT}stderr_logfile_maxbytes=10000000 ; 10M
-${GUI_COMMENT}stderr_logfile_maxbackups=100
-${GUI_COMMENT};user=$RVDAS_USER
+${DJANGO_GUI_COMMENT}[program:nginx]
+${DJANGO_GUI_COMMENT}command=${NGINX_BIN} -g 'daemon off;' -c ${INSTALL_ROOT}/openrvdas/django_gui/openrvdas_nginx.conf
+${DJANGO_GUI_COMMENT}directory=${INSTALL_ROOT}/openrvdas
+${DJANGO_GUI_COMMENT}priority=30
+${DJANGO_GUI_COMMENT}autostart=$AUTOSTART
+${DJANGO_GUI_COMMENT}autorestart=true
+${DJANGO_GUI_COMMENT}startretries=3
+${DJANGO_GUI_COMMENT}killasgroup=true
+${DJANGO_GUI_COMMENT}stderr_logfile=/var/log/openrvdas/nginx.stderr
+${DJANGO_GUI_COMMENT}stderr_logfile_maxbytes=10000000 ; 10M
+${DJANGO_GUI_COMMENT}stderr_logfile_maxbackups=100
+${DJANGO_GUI_COMMENT};user=$RVDAS_USER
 
-${GUI_COMMENT}[program:uwsgi]
-${GUI_COMMENT}command=${VENV_BIN}/uwsgi ${INSTALL_ROOT}/openrvdas/django_gui/openrvdas_uwsgi.ini --thunder-lock --enable-threads
-${GUI_COMMENT}stopsignal=INT
-${GUI_COMMENT}directory=${INSTALL_ROOT}/openrvdas
-${GUI_COMMENT}autostart=$AUTOSTART
-${GUI_COMMENT}autorestart=true
-${GUI_COMMENT}startretries=3
-${GUI_COMMENT}killasgroup=true
-${GUI_COMMENT}stderr_logfile=/var/log/openrvdas/uwsgi.stderr
-${GUI_COMMENT}stderr_logfile_maxbytes=10000000 ; 10M
-${GUI_COMMENT}stderr_logfile_maxbackups=100
-${GUI_COMMENT}user=$RVDAS_USER
+${DJANGO_GUI_COMMENT}[program:uwsgi]
+${DJANGO_GUI_COMMENT}command=${VENV_BIN}/uwsgi ${INSTALL_ROOT}/openrvdas/django_gui/openrvdas_uwsgi.ini --thunder-lock --enable-threads
+${DJANGO_GUI_COMMENT}stopsignal=INT
+${DJANGO_GUI_COMMENT}directory=${INSTALL_ROOT}/openrvdas
+${DJANGO_GUI_COMMENT}priority=30
+${DJANGO_GUI_COMMENT}autostart=$AUTOSTART
+${DJANGO_GUI_COMMENT}autorestart=true
+${DJANGO_GUI_COMMENT}startretries=3
+${DJANGO_GUI_COMMENT}killasgroup=true
+${DJANGO_GUI_COMMENT}stderr_logfile=/var/log/openrvdas/uwsgi.stderr
+${DJANGO_GUI_COMMENT}stderr_logfile_maxbytes=10000000 ; 10M
+${DJANGO_GUI_COMMENT}stderr_logfile_maxbackups=100
+${DJANGO_GUI_COMMENT}user=$RVDAS_USER
 
-${GUI_COMMENT}[group:django]
-${GUI_COMMENT}programs=nginx,uwsgi
+${DJANGO_GUI_COMMENT}[group:django]
+${DJANGO_GUI_COMMENT}programs=nginx,uwsgi
 EOF
     sudo mv $TEMP_FILE $DJANGO_FILE
+
+    #######################################################
+    # Write out the React/FastAPI UI supervisor file
+    cat > $TEMP_FILE <<EOF
+; Supervisor configurations for React/FastAPI UI
+${REACT_GUI_COMMENT}[program:nginx]
+${REACT_GUI_COMMENT}command=${NGINX_BIN} -g 'daemon off;' -c ${INSTALL_ROOT}/openrvdas/web_frontend/openrvdas_nginx.conf
+${REACT_GUI_COMMENT}directory=${INSTALL_ROOT}/openrvdas
+${REACT_GUI_COMMENT}priority=30
+${REACT_GUI_COMMENT}autostart=$AUTOSTART
+${REACT_GUI_COMMENT}autorestart=true
+${REACT_GUI_COMMENT}startretries=3
+${REACT_GUI_COMMENT}killasgroup=true
+${REACT_GUI_COMMENT}stderr_logfile=/var/log/openrvdas/nginx.stderr
+${REACT_GUI_COMMENT}stderr_logfile_maxbytes=10000000 ; 10M
+${REACT_GUI_COMMENT}stderr_logfile_maxbackups=100
+${REACT_GUI_COMMENT};user=$RVDAS_USER
+
+${REACT_GUI_COMMENT}[program:uvicorn]
+${REACT_GUI_COMMENT}command=${INSTALL_ROOT}/openrvdas/web_backend/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000
+${REACT_GUI_COMMENT}directory=${INSTALL_ROOT}/openrvdas/web_backend
+${REACT_GUI_COMMENT}priority=30
+${REACT_GUI_COMMENT}autostart=$AUTOSTART
+${REACT_GUI_COMMENT}autorestart=true
+${REACT_GUI_COMMENT}startretries=3
+${REACT_GUI_COMMENT}killasgroup=true
+${REACT_GUI_COMMENT}stderr_logfile=/var/log/openrvdas/uvicorn.stderr
+${REACT_GUI_COMMENT}stderr_logfile_maxbytes=10000000 ; 10M
+${REACT_GUI_COMMENT}stderr_logfile_maxbackups=100
+${REACT_GUI_COMMENT}user=$RVDAS_USER
+
+${REACT_GUI_COMMENT}[group:react_ui]
+${REACT_GUI_COMMENT}programs=nginx,uvicorn
+EOF
+    sudo mv $TEMP_FILE $REACT_FILE
 
     #######################################################
     # Write out the simulator commands, filling in variables
@@ -1283,6 +1667,36 @@ EOF
 
 ###########################################################################
 ###########################################################################
+# CentOS/RHEL ONLY - Configure SELinux for OpenRVDAS services
+function setup_selinux {
+    if [ $OS_TYPE == 'MacOS' ] || [ $OS_TYPE == 'Ubuntu' ]; then
+        return
+    fi
+
+    echo "#####################################################################"
+    echo "Configuring SELinux permissions for OpenRVDAS"
+
+    # The old way of enabling things...
+    # (sed -i -e 's/SELINUX=enforcing/SELINUX=permissive/g' /etc/selinux/config) || echo UNABLE TO UPDATE SELINUX! Continuing...
+
+    # Allow the web server process to make outbound network connections (needed
+    # for uWSGI/FastAPI to reach the CachedDataServer and other services).
+    setsebool -P nis_enabled 1
+    setsebool -P use_nfs_home_dirs 1
+    setsebool -P httpd_can_network_connect 1
+    semanage permissive -a httpd_t
+
+    # Label the CachedDataServer's fixed port so httpd_t can connect to it.
+    # Port 8766 is the universal CDS port across all OpenRVDAS installations.
+    semanage port -a -t http_port_t -p tcp 8766 2>/dev/null || \
+        semanage port -m -t http_port_t -p tcp 8766
+
+    echo "Done configuring SELinux permissions"
+}
+
+
+###########################################################################
+###########################################################################
 # CentOS/RHEL ONLY - Set up firewall daemon and open relevant ports
 function setup_firewall {
     if [ $OS_TYPE == 'MacOS' ] || [ $OS_TYPE == 'Ubuntu' ]; then
@@ -1293,17 +1707,8 @@ function setup_firewall {
     # All this is CentOS/RHEL only
     yum install -y firewalld
     echo "#####################################################################"
-    echo "Setting SELINUX permissions and firewall ports"
+    echo "Setting up firewall ports"
     echo "This could take a while..."
-
-    # The old way of enabling things...
-    # (sed -i -e 's/SELINUX=enforcing/SELINUX=permissive/g' /etc/selinux/config) || echo UNABLE TO UPDATE SELINUX! Continuing...
-
-    # The new way of more selectively enabling things
-    setsebool -P nis_enabled 1
-    setsebool -P use_nfs_home_dirs 1
-    setsebool -P httpd_can_network_connect 1
-    semanage permissive -a httpd_t
 
     # Set up the firewall and open some holes in it
     systemctl enable --now firewalld
@@ -1339,7 +1744,63 @@ function setup_firewall {
     fi
 
     firewall-cmd -q --reload > /dev/null
-    echo "Done setting SELINUX permissions"
+    echo "Done setting up firewall"
+}
+
+
+###########################################################################
+###########################################################################
+# Ubuntu ONLY - Set up ufw and open relevant ports
+function setup_ufw {
+    if [ $OS_TYPE != 'Ubuntu' ]; then
+        echo "No ufw setup on $OS_TYPE"
+        return
+    fi
+
+    apt-get install -y ufw
+    echo "#####################################################################"
+    echo "Configuring ufw firewall..."
+
+    ufw --force reset
+    ufw default deny incoming
+    ufw default allow outgoing
+
+    # Always allow SSH to prevent lockout
+    ufw allow ssh
+
+    # Web console port
+    ufw allow ${SERVER_PORT}/tcp
+
+    # If SSL is enabled, also open the non-SSL port for HTTP->HTTPS redirect
+    if [ "$USE_SSL" == 'yes' ] && [ "$NONSSL_SERVER_PORT" != "$SERVER_PORT" ]; then
+        ufw allow ${NONSSL_SERVER_PORT}/tcp
+    fi
+
+    # Supervisord web interface
+    if [ "$SUPERVISORD_WEBINTERFACE" == 'yes' ]; then
+        ufw allow ${SUPERVISORD_WEBINTERFACE_PORT}/tcp
+    fi
+
+    if [ ! -z "$TCP_PORTS_TO_OPEN" ]; then
+        for PORT in "${TCP_PORTS_TO_OPEN[@]}"
+        do
+            PORT="$(echo -e "${PORT}" | tr -d '[:space:]')"  # trim whitespace
+            echo Opening $PORT/tcp
+            ufw allow ${PORT}/tcp
+        done
+    fi
+
+    if [ ! -z "$UDP_PORTS_TO_OPEN" ]; then
+        for PORT in "${UDP_PORTS_TO_OPEN[@]}"
+        do
+            PORT="$(echo -e "${PORT}" | tr -d '[:space:]')"  # trim whitespace
+            echo Opening $PORT/udp
+            ufw allow ${PORT}/udp
+        done
+    fi
+
+    ufw --force enable
+    echo "Done configuring ufw"
 }
 
 
@@ -1428,9 +1889,11 @@ if [ "$EUID" -ne 0 ]; then
         echo "ERROR: Could not obtain sudo privileges. Exiting."
         exit 1
     fi
-    # Refresh sudo credentials every 60 seconds in the background so
+    # Refresh sudo credentials every 55 seconds in the background so
     # long-running steps (e.g. package installs, pip) don't time out.
-    ( while true; do sudo -n true; sleep 60; kill -0 "$$" 2>/dev/null || exit; done ) &
+    # Use `sudo -v -n` (validate/refresh, no prompt) so the timestamp is
+    # explicitly extended rather than just running a no-op command.
+    ( while true; do sudo -v -n 2>/dev/null; sleep 55; kill -0 "$$" 2>/dev/null || exit; done ) &
     SUDO_KEEPALIVE_PID=$!
     trap 'kill "$SUDO_KEEPALIVE_PID" 2>/dev/null' EXIT
 fi
@@ -1548,7 +2011,8 @@ else
     RVDAS_GROUP=$RVDAS_USER
 fi
 
-read -p "Django/database password to use for user $RVDAS_USER? ($RVDAS_USER) " RVDAS_DATABASE_PASSWORD
+echo
+read -p "OpenRVDAS database password for user $RVDAS_USER? ($RVDAS_USER) " RVDAS_DATABASE_PASSWORD
 RVDAS_DATABASE_PASSWORD=${RVDAS_DATABASE_PASSWORD:-$RVDAS_USER}
 
 #########################################################################
@@ -1708,16 +2172,54 @@ fi
 
 
 #########################################################################
-# Install web console programs - nginx and uwsgi?
+# Choose web UI
 echo
 echo "#####################################################################"
-echo "The full OpenRVDAS installation includes a web-based console for loading"
-echo "and controlling loggers, but a slimmed-down version of the code may be"
-echo "installed and run without it if desired for portability or computational"
-echo "reasons."
+echo "OpenRVDAS includes two web-based console options:"
+echo "  django - Classic Django UI (stable, full-featured)"
+echo "  react  - New React/FastAPI UI (experimental)"
+echo "  none   - No web UI (headless / portability mode)"
 echo
-yes_no "Install OpenRVDAS web console GUI? " $DEFAULT_INSTALL_GUI
-INSTALL_GUI=$YES_NO_RESULT
+read -p "Which web UI would you like to install? (django/react/none) [$DEFAULT_UI_TYPE] " UI_TYPE_INPUT
+UI_TYPE=${UI_TYPE_INPUT:-$DEFAULT_UI_TYPE}
+# Normalise and validate
+case "$UI_TYPE" in
+    react|React|REACT) UI_TYPE=react ;;
+    none|None|NONE)    UI_TYPE=none  ;;
+    *)                 UI_TYPE=django ;;
+esac
+echo "Web UI: $UI_TYPE"
+
+if [ "$UI_TYPE" == "react" ]; then
+    echo
+    echo "#####################################################################"
+    echo "The React UI's FastAPI backend provides an OpenAPI documentation"
+    echo "interface at /docs and /redoc. These are useful for development and"
+    echo "debugging, but expose your API surface publicly with no authentication."
+    echo
+    yes_no "Expose FastAPI OpenAPI docs (/docs, /redoc) via nginx? " $DEFAULT_EXPOSE_API_DOCS
+    EXPOSE_API_DOCS=$YES_NO_RESULT
+
+    echo
+    echo "#####################################################################"
+    if [ -f "${INSTALL_ROOT}/openrvdas/web_backend/db.sqlite3" ]; then
+        echo "React web UI database already exists; skipping admin account setup."
+        echo "Manage admin accounts via the web UI after installation."
+        WEB_ADMIN_USER=${DEFAULT_WEB_ADMIN_USER:-$RVDAS_USER}
+        WEB_ADMIN_PASS=
+    else
+        echo "Initial admin account for the React web UI:"
+        read -p "  Admin username? (${DEFAULT_WEB_ADMIN_USER:-$RVDAS_USER}) " WEB_ADMIN_USER
+        WEB_ADMIN_USER=${WEB_ADMIN_USER:-${DEFAULT_WEB_ADMIN_USER:-$RVDAS_USER}}
+        read -s -p "  Admin password? (${WEB_ADMIN_USER}) " WEB_ADMIN_PASS
+        echo
+        WEB_ADMIN_PASS=${WEB_ADMIN_PASS:-${WEB_ADMIN_USER}}
+    fi
+else
+    EXPOSE_API_DOCS=no
+    WEB_ADMIN_USER=
+    WEB_ADMIN_PASS=
+fi
 
 #########################################################################
 # Enable Supervisor web-interface?
@@ -1779,7 +2281,7 @@ setup_python_packages
 #########################################################################
 #########################################################################
 # Set up nginx
-if [[ "$INSTALL_GUI" == "yes" ]];then
+if [[ "$UI_TYPE" != "none" ]];then
     echo "#####################################################################"
     echo "Setting up NGINX"
     setup_nginx
@@ -1814,8 +2316,8 @@ fi
 
 #########################################################################
 #########################################################################
-# Set up uwsgi
-if [[ "$INSTALL_GUI" == "yes" ]];then
+# Set up uwsgi (Django UI only)
+if [[ "$UI_TYPE" == "django" ]];then
     echo
     echo "#####################################################################"
     echo "Setting up UWSGI"
@@ -1827,7 +2329,8 @@ fi
 
 #########################################################################
 #########################################################################
-# Set up Django database
+# Set up Django database (always needed — logger_manager uses Django ORM
+# regardless of which web UI is selected)
 echo
 echo "#########################################################################"
 echo "Initializing Django database..."
@@ -1837,9 +2340,24 @@ echo "Initializing Django database..."
 setup_django
 
 # Connect uWSGI with our project installation
+#########################################################################
+#########################################################################
+# Set up React/FastAPI UI (react mode only)
+if [[ "$UI_TYPE" == "react" ]];then
+    echo
+    echo "#####################################################################"
+    echo "Setting up FastAPI web backend..."
+    setup_new_ui_backend
+
+    echo
+    echo "#####################################################################"
+    echo "Building React web frontend..."
+    setup_new_ui_frontend
+fi
+
 echo
 echo "#####################################################################"
-echo "Creating OpenRVDAS-specific uWSGI files"
+echo "Setting ownership of OpenRVDAS files"
 
 # Make everything accessible to nginx
 sudo chmod 755 ${INSTALL_ROOT}/openrvdas
@@ -1862,6 +2380,11 @@ setup_supervisor
 
 #########################################################################
 #########################################################################
+# CentOS/RHEL: always configure SELinux regardless of firewall choice.
+if [ $OS_TYPE == 'CentOS' ]; then
+    setup_selinux
+fi
+
 # If we've been instructed to set up firewall, do so.
 if [ $INSTALL_FIREWALLD == 'yes' ]; then
     setup_firewall
@@ -1893,7 +2416,7 @@ elif [ $OS_TYPE == 'CentOS' ] || [ $OS_TYPE == 'Ubuntu' ]; then
         sudo systemctl restart supervisor
     fi
 
-    if [[ "$INSTALL_GUI" == "yes" ]];then
+    if [[ "$UI_TYPE" != "none" ]];then
         # Previous installations used nginx and uwsgi as a service. We need to
         # disable them if they're running.
         echo Disabling legacy services

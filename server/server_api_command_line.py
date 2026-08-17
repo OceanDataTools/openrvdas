@@ -339,7 +339,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--database', dest='database', action='store',
-                        choices=['memory', 'django', 'sqlite'],
+                        choices=['memory', 'django', 'sqlite', 'fastapi'],
                         default='memory', help='What backing store database '
                         'to use. Currently-implemented options are "memory" '
                         'and "django".')
@@ -381,6 +381,9 @@ if __name__ == '__main__':
     elif args.database == 'sqlite':
         from server.sqlite_server_api import SQLiteServerAPI
         api = SQLiteServerAPI()
+    elif args.database == 'fastapi':
+        from web_backend.fastapi_server_api import FastAPIServerAPI
+        api = FastAPIServerAPI()
     else:
         raise ValueError('Illegal arg for --database: "%s"' % args.database)
     command_line_reader = ServerAPICommandLine(api)

@@ -1,0 +1,71 @@
+###########################################################
+###########################################################
+# YAML cruise definition file for OpenRVDAS.
+#
+# Created by:
+#   command:  <<command_line>>
+#   time:     <<date_time>> UTC
+#   user:     <<user>>
+#
+###########################################################
+cruise:
+  id: <<cruise>>
+  start: '<<cruise_start>>'
+  end: '<<cruise_end>>'
+
+###########################################################
+includes:
+  - contrib/logger_templates/serial_logger_template.yaml
+  - contrib/logger_templates/parse_data_logger_template.yaml
+
+###########################################################
+# Global variables - can be overridden by individual loggers
+variables:
+  cruise: NBP1406
+  cruise_start: '2019-07-01'
+  cruise_end: '2019-12-31'
+
+  udp_destination: 255.255.255.255
+  raw_udp_port: 6224
+  parsed_udp_port: 6225
+
+  file_root: /var/tmp/log
+  parse_definition_path: test/NBP1406/devices/nbp_devices.yaml
+
+  data_server: localhost:8766
+  influx_bucket_name: openrvdas
+
+###########################################################
+loggers:
+  gp02:
+    logger_template: serial_logger_template
+    variables:
+      serial_port: /tmp/tty_gp02
+      baud_rate: 4800
+  gyr1:
+    logger_template: serial_logger_template
+    variables:
+      serial_port: /tmp/tty_gyr1
+      baud_rate: 4800
+
+  # Parse raw UDP data and send to CDS, and optionally InfluxDB;
+  # uses default global variables
+  parse_data:
+    logger_template: parse_data_logger_template
+
+###########################################################
+modes:
+  'off':  # without a 'default_mode' key, first defined mode will be default
+    [gp02-off, gyr1-off, parse_data-off]
+
+  no_write:
+    [gp02-net, gyr1-net, parse_data-on]
+
+  write:
+    [gp02-net+file, gyr1-net+file, parse_data-on]
+
+  no_write+influx:
+    [gp02-net, gyr1-net, parse_data-on+influx]
+
+  write+influx:
+    [gp02-net+file, gyr1-net+file, parse_data-on+influx]

@@ -7,7 +7,7 @@ import glob
 import logging
 import re
 import json
-from typing import Dict, List, Any, Union
+from typing import Dict, List, Any, Optional, Union
 
 try:
     import yaml
@@ -73,23 +73,31 @@ def parse(content: str, file_path: str = None) -> Dict[str, Any]:
 
 
 ###################
-def expand_cruise_definition(input_dict):
+def expand_cruise_definition(input_dict, errors: Optional[List[str]] = None):
     """
     Expand a configuration dictionary with loggers and configs structure.
+
+    Args:
+        input_dict: The configuration dictionary to expand.
+        errors: Optional list to collect non-fatal errors into. When provided,
+                per-item errors (bad template reference, missing config, etc.)
+                are appended and processing continues so all errors are
+                surfaced at once. Fatal structural errors (missing 'loggers'
+                key, etc.) still raise ValueError regardless.
     """
     # First handle includes to get all templates loaded
     result = expand_includes(input_dict)
 
     # Process both logger and config templates
-    result = expand_templates(result)
+    result = expand_templates(result, errors=errors)
 
     # Now do the global variable substitution
     global_variables = result.get('variables', {})
     result = substitute_variables(result, global_variables)
 
     # Continue with the rest of the process
-    result = expand_logger_definitions(result)
-    result = expand_modes(result)
+    result = expand_logger_definitions(result, errors=errors)
+    result = expand_modes(result, errors=errors)
 
     unmatched_vars = find_unmatched_variables(result)
     if unmatched_vars:
@@ -233,7 +241,8 @@ def deep_merge(base: Dict[str, Any],
 
 ###################
 def expand_templates(
-    cruise_definition: Dict[str, Dict[str, Any]]
+    cruise_definition: Dict[str, Dict[str, Any]],
+    errors: Optional[List[str]] = None,
 ) -> Dict[str, Dict[str, Any]]:
     """
     Process a complete configuration dictionary with templates.
@@ -255,8 +264,11 @@ def expand_templates(
     # FIRST PHASE: Process logger templates
     for logger_name, logger_def in cruise_definition.get('loggers', {}).items():  # noqa E501
         if not isinstance(logger_def, dict):
-            raise ValueError(f'Malformed logger definition for {logger_name}; '
-                             f'should be dict.')
+            msg = f'Malformed logger definition for {logger_name}; should be dict.'
+            if errors is not None:
+                errors.append(msg)
+                continue
+            raise ValueError(msg)
 
         # Skip loggers that don't use logger_templates
         template_name = logger_def.get('logger_template')
@@ -274,8 +286,11 @@ def expand_templates(
         # Get the template
         template = logger_templates.get(template_name)
         if not template:
-            raise ValueError(f"Template '{template_name}' not found in "
-                             f"logger_templates")
+            msg = f"Template '{template_name}' not found in logger_templates"
+            if errors is not None:
+                errors.append(msg)
+                continue
+            raise ValueError(msg)
 
         # Overlay the template on the existing logger definition,
         # overwriting configs, etc.
@@ -290,6 +305,9 @@ def expand_templates(
                                                         effective_variables)
         except ValueError as e:
             logging.error(f"Error processing logger '{logger_name}': {e}")
+            if errors is not None:
+                errors.append(str(e))
+                continue
             raise
 
         # Clean up things that aren't needed
@@ -322,8 +340,11 @@ def expand_templates(
             template_name = config_def.get('config_template')
             template = config_templates.get(template_name)
             if not template:
-                raise ValueError(f"Template '{template_name}' not found in "
-                                 f"config_templates")
+                msg = f"Template '{template_name}' not found in config_templates"
+                if errors is not None:
+                    errors.append(msg)
+                    continue
+                raise ValueError(msg)
 
             # Setup effective variables by merging global, logger, and config
             # variables
@@ -366,6 +387,9 @@ def expand_templates(
                               f"logger '{logger_name}'")
                 logging.error(f"Available variables: "
                               f"{', '.join(sorted(effective_variables.keys()))}")  # noqa E501
+                if errors is not None:
+                    errors.append(str(e))
+                    continue
                 raise
 
             # Merge any extra non-template keys from the original config
@@ -590,7 +614,7 @@ def substitute_variables(config: ConfigValue,
 
 
 ###################
-def expand_logger_definitions(input_dict):
+def expand_logger_definitions(input_dict, errors: Optional[List[str]] = None):
     """
     Expand a configuration dictionary with loggers and configs structure.
 
@@ -693,8 +717,11 @@ def expand_logger_definitions(input_dict):
             # Verify each referenced config exists in top-level configs
             for config_name in logger_configs:
                 if config_name not in result['configs']:
-                    raise ValueError(f"Referenced config '{config_name}' "
-                                     "not found in top-level configs")
+                    msg = f"Referenced config '{config_name}' not found in top-level configs"
+                    if errors is not None:
+                        errors.append(msg)
+                        continue
+                    raise ValueError(msg)
 
         # Handle the case where configs is a dictionary of dictionaries
         elif isinstance(logger_configs, dict):
@@ -724,7 +751,7 @@ def expand_logger_definitions(input_dict):
 
 
 ###################
-def expand_modes(input_dict):
+def expand_modes(input_dict, errors: Optional[List[str]] = None):
     """
     Expand or infer the modes section of a cruise definition dict.
 
@@ -759,7 +786,7 @@ def expand_modes(input_dict):
     modes = input_dict.get('modes')
     if not modes:
         logging.warning('No "modes" section found. Generating default mode.')
-        return generate_default_mode(input_dict)
+        return generate_default_mode(input_dict, errors=errors)
 
     # 'modes' is there. Is it a dict?
     if not isinstance(modes, dict):
@@ -771,13 +798,25 @@ def expand_modes(input_dict):
 
     loggers = input_dict.get('loggers')
     for mode_name, mode_configs in input_dict.get('modes').items():
-        # Mode is already in expanded form - nothing to do
+        # Mode is already in expanded dict form: validate referenced configs exist
         if isinstance(mode_configs, dict):
+            top_level_configs = input_dict.get('configs', {})
+            for logger_name, config_name in mode_configs.items():
+                if config_name not in top_level_configs:
+                    msg = (f"Config '{config_name}' for logger '{logger_name}' "
+                           f"in mode '{mode_name}' not found in top-level configs")
+                    if errors is not None:
+                        errors.append(msg)
+                    else:
+                        raise ValueError(msg)
             continue
 
         if not isinstance(mode_configs, list):
-            raise ValueError(f"Mode {mode_name} must be either dict "
-                             f"or list; found {type(mode_configs)}")
+            msg = f"Mode {mode_name} must be either dict or list; found {type(mode_configs)}"
+            if errors is not None:
+                errors.append(msg)
+                continue
+            raise ValueError(msg)
 
         # If here, we've got a list of configs that should be run in this mode.
         # Figure out which loggers they belong to and expand into the normal
@@ -789,20 +828,30 @@ def expand_modes(input_dict):
             for logger_name, logger_def in loggers.items():
                 logger_configs = logger_def.get('configs')
                 if not logger_configs:
-                    raise ValueError(f"Logger {logger_name} has no configs!")
+                    msg = f"Logger {logger_name} has no configs!"
+                    if errors is not None:
+                        errors.append(msg)
+                        continue
+                    raise ValueError(msg)
                 if config_name in logger_configs:
                     mode_dict[logger_name] = config_name
                     found = True
                     break
             if not found:
-                raise ValueError(f"No logger found for {config_name} in "
-                                 f"mode {mode_name}")
+                msg = f"No logger found for {config_name} in mode {mode_name}"
+                if errors is not None:
+                    errors.append(msg)
+                    continue
+                raise ValueError(msg)
 
         # Now confirm that each logger has had a config defined
         for logger_name in loggers:
             if logger_name not in mode_dict:
-                raise ValueError(f"No config defined for {logger_name} "
-                                 f"in mode {mode_name}")
+                msg = f"No config defined for {logger_name} in mode {mode_name}"
+                if errors is not None:
+                    errors.append(msg)
+                else:
+                    raise ValueError(msg)
 
         # Replace the config list with newly-created config dict
         result['modes'][mode_name] = mode_dict
@@ -817,7 +866,7 @@ def expand_modes(input_dict):
 
 
 ###################
-def generate_default_mode(input_dict):
+def generate_default_mode(input_dict, errors: Optional[List[str]] = None):
     """
     If no 'modes' section is present in input_dict, create one that has a
     single mode, named 'default', using the first config defined for each
@@ -847,15 +896,22 @@ def generate_default_mode(input_dict):
     for logger_name, logger_data in input_dict['loggers'].items():
         # Skip if no configs key in this logger
         if 'configs' not in logger_data:
-            raise ValueError(f"Logger {logger_name} has no configs")
+            msg = f"Logger {logger_name} has no configs"
+            if errors is not None:
+                errors.append(msg)
+                continue
+            raise ValueError(msg)
         # Get the configs for this logger
         logger_configs = logger_data['configs']
 
         # Handle the case where configs is a list of strings
         if not isinstance(logger_configs, list) or not len(logger_configs):
-            raise ValueError(f"Logger {logger_name} config list is not a "
-                             f"list? Found type {type(logger_configs)}: "
-                             f"{logger_configs}")
+            msg = (f"Logger {logger_name} config list is not a list? "
+                   f"Found type {type(logger_configs)}: {logger_configs}")
+            if errors is not None:
+                errors.append(msg)
+                continue
+            raise ValueError(msg)
         default_mode[logger_name] = logger_configs[0]
     result['modes'] = {'default': default_mode}
     result['default_mode'] = 'default'
