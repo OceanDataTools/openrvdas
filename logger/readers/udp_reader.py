@@ -187,7 +187,7 @@ class UDPReader(Reader):
             if record.endswith(FRAGMENT_MARKER):
                 # UDPWriter fragmented this record because it was too large to
                 # send as a single datagram
-                logging.info('UDPrader.read: detected fragmented packet')
+                logging.info('UDPReader.read: detected fragmented packet')
                 record_buffer += record.rsplit(FRAGMENT_MARKER, maxsplit=1)[0]
                 logging.debug('record_buffer: %s', record_buffer)
             else:
