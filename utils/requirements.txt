@@ -17,9 +17,16 @@ setproctitle
 influxdb_client
 pyModbusTCP
 
-# For Geofencing
-geopandas
-shapely
+# For Geofencing (optional - used only by GeofenceTransform).
+#
+# Not installed by default: geopandas pulls in pyogrio, which has no prebuilt
+# wheel for ARMv6/ARMv7 and requires libgdal-dev to compile from source. That
+# makes a default install fail on Raspberry Pi and similar hardware.
+#
+# To enable geofencing:
+#   pip install '.[geofence]'
+#geopandas
+#shapely
 
 django
 djangorestframework
