@@ -17,19 +17,21 @@ dependencies = [
   "django",
   "djangorestframework",
   "drf-spectacular[sidecar]",
-  "geopandas",
   "influxdb_client",
   "parse",
   "psutil",
   "pyModbusTCP",
   "pyserial",
   "setproctitle",
-  "shapely",
   "uwsgi",
   "websockets"
 ]
 
 [project.optional-dependencies]
+geofence = [
+  "geopandas",
+  "shapely"
+]
 google = [
   "google-api-python-client",
   "google-auth-httplib2",
