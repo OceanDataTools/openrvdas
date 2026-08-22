@@ -6,18 +6,24 @@ Run with: ./manage.py test test.django_gui.test_api_views
 Or: python -m pytest test/django_gui/test_api_views.py
 """
 
-import django
 import os
 import unittest
 from unittest import mock
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'django_gui.settings')
-django.setup()
+# Django is an optional extra ("pip install '.[web]'"); skip rather than
+# error out at collection time if it isn't installed.
+try:
+    import django
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'django_gui.settings')
+    django.setup()
 
-from django.test import TestCase, override_settings  # noqa: E402
-from django.contrib.auth.models import User  # noqa: E402
-from rest_framework.test import APIClient  # noqa: E402
-from rest_framework.authtoken.models import Token  # noqa: E402
+    from django.test import TestCase, override_settings  # noqa: E402
+    from django.contrib.auth.models import User  # noqa: E402
+    from rest_framework.test import APIClient  # noqa: E402
+    from rest_framework.authtoken.models import Token  # noqa: E402
+except ImportError:
+    raise unittest.SkipTest(
+        "Django not installed; run: pip install '.[web]'")
 
 
 # Sample cruise configuration for testing

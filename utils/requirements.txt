@@ -8,7 +8,7 @@
 
 # Packages
 pyserial
-uwsgi
+#uwsgi   # see "Django web console" note below
 websockets
 PyYAML
 parse
@@ -28,15 +28,22 @@ pyModbusTCP
 #geopandas
 #shapely
 
-django
-djangorestframework
+# For the Django web console (optional - only needed for UI_TYPE=django).
+# Not installed by default: uwsgi needs a C compiler and OpenSSL headers,
+# which makes a default install fail on minimal or embedded systems. The
+# installer adds these automatically when a web UI is selected.
+#
+# To enable the Django console manually:
+#   pip install '.[web]'
+#django
+#djangorestframework
 
 # Version-restricted packages
 #django==5.0.3
 #djangorestframework==3.15.1
 
 #includes the swagger ui css and javascript
-drf-spectacular[sidecar]
+#drf-spectacular[sidecar]
 
 # For testing
 pytest

@@ -14,20 +14,25 @@ authors = [
 ]
 dependencies = [
   "PyYAML",
-  "django",
-  "djangorestframework",
-  "drf-spectacular[sidecar]",
   "influxdb_client",
   "parse",
   "psutil",
   "pyModbusTCP",
   "pyserial",
   "setproctitle",
-  "uwsgi",
   "websockets"
 ]
 
 [project.optional-dependencies]
+# Django web console (UI_TYPE=django) and the nginx/uwsgi stack that serves
+# it. Not needed to run loggers, or for the React UI, which has its own
+# dependencies under web_backend/.
+web = [
+  "django",
+  "djangorestframework",
+  "drf-spectacular[sidecar]",
+  "uwsgi"
+]
 geofence = [
   "geopandas",
   "shapely"
