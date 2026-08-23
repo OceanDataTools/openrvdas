@@ -783,11 +783,13 @@ function setup_python_packages {
           --trusted-host pypi.org --trusted-host files.pythonhosted.org \
           -e .
 
-        # Django/uwsgi are an optional extra so that logger-only installs
-        # (UI_TYPE=none) don't need a C compiler to build uwsgi. Pull them
-        # in whenever a web UI was requested.
-        if [[ "${UI_TYPE:-}" != "none" ]]; then
-            echo "Installing web UI packages (Django, uwsgi)."
+        # uwsgi is an optional extra: it's the only web-stack dependency that
+        # needs a C compiler, so logger-only (UI_TYPE=none) and React installs
+        # don't build it. Django itself is a core dependency, because
+        # LoggerManager uses the Django ORM regardless of UI choice.
+        # This condition matches the one guarding setup_uwsgi below.
+        if [[ "${UI_TYPE:-}" == "django" ]]; then
+            echo "Installing uwsgi for the Django web console."
             venv/bin/python venv/bin/pip3 install \
               --trusted-host pypi.org --trusted-host files.pythonhosted.org \
               -e '.[web]'
