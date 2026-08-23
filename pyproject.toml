@@ -12,24 +12,49 @@ license = { text = "MIT" }
 authors = [
   { name = "OpenRVDAS Contributors" }
 ]
+# Upper bounds are applied to packages that have broken OpenRVDAS (or are
+# known to break APIs) across major versions. See the "Version ceilings" note
+# at the bottom of this file before adding or bumping one.
 dependencies = [
   "PyYAML",
-  "django",
-  "djangorestframework",
-  "drf-spectacular[sidecar]",
-  "geopandas",
   "influxdb_client",
   "parse",
   "psutil",
   "pyModbusTCP",
   "pyserial",
   "setproctitle",
-  "shapely",
-  "uwsgi",
-  "websockets"
+  "websockets<18",
+
+  # Django is required regardless of which web UI (if any) is installed:
+  # LoggerManager uses the Django ORM as a backing store by default, and
+  # install_openrvdas.sh runs setup_django unconditionally. These are all
+  # pure Python, so they don't stand in the way of a compiler-free install
+  # - only uwsgi does, and that lives in the "web" extra below.
+  #
+  # django<6.1: 6.1 raised the minimum SQLite to 3.37, but RHEL 9, Rocky 9,
+  # Alma 9 and CentOS Stream 9 all ship SQLite 3.34.1, so every install on
+  # those platforms failed at the first ORM call. See issue #590.
+  "django>=4.2,<6.1",
+  "djangorestframework<4",
+  "drf-spectacular[sidecar]"
 ]
 
 [project.optional-dependencies]
+# Django web console (UI_TYPE=django) and the nginx/uwsgi stack that serves
+# it. Not needed to run loggers, or for the React UI, which has its own
+# dependencies under web_backend/.
+# The application server that fronts the Django console. This is the only
+# web-stack dependency that needs a C compiler and OpenSSL headers, which is
+# why it's split out: a logger-only or React install never builds it.
+# install_openrvdas.sh installs this extra when UI_TYPE=django, matching the
+# condition it already uses to run setup_uwsgi.
+web = [
+  "uwsgi"
+]
+geofence = [
+  "geopandas<2",
+  "shapely<3"
+]
 google = [
   "google-api-python-client",
   "google-auth-httplib2",
@@ -46,9 +71,27 @@ mqtt = [
   "paho-mqtt"
 ]
 dev = [
-  "pytest",
+  "pytest<10",
   "pdoc>=14.0.0"
 ]
+
+# ---------------------------------------------------------------------------
+# Version ceilings
+#
+# Dependencies here are otherwise deliberately unconstrained, so that patch and
+# minor releases flow through without a repo change. Upper bounds are added
+# only where a major version has broken OpenRVDAS, or where the package has a
+# track record of breaking its API across majors:
+#
+#   django                6.1 raised the minimum SQLite past what RHEL 9 ships
+#   djangorestframework   moves in lockstep with django
+#   websockets            has changed its client/server API across majors
+#   geopandas, shapely    move together and have broken APIs before
+#   pytest                collection/fixture behavior has changed across majors
+#
+# When a new major is validated against OpenRVDAS, bump the ceiling here - this
+# is the only place dependencies are declared. See issue #590.
+# ---------------------------------------------------------------------------
 
 [project.urls]
 Homepage = "https://openrvdas.org/"

@@ -3,10 +3,14 @@
 (ListenerFromLoggerConfig) and the command-line assembly helpers."""
 
 import copy
+import importlib
 import logging
+import os
+import sys
 import tempfile
 import unittest
 import warnings
+from unittest import mock
 
 from logger.listener.listen import (
     ListenerFromLoggerConfig, build_arg_parser, parse_addr_list, build_listener)
@@ -138,6 +142,68 @@ class TestCLIHelpers(unittest.TestCase):
         with open(self.dest) as f:
             out = [line.rstrip() for line in f.readlines()]
         self.assertEqual(out, ['pre line1', 'pre line2'])
+
+
+################################################################################
+class TestImportModule(unittest.TestCase):
+    """Configs may name modules that live in the OpenRVDAS tree but aren't
+    installed as packages (contrib/, local/). Verify _import_module() finds
+    them even when the OpenRVDAS root isn't on sys.path, which is the case
+    when listen.py is run as a script or via its console entry point.
+    """
+    # 'contrib' is a namespace package with no third-party dependencies of
+    # its own, which makes it a safe target to import in a test.
+    UNINSTALLED_PACKAGE = 'contrib'
+
+    ############################
+    def setUp(self):
+        self.orig_sys_path = list(sys.path)
+        self.orig_modules = dict(sys.modules)
+        self.openrvdas_root = os.path.dirname(os.path.dirname(os.path.dirname(
+            os.path.dirname(os.path.realpath(__file__)))))
+        # Simulate script invocation: OpenRVDAS root not on sys.path, and the
+        # package not already imported by some earlier test.
+        sys.path[:] = [p for p in sys.path
+                       if os.path.realpath(p or os.getcwd()) != self.openrvdas_root]
+        sys.modules.pop(self.UNINSTALLED_PACKAGE, None)
+
+    ############################
+    def tearDown(self):
+        sys.path[:] = self.orig_sys_path
+        sys.modules.clear()
+        sys.modules.update(self.orig_modules)
+
+    ############################
+    def test_plain_import_fails_without_root(self):
+        """Guard the premise: without the root on sys.path, a plain import
+        of an uninstalled package really does fail. If this ever starts
+        passing, the test below is no longer proving anything."""
+        with self.assertRaises(ModuleNotFoundError):
+            importlib.import_module(self.UNINSTALLED_PACKAGE)
+
+    ############################
+    def test_import_module_adds_root_and_succeeds(self):
+        module = ListenerFromLoggerConfig._import_module(self.UNINSTALLED_PACKAGE)
+        self.assertIsNotNone(module)
+        self.assertIn(self.openrvdas_root, sys.path)
+
+    ############################
+    def test_genuinely_missing_module_still_raises(self):
+        """A typo'd or absent module must still fail, not be papered over."""
+        with self.assertRaises(ModuleNotFoundError):
+            ListenerFromLoggerConfig._import_module('no_such_module_xyzzy')
+
+    ############################
+    def test_missing_sub_dependency_is_not_masked(self):
+        """If the module itself is found but one of *its* imports fails - e.g.
+        a contrib driver whose hardware library isn't installed - the error
+        must propagate immediately, with no pointless second attempt."""
+        err = ModuleNotFoundError("No module named 'somedep'", name='somedep')
+        with mock.patch('importlib.import_module', side_effect=err) as mock_import:
+            with self.assertRaises(ModuleNotFoundError) as ctx:
+                ListenerFromLoggerConfig._import_module('contrib.some.driver')
+        self.assertEqual(ctx.exception.name, 'somedep')
+        self.assertEqual(mock_import.call_count, 1)  # no retry
 
 
 ################################################################################

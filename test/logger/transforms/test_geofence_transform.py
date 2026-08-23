@@ -9,7 +9,7 @@ import time
 import unittest
 
 from logger.utils.das_record import DASRecord  # noqa: E402
-from logger.transforms.geofence_transform import GeofenceTransform  # noqa: E402
+from logger.transforms.geofence_transform import GeofenceTransform, GEOFENCE_ENABLED  # noqa: E402
 
 # EEZ of Togo
 BOUNDARY_GML = """<?xml version="1.0" encoding="UTF-8"?>
@@ -103,6 +103,9 @@ BOUNDARY_RESULT = [
 SECONDS_RESULT = [
     'leaving', None, None, None, 'entering', None, None, None, None, None, 'leaving', None, None
 ]
+@unittest.skipUnless(GEOFENCE_ENABLED,
+                     'geopandas/shapely not installed; '
+                     "run: pip install '.[geofence]'")
 class TestGeofenceTransform(unittest.TestCase):
     ############################
     @classmethod

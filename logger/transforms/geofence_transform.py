@@ -64,6 +64,10 @@ try:
 except ImportError:
     import_errors = True
 
+# Exported so that callers and tests can check whether geofencing is
+# available without having to import geopandas/shapely themselves.
+GEOFENCE_ENABLED = not import_errors
+
 import_pandas_errors = False
 try:
     import pandas as pd
@@ -116,8 +120,8 @@ class GeofenceTransform(Transform):
         # Only throw this error if user tries to actually use this code
         if import_errors:
             raise ImportError('GeofenceTransform requires installation of geopandas and '
-                              'shapely packages. Please run "pip install geopandas shapely" '
-                              'and retry.')
+                              'shapely packages. Please run "pip install \'.[geofence]\'" '
+                              '(or "pip install geopandas shapely") and retry.')
 
         super().__init__(**kwargs)  # processes 'quiet' and type hints
 

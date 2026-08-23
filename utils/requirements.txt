@@ -1,38 +1,42 @@
-# Python/pip requirements for OpenRVDAS. Invoked on installation by the
-# script utils/install_openrvdas.sh. See also requirements_mysql.txt for
-# files required to enable MySQL functionality with OpenRVDAS
+# ---------------------------------------------------------------------------
+# This file no longer declares OpenRVDAS's dependencies.
+#
+# All dependencies - required and optional - are declared in pyproject.toml,
+# which is now the single source of truth. Previously they were listed both
+# here and there, with nothing keeping the two in sync, and the installer ran
+# both: a package added in only one place either got installed twice or not at
+# all, depending on which file you edited. See issue #594.
+#
+# This file is kept so that existing scripts and documentation that run
+#
+#     pip install -r utils/requirements.txt
+#
+# keep working. All it does is install the project itself, which pulls in the
+# dependencies pyproject.toml declares.
+#
+# To add or change a dependency, edit pyproject.toml - NOT this file. Adding a
+# package here would install it without recording it as a project dependency,
+# which is the drift this change was made to eliminate.
+#
+# To install optional features, use the extras:
+#
+#     pip install -e '.[web]'        # uwsgi, to serve the Django console
+#     pip install -e '.[geofence]'   # GeofenceTransform (geopandas, shapely)
+#     pip install -e '.[mysql]'      # MySQL client libraries
+#     pip install -e '.[google]'     # Google Sheets writer
+#     pip install -e '.[mqtt]'       # MQTT reader/writer
+#     pip install -e '.[redis]'      # Redis reader/writer
+#     pip install -e '.[dev]'        # pytest, pdoc
+#
+# NOTE: pip resolves the "-e ." below relative to your current working
+# directory, not to the location of this file. Run it from the OpenRVDAS root:
+#
+#     cd /opt/openrvdas && pip install -r utils/requirements.txt
+# ---------------------------------------------------------------------------
 
 # Flags
 --trusted-host pypi.org
 --trusted-host files.pythonhosted.org
 
-# Packages
-pyserial
-uwsgi
-websockets
-PyYAML
-parse
-psutil
-setproctitle
-influxdb_client
-pyModbusTCP
-
-# For Geofencing
-geopandas
-shapely
-
-django
-djangorestframework
-
-# Version-restricted packages
-#django==5.0.3
-#djangorestframework==3.15.1
-
-#includes the swagger ui css and javascript
-drf-spectacular[sidecar]
-
-# For testing
-pytest
-
-# For generating API documentation (see docs/generate_html_docs.sh)
-pdoc>=14.0.0
+# Install OpenRVDAS and the dependencies declared in pyproject.toml.
+-e .

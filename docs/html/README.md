@@ -15,8 +15,9 @@ Run the generation script from the repo root:
 ```
 
 Requirements: `pdoc >= 14.0.0` and all OpenRVDAS dependencies installed.
-If using the project venv, pdoc is included in `utils/requirements.txt` and the
-script will activate the venv automatically.
+If using the project venv, pdoc comes from the `dev` extra
+(`pip install -e '.[dev]'`) and the script will activate the venv
+automatically.
 
 ## Live preview during development
 

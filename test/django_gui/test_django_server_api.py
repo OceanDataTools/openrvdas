@@ -4,17 +4,23 @@
 via "./manage.py test". Disabled until we figure out how to force it to use the test database.
 """
 
-import django
 import logging
 import os
 import sys
 import unittest
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'django_gui.settings')
-django.setup()
+# Django is an optional extra ("pip install '.[web]'"); skip rather than
+# error out at collection time if it isn't installed.
+try:
+    import django
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'django_gui.settings')
+    django.setup()
 
-from django.test import TestCase  # noqa: E402
-from django_gui.django_server_api import DjangoServerAPI  # noqa: E402
+    from django.test import TestCase  # noqa: E402
+    from django_gui.django_server_api import DjangoServerAPI  # noqa: E402
+except ImportError:
+    raise unittest.SkipTest(
+        "Django not installed; run: pip install '.[web]'")
 
 sample_test_0 = {
     "cruise": {

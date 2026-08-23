@@ -775,12 +775,29 @@ function setup_python_packages {
         export PKG_CONFIG_PATH="${OPENSSL_PREFIX}/lib/pkgconfig:${PKG_CONFIG_PATH:-}"
     fi
 
-    venv/bin/python venv/bin/pip3 install -r utils/requirements.txt
-
-    # Register the package so that direct script invocation works without
-    # sys.path hacks (requires pyproject.toml, present from v2.x onwards).
+    # Dependencies are declared in pyproject.toml; installing the project
+    # itself pulls them in. This also registers the package so that direct
+    # script invocation works without sys.path hacks.
     if [ -f pyproject.toml ]; then
-        venv/bin/python venv/bin/pip3 install -e .
+        venv/bin/python venv/bin/pip3 install \
+          --trusted-host pypi.org --trusted-host files.pythonhosted.org \
+          -e .
+
+        # uwsgi is an optional extra: it's the only web-stack dependency that
+        # needs a C compiler, so logger-only (UI_TYPE=none) and React installs
+        # don't build it. Django itself is a core dependency, because
+        # LoggerManager uses the Django ORM regardless of UI choice.
+        # This condition matches the one guarding setup_uwsgi below.
+        if [[ "${UI_TYPE:-}" == "django" ]]; then
+            echo "Installing uwsgi for the Django web console."
+            venv/bin/python venv/bin/pip3 install \
+              --trusted-host pypi.org --trusted-host files.pythonhosted.org \
+              -e '.[web]'
+        fi
+    else
+        # Pre-v2.x checkout with no pyproject.toml: fall back to the
+        # requirements file, which in those versions still listed packages.
+        venv/bin/python venv/bin/pip3 install -r utils/requirements.txt
     fi
 }
 
