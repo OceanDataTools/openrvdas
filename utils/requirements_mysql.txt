@@ -1,10 +1,27 @@
-# Python/pip requirements for MySQL functionality in OpenRVDAS. Invoked on
-# installation by the script utils/install_openrvdas.sh. See also requirements.txt.
+# ---------------------------------------------------------------------------
+# This file no longer declares OpenRVDAS's MySQL dependencies.
+#
+# They are declared in pyproject.toml as the "mysql" extra, which is now the
+# single source of truth. See utils/requirements.txt and issue #594.
+#
+# This file is kept so that existing scripts and documentation that run
+#
+#     pip install -r utils/requirements_mysql.txt
+#
+# keep working. It installs the project with its "mysql" extra.
+#
+# To add or change a MySQL dependency, edit the "mysql" extra in
+# pyproject.toml - NOT this file.
+#
+# NOTE: pip resolves the "-e" line below relative to your current working
+# directory, not to the location of this file. Run it from the OpenRVDAS root:
+#
+#     cd /opt/openrvdas && pip install -r utils/requirements_mysql.txt
+# ---------------------------------------------------------------------------
 
 # Flags
 --trusted-host pypi.org
 --trusted-host files.pythonhosted.org
 
-# Packages
-mysqlclient
-mysql-connector
+# Install OpenRVDAS plus the MySQL client libraries.
+-e .[mysql]

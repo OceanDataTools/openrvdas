@@ -775,20 +775,27 @@ function setup_python_packages {
         export PKG_CONFIG_PATH="${OPENSSL_PREFIX}/lib/pkgconfig:${PKG_CONFIG_PATH:-}"
     fi
 
-    venv/bin/python venv/bin/pip3 install -r utils/requirements.txt
-
-    # Register the package so that direct script invocation works without
-    # sys.path hacks (requires pyproject.toml, present from v2.x onwards).
+    # Dependencies are declared in pyproject.toml; installing the project
+    # itself pulls them in. This also registers the package so that direct
+    # script invocation works without sys.path hacks.
     if [ -f pyproject.toml ]; then
-        venv/bin/python venv/bin/pip3 install -e .
+        venv/bin/python venv/bin/pip3 install \
+          --trusted-host pypi.org --trusted-host files.pythonhosted.org \
+          -e .
 
         # Django/uwsgi are an optional extra so that logger-only installs
         # (UI_TYPE=none) don't need a C compiler to build uwsgi. Pull them
         # in whenever a web UI was requested.
         if [[ "${UI_TYPE:-}" != "none" ]]; then
             echo "Installing web UI packages (Django, uwsgi)."
-            venv/bin/python venv/bin/pip3 install -e '.[web]'
+            venv/bin/python venv/bin/pip3 install \
+              --trusted-host pypi.org --trusted-host files.pythonhosted.org \
+              -e '.[web]'
         fi
+    else
+        # Pre-v2.x checkout with no pyproject.toml: fall back to the
+        # requirements file, which in those versions still listed packages.
+        venv/bin/python venv/bin/pip3 install -r utils/requirements.txt
     fi
 }
 
