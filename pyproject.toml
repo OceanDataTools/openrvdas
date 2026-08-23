@@ -12,6 +12,9 @@ license = { text = "MIT" }
 authors = [
   { name = "OpenRVDAS Contributors" }
 ]
+# Upper bounds are applied to packages that have broken OpenRVDAS (or are
+# known to break APIs) across major versions. See the "Version ceilings" note
+# at the bottom of this file before adding or bumping one.
 dependencies = [
   "PyYAML",
   "influxdb_client",
@@ -20,7 +23,7 @@ dependencies = [
   "pyModbusTCP",
   "pyserial",
   "setproctitle",
-  "websockets"
+  "websockets<18"
 ]
 
 [project.optional-dependencies]
@@ -28,14 +31,17 @@ dependencies = [
 # it. Not needed to run loggers, or for the React UI, which has its own
 # dependencies under web_backend/.
 web = [
-  "django",
-  "djangorestframework",
+  # django<6.1: 6.1 raised the minimum SQLite to 3.37, but RHEL 9, Rocky 9,
+  # Alma 9 and CentOS Stream 9 all ship SQLite 3.34.1, so every install on
+  # those platforms failed at the first ORM call. See issue #590.
+  "django>=4.2,<6.1",
+  "djangorestframework<4",
   "drf-spectacular[sidecar]",
   "uwsgi"
 ]
 geofence = [
-  "geopandas",
-  "shapely"
+  "geopandas<2",
+  "shapely<3"
 ]
 google = [
   "google-api-python-client",
@@ -53,9 +59,27 @@ mqtt = [
   "paho-mqtt"
 ]
 dev = [
-  "pytest",
+  "pytest<10",
   "pdoc>=14.0.0"
 ]
+
+# ---------------------------------------------------------------------------
+# Version ceilings
+#
+# Dependencies here are otherwise deliberately unconstrained, so that patch and
+# minor releases flow through without a repo change. Upper bounds are added
+# only where a major version has broken OpenRVDAS, or where the package has a
+# track record of breaking its API across majors:
+#
+#   django                6.1 raised the minimum SQLite past what RHEL 9 ships
+#   djangorestframework   moves in lockstep with django
+#   websockets            has changed its client/server API across majors
+#   geopandas, shapely    move together and have broken APIs before
+#   pytest                collection/fixture behavior has changed across majors
+#
+# When a new major is validated against OpenRVDAS, bump the ceiling here - this
+# is the only place dependencies are declared. See issue #590.
+# ---------------------------------------------------------------------------
 
 [project.urls]
 Homepage = "https://openrvdas.org/"

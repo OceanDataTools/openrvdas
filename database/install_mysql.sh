@@ -407,12 +407,18 @@ function setup_python_packages {
       --trusted-host pypi.org --trusted-host files.pythonhosted.org \
       wheel  # To help with the rest of the installations
 
-    pip install -r utils/requirements.txt
+    # Dependencies are declared in pyproject.toml; installing the project
+    # itself pulls them in.
+    pip install \
+      --trusted-host pypi.org --trusted-host files.pythonhosted.org \
+      -e .
 
     # If we're installing database, then also install relevant
-    # Python clients.
+    # Python clients, declared as the "mysql" extra.
     if [ $INSTALL_MYSQL == 'yes' ]; then
-      pip install -r utils/requirements_mysql.txt
+      pip install \
+        --trusted-host pypi.org --trusted-host files.pythonhosted.org \
+        -e '.[mysql]'
     fi
 }
 ###########################################################################
