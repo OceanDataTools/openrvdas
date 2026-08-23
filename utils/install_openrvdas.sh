@@ -781,6 +781,14 @@ function setup_python_packages {
     # sys.path hacks (requires pyproject.toml, present from v2.x onwards).
     if [ -f pyproject.toml ]; then
         venv/bin/python venv/bin/pip3 install -e .
+
+        # Django/uwsgi are an optional extra so that logger-only installs
+        # (UI_TYPE=none) don't need a C compiler to build uwsgi. Pull them
+        # in whenever a web UI was requested.
+        if [[ "${UI_TYPE:-}" != "none" ]]; then
+            echo "Installing web UI packages (Django, uwsgi)."
+            venv/bin/python venv/bin/pip3 install -e '.[web]'
+        fi
     fi
 }
 
