@@ -45,6 +45,8 @@ import pprint
 import re
 import sys
 
+from os.path import dirname, realpath
+
 
 # flake8: noqa E402, F406
 from logger.readers import *
@@ -135,6 +137,40 @@ class ListenerFromLoggerConfig(Listener):
         return kwargs
 
     ############################
+    @staticmethod
+    def _import_module(class_module_name):
+        """Import a module named by a 'module' declaration in a logger config.
+
+        Configs may name modules that live in the OpenRVDAS tree but are
+        deliberately not installed as packages: contrib/ and local/ are both
+        excluded from [tool.setuptools.packages.find] in pyproject.toml. When
+        listen.py is run as a script, or via its 'listen' console entry point,
+        sys.path[0] is the script's own directory rather than the OpenRVDAS
+        root, so those modules can't be found. Add the root and retry once.
+
+        (Loggers started by LoggerRunner don't hit this: it runs them as
+        'python -m logger.listener.listen' with cwd set to the OpenRVDAS root,
+        which puts the root on sys.path already.)
+        """
+        try:
+            return importlib.import_module(class_module_name)
+        except ModuleNotFoundError as e:
+            # Only retry if the requested module's own top-level package is
+            # what's missing. If the module was found but one of *its* imports
+            # failed - e.g. a contrib driver whose hardware library isn't
+            # installed - the repo root won't help, and retrying would only
+            # obscure the real error.
+            if e.name != class_module_name.split('.')[0]:
+                raise
+            openrvdas_root = dirname(dirname(dirname(realpath(__file__))))
+            if openrvdas_root in sys.path:
+                raise
+            logging.debug('Module "%s" not found; adding "%s" to sys.path and '
+                          'retrying.', class_module_name, openrvdas_root)
+            sys.path.append(openrvdas_root)
+            return importlib.import_module(class_module_name)
+
+    ############################
     def _class_kwargs_from_config(self, class_json):
         """Parse a class's kwargs from a JSON string."""
         if not type(class_json) in [list, dict]:
@@ -153,7 +189,7 @@ class ListenerFromLoggerConfig(Listener):
         # Are they telling us where the class definition is? If so import it
         class_module_name = class_json.get('module')
         if class_module_name is not None:
-            module = importlib.import_module(class_module_name)
+            module = self._import_module(class_module_name)
             class_const = getattr(module, class_name, None)
             if not class_const:
                 raise ValueError('No component class "{}" found in module "{}"'.format(
