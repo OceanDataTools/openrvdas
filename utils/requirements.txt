@@ -20,7 +20,7 @@
 #
 # To install optional features, use the extras:
 #
-#     pip install -e '.[web]'        # Django web console (django, uwsgi)
+#     pip install -e '.[web]'        # uwsgi, to serve the Django console
 #     pip install -e '.[geofence]'   # GeofenceTransform (geopandas, shapely)
 #     pip install -e '.[mysql]'      # MySQL client libraries
 #     pip install -e '.[google]'     # Google Sheets writer
