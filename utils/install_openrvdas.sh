@@ -824,10 +824,16 @@ function setup_nginx {
         SSL_COMMENT='#'   # do comment out SSL stuff
     fi
 
-    if [[ "$UI_TYPE" == "react" ]]; then
+    # Write the nginx config for BOTH UIs, not just the one selected on this
+    # run. Only the selected UI's config is actually loaded (supervisor
+    # decides that), but generating both keeps their port/SSL settings in
+    # sync. Otherwise the unselected UI's config stays frozen at whatever
+    # answers were given the last time that UI was installed, and switching
+    # to it later - e.g. via utils/switch_ui.sh - silently serves on a
+    # different port, or without SSL, than the UI it replaced.
+    setup_nginx_django
+    if [ -d "${INSTALL_ROOT}/openrvdas/web_frontend" ]; then
         setup_nginx_react
-    else
-        setup_nginx_django
     fi
 }
 
