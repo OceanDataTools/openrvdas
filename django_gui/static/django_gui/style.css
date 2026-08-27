@@ -325,6 +325,17 @@ footer {
     vertical-align: top;
     /*font-weight:bold;*/
 }
+.config_yaml {
+    background-color:white;
+    border:1px solid var(--grey);
+    padding:6px;
+    margin:0px;
+    max-height:400px;
+    overflow:auto;
+    font-size:small;
+    resize:vertical;
+}
+
 .stderr_window {
     height: 30px;
     min-height:30px;

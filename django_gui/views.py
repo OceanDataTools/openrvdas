@@ -2,8 +2,8 @@ from django.contrib import auth
 from .django_server_api import DjangoServerAPI
 from django_gui.settings import FILECHOOSER_DIRS
 from django_gui.settings import WEBSOCKET_DATA_SERVER
-import json
 import logging
+import yaml
 
 from json import JSONDecodeError
 from os import listdir
@@ -215,15 +215,24 @@ def edit_config(request, logger_id):
     default_config = api.get_logger_config_name(logger_id, active_mode)
     current_config = api.get_logger_config_name(logger_id)
 
-    # dict of config_name: config_json
-    config_map = {config_name: api.get_logger_config(config_name)
-                  for config_name in config_options}
+    # dict of config_name: config_yaml. Configs are stored as JSON, but
+    # they're written and read by humans as YAML, so that's what we show.
+    # sort_keys=False keeps each config's keys in their stored order rather
+    # than alphabetizing them.
+    config_map = {
+        config_name: yaml.safe_dump(api.get_logger_config(config_name),
+                                    default_flow_style=False,
+                                    sort_keys=False,
+                                    allow_unicode=True,
+                                    width=100)
+        for config_name in config_options
+    }
 
     return render(request, 'django_gui/edit_config.html',
                   {
                       'logger_id': logger_id,
                       'current_config': current_config,
-                      'config_map': json.dumps(config_map),
+                      'config_map': config_map,
                       'default_config': default_config,
                       'config_options': config_options,
                       'websocket_server': WEBSOCKET_DATA_SERVER
