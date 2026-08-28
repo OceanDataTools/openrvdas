@@ -386,6 +386,7 @@ function check_nginx_configs {
 function check_prerequisites {
     TARGET=$1
     MISSING=
+    MISSING_PACKAGES=
 
     if [ "$TARGET" == 'django' ]; then
         if [ ! -f "$DJANGO_FILE" ]; then
@@ -409,19 +410,55 @@ function check_prerequisites {
             "${OPENRVDAS_ROOT}/web_backend/.env"; do
             [ -e "$REQUIRED" ] || MISSING="${MISSING}  $REQUIRED\n"
         done
+
+        # uvicorn runs out of web_backend/.venv, but logger_manager runs out of
+        # the MAIN venv - and with --database fastapi it imports web_backend's
+        # async API, so FastAPI's packages have to be in the main venv too. The
+        # installer puts them there only while installing the React UI, so an
+        # install that has since been re-run for Django (which recreates the
+        # venv) ends up with a complete-looking React tree whose logger_manager
+        # dies on startup with "No module named 'fastapi'".
+        MAIN_PYTHON="${OPENRVDAS_ROOT}/venv/bin/python"
+        if [ -x "$MAIN_PYTHON" ] && \
+           ! "$MAIN_PYTHON" -c 'import fastapi, sqlalchemy, aiosqlite, greenlet, pydantic_settings' \
+             > /dev/null 2>&1; then
+            MISSING_PACKAGES="yes"
+        fi
     fi
 
-    if [ -n "$MISSING" ]; then
+    if [ -n "$MISSING" ] || [ -n "$MISSING_PACKAGES" ]; then
         echo
-        echo "ERROR: the '${TARGET}' UI does not look fully installed. Missing:"
-        echo -e "$MISSING"
-        echo "This script only switches between UIs that have already been"
-        echo "installed; it does not build them. To install the '${TARGET}' UI,"
-        echo "re-run the installer and select it:"
-        echo
-        echo "  bash ${OPENRVDAS_ROOT}/utils/install_openrvdas.sh"
-        echo
-        echo "After that, this script can switch back and forth freely."
+        echo "ERROR: the '${TARGET}' UI does not look fully installed."
+
+        if [ -n "$MISSING" ]; then
+            echo
+            echo "Missing files:"
+            echo -e "$MISSING"
+        fi
+
+        if [ -n "$MISSING_PACKAGES" ]; then
+            echo
+            echo "The React UI's files are present, but ${OPENRVDAS_ROOT}/venv is"
+            echo "missing the packages logger_manager needs to talk to the FastAPI"
+            echo "database. Switching now would leave logger_manager dead with"
+            echo "\"No module named 'fastapi'\". Install them into the main venv:"
+            echo
+            echo "  ${OPENRVDAS_ROOT}/venv/bin/pip install \\"
+            echo "      'fastapi>=0.135.0' 'sqlalchemy>=2.0' 'aiosqlite>=0.22' \\"
+            echo "      'greenlet>=3.2' 'pydantic>=2.0' 'pydantic-settings>=2.0'"
+            echo
+            echo "then run this script again."
+        fi
+
+        if [ -n "$MISSING" ]; then
+            echo "This script only switches between UIs that have already been"
+            echo "installed; it does not build them. To install the '${TARGET}' UI,"
+            echo "re-run the installer and select it:"
+            echo
+            echo "  bash ${OPENRVDAS_ROOT}/utils/install_openrvdas.sh"
+            echo
+            echo "After that, this script can switch back and forth freely."
+        fi
         exit_gracefully
     fi
 }
