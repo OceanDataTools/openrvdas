@@ -11,13 +11,15 @@ try:
     import paho.mqtt.client as mqtt  # import the client | $ pip installing paho-mqtt is necessary
     PAHO_ENABLED = True
 
-    # Check which paho version is being used
-    from pkg_resources import get_distribution, packaging  # noqa: E402
-    PAHO_VERSION = get_distribution('paho-mqtt').version
-    if packaging.version.parse(PAHO_VERSION) >= packaging.version.parse('2.0.0'):
-        USE_VERSION_FLAG = True
-    else:
-        USE_VERSION_FLAG = False
+    # Check which paho version is being used, so we know how to call it.
+    # importlib.metadata is stdlib; the pkg_resources this used to rely on
+    # ships with setuptools, which recent Python versions no longer install
+    # into a venv by default. When it was missing, the ModuleNotFoundError
+    # landed in the handler below and MQTTReader reported that paho-mqtt
+    # wasn't installed, even though it was.
+    from importlib.metadata import version as _package_version  # noqa: E402
+    PAHO_VERSION = _package_version('paho-mqtt')
+    USE_VERSION_FLAG = int(PAHO_VERSION.split('.')[0]) >= 2
 except ModuleNotFoundError:
     PAHO_ENABLED = False
 
