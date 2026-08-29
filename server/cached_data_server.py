@@ -119,10 +119,19 @@ try:
         from websockets.exceptions import ConnectionClosed
     except ImportError:
         from websockets.connection import ConnectionClosed
-    # websockets 12+ (asyncio server) exposes http11.Response for process_request handlers
+    # The HTTP-route handler below is only usable with the asyncio server
+    # implementation, whose process_request() receives (connection, request).
+    # The legacy server passes (path, request_headers) instead, so installing
+    # the handler there makes every handshake fail with AttributeError -> 500.
+    #
+    # websockets.http11 alone does not distinguish the two: it has existed
+    # since websockets 10, while websockets.serve only became the asyncio
+    # implementation in 14.0. Test what serve() actually is. This matters on
+    # Python 3.8 (e.g. Ubuntu 20), where websockets >= 14 cannot be installed
+    # and pip resolves to 13.x.
     try:
         from websockets.http11 import Response as _WsResponse, Headers as _WsHeaders
-        _WEBSOCKETS_HAS_HTTP11 = True
+        _WEBSOCKETS_HAS_HTTP11 = websockets.serve.__module__.startswith('websockets.asyncio')
     except ImportError:
         _WEBSOCKETS_HAS_HTTP11 = False
 except ModuleNotFoundError:

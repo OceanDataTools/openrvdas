@@ -91,6 +91,14 @@ dev = [
 #
 # When a new major is validated against OpenRVDAS, bump the ceiling here - this
 # is the only place dependencies are declared. See issue #590.
+#
+# No LOWER bound on websockets, deliberately. websockets 14 moved serve() from
+# the legacy implementation to the asyncio one, and CachedDataServer's HTTP
+# routes (/fields, /latest/) only work with the latter - it detects which is
+# installed and skips those routes on older versions. A floor of >=14 would be
+# tempting but would make Python 3.8 installs (Ubuntu 20) unresolvable, since
+# websockets 14 requires Python >=3.9. Those installs get a working
+# CachedDataServer without the HTTP routes, which is the intended trade.
 # ---------------------------------------------------------------------------
 
 [project.urls]
