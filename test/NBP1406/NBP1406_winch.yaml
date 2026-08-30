@@ -1,3 +1,9 @@
+# NOTE: the LogfileWriter paths below write under /var/tmp, which is
+# deliberately disposable - most Linux distributions delete anything in
+# /var/tmp untouched for 30 days. Point them at a real data location before
+# using this for anything you intend to keep; see the note on file_root in
+# NBP1406_cruise.yaml.
+
 # A sample quality control logger for winch data. The waterfall winch
 # logger (cwnc) outputs raw data to port 6224 and parsed fields to 6225.
 # A QC logger listens to port 6225 and passes fields it receives through a
