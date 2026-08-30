@@ -294,6 +294,11 @@ function set_default_variables {
     DEFAULT_INSTALL_SIMULATE_NBP=no
     DEFAULT_RUN_SIMULATE_NBP=no
 
+    # Port the CachedDataServer listens on. Internal: browsers reach the CDS
+    # through nginx at <server>/cds-ws, never on this port directly. Worth
+    # changing only if something else on the machine already uses 8766.
+    DEFAULT_CACHED_DATA_SERVER_PORT=8766
+
     DEFAULT_UI_TYPE=django
     DEFAULT_EXPOSE_API_DOCS=no
     DEFAULT_WEB_ADMIN_USER=
@@ -346,6 +351,8 @@ DEFAULT_RVDAS_USER=$RVDAS_USER
 DEFAULT_INSTALL_FIREWALLD=$INSTALL_FIREWALLD
 DEFAULT_INSTALL_UFW=$INSTALL_UFW
 DEFAULT_OPENRVDAS_AUTOSTART=$OPENRVDAS_AUTOSTART
+
+DEFAULT_CACHED_DATA_SERVER_PORT=$CACHED_DATA_SERVER_PORT
 
 DEFAULT_UI_TYPE=$UI_TYPE
 DEFAULT_EXPOSE_API_DOCS=$EXPOSE_API_DOCS
@@ -932,10 +939,10 @@ http {
             autoindex on;
         }
 
-        # Internally, Cached Data Server operates on port 8766; we proxy
-        # it externally, serve cached data server at $SERVER_PORT/cds-ws
+        # Internally, Cached Data Server operates on port ${CACHED_DATA_SERVER_PORT};
+        # we proxy it externally, serving cached data at $SERVER_PORT/cds-ws
         location /cds-ws {
-            proxy_pass http://localhost:8766;
+            proxy_pass http://localhost:${CACHED_DATA_SERVER_PORT};
             proxy_http_version 1.1;
             proxy_set_header Upgrade \$http_upgrade;
             proxy_set_header Connection \$connection_upgrade;
@@ -1034,7 +1041,7 @@ http {
 
         # CachedDataServer WebSocket proxy
         location /cds-ws {
-            proxy_pass http://localhost:8766;
+            proxy_pass http://localhost:${CACHED_DATA_SERVER_PORT};
             proxy_http_version 1.1;
             proxy_set_header Upgrade \$http_upgrade;
             proxy_set_header Connection \$connection_upgrade;
@@ -1132,7 +1139,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES=15
 REFRESH_TOKEN_EXPIRE_DAYS=7
 FRONTEND_URL=${FRONTEND_URL}
 CACHED_DATA_SERVER_HOST=localhost
-CACHED_DATA_SERVER_PORT=8766
+CACHED_DATA_SERVER_PORT=${CACHED_DATA_SERVER_PORT}
 ENVIRONMENT=Production
 DEFAULT_ADMIN_USERNAME=${WEB_ADMIN_USER}
 DEFAULT_ADMIN_PASSWORD=${WEB_ADMIN_PASS}
@@ -1152,7 +1159,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES=15
 REFRESH_TOKEN_EXPIRE_DAYS=7
 FRONTEND_URL=${FRONTEND_URL}
 CACHED_DATA_SERVER_HOST=localhost
-CACHED_DATA_SERVER_PORT=8766
+CACHED_DATA_SERVER_PORT=${CACHED_DATA_SERVER_PORT}
 ENVIRONMENT=Production
 ENVDEFAULTS
 )
@@ -1568,7 +1575,7 @@ EOF
     cat > $TEMP_FILE <<EOF
 ; Supervisor configurations for LoggerManager
 [program:logger_manager]
-command=${VENV_BIN}/python server/logger_manager.py --database ${LOGGER_MANAGER_DATABASE} --data_server_websocket :8766 -v -V --no-console
+command=${VENV_BIN}/python server/logger_manager.py --database ${LOGGER_MANAGER_DATABASE} --data_server_websocket :${CACHED_DATA_SERVER_PORT} -v -V --no-console
 environment=PYTHONPATH="${INSTALL_ROOT}/openrvdas",PATH="${VENV_BIN}:/usr/bin:/usr/local/bin"
 directory=${INSTALL_ROOT}/openrvdas
 priority=20
@@ -1588,7 +1595,7 @@ EOF
     cat > $TEMP_FILE <<EOF
 ; Supervisor configurations for LoggerManager and CachedDataServer
 [program:cached_data_server]
-command=${VENV_BIN}/python server/cached_data_server.py --port 8766 --disk_cache /var/tmp/openrvdas/disk_cache --max_records 8640 -v
+command=${VENV_BIN}/python server/cached_data_server.py --port ${CACHED_DATA_SERVER_PORT} --disk_cache /var/tmp/openrvdas/disk_cache --max_records 8640 -v
 environment=PYTHONPATH="${INSTALL_ROOT}/openrvdas",PATH="${VENV_BIN}:/usr/bin:/usr/local/bin"
 directory=${INSTALL_ROOT}/openrvdas
 priority=10
@@ -1718,10 +1725,9 @@ function setup_selinux {
     setsebool -P httpd_can_network_connect 1
     semanage permissive -a httpd_t
 
-    # Label the CachedDataServer's fixed port so httpd_t can connect to it.
-    # Port 8766 is the universal CDS port across all OpenRVDAS installations.
-    semanage port -a -t http_port_t -p tcp 8766 2>/dev/null || \
-        semanage port -m -t http_port_t -p tcp 8766
+    # Label the CachedDataServer's port so httpd_t can connect to it.
+    semanage port -a -t http_port_t -p tcp ${CACHED_DATA_SERVER_PORT} 2>/dev/null || \
+        semanage port -m -t http_port_t -p tcp ${CACHED_DATA_SERVER_PORT}
 
     echo "Done configuring SELinux permissions"
 }
@@ -2204,6 +2210,19 @@ fi
 
 
 #########################################################################
+# Port for the CachedDataServer
+echo
+echo "#####################################################################"
+echo "The CachedDataServer holds recent data in memory and serves it to the"
+echo "web console and display widgets. Browsers reach it through the web"
+echo "server at <hostname>/cds-ws, so this port is internal and does not"
+echo "need to be open to the outside. Change it only if something else on"
+echo "this machine already uses it."
+echo
+read -p "Port for the CachedDataServer? ($DEFAULT_CACHED_DATA_SERVER_PORT) " CACHED_DATA_SERVER_PORT
+CACHED_DATA_SERVER_PORT=${CACHED_DATA_SERVER_PORT:-$DEFAULT_CACHED_DATA_SERVER_PORT}
+
+#########################################################################
 # Choose web UI
 echo
 echo "#####################################################################"
@@ -2485,3 +2504,23 @@ echo
 echo "To activate the virtual environment in a new terminal, run:"
 echo "  source ${INSTALL_ROOT}/openrvdas/venv/bin/activate"
 echo
+
+# Cruise definitions carry their own copy of the CDS address, in the
+# data_server variable that logger templates interpolate. The installer has
+# no business rewriting a site's cruise files, so say something instead.
+if [ "$CACHED_DATA_SERVER_PORT" != '8766' ]; then
+    echo "#####################################################################"
+    echo "NOTE: the CachedDataServer is configured on port ${CACHED_DATA_SERVER_PORT},"
+    echo "not the default 8766."
+    echo
+    echo "Cruise definitions carry their own copy of that address, in the"
+    echo "'data_server' variable that logger templates interpolate. Loggers"
+    echo "that write to or read from the CDS will not find it until that"
+    echo "variable matches, e.g.:"
+    echo
+    echo "  variables:"
+    echo "    data_server: localhost:${CACHED_DATA_SERVER_PORT}"
+    echo
+    echo "The sample definitions under test/ still say 8766."
+    echo
+fi
