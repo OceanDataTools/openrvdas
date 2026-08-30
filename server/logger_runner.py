@@ -6,7 +6,7 @@ Can be run from the command line as follows:
 ```
    server/logger_runner.py \
      --config test/NBP1406/NBP1406_cruise.yaml:gyr1->net \
-     --stderr_filename /var/log/openrvdas/gyr1.stderr
+     --stderr_filename /var/log/openrvdas/loggers/gyr1.stderr
 ```
 
 But its main intended use is to be invoked by another module (such as
@@ -164,6 +164,20 @@ class LoggerRunner:
         # receive from the child to a rotating file. delay=True so we don't
         # create the file until there's something to write.
         if stderr_filename:
+            # Make sure the directory exists. The installer creates
+            # /var/log/openrvdas/loggers, but an install upgraded without
+            # re-running it - or a custom --stderr_file_pattern - can point
+            # somewhere that doesn't exist yet. Because the handler is opened
+            # with delay=True it would construct happily and then fail on the
+            # first write, where logging swallows the error and the line is
+            # simply lost.
+            stderr_dir = os.path.dirname(stderr_filename)
+            if stderr_dir:
+                try:
+                    os.makedirs(stderr_dir, exist_ok=True)
+                except OSError as e:
+                    logging.error('Unable to create directory "%s" for logger '
+                                  'stderr: %s', stderr_dir, e)
             self.stderr_file_handler = RotatingFileHandler(
                 stderr_filename, maxBytes=STDERR_MAX_BYTES,
                 backupCount=STDERR_BACKUP_COUNT, delay=True)

@@ -97,7 +97,7 @@ class LoggerManager:
     ############################
     def __init__(self,
                  api, data_server_websocket=None,
-                 stderr_file_pattern='/var/log/openrvdas/{logger}.stderr',
+                 stderr_file_pattern='/var/log/openrvdas/loggers/{logger}.stderr',
                  max_tries=DEFAULT_MAX_TRIES, min_uptime=DEFAULT_MIN_UPTIME,
                  interval=0.5, logger_log_level=logging.WARNING):
         """Read desired logger configs from the data store and try to keep
@@ -112,7 +112,7 @@ class LoggerManager:
         stderr_file_pattern - Pattern into which logger name will be
               interpolated to create the file path/name to which the
               logger's stderr will be written. E.g.
-              '/var/log/openrvdas/{logger}.stderr' If
+              '/var/log/openrvdas/loggers/{logger}.stderr' If
               data_server_websocket is defined, will also write logger
               stderr to it.
 
@@ -634,11 +634,11 @@ if __name__ == '__main__':  # noqa: C901
                         'to use.')
 
     parser.add_argument('--stderr_file_pattern', dest='stderr_file_pattern',
-                        default='/var/log/openrvdas/{logger}.stderr',
+                        default='/var/log/openrvdas/loggers/{logger}.stderr',
                         help='Pattern into which logger name will be '
                         'interpolated to create the file path/name to which '
                         'the logger\'s stderr will be written. E.g. '
-                        '\'/var/log/openrvdas/{logger}.stderr\'')
+                        '\'/var/log/openrvdas/loggers/{logger}.stderr\'')
 
     # Arguments for cached data server
     parser.add_argument('--data_server_websocket', dest='data_server_websocket',

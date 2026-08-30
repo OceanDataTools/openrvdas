@@ -2387,10 +2387,12 @@ sudo chmod 755 ${INSTALL_ROOT}/openrvdas
 sudo chown -R ${RVDAS_USER} ${INSTALL_ROOT}/openrvdas
 sudo chgrp -R ${RVDAS_GROUP} ${INSTALL_ROOT}/openrvdas
 
-# Create openrvdas log and tmp directories
-sudo mkdir -p /var/log/openrvdas /var/tmp/openrvdas
-sudo chown $RVDAS_USER /var/log/openrvdas /var/tmp/openrvdas
-sudo chgrp $RVDAS_GROUP /var/log/openrvdas /var/tmp/openrvdas
+# Create openrvdas log and tmp directories. Per-logger stderr goes in the
+# loggers/ subdirectory so it isn't interleaved with the stderr of the
+# services supervisord runs, whose files sit at the top level.
+sudo mkdir -p /var/log/openrvdas/loggers /var/tmp/openrvdas
+sudo chown $RVDAS_USER /var/log/openrvdas /var/log/openrvdas/loggers /var/tmp/openrvdas
+sudo chgrp $RVDAS_GROUP /var/log/openrvdas /var/log/openrvdas/loggers /var/tmp/openrvdas
 
 echo
 echo "#####################################################################"

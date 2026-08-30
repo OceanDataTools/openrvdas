@@ -34,6 +34,63 @@ publish, distribute, sublicense, and/or sell...""".split('\n')
 
 
 ################################################################################
+class TestLoggerRunnerStderrPath(unittest.TestCase):
+    """LoggerRunner has to create the directory its stderr file lives in.
+
+    Per-logger stderr defaults to /var/log/openrvdas/loggers/, which the
+    installer creates - but an install upgraded without re-running it, or a
+    custom --stderr_file_pattern, can point somewhere that doesn't exist. The
+    handler is opened with delay=True, so a missing directory would not fail
+    at construction: it would fail on the first write, where logging swallows
+    the error and the stderr line is simply lost.
+    """
+
+    ############################
+    def test_creates_missing_stderr_directory(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            stderr_file = os.path.join(tmpdir, 'loggers', 'gyr1.stderr')
+            self.assertFalse(os.path.exists(os.path.dirname(stderr_file)))
+
+            runner = LoggerRunner(config=CONFIG, name='gyr1',
+                                  stderr_filename=stderr_file)
+            self.assertTrue(os.path.isdir(os.path.dirname(stderr_file)),
+                            'LoggerRunner should have created the directory')
+
+            # And the handler can actually write there.
+            runner.stderr_file_handler.emit(
+                logging.LogRecord('gyr1', logging.INFO, '', 0,
+                                  'a line of stderr', None, None))
+            runner.stderr_file_handler.close()
+            with open(stderr_file) as f:
+                self.assertIn('a line of stderr', f.read())
+
+    ############################
+    def test_nested_missing_directories(self):
+        """Several levels deep, as a non-default pattern might be."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            stderr_file = os.path.join(tmpdir, 'a', 'b', 'c', 's330.stderr')
+            LoggerRunner(config=CONFIG, name='s330',
+                         stderr_filename=stderr_file)
+            self.assertTrue(os.path.isdir(os.path.dirname(stderr_file)))
+
+    ############################
+    def test_existing_directory_is_left_alone(self):
+        """An existing directory, and anything in it, must survive."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            stderr_dir = os.path.join(tmpdir, 'loggers')
+            os.makedirs(stderr_dir)
+            keeper = os.path.join(stderr_dir, 'previous.stderr')
+            with open(keeper, 'w') as f:
+                f.write('earlier output\n')
+
+            LoggerRunner(config=CONFIG, name='gyr1',
+                         stderr_filename=os.path.join(stderr_dir, 'gyr1.stderr'))
+            self.assertTrue(os.path.exists(keeper))
+            with open(keeper) as f:
+                self.assertEqual(f.read(), 'earlier output\n')
+
+
+################################################################################
 class TestLoggerRunner(unittest.TestCase):
     ############################
     def setUp(self):
