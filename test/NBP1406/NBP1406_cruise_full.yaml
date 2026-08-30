@@ -7,6 +7,11 @@
 #   time:     Wed Feb  2 22:47:13 2022 UTC
 #   user:     pablo
 #
+# The logfile paths below are under /var/tmp, which is deliberately
+# disposable - see the note on file_root in NBP1406_port_defs.yaml, from
+# which this file was generated. Change it there and regenerate, rather
+# than editing the paths here, before using this for real data.
+#
 ########################################
 cruise:
   id: NBP1406
