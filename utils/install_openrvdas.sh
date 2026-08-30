@@ -1842,61 +1842,6 @@ function setup_ufw {
 }
 
 
-###########################################################################
-###########################################################################
-# Ubuntu ONLY - Set up ufw and open relevant ports
-function setup_ufw {
-    if [ $OS_TYPE != 'Ubuntu' ]; then
-        echo "No ufw setup on $OS_TYPE"
-        return
-    fi
-
-    apt-get install -y ufw
-    echo "#####################################################################"
-    echo "Configuring ufw firewall..."
-
-    ufw --force reset
-    ufw default deny incoming
-    ufw default allow outgoing
-
-    # Always allow SSH to prevent lockout
-    ufw allow ssh
-
-    # Web console port
-    ufw allow ${SERVER_PORT}/tcp
-
-    # If SSL is enabled, also open the non-SSL port for HTTP->HTTPS redirect
-    if [ "$USE_SSL" == 'yes' ] && [ "$NONSSL_SERVER_PORT" != "$SERVER_PORT" ]; then
-        ufw allow ${NONSSL_SERVER_PORT}/tcp
-    fi
-
-    # Supervisord web interface
-    if [ "$SUPERVISORD_WEBINTERFACE" == 'yes' ]; then
-        ufw allow ${SUPERVISORD_WEBINTERFACE_PORT}/tcp
-    fi
-
-    if [ ! -z "$TCP_PORTS_TO_OPEN" ]; then
-        for PORT in "${TCP_PORTS_TO_OPEN[@]}"
-        do
-            PORT="$(echo -e "${PORT}" | tr -d '[:space:]')"  # trim whitespace
-            echo Opening $PORT/tcp
-            ufw allow ${PORT}/tcp
-        done
-    fi
-
-    if [ ! -z "$UDP_PORTS_TO_OPEN" ]; then
-        for PORT in "${UDP_PORTS_TO_OPEN[@]}"
-        do
-            PORT="$(echo -e "${PORT}" | tr -d '[:space:]')"  # trim whitespace
-            echo Opening $PORT/udp
-            ufw allow ${PORT}/udp
-        done
-    fi
-
-    ufw --force enable
-    echo "Done configuring ufw"
-}
-
 
 
 ###########################################################################
