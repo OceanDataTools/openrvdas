@@ -640,15 +640,15 @@ function install_influxdb {
             sudo rm /etc/yum.repos.d/influxdb.repo
         fi
         # From https://portal.influxdata.com/downloads/
-        # influxdata-archive_compat.key GPG fingerprint:
-        #     9D53 9D90 D332 8DC7 D6C8 D3B9 D8FF 8E1F 7DF8 B07E
+        # influxdata-archive.key GPG fingerprint:
+        #     24C9 75CB A61A 024E E1B6 3178 7C3D 5715 9FC2 F927
         cat <<EOF | sudo tee /etc/yum.repos.d/influxdata.repo
 [influxdata]
 name = InfluxData Repository - Stable
 baseurl = https://repos.influxdata.com/stable/\$basearch/main
 enabled = 1
 gpgcheck = 1
-gpgkey = https://repos.influxdata.com/influxdata-archive_compat.key
+gpgkey = https://repos.influxdata.com/influxdata-archive.key
 EOF
         if [ $OS_VERSION == '7' ]; then
             sudo yum install -y influxdb2 influxdb2-cli
@@ -660,10 +660,14 @@ EOF
             sudo rpm -ivh --nofiledigest --replacepkgs --replacefiles influxdb*.rpm
         fi
     elif [ $OS_TYPE == 'Ubuntu' ]; then
-        # influxdata-archive_compat.key GPG Fingerprint: 9D539D90D3328DC7D6C8D3B9D8FF8E1F7DF8B07E
-        wget -q https://repos.influxdata.com/influxdata-archive_compat.key
-        echo '393e8779c89ac8d958f81f942f9ad7fb82a25e133faddaf92e15b16e6ac9ce4c influxdata-archive_compat.key' | sha256sum -c && cat influxdata-archive_compat.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/influxdata-archive_compat.gpg > /dev/null
-        echo 'deb [signed-by=/etc/apt/trusted.gpg.d/influxdata-archive_compat.gpg] https://repos.influxdata.com/debian stable main' | sudo tee /etc/apt/sources.list.d/influxdata.list
+        # influxdata-archive.key GPG fingerprint: 24C975CBA61A024EE1B631787C3D57159FC2F927
+        # The repo is signed by subkey DA61C26A0585BD3B, which is in this key
+        # but NOT in the influxdata-archive_compat.key this used to fetch -
+        # hence "NO_PUBKEY DA61C26A0585BD3B" and "repository is not signed".
+        sudo rm -f /etc/apt/trusted.gpg.d/influxdata-archive_compat.gpg
+        wget -q https://repos.influxdata.com/influxdata-archive.key
+        echo '40557e261cdbdccac91a2dde474cbf101ef672661e64b211b711cc0b904d5dac influxdata-archive.key' | sha256sum -c && cat influxdata-archive.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/influxdata-archive.gpg > /dev/null
+        echo 'deb [signed-by=/etc/apt/trusted.gpg.d/influxdata-archive.gpg] https://repos.influxdata.com/debian stable main' | sudo tee /etc/apt/sources.list.d/influxdata.list
         sudo apt-get update || echo "Failed to update all packages"
 
         sudo apt-get install -y influxdb2
@@ -809,15 +813,15 @@ function install_telegraf {
             sudo rm /etc/yum.repos.d/influxdb.repo
         fi
         # From: https://portal.influxdata.com/downloads/
-        # influxdata-archive_compat.key GPG fingerprint:
-        #     9D53 9D90 D332 8DC7 D6C8 D3B9 D8FF 8E1F 7DF8 B07E
+        # influxdata-archive.key GPG fingerprint:
+        #     24C9 75CB A61A 024E E1B6 3178 7C3D 5715 9FC2 F927
         cat <<EOF | sudo tee /etc/yum.repos.d/influxdata.repo
 [influxdata]
 name = InfluxData Repository - Stable
 baseurl = https://repos.influxdata.com/stable/\$basearch/main
 enabled = 1
 gpgcheck = 1
-gpgkey = https://repos.influxdata.com/influxdata-archive_compat.key
+gpgkey = https://repos.influxdata.com/influxdata-archive.key
 EOF
         sudo yum install -y telegraf
 
@@ -827,9 +831,14 @@ EOF
         TELEGRAF_CONF_DIR=/etc/telegraf/telegraf.d
         TELEGRAF_BIN=/usr/bin/telegraf
 
-        wget -q https://repos.influxdata.com/influxdata-archive_compat.key
-        echo '23a1c8836f0afc5ed24e0486339d7cc8f6790b83886c4c96995b88a061c5bb5d influxdata-archive_compat.key' | sha256sum -c && cat influxdata-archive_compat.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/influxdb.gpg > /dev/null
-        echo 'deb [signed-by=/etc/apt/trusted.gpg.d/influxdb.gpg] https://repos.influxdata.com/debian stable main' | sudo tee /etc/apt/sources.list.d/influxdata.list
+        # Same key as the InfluxDB install above. This block previously
+        # checked against a sha256 that matched neither the compat key nor
+        # the current one, so sha256sum -c failed, the && skipped writing the
+        # keyring, and the install went ahead against an unsigned repo.
+        sudo rm -f /etc/apt/trusted.gpg.d/influxdb.gpg
+        wget -q https://repos.influxdata.com/influxdata-archive.key
+        echo '40557e261cdbdccac91a2dde474cbf101ef672661e64b211b711cc0b904d5dac influxdata-archive.key' | sha256sum -c && cat influxdata-archive.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/influxdata-archive.gpg > /dev/null
+        echo 'deb [signed-by=/etc/apt/trusted.gpg.d/influxdata-archive.gpg] https://repos.influxdata.com/debian stable main' | sudo tee /etc/apt/sources.list.d/influxdata.list
 
         sudo apt-get update
         sudo apt-get install telegraf
