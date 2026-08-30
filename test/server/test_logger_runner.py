@@ -9,7 +9,8 @@ import warnings
 
 from logger.readers.text_file_reader import TextFileReader  # noqa: E402
 from logger.writers.text_file_writer import TextFileWriter  # noqa: E402
-from server.logger_runner import LoggerRunner  # noqa: E402
+from server.logger_runner import (LoggerRunner, STDERR_MAX_BYTES,  # noqa: E402
+                                  STDERR_BACKUP_COUNT)
 
 CONFIG = {
     "name": "logger",
@@ -88,6 +89,52 @@ class TestLoggerRunnerStderrPath(unittest.TestCase):
             self.assertTrue(os.path.exists(keeper))
             with open(keeper) as f:
                 self.assertEqual(f.read(), 'earlier output\n')
+
+
+################################################################################
+class TestLoggerRunnerStderrRotation(unittest.TestCase):
+    """The rotation caps are parameters, not hardcoded constants (#607)."""
+
+    ############################
+    def test_defaults_match_module_constants(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            runner = LoggerRunner(
+                config=CONFIG, name='gyr1',
+                stderr_filename=os.path.join(tmpdir, 'gyr1.stderr'))
+            self.assertEqual(runner.stderr_file_handler.maxBytes,
+                             STDERR_MAX_BYTES)
+            self.assertEqual(runner.stderr_file_handler.backupCount,
+                             STDERR_BACKUP_COUNT)
+
+    ############################
+    def test_caps_can_be_overridden(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            runner = LoggerRunner(
+                config=CONFIG, name='gyr1',
+                stderr_filename=os.path.join(tmpdir, 'gyr1.stderr'),
+                stderr_max_bytes=512, stderr_backup_count=3)
+            self.assertEqual(runner.stderr_file_handler.maxBytes, 512)
+            self.assertEqual(runner.stderr_file_handler.backupCount, 3)
+
+    ############################
+    def test_overridden_caps_are_actually_applied(self):
+        """Not just stored - the file really does rotate at the new size."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            stderr_file = os.path.join(tmpdir, 'gyr1.stderr')
+            runner = LoggerRunner(config=CONFIG, name='gyr1',
+                                  stderr_filename=stderr_file,
+                                  stderr_max_bytes=200,
+                                  stderr_backup_count=2)
+            handler = runner.stderr_file_handler
+            for i in range(20):
+                handler.emit(logging.LogRecord('gyr1', logging.INFO, '', 0,
+                                               'x' * 80, None, None))
+            handler.close()
+
+            # backup_count=2 means .1 and .2 exist, and no .3
+            self.assertTrue(os.path.exists(stderr_file + '.1'))
+            self.assertTrue(os.path.exists(stderr_file + '.2'))
+            self.assertFalse(os.path.exists(stderr_file + '.3'))
 
 
 ################################################################################

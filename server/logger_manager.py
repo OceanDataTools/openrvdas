@@ -38,7 +38,8 @@ import time
 # Imports for running CachedDataServer
 from server.cached_data_server import CachedDataServer  # noqa: E402
 
-from server.logger_runner import LoggerRunner  # noqa: E402
+from server.logger_runner import (LoggerRunner, STDERR_MAX_BYTES,
+                                  STDERR_BACKUP_COUNT)  # noqa: E402
 from server.server_api import ServerAPI  # noqa: E402
 from logger.transforms.to_das_record_transform import ToDASRecordTransform  # noqa: E402
 from logger.utils.stderr_logging import DEFAULT_LOGGING_FORMAT  # noqa: E402
@@ -98,6 +99,8 @@ class LoggerManager:
     def __init__(self,
                  api, data_server_websocket=None,
                  stderr_file_pattern='/var/log/openrvdas/loggers/{logger}.stderr',
+                 stderr_max_bytes=STDERR_MAX_BYTES,
+                 stderr_backup_count=STDERR_BACKUP_COUNT,
                  max_tries=DEFAULT_MAX_TRIES, min_uptime=DEFAULT_MIN_UPTIME,
                  interval=0.5, logger_log_level=logging.WARNING):
         """Read desired logger configs from the data store and try to keep
@@ -115,6 +118,12 @@ class LoggerManager:
               '/var/log/openrvdas/loggers/{logger}.stderr' If
               data_server_websocket is defined, will also write logger
               stderr to it.
+
+        stderr_max_bytes - Size at which each logger's stderr file is
+              rotated.
+
+        stderr_backup_count - How many rotated stderr files to keep per
+              logger.
 
         max_tries - number of times to try restarting a dead logger config
               before giving up on it as failed. If zero, never stop retrying.
@@ -159,6 +168,8 @@ class LoggerManager:
             self.data_server_writer = None
 
         self.stderr_file_pattern = stderr_file_pattern
+        self.stderr_max_bytes = stderr_max_bytes
+        self.stderr_backup_count = stderr_backup_count
         self.max_tries = max_tries
         self.min_uptime = min_uptime
         self.interval = interval
@@ -320,6 +331,8 @@ class LoggerManager:
 
         runner = LoggerRunner(config=config, name=logger,
                               stderr_filename=stderr_filename,
+                              stderr_max_bytes=self.stderr_max_bytes,
+                              stderr_backup_count=self.stderr_backup_count,
                               stderr_callback=stderr_callback,
                               death_callback=death_callback,
                               logger_log_level=self.logger_log_level)
@@ -640,6 +653,16 @@ if __name__ == '__main__':  # noqa: C901
                         'the logger\'s stderr will be written. E.g. '
                         '\'/var/log/openrvdas/loggers/{logger}.stderr\'')
 
+    parser.add_argument('--stderr_max_bytes', dest='stderr_max_bytes',
+                        type=int, default=STDERR_MAX_BYTES,
+                        help='Size in bytes at which each logger\'s stderr '
+                        f'file is rotated. Default: {STDERR_MAX_BYTES}')
+
+    parser.add_argument('--stderr_backup_count', dest='stderr_backup_count',
+                        type=int, default=STDERR_BACKUP_COUNT,
+                        help='How many rotated stderr files to keep per '
+                        f'logger. Default: {STDERR_BACKUP_COUNT}')
+
     # Arguments for cached data server
     parser.add_argument('--data_server_websocket', dest='data_server_websocket',
                         action='store', default=None,
@@ -737,6 +760,8 @@ if __name__ == '__main__':  # noqa: C901
         api=api,
         data_server_websocket=args.data_server_websocket,
         stderr_file_pattern=args.stderr_file_pattern,
+        stderr_max_bytes=args.stderr_max_bytes,
+        stderr_backup_count=args.stderr_backup_count,
         max_tries=args.max_tries,
         min_uptime=args.min_uptime,
         interval=args.interval,
