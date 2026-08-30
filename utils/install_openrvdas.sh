@@ -298,6 +298,12 @@ function set_default_variables {
     DEFAULT_EXPOSE_API_DOCS=no
     DEFAULT_WEB_ADMIN_USER=
 
+    # Rotation for the stderr of the services supervisord runs. Per-logger
+    # stderr is rotated separately by logger_manager - see its
+    # --stderr_max_bytes / --stderr_backup_count.
+    DEFAULT_STDERR_LOGFILE_MAXBYTES=10000000   # 10M
+    DEFAULT_STDERR_LOGFILE_MAXBACKUPS=100
+
     DEFAULT_SUPERVISORD_WEBINTERFACE=no
     DEFAULT_SUPERVISORD_WEBINTERFACE_AUTH=no
     DEFAULT_SUPERVISORD_WEBINTERFACE_PORT=9001
@@ -347,6 +353,9 @@ DEFAULT_WEB_ADMIN_USER=$WEB_ADMIN_USER
 
 DEFAULT_INSTALL_SIMULATE_NBP=$INSTALL_SIMULATE_NBP
 DEFAULT_RUN_SIMULATE_NBP=$RUN_SIMULATE_NBP
+
+DEFAULT_STDERR_LOGFILE_MAXBYTES=$STDERR_LOGFILE_MAXBYTES
+DEFAULT_STDERR_LOGFILE_MAXBACKUPS=$STDERR_LOGFILE_MAXBACKUPS
 
 DEFAULT_SUPERVISORD_WEBINTERFACE=$SUPERVISORD_WEBINTERFACE
 DEFAULT_SUPERVISORD_WEBINTERFACE_AUTH=$SUPERVISORD_WEBINTERFACE_AUTH
@@ -1568,8 +1577,8 @@ autorestart=true
 startretries=3
 killasgroup=true
 stderr_logfile=/var/log/openrvdas/logger_manager.stderr
-stderr_logfile_maxbytes=10000000 ; 10M
-stderr_logfile_maxbackups=100
+stderr_logfile_maxbytes=${STDERR_LOGFILE_MAXBYTES}
+stderr_logfile_maxbackups=${STDERR_LOGFILE_MAXBACKUPS}
 user=$RVDAS_USER
 EOF
     sudo mv $TEMP_FILE $LOGGER_MANAGER_FILE
@@ -1588,8 +1597,8 @@ autorestart=true
 startretries=3
 killasgroup=true
 stderr_logfile=/var/log/openrvdas/cached_data_server.stderr
-stderr_logfile_maxbytes=10000000 ; 10M
-stderr_logfile_maxbackups=100
+stderr_logfile_maxbytes=${STDERR_LOGFILE_MAXBYTES}
+stderr_logfile_maxbackups=${STDERR_LOGFILE_MAXBACKUPS}
 user=$RVDAS_USER
 EOF
     sudo mv $TEMP_FILE $CACHED_DATA_FILE
@@ -1608,8 +1617,8 @@ ${DJANGO_GUI_COMMENT}autorestart=true
 ${DJANGO_GUI_COMMENT}startretries=3
 ${DJANGO_GUI_COMMENT}killasgroup=true
 ${DJANGO_GUI_COMMENT}stderr_logfile=/var/log/openrvdas/nginx.stderr
-${DJANGO_GUI_COMMENT}stderr_logfile_maxbytes=10000000 ; 10M
-${DJANGO_GUI_COMMENT}stderr_logfile_maxbackups=100
+${DJANGO_GUI_COMMENT}stderr_logfile_maxbytes=${STDERR_LOGFILE_MAXBYTES}
+${DJANGO_GUI_COMMENT}stderr_logfile_maxbackups=${STDERR_LOGFILE_MAXBACKUPS}
 ${DJANGO_GUI_COMMENT};user=$RVDAS_USER
 
 ${DJANGO_GUI_COMMENT}[program:uwsgi]
@@ -1622,8 +1631,8 @@ ${DJANGO_GUI_COMMENT}autorestart=true
 ${DJANGO_GUI_COMMENT}startretries=3
 ${DJANGO_GUI_COMMENT}killasgroup=true
 ${DJANGO_GUI_COMMENT}stderr_logfile=/var/log/openrvdas/uwsgi.stderr
-${DJANGO_GUI_COMMENT}stderr_logfile_maxbytes=10000000 ; 10M
-${DJANGO_GUI_COMMENT}stderr_logfile_maxbackups=100
+${DJANGO_GUI_COMMENT}stderr_logfile_maxbytes=${STDERR_LOGFILE_MAXBYTES}
+${DJANGO_GUI_COMMENT}stderr_logfile_maxbackups=${STDERR_LOGFILE_MAXBACKUPS}
 ${DJANGO_GUI_COMMENT}user=$RVDAS_USER
 
 ${DJANGO_GUI_COMMENT}[group:django]
@@ -1644,8 +1653,8 @@ ${REACT_GUI_COMMENT}autorestart=true
 ${REACT_GUI_COMMENT}startretries=3
 ${REACT_GUI_COMMENT}killasgroup=true
 ${REACT_GUI_COMMENT}stderr_logfile=/var/log/openrvdas/nginx.stderr
-${REACT_GUI_COMMENT}stderr_logfile_maxbytes=10000000 ; 10M
-${REACT_GUI_COMMENT}stderr_logfile_maxbackups=100
+${REACT_GUI_COMMENT}stderr_logfile_maxbytes=${STDERR_LOGFILE_MAXBYTES}
+${REACT_GUI_COMMENT}stderr_logfile_maxbackups=${STDERR_LOGFILE_MAXBACKUPS}
 ${REACT_GUI_COMMENT};user=$RVDAS_USER
 
 ${REACT_GUI_COMMENT}[program:uvicorn]
@@ -1657,8 +1666,8 @@ ${REACT_GUI_COMMENT}autorestart=true
 ${REACT_GUI_COMMENT}startretries=3
 ${REACT_GUI_COMMENT}killasgroup=true
 ${REACT_GUI_COMMENT}stderr_logfile=/var/log/openrvdas/uvicorn.stderr
-${REACT_GUI_COMMENT}stderr_logfile_maxbytes=10000000 ; 10M
-${REACT_GUI_COMMENT}stderr_logfile_maxbackups=100
+${REACT_GUI_COMMENT}stderr_logfile_maxbytes=${STDERR_LOGFILE_MAXBYTES}
+${REACT_GUI_COMMENT}stderr_logfile_maxbackups=${STDERR_LOGFILE_MAXBACKUPS}
 ${REACT_GUI_COMMENT}user=$RVDAS_USER
 
 ${REACT_GUI_COMMENT}[group:react_ui]
@@ -1678,8 +1687,8 @@ ${SIMULATE_NBP_COMMENT}autorestart=true
 ${SIMULATE_NBP_COMMENT}startretries=3
 ${SIMULATE_NBP_COMMENT}killasgroup=true
 ${SIMULATE_NBP_COMMENT}stderr_logfile=/var/log/openrvdas/simulate_nbp.stderr
-${SIMULATE_NBP_COMMENT}stderr_logfile_maxbytes=10000000 ; 10M
-${SIMULATE_NBP_COMMENT}stderr_logfile_maxbackups=100
+${SIMULATE_NBP_COMMENT}stderr_logfile_maxbytes=${STDERR_LOGFILE_MAXBYTES}
+${SIMULATE_NBP_COMMENT}stderr_logfile_maxbackups=${STDERR_LOGFILE_MAXBACKUPS}
 ${SIMULATE_NBP_COMMENT}user=$RVDAS_USER
 
 ${SIMULATE_NBP_COMMENT}[group:simulate]
@@ -2274,6 +2283,16 @@ if [ $SUPERVISORD_WEBINTERFACE == 'yes' ]; then
     fi
 fi
 echo
+
+#########################################################################
+#########################################################################
+# Rotation limits for the stderr of the services supervisord runs. Not
+# prompted for - the defaults suit most installs, and the install already asks
+# plenty. To change them, edit these in $PREFERENCES_FILE and re-run; they
+# will be picked up as the defaults next time. Per-logger stderr is rotated
+# separately by logger_manager (--stderr_max_bytes, --stderr_backup_count).
+STDERR_LOGFILE_MAXBYTES=${DEFAULT_STDERR_LOGFILE_MAXBYTES}
+STDERR_LOGFILE_MAXBACKUPS=${DEFAULT_STDERR_LOGFILE_MAXBACKUPS}
 
 #########################################################################
 #########################################################################

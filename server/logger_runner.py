@@ -119,6 +119,8 @@ def config_is_runnable(config):
 class LoggerRunner:
     ############################
     def __init__(self, config, name=None, stderr_filename=None,
+                 stderr_max_bytes=STDERR_MAX_BYTES,
+                 stderr_backup_count=STDERR_BACKUP_COUNT,
                  stderr_callback=None, death_callback=None,
                  logger_log_level=logging.WARNING):
         """Create a LoggerRunner.
@@ -128,7 +130,16 @@ class LoggerRunner:
         name     - Optional name to give to logger process.
 
         stderr_filename - Optional name of file to write the logger's stderr
-                   to. Will be rotated when it exceeds STDERR_MAX_BYTES.
+                   to. Will be rotated when it exceeds stderr_max_bytes.
+
+        stderr_max_bytes - Size at which the stderr file is rotated. Defaults
+                   to STDERR_MAX_BYTES.
+
+        stderr_backup_count - How many rotated stderr files to keep. Defaults
+                   to STDERR_BACKUP_COUNT. Note that lowering this on a system
+                   that has already accumulated more than this many backups
+                   does not delete the surplus: RotatingFileHandler only
+                   shuffles files within the count it is given.
 
         stderr_callback - Optional function to call with each line of the
                    logger's stderr as it is received. Lines are passed as
@@ -179,8 +190,8 @@ class LoggerRunner:
                     logging.error('Unable to create directory "%s" for logger '
                                   'stderr: %s', stderr_dir, e)
             self.stderr_file_handler = RotatingFileHandler(
-                stderr_filename, maxBytes=STDERR_MAX_BYTES,
-                backupCount=STDERR_BACKUP_COUNT, delay=True)
+                stderr_filename, maxBytes=stderr_max_bytes,
+                backupCount=stderr_backup_count, delay=True)
             # Lines arrive already formatted by the child; pass them through.
             self.stderr_file_handler.setFormatter(logging.Formatter('%(message)s'))
         else:
@@ -360,6 +371,17 @@ if __name__ == '__main__':
                         help='Optional filename to which the logger\'s stderr '
                         'should be written.')
 
+    parser.add_argument('--stderr_max_bytes', dest='stderr_max_bytes',
+                        type=int, default=STDERR_MAX_BYTES,
+                        help='Size in bytes at which the stderr file named by '
+                        '--stderr_filename is rotated. Default: '
+                        f'{STDERR_MAX_BYTES}')
+
+    parser.add_argument('--stderr_backup_count', dest='stderr_backup_count',
+                        type=int, default=STDERR_BACKUP_COUNT,
+                        help='How many rotated stderr files to keep. Default: '
+                        f'{STDERR_BACKUP_COUNT}')
+
     parser.add_argument('--stderr_data_server', dest='stderr_data_server', default=None,
                         help='Optional host:port of a cached data server to which '
                         ' stderr messages should be written.')
@@ -405,6 +427,8 @@ if __name__ == '__main__':
     runner = LoggerRunner(config=config,
                           name=name,
                           stderr_filename=args.stderr_filename,
+                          stderr_max_bytes=args.stderr_max_bytes,
+                          stderr_backup_count=args.stderr_backup_count,
                           stderr_callback=stderr_callback,
                           logger_log_level=logger_log_level)
     runner.start()
