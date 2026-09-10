@@ -1250,14 +1250,6 @@ function setup_new_ui_frontend {
         done < "${FRONTEND_DIR}/.env.dist"
     fi
 
-    OPENRVDAS_VERSION=$(grep '^version' "${INSTALL_ROOT}/openrvdas/pyproject.toml" | sed 's/version = "\(.*\)"/\1/')
-    echo "Setting VITE_OPENRVDAS_VERSION=${OPENRVDAS_VERSION} in web frontend .env..."
-    if grep -q '^VITE_OPENRVDAS_VERSION=' "${FRONTEND_DIR}/.env"; then
-        sed -i -e "s|^VITE_OPENRVDAS_VERSION=.*|VITE_OPENRVDAS_VERSION=${OPENRVDAS_VERSION}|" "${FRONTEND_DIR}/.env"
-    else
-        echo "VITE_OPENRVDAS_VERSION=${OPENRVDAS_VERSION}" >> "${FRONTEND_DIR}/.env"
-    fi
-
     echo "Installing frontend dependencies..."
     cd "$FRONTEND_DIR"
     npm ci --silent
