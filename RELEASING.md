@@ -110,6 +110,26 @@ of the process.
 release tag itself does the job. See
 [#624](https://github.com/OceanDataTools/openrvdas/issues/624).
 
+### Marker tags must end in `.dev0`
+
+Tag `vX.Y.Z.dev0` and nothing else — never `.dev1`, `.dev2`, and so on.
+`setuptools_scm` derives the running count itself, so one `.dev0` marker per
+release cycle is all that is needed: with `v2.6.2.dev0` on `dev`, a commit on
+top reports `2.6.2.dev1+g<sha>`, the next `2.6.2.dev2+g<sha>`, and so on.
+
+Tagging a hand-numbered `.devN` instead breaks the build as soon as any commit
+lands after it:
+
+```
+ValueError: choosing custom numbers for the `.devX` distance is not supported.
+ The 2.6.2.dev1 can't be bumped
+Please drop the tag or create a new supported one ending in .dev0
+```
+
+The tag itself is accepted, so this does not fail until the next commit — by
+which point the bad tag may already be pushed. If that happens, delete the tag
+(locally and on the remote) and re-cut it as `.dev0`.
+
 ## Version numbers
 
 `vMAJOR.MINOR.PATCH`, incremented as:
