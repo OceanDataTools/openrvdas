@@ -138,8 +138,30 @@ which point the bad tag may already be pushed. If that happens, delete the tag
 - **MINOR** — new features, backward compatible (`v2.5.1` → `v2.6.0`)
 - **MAJOR** — breaking changes
 
-`pyproject.toml` currently carries a hand-maintained `version` field. Work is
-in progress ([#618](https://github.com/OceanDataTools/openrvdas/issues/618)) to
-derive it from git tags via `setuptools_scm`, at which point the tag becomes the
-single source of truth and the field goes away. Until then, bump it in the same
-PR as the release if it has drifted.
+The git tag is the single source of truth. `pyproject.toml` declares
+`dynamic = ["version"]` and `setuptools_scm` derives the version from the
+nearest reachable tag, so there is no version field to bump — tagging the
+release in step 3 *is* setting the version.
+
+This is also why steps 4 and 5 matter: a release tag that isn't reachable from
+`dev` at a short distance silently yields a stale version everywhere the number
+is displayed. See [Why `--no-ff`](#why---no-ff).
+
+### The displayed version updates only on reinstall
+
+OpenRVDAS is installed editable (`pip install -e .`), and `setuptools_scm`
+resolves the version at **install** time, freezing it into the package metadata
+that `logger/utils/read_version.py` reads. It is not recomputed from git on
+import.
+
+So a deployment upgraded with a plain `git pull` keeps reporting the *previous*
+version in the Django footer, the React nav, and the FastAPI `/version`
+endpoint — indefinitely, with nothing indicating it is stale. To pick up a new
+release:
+
+```bash
+pip install -e /opt/openrvdas
+```
+
+Worth mentioning in release notes for anyone who upgrades without re-running
+the installer.
