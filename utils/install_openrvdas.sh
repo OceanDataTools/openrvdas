@@ -1202,6 +1202,15 @@ ENVDEFAULTS
         --trusted-host pypi.org --trusted-host files.pythonhosted.org \
         -r "$BACKEND_DIR/requirements.txt"
 
+    # Register OpenRVDAS's own package metadata in this venv (--no-deps: the
+    # backend reaches OpenRVDAS's modules via sys.path, not this install; this
+    # is only so importlib.metadata.version("openrvdas") can find it, for
+    # GET /api/v1/version). Version comes from git tags via setuptools_scm.
+    echo "Registering OpenRVDAS package metadata in web backend venv..."
+    "$BACKEND_VENV/bin/pip" install --no-deps --quiet \
+        --trusted-host pypi.org --trusted-host files.pythonhosted.org \
+        -e "${INSTALL_ROOT}/openrvdas"
+
     # Install packages needed by async_fastapi_server_api into the main venv
     # so logger_manager can import them when using --database fastapi.
     echo "Installing FastAPI dependencies into main OpenRVDAS venv..."

@@ -1,45 +1,29 @@
 #!/usr/bin/env python3
-"""Utility for reading the OpenRVDAS release version from pyproject.toml.
+"""Utility for reading the installed OpenRVDAS release version.
+
+The version is derived from git tags via setuptools_scm at install time
+(see the [tool.setuptools_scm] section of pyproject.toml) rather than
+hand-maintained as a static string, so it can't drift from what's actually
+tagged/released. This reads it back out of the installed package's
+metadata, which is populated whenever OpenRVDAS is installed (e.g. via
+`pip install -e .`, as utils/install_openrvdas.sh does).
 """
+import importlib.metadata
 import logging
-import os
-import re
-
-# pyproject.toml lives at the repo root, two levels up from this file:
-# logger/utils/read_version.py -> logger/utils -> logger -> repo root.
-PYPROJECT_PATH = os.path.join(os.path.dirname(__file__), '..', '..', 'pyproject.toml')
-
-# Matches the top-level "version = "..."" line under [project]. Anchored to
-# the start of a line so it doesn't match inline dependency version
-# constraints (e.g. 'fastapi = {version = "^0.135.0"}').
-VERSION_RE = re.compile(r'^version\s*=\s*"(?P<version>[^"]+)"', re.MULTILINE)
 
 
 ###############################################################################
-def get_version(pyproject_path: str = PYPROJECT_PATH) -> str:
+def get_version() -> str:
     """
-    Read the OpenRVDAS release version out of pyproject.toml.
-
-    Uses a simple regex rather than a TOML parser so this works on the
-    project's full supported Python range (the stdlib "tomllib" module
-    requires Python 3.11+) without adding a new third-party dependency.
-
-    Args:
-        pyproject_path: Path to pyproject.toml (defaults to the repo root's)
+    Return the installed OpenRVDAS version.
 
     Returns:
-        The version string, or "unknown" if it can't be determined
+        The version string (e.g. "2.6.1", or "2.6.2.dev3+g1234567" for an
+        untagged commit), or "unknown" if OpenRVDAS isn't installed as a
+        package in the current environment.
     """
     try:
-        with open(pyproject_path, 'r') as f:
-            contents = f.read()
-    except OSError as e:
-        logging.warning('Could not read %s: %s', pyproject_path, e)
+        return importlib.metadata.version('openrvdas')
+    except importlib.metadata.PackageNotFoundError:
+        logging.warning('OpenRVDAS is not installed as a package; can\'t determine its version.')
         return 'unknown'
-
-    match = VERSION_RE.search(contents)
-    if not match:
-        logging.warning('No version found in %s', pyproject_path)
-        return 'unknown'
-
-    return match.group('version')
