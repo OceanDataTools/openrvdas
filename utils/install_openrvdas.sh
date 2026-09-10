@@ -1183,15 +1183,40 @@ ENVDEFAULTS
         _BREW_PFX="${HOMEBREW_PREFIX:-$( [ "$(uname -m)" = "arm64" ] && echo /opt/homebrew || echo /usr/local )}"
         BACKEND_PYTHON="${_BREW_PFX}/opt/python@3.12/bin/python3.12"
     else
-        BACKEND_PYTHON=python3
+        # BACKEND_PYTHON may be pre-set in the environment (e.g. to a
+        # deadsnakes/EPEL python3.11+ interpreter) to override the bare
+        # `python3` default - see the version check just below.
+        BACKEND_PYTHON="${BACKEND_PYTHON:-python3}"
     fi
 
-    # Remove a pre-existing venv that was built with the wrong Python; trying
-    # to update it in-place produces "No such file or directory: .../python3.12".
+    # web_backend/pyproject.toml requires Python 3.11+ (its app/main.py uses
+    # the stdlib tomllib, which doesn't exist before 3.11); bare `python3` on
+    # non-macOS targets isn't guaranteed to meet that. Fail fast here with a
+    # clear error rather than letting the venv build "succeed" and the
+    # backend then crash on import at startup.
+    if ! "$BACKEND_PYTHON" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 11) else 1)' 2>/dev/null; then
+        BACKEND_PYTHON_VERSION="$("$BACKEND_PYTHON" --version 2>&1)"
+        echo "ERROR: The React/FastAPI UI (UI_TYPE=react) requires Python 3.11 or newer,"
+        echo "but '$BACKEND_PYTHON' resolves to: $BACKEND_PYTHON_VERSION"
+        echo
+        echo "Install a Python 3.11+ interpreter and re-run with BACKEND_PYTHON set to it - e.g.:"
+        echo "  Ubuntu: sudo add-apt-repository ppa:deadsnakes/ppa && sudo apt install python3.11 python3.11-venv python3.11-dev"
+        echo "          BACKEND_PYTHON=python3.11 bash utils/install_openrvdas.sh"
+        echo "  RHEL/Rocky/Alma: sudo dnf install python3.11 python3.11-devel"
+        echo "          BACKEND_PYTHON=python3.11 bash utils/install_openrvdas.sh"
+        echo "or choose UI_TYPE=django/none instead."
+        exit_gracefully
+    fi
+
+    # Remove a pre-existing venv that was built with a different Python;
+    # trying to update it in-place produces "No such file or directory:
+    # .../python3.12" (or whichever interpreter it was originally built
+    # with). Compare reported versions rather than a hardcoded "3.12"
+    # string, since BACKEND_PYTHON may be a non-macOS 3.11+ override.
     if [ -d "$BACKEND_VENV" ]; then
         VENV_PYTHON="$BACKEND_VENV/bin/python3"
-        if [ ! -x "$VENV_PYTHON" ] || ! "$VENV_PYTHON" --version 2>&1 | grep -q "3\.12"; then
-            echo "Existing backend venv uses wrong Python; recreating..."
+        if [ ! -x "$VENV_PYTHON" ] || [ "$("$VENV_PYTHON" --version 2>&1)" != "$("$BACKEND_PYTHON" --version 2>&1)" ]; then
+            echo "Existing backend venv uses a different Python; recreating..."
             rm -rf "$BACKEND_VENV"
         fi
     fi
