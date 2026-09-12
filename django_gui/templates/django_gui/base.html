@@ -11,7 +11,7 @@
     </div>
     <footer>
       <a href="https://github.com/oceandatatools/openrvdas/blob/master/README.md" target="_blank">
-        OpenRVDAS v{{ openrvdas_version }} &copy;<script>document.write(new Date().getFullYear())</script> David Pablo Cohn
+        OpenRVDAS {% if openrvdas_version and openrvdas_version != 'unknown' %}v{{ openrvdas_version }} {% endif %}&copy;<script>document.write(new Date().getFullYear())</script> David Pablo Cohn
       </a>
     </footer>
   </body>

@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=68", "setuptools_scm>=8", "wheel"]
+requires = ["setuptools>=68", "setuptools_scm>=8,<11", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -131,8 +131,12 @@ include-package-data = true
 # Version is derived from git tags (e.g. v2.6.1) rather than hand-maintained
 # here, so it can never drift from what's actually released. Untagged
 # commits get a PEP 440 dev version like "2.6.2.dev3+g1234567".
+# fallback_version covers builds with no .git tree to inspect (GitHub's
+# "Download ZIP", an rsync'd source tree, a Docker COPY with .git excluded),
+# where setuptools_scm would otherwise raise and fail the build outright.
 [tool.setuptools_scm]
 tag_regex = "^v(?P<version>\\d+\\.\\d+\\.\\d+.*)$"
+fallback_version = "0.0.0"
 
 [tool.setuptools.packages.find]
 where = ["."]
