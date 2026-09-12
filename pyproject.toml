@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools>=68", "wheel"]
+requires = ["setuptools>=68", "setuptools_scm>=8,<11", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "openrvdas"
-version = "0.1.0"
+dynamic = ["version"]
 description = "Open Research Vessel Data Acquisition System"
 readme = "README.md"
 requires-python = ">=3.8"
@@ -24,6 +24,12 @@ dependencies = [
   "pyserial",
   "setproctitle",
   "websockets<18",
+
+  # Also a build-time dependency above, under [build-system]. Kept here too
+  # so logger/utils/read_version.py can recompute the version live from git
+  # at runtime instead of relying solely on the version frozen into
+  # dist-info metadata at install time (see that module's docstring).
+  "setuptools_scm>=8,<11",
 
   # Django is required regardless of which web UI (if any) is installed:
   # LoggerManager uses the Django ORM as a backing store by default, and
@@ -127,6 +133,15 @@ openrvdas_manage = "openrvdas_cli:openrvdas_manage"
 [tool.setuptools]
 py-modules = ["openrvdas_cli", "manage"]
 include-package-data = true
+
+# Version is derived from git tags (e.g. v2.6.1) rather than hand-maintained
+# here, so it can never drift from what's actually released. Untagged
+# commits get a PEP 440 dev version like "2.6.2.dev3+g1234567".
+# fallback_version covers builds with no .git tree to inspect (GitHub's
+# "Download ZIP", an rsync'd source tree, a Docker COPY with .git excluded),
+# where setuptools_scm would otherwise raise and fail the build outright.
+[tool.setuptools_scm]
+fallback_version = "0.0.0"
 
 [tool.setuptools.packages.find]
 where = ["."]
