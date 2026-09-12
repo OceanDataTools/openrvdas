@@ -135,7 +135,6 @@ include-package-data = true
 # "Download ZIP", an rsync'd source tree, a Docker COPY with .git excluded),
 # where setuptools_scm would otherwise raise and fail the build outright.
 [tool.setuptools_scm]
-tag_regex = "^v(?P<version>\\d+\\.\\d+\\.\\d+.*)$"
 fallback_version = "0.0.0"
 
 [tool.setuptools.packages.find]
