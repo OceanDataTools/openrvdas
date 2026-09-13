@@ -147,21 +147,22 @@ This is also why steps 4 and 5 matter: a release tag that isn't reachable from
 `dev` at a short distance silently yields a stale version everywhere the number
 is displayed. See [Why `--no-ff`](#why---no-ff).
 
-### The displayed version updates only on reinstall
+### How the displayed version is resolved
 
-OpenRVDAS is installed editable (`pip install -e .`), and `setuptools_scm`
-resolves the version at **install** time, freezing it into the package metadata
-that `logger/utils/read_version.py` reads. It is not recomputed from git on
-import.
+`logger/utils/read_version.py` recomputes the version **live from the git tree**
+on each call, via `setuptools_scm` (a runtime dependency, not just a build one).
+A deployment upgraded with a plain `git pull` therefore picks up the new version
+straight away — no reinstall needed for the Django footer, the React nav, or the
+FastAPI `/version` endpoint to update.
 
-So a deployment upgraded with a plain `git pull` keeps reporting the *previous*
-version in the Django footer, the React nav, and the FastAPI `/version`
-endpoint — indefinitely, with nothing indicating it is stale. To pick up a new
-release:
+It falls back to the version frozen into package metadata at install time only
+when the live read isn't possible — no `.git` tree (a non-editable install from
+a built wheel or sdist), or `setuptools_scm` missing from the environment — and
+to `"unknown"` if the package isn't installed at all.
 
-```bash
-pip install -e /opt/openrvdas
-```
-
-Worth mentioning in release notes for anyone who upgrades without re-running
-the installer.
+**One upgrade gotcha:** environments created before `setuptools_scm` became a
+runtime dependency don't have it installed, so they silently take the fallback
+path and keep reporting whatever was frozen in at their original install — which
+for older checkouts is the long-stale `0.1.0`. A version that looks implausibly
+old is the symptom; `pip install -e /opt/openrvdas` (or re-running the
+installer) fixes it by pulling in the new dependency.
