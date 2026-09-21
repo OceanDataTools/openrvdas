@@ -287,6 +287,16 @@ function set_default_variables {
         DEFAULT_RVDAS_USER=rvdas
     fi
 
+    # Whether to activate the venv from the RVDAS user's login script. An
+    # activated venv takes over python/pip for everything that user does,
+    # so only default to yes for a dedicated service account - on MacOS the
+    # RVDAS user is the account the installer is being run from.
+    if [ "${OS_TYPE:-}" == 'MacOS' ]; then
+        DEFAULT_ACTIVATE_VENV_ON_LOGIN=no
+    else
+        DEFAULT_ACTIVATE_VENV_ON_LOGIN=yes
+    fi
+
     DEFAULT_INSTALL_FIREWALLD=no
     DEFAULT_INSTALL_UFW=no
     DEFAULT_OPENRVDAS_AUTOSTART=yes
@@ -347,6 +357,7 @@ DEFAULT_SSL_CRT_LOCATION=$SSL_CRT_LOCATION
 DEFAULT_SSL_KEY_LOCATION=$SSL_KEY_LOCATION
 
 DEFAULT_RVDAS_USER=$RVDAS_USER
+DEFAULT_ACTIVATE_VENV_ON_LOGIN=$ACTIVATE_VENV_ON_LOGIN
 
 DEFAULT_INSTALL_FIREWALLD=$INSTALL_FIREWALLD
 DEFAULT_INSTALL_UFW=$INSTALL_UFW
@@ -445,6 +456,90 @@ function create_user {
           sudo usermod -a -G tty $RVDAS_USER
           sudo usermod -a -G dialout $RVDAS_USER
           sudo usermod -a -G sudo $RVDAS_USER
+    fi
+}
+
+###########################################################################
+###########################################################################
+# Add venv activation to the OpenRVDAS user's login script, so that they
+# don't have to source it by hand every time they log in.
+#
+# Note that nothing in a running OpenRVDAS depends on this: every program
+# supervisord runs invokes the venv's binaries by their absolute paths.
+# This is purely a convenience for humans at a shell prompt.
+#
+# Expect the following shell variables to be appropriately set:
+# RVDAS_USER - valid username
+# INSTALL_ROOT - path where openrvdas/ is found
+function add_venv_to_login_script {
+    VENV_ACTIVATE=${INSTALL_ROOT}/openrvdas/venv/bin/activate
+    VENV_MARKER="# Added by OpenRVDAS installer"
+
+    # Which file to append to depends on the user's login shell: zsh never
+    # reads .bashrc, and MacOS accounts default to zsh. Look the shell and
+    # home directory up rather than assuming, because the RVDAS user is
+    # often one that predates this install.
+    if [ $OS_TYPE == 'MacOS' ]; then
+        RVDAS_SHELL=$(dscl . -read /Users/${RVDAS_USER} UserShell 2>/dev/null | awk '{print $2}')
+        RVDAS_HOME=$(dscl . -read /Users/${RVDAS_USER} NFSHomeDirectory 2>/dev/null | awk '{print $2}')
+    else
+        RVDAS_SHELL=$(getent passwd ${RVDAS_USER} | cut -d: -f7)
+        RVDAS_HOME=$(getent passwd ${RVDAS_USER} | cut -d: -f6)
+    fi
+
+    if [ -z "$RVDAS_HOME" ]; then
+        echo "Unable to find home directory for $RVDAS_USER; skipping."
+        echo "To activate the venv by hand: source ${VENV_ACTIVATE}"
+        return
+    fi
+
+    case "$RVDAS_SHELL" in
+        *zsh)
+            LOGIN_SCRIPT=${RVDAS_HOME}/.zshrc ;;
+        *bash)
+            LOGIN_SCRIPT=${RVDAS_HOME}/.bashrc ;;
+        *)
+            echo "Don't know the login script for shell '${RVDAS_SHELL}'; skipping."
+            echo "To activate the venv by hand: source ${VENV_ACTIVATE}"
+            return ;;
+    esac
+
+    # Already pointing at this venv? Nothing to do. If a previous install
+    # left a line pointing somewhere else, say so rather than adding a
+    # second activation or quietly rewriting a file we don't own.
+    if [ -f "$LOGIN_SCRIPT" ]; then
+        if grep -qF "$VENV_ACTIVATE" "$LOGIN_SCRIPT"; then
+            echo "$LOGIN_SCRIPT already activates ${VENV_ACTIVATE}"
+            return
+        fi
+        if grep -qF "$VENV_MARKER" "$LOGIN_SCRIPT"; then
+            echo "WARNING: $LOGIN_SCRIPT already has an OpenRVDAS venv line"
+            echo "pointing at a different install. Leaving it alone - remove it"
+            echo "by hand if you want ${VENV_ACTIVATE} activated instead."
+            return
+        fi
+    fi
+
+    # The 'case' guard keeps this to interactive shells: bash also reads
+    # .bashrc for the likes of 'ssh host command', and those shouldn't have
+    # their python swapped out from under them. The -f test keeps a moved or
+    # rebuilt venv from producing an error on every single login.
+    # A quoted string rather than a heredoc: the bash 3.2 that MacOS ships
+    # can't parse a heredoc containing ';;' inside a command substitution.
+    VENV_SNIPPET="
+${VENV_MARKER} - activate the OpenRVDAS virtual environment
+case \$- in *i*)
+    [ -f ${VENV_ACTIVATE} ] && . ${VENV_ACTIVATE} ;;
+esac"
+
+    echo "Adding OpenRVDAS venv activation to $LOGIN_SCRIPT"
+    # The installer runs as a user with sudo rather than as root, so write
+    # as $RVDAS_USER; otherwise a created-on-demand .bashrc ends up owned
+    # by whoever ran the install.
+    if [ "$RVDAS_USER" == "${SUDO_USER:-$USER}" ]; then
+        echo "$VENV_SNIPPET" >> "$LOGIN_SCRIPT"
+    else
+        echo "$VENV_SNIPPET" | sudo -u "$RVDAS_USER" tee -a "$LOGIN_SCRIPT" > /dev/null
     fi
 }
 
@@ -2020,6 +2115,13 @@ else
     RVDAS_GROUP=$RVDAS_USER
 fi
 
+# An activated venv takes over python/pip for everything that user does,
+# which is what you want for a dedicated service account and less clearly
+# what you want for someone's personal login.
+echo
+yes_no "Activate the OpenRVDAS venv when $RVDAS_USER logs in?" $DEFAULT_ACTIVATE_VENV_ON_LOGIN
+ACTIVATE_VENV_ON_LOGIN=$YES_NO_RESULT
+
 echo
 read -p "OpenRVDAS database password for user $RVDAS_USER? ($RVDAS_USER) " RVDAS_DATABASE_PASSWORD
 RVDAS_DATABASE_PASSWORD=${RVDAS_DATABASE_PASSWORD:-$RVDAS_USER}
@@ -2465,6 +2567,15 @@ fi
 # binaries using their venv paths, so don't need it.
 deactivate
 
+# Save the RVDAS user a 'source .../activate' on every login, if they
+# asked for it. Expects RVDAS_USER and INSTALL_ROOT to be set.
+if [ $ACTIVATE_VENV_ON_LOGIN == 'yes' ]; then
+    echo
+    echo "#####################################################################"
+    echo "Adding virtual environment activation to $RVDAS_USER's login script"
+    add_venv_to_login_script
+fi
+
 echo
 echo "#########################################################################"
 echo "Installation complete - happy logging!"
@@ -2472,7 +2583,12 @@ echo
 echo "OpenRVDAS has been installed to:"
 echo "  ${INSTALL_ROOT}/openrvdas"
 echo
-echo "To activate the virtual environment in a new terminal, run:"
+if [ $ACTIVATE_VENV_ON_LOGIN == 'yes' ]; then
+    echo "The virtual environment will be activated the next time $RVDAS_USER"
+    echo "logs in. To activate it in this terminal, run:"
+else
+    echo "To activate the virtual environment in a new terminal, run:"
+fi
 echo "  source ${INSTALL_ROOT}/openrvdas/venv/bin/activate"
 echo
 
