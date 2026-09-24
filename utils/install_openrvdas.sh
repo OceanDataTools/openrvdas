@@ -1236,6 +1236,15 @@ ENVDEFAULTS
         --trusted-host pypi.org --trusted-host files.pythonhosted.org \
         -e "${INSTALL_ROOT}/openrvdas"
 
+    # That metadata is frozen at install time, so it goes stale after a
+    # `git pull`. read_version.get_version() avoids that by asking
+    # setuptools_scm to read the version live from the git tree, but
+    # --no-deps above skips it - install it explicitly. Keep this range in
+    # sync with setuptools_scm in the top-level pyproject.toml.
+    "$BACKEND_VENV/bin/pip" install --quiet \
+        --trusted-host pypi.org --trusted-host files.pythonhosted.org \
+        "setuptools_scm>=8,<11"
+
     # Install packages needed by async_fastapi_server_api into the main venv
     # so logger_manager can import them when using --database fastapi.
     echo "Installing FastAPI dependencies into main OpenRVDAS venv..."
