@@ -1082,34 +1082,67 @@ EOF
 
 ###########################################################################
 ###########################################################################
-# Install Node.js >= MIN_NODE_MAJOR if not already present or too old
-MIN_NODE_MAJOR=20
+# Install Node.js >= MIN_NODE_VERSION if not already present or too old.
+# vite 8 needs ^20.19.0 || >=22.12.0 and vitest 5 needs ^22.12.0 || ^24 ||
+# >=26, so 22.12.0 is the lowest version that satisfies the whole toolchain.
+MIN_NODE_VERSION=22.12.0
+
+# Succeed if the installed 'node' is at least MIN_NODE_VERSION. Compares
+# major.minor.patch numerically (no 'sort -V', which BSD sort lacks).
+function node_version_ok {
+    command -v node &>/dev/null || return 1
+    local have_major have_minor have_patch
+    local need_major need_minor need_patch
+    IFS=. read -r have_major have_minor have_patch <<< "$(node --version | sed 's/^v//; s/[^0-9.].*//')"
+    IFS=. read -r need_major need_minor need_patch <<< "$MIN_NODE_VERSION"
+    have_major=${have_major:-0}; have_minor=${have_minor:-0}; have_patch=${have_patch:-0}
+
+    [ "$have_major" -ne "$need_major" ] && { [ "$have_major" -gt "$need_major" ]; return; }
+    [ "$have_minor" -ne "$need_minor" ] && { [ "$have_minor" -gt "$need_minor" ]; return; }
+    [ "$have_patch" -ge "$need_patch" ]
+}
+
 function install_nodejs {
-    local need_install=true
-    if command -v node &>/dev/null; then
-        local current_major
-        current_major=$(node --version | sed 's/v\([0-9]*\).*/\1/')
-        if [ "$current_major" -ge "$MIN_NODE_MAJOR" ]; then
-            echo "Node.js already installed: $(node --version)"
-            need_install=false
-        else
-            echo "Node.js $(node --version) is too old (need >= v${MIN_NODE_MAJOR}), upgrading..."
-        fi
+    if node_version_ok; then
+        echo "Node.js already installed: $(node --version)"
+        return
+    elif command -v node &>/dev/null; then
+        echo "Node.js $(node --version) is too old (need >= v${MIN_NODE_VERSION}), upgrading..."
     else
         echo "Node.js not found, installing..."
     fi
 
-    if [ "$need_install" = true ]; then
-        if [ $OS_TYPE == 'MacOS' ]; then
+    if [ $OS_TYPE == 'MacOS' ]; then
+        # 'brew install' is a no-op when the formula is already installed,
+        # so an outdated brew node has to be upgraded instead.
+        if brew list --formula node &>/dev/null; then
+            env HOMEBREW_NO_AUTO_UPDATE=1 brew upgrade node
+        else
             env HOMEBREW_NO_AUTO_UPDATE=1 brew install node
-        elif [ $OS_TYPE == 'Ubuntu' ]; then
-            curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
-            sudo DEBIAN_FRONTEND=noninteractive apt install -y nodejs
-        elif [ $OS_TYPE == 'CentOS' ]; then
-            curl -fsSL https://rpm.nodesource.com/setup_lts.x | sudo bash -
-            sudo yum install -y nodejs
         fi
+    elif [ $OS_TYPE == 'Ubuntu' ]; then
+        curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+        sudo DEBIAN_FRONTEND=noninteractive apt install -y nodejs
+    elif [ $OS_TYPE == 'CentOS' ]; then
+        curl -fsSL https://rpm.nodesource.com/setup_lts.x | sudo bash -
+        sudo yum install -y nodejs
     fi
+
+    # Make sure the node now first on PATH is the new one - an older copy
+    # (nvm, /usr/local/bin, a versioned brew keg) can still shadow it.
+    hash -r
+    if ! node_version_ok; then
+        echo
+        echo "Node.js >= v${MIN_NODE_VERSION} is required to build the React UI,"
+        if command -v node &>/dev/null; then
+            echo "but '$(command -v node)' is still $(node --version) after installing."
+            echo "Remove or reorder the older Node.js on your PATH and re-run the installer."
+        else
+            echo "but no 'node' was found on PATH after installing."
+        fi
+        exit_gracefully
+    fi
+    echo "Node.js installed: $(node --version)"
 }
 
 ###########################################################################
