@@ -1083,9 +1083,10 @@ EOF
 ###########################################################################
 ###########################################################################
 # Install Node.js >= MIN_NODE_VERSION if not already present or too old.
-# vite 8 needs ^20.19.0 || >=22.12.0 and vitest 5 needs ^22.12.0 || ^24 ||
-# >=26, so 22.12.0 is the lowest version that satisfies the whole toolchain.
-MIN_NODE_VERSION=22.12.0
+# vite 8 needs ^20.19.0 || >=22.12.0, vitest 5 needs ^22.12.0 || ^24 || >=26
+# and jsdom needs ^20.19.0 || ^22.13.0 || >=24, so 22.13.0 is the lowest
+# version that satisfies both the build and the test toolchain.
+MIN_NODE_VERSION=22.13.0
 
 # Succeed if the installed 'node' is at least MIN_NODE_VERSION. Compares
 # major.minor.patch numerically (no 'sort -V', which BSD sort lacks).
