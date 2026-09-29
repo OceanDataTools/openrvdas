@@ -72,8 +72,19 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      # Pinned rather than apt's: the finding count is the baseline the
+      # ratchet in #638 measures against, and it shifts with the tool
+      # version (0.9.0 from apt reports 539 where 0.11.0 reports 465, all
+      # in the 'note' band). A baseline that moves on its own isn't one.
+      # Bump deliberately, re-measuring the baseline in the same change.
       - name: Install ShellCheck
-        run: sudo apt-get update && sudo apt-get install -y shellcheck
+        env:
+          SC_VERSION: v0.11.0
+        run: |
+          curl -fsSL "https://github.com/koalaman/shellcheck/releases/download/${SC_VERSION}/shellcheck-${SC_VERSION}.linux.x86_64.tar.xz" \
+            | tar -xJ
+          sudo install -m 0755 "shellcheck-${SC_VERSION}/shellcheck" /usr/local/bin/shellcheck
+          rm -rf "shellcheck-${SC_VERSION}"
 
       - name: Report ShellCheck version
         run: shellcheck --version
@@ -87,11 +98,12 @@ jobs:
             $(git ls-files '*.sh' | grep -v '^local/' | grep -v '^utils/deprecated/')
 
       # Informational: the full warning/info/style set. Not a gate yet - the
-      # tree carries a backlog of 465 of these as of this workflow landing
-      # (37 warning, 428 note; dominated by SC2086 unquoted expansions x272,
-      # SC2006 backticks x86, SC2162 read-without-r x60). The intent per issue
-      # #638 is to work that count down and then raise the blocking severity,
-      # rather than fix them all in one change.
+      # tree carries a backlog of 465 of these as of this workflow landing,
+      # under the pinned ShellCheck above (0 error, 37 warning, 428 note;
+      # dominated by SC2086 unquoted expansions x272, SC2006 backticks x86,
+      # SC2162 read-without-r x60). The intent per issue #638 is to work that
+      # count down and then raise the blocking severity, rather than fix them
+      # all in one change.
       # --format=gcc so the count is one line per finding. The default format
       # groups findings by source line, which under-counts (402 vs 465) and
       # wouldn't match the baseline documented above.
