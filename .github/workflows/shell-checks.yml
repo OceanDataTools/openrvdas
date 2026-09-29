@@ -92,12 +92,19 @@ jobs:
       # SC2006 backticks x86, SC2162 read-without-r x60). The intent per issue
       # #638 is to work that count down and then raise the blocking severity,
       # rather than fix them all in one change.
+      # --format=gcc so the count is one line per finding. The default format
+      # groups findings by source line, which under-counts (402 vs 465) and
+      # wouldn't match the baseline documented above.
       - name: ShellCheck (all severities, informational)
         continue-on-error: true
         run: |
           # shellcheck disable=SC2046
-          shellcheck --severity=style --external-sources \
+          shellcheck --severity=style --external-sources --format=gcc \
             $(git ls-files '*.sh' | grep -v '^local/' | grep -v '^utils/deprecated/') \
-            | tee shellcheck-full.txt
+            | tee shellcheck-full.txt || true
           echo
-          echo "Total findings: $(grep -c '^In ' shellcheck-full.txt || true)"
+          echo "Total findings: $(wc -l < shellcheck-full.txt)"
+          echo "  by severity:"
+          for sev in error warning note; do
+            echo "    $sev: $(grep -c ": $sev:" shellcheck-full.txt || true)"
+          done
