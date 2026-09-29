@@ -127,7 +127,7 @@ function get_os_type {
             arch -x86_64 /bin/bash $THIS_SCRIPT_PATH
 
             # Exit quietly after recursive run
-            return -1 2> /dev/null || exit -1  # exit correctly if sourced/bashed
+            return 1 2> /dev/null || exit 1  # exit correctly if sourced/bashed
         fi
 
     elif [[ `uname -s` == 'Linux' ]];then
@@ -672,18 +672,6 @@ function install_prereqs {
         then
             echo "SQLite3 is not installed. Installing ..."
             sudo yum install -y sqlite sqlite-devel
-#        else
-#            # Get the current version of SQLite3
-#            current_version=$(sqlite3 --version | awk '{print $1}')
-#
-#            # Compare the current version with the required version
-#            if [[ "$current_version" != "$required_version" ]]
-#            then
-#                echo "SQLite3 version $required_version is required, but version $current_version is installed. Installing version $required_version..."
-#                sudo yum install -y sqlite-$required_version sqlite-devel
-#            else
-#                echo "SQLite3 version $required_version is already installed."
-#            fi
         fi
 
         if [ $OS_VERSION == '7' ] || [ $OS_VERSION == '8' ]; then
@@ -818,28 +806,6 @@ function setup_python_packages {
 
     # Set up virtual environment
     VENV_PATH=$INSTALL_ROOT/openrvdas/venv
-
-    ## Bit of a challenge here - if our new install has a newer version of
-    ## Python or something, reusing the existing venv can cause subtle
-    ## havoc. But deleting and rebuilding it each time is a mess. Commenting
-    ## out the delete for now...
-    ##
-    # We'll rebuild the virtual environment each time to avoid version skew
-    #if [ -d $VENV_PATH ];then
-    #    mv $VENV_PATH ${VENV_PATH}.bak.$$
-    #fi
-
-    #if [ -e '${HOMEBREW_BASE}/bin/python3' ];then
-    #    eval "$(${HOMEBREW_BASE}/bin/brew shellenv)"
-    #    PYTHON_PATH=${HOMEBREW_BASE}/bin/python3
-    #elif [ -e '/usr/local/bin/python3' ];then
-    #    PYTHON_PATH=/usr/local/bin/python3
-    #elif [ -e '/usr/bin/python3' ];then
-    #    PYTHON_PATH=/usr/bin/python3
-    #else
-    #    echo 'No python3 found?!?'
-    #    exit_gracefully
-    #fi
 
     echo "Creating virtual environment"
     cd $INSTALL_ROOT/openrvdas
