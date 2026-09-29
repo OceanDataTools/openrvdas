@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import errno
 import logging
 
 # Don't freak out if pyserial isn't installed - unless they actually
@@ -22,7 +23,7 @@ class SerialReader(Reader):
     def __init__(self,  port, baudrate=9600, bytesize=8, parity='N',
                  stopbits=1, timeout=None, xonxoff=False, rtscts=False,
                  write_timeout=None, dsrdtr=False, inter_byte_timeout=None,
-                 exclusive=None, max_bytes=None, eol=None, allow_empty=False,
+                 exclusive=True, max_bytes=None, eol=None, allow_empty=False,
                  encoding='utf-8', encoding_errors='ignore', **kwargs):
         """If max_bytes is specified on initialization, read up to that many
         bytes when read() is called. If eol is not specified, read() will
@@ -42,6 +43,19 @@ class SerialReader(Reader):
         ignore non unicode characters it encounters. These defaults may be changed by specifying
 
         allow_empty - If True, preserve and return empty records
+
+        exclusive - True by default: take an exclusive lock on the port, so that
+                a second OpenRVDAS process opening the same port fails loudly
+                instead of silently splitting the byte stream with the first.
+                Serial data is divided between readers rather than copied to
+                each, so two readers on one port means both get partial data
+                and neither reports a problem. Pass False to allow shared
+                access.
+
+                Note the lock is advisory - pyserial implements it with
+                flock() - so it only excludes processes that also ask for
+                exclusivity. It will not stop a non-locking reader such as
+                'cat' or 'minicom' from taking bytes off the port.
 
         encoding - 'utf-8' by default. If empty or None, do not attempt any decoding
                 and return raw bytes. Other possible encodings are listed in online
@@ -80,6 +94,24 @@ class SerialReader(Reader):
                                         inter_byte_timeout=inter_byte_timeout,
                                         exclusive=exclusive)
         except (serial.SerialException, serial.serialutil.SerialException) as e:
+            # A lock conflict means someone else already has the port. pyserial
+            # surfaces that as an errno on the exception; say what to do about
+            # it rather than leaving the reader to decode "Could not
+            # exclusively lock port".
+            if exclusive and e.errno in (errno.EACCES, errno.EAGAIN, errno.EWOULDBLOCK):
+                message = (
+                    f'Serial port {port} is already locked by another process; '
+                    f'not opening it a second time. Serial data is split '
+                    f'between readers rather than copied to each, so both '
+                    f'would get partial data. Is a logger already running on '
+                    f'this port? "fuser -v {port}" or "lsof {port}" will name '
+                    f'the process. To allow shared access anyway, set '
+                    f'exclusive: false. Underlying error: {e}')
+                logging.fatal(message)
+                # Carry the guidance on the exception too, not just in the log:
+                # whoever sees the traceback shouldn't have to go find the log
+                # line to learn what to do about it.
+                raise serial.SerialException(message) from e
             logging.fatal('Failed to open serial port %s: %s', port, e)
             raise
 
