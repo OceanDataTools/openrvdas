@@ -15,6 +15,8 @@ sys.path.append('.')
 from logger.readers.serial_reader import SerialReader  # noqa: E402
 from logger.writers.serial_writer import SerialWriter  # noqa: E402
 
+import serial  # noqa: E402
+
 SAMPLE_DATA = """2017-11-04T05:12:19.275337Z $HEHDT,234.76,T*1b
 2017-11-04T05:12:19.527360Z $HEHDT,234.73,T*1e
 2017-11-04T05:12:19.781738Z $HEHDT,234.72,T*1f
@@ -227,6 +229,40 @@ class TestSerialWriter(unittest.TestCase):
 
         # Tell simulated serial port to shut down
         sim_serial.quit()
+
+    ############################
+    # A second writer on the same port must fail rather than interleaving its
+    # output with the first one's. See issue #641.
+    def test_exclusive_by_default(self):
+        temp_port = self.tmpdirname + '/exclusive'
+
+        sim_serial = SimSerialPort(temp_port)
+        if sim_serial.quit_flag:
+            self.skipTest('Could not create virtual serial ports')
+
+        first = SerialWriter(port=temp_port + '_in')
+        try:
+            with self.assertRaises(serial.SerialException) as cm:
+                SerialWriter(port=temp_port + '_in')
+            self.assertIn('locked by another process', str(cm.exception))
+        finally:
+            first.serial.close()
+
+    ############################
+    # ...but sharing remains available for anyone who wants it.
+    def test_exclusive_false_allows_sharing(self):
+        temp_port = self.tmpdirname + '/exclusive_false'
+
+        sim_serial = SimSerialPort(temp_port)
+        if sim_serial.quit_flag:
+            self.skipTest('Could not create virtual serial ports')
+
+        first = SerialWriter(port=temp_port + '_in', exclusive=False)
+        try:
+            second = SerialWriter(port=temp_port + '_in', exclusive=False)
+            second.serial.close()
+        finally:
+            first.serial.close()
 
 
 ################################################################################

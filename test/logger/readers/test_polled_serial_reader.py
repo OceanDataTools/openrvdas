@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 
 
+import inspect
 import unittest
 from unittest.mock import patch, MagicMock, call
 
 from logger.readers.polled_serial_reader import PolledSerialReader  # noqa: E402
+from logger.readers.serial_reader import SerialReader  # noqa: E402
 
 
 class TestPolledSerialReader(unittest.TestCase):
@@ -12,12 +14,36 @@ class TestPolledSerialReader(unittest.TestCase):
         # Create a mock for the serial port within the test class
         self.mock_serial_instance = MagicMock()
         self.patcher = patch('serial.Serial', return_value=self.mock_serial_instance)
-        self.patcher.start()
+        self.mock_serial_class = self.patcher.start()
         self.mock_serial_instance.readline.return_value = b'Hello, World!\n'
 
     def tearDown(self):
         # Stop the patcher to clean up after tests
         self.patcher.stop()
+
+    def test_exclusive_default(self):
+        """Issue #641: PolledSerialReader declares its own 'exclusive' default and
+        passes it through to SerialReader, so it shadows the parent's value. If the
+        two drift apart, this reader silently stops locking its port - and it is the
+        reader that most needs the lock, since it writes commands to the same port it
+        reads from.
+        """
+        PolledSerialReader(port='/dev/testport')
+        _, kwargs = self.mock_serial_class.call_args
+        self.assertTrue(kwargs.get('exclusive'),
+                        'PolledSerialReader should lock its port by default')
+
+        # The defaults of parent and child must stay in step.
+        parent = inspect.signature(SerialReader.__init__).parameters['exclusive'].default
+        child = inspect.signature(PolledSerialReader.__init__).parameters['exclusive'].default
+        self.assertEqual(child, parent,
+                         'PolledSerialReader exclusive default has drifted from SerialReader')
+
+        # An explicit opt-out still reaches pyserial.
+        self.mock_serial_class.reset_mock()
+        PolledSerialReader(port='/dev/testport', exclusive=False)
+        _, kwargs = self.mock_serial_class.call_args
+        self.assertFalse(kwargs.get('exclusive'))
 
     def test_with_start_and_stop_commands(self):
         start_cmd = "POWER ON"

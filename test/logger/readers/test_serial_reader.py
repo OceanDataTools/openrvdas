@@ -10,6 +10,8 @@ from logger.utils.simulate_data import SimSerial  # noqa: E402
 from logger.transforms.slice_transform import SliceTransform  # noqa: E402
 from logger.readers.serial_reader import SerialReader  # noqa: E402
 
+import serial  # noqa: E402
+
 SAMPLE_DATA = """2017-11-04T05:12:19.275337Z $HEHDT,234.76,T*1b
 2017-11-04T05:12:19.527360Z $HEHDT,234.73,T*1e
 2017-11-04T05:12:19.781738Z $HEHDT,234.72,T*1f
@@ -129,21 +131,24 @@ class TestSerialReader(unittest.TestCase):
         # Create a SerialReader, then replace its serial reader with a stub so
         # we can feed it bad records.
 
-        s = SerialReader(port=port)
+        # These readers each stub out readline immediately and never take
+        # data off the real port, so they don't need exclusive access to it -
+        # and can't have it, since the reader above still holds the port.
+        s = SerialReader(port=port, exclusive=False)
         s.serial.readline = dummy_readline
         self.assertEqual('♥♥\x00♥♥', s.read())
 
-        s = SerialReader(port=port, encoding_errors='replace')
+        s = SerialReader(port=port, encoding_errors='replace', exclusive=False)
         s.serial.readline = dummy_readline
         self.assertEqual('♥�♥\x00♥♥', s.read())
 
-        s = SerialReader(port=port, encoding_errors='strict')
+        s = SerialReader(port=port, encoding_errors='strict', exclusive=False)
         s.serial.readline = dummy_readline
         with self.assertLogs(logging.getLogger(), logging.WARNING):
             self.assertEqual(None, s.read())
 
         # Don't decode at all - return raw bytes
-        s = SerialReader(port=port, encoding=None)
+        s = SerialReader(port=port, encoding=None, exclusive=False)
         s.serial.readline = dummy_readline
         self.assertEqual(dummy_readline(), s.read())
 
@@ -164,6 +169,57 @@ class TestSerialReader(unittest.TestCase):
                              'test that can fail non-deterministically. If the '
                              'test fails, try running from the command line, e.g. '
                              'as "logger/readers/test_serial_reader.py"')
+
+    ############################
+    # A second reader on the same port must fail rather than quietly splitting
+    # the byte stream with the first one. See issue #641.
+    def test_exclusive_by_default(self):
+        port = self.port + '_exclusive_default'
+        # SimSerial creates the pty and symlink in its constructor, so we
+        # don't need to start its thread for a locking test - but we do need
+        # to hold the reference, because its __del__ unlinks the port.
+        sim = SimSerial(port=port, filebase=self.logfile_filename)  # noqa: F841
+
+        first = SerialReader(port)
+        try:
+            with self.assertRaises(serial.SerialException) as cm:
+                SerialReader(port)
+            # The message should name the port and point at the cause, rather
+            # than leaving the operator to decode pyserial's wording.
+            message = str(cm.exception)
+            self.assertIn(port, message)
+            self.assertIn('locked by another process', message)
+        finally:
+            first.serial.close()
+
+    ############################
+    # ...but sharing is still available for anyone who genuinely wants it.
+    def test_exclusive_false_allows_sharing(self):
+        port = self.port + '_exclusive_false'
+        sim = SimSerial(port=port, filebase=self.logfile_filename)  # noqa: F841
+
+        first = SerialReader(port, exclusive=False)
+        try:
+            second = SerialReader(port, exclusive=False)
+            second.serial.close()
+        finally:
+            first.serial.close()
+
+    ############################
+    # The lock is advisory (pyserial uses flock), so it only excludes
+    # processes that also ask for it. Pin that down, because it bounds what
+    # the exclusive default can promise: it stops a second OpenRVDAS logger,
+    # not a stray 'cat' or 'minicom'.
+    def test_lock_is_advisory(self):
+        port = self.port + '_advisory'
+        sim = SimSerial(port=port, filebase=self.logfile_filename)  # noqa: F841
+
+        locked = SerialReader(port)  # exclusive=True by default
+        try:
+            unlocked = SerialReader(port, exclusive=False)
+            unlocked.serial.close()
+        finally:
+            locked.serial.close()
 
 
 ################################################################################

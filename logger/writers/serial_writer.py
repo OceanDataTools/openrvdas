@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import errno
 import logging
 
 from typing import Union
@@ -23,7 +24,7 @@ class SerialWriter(Writer):
     def __init__(self,  port, baudrate=9600, bytesize=8, parity='N',
                  stopbits=1, timeout=None, xonxoff=False, rtscts=False,
                  write_timeout=None, dsrdtr=False, inter_byte_timeout=None,
-                 exclusive=None, eol='\n', **kwargs):
+                 exclusive=True, eol='\n', **kwargs):
         """
         By default, the SerialWriter write records to the specified serial port encoded by UTF-8
         and will ignore non unicode characters it encounters. These defaults may be changed by
@@ -31,6 +32,15 @@ class SerialWriter(Writer):
 
         eol - if specified, append to end of records to signify end of line,
                 otherwise use \n
+
+        exclusive - True by default: take an exclusive lock on the port, so that
+                a second OpenRVDAS process opening the same port fails loudly
+                rather than interleaving its output with this one's. Pass False
+                to allow shared access.
+
+                Note the lock is advisory - pyserial implements it with
+                flock() - so it only excludes processes that also ask for
+                exclusivity.
 
         encoding - 'utf-8' by default. If empty or None, will throw type error.
                 Other possible encodings are listed in online documentation here:
@@ -44,7 +54,6 @@ class SerialWriter(Writer):
         """
         super().__init__(**kwargs)  # processes 'quiet', encodings and type hints
 
-
         if not SERIAL_MODULE_FOUND:
             raise RuntimeError('Serial port functionality not available. Please '
                                'install Python module pyserial.')
@@ -57,6 +66,16 @@ class SerialWriter(Writer):
                                         inter_byte_timeout=inter_byte_timeout,
                                         exclusive=exclusive)
         except serial.SerialException as e:
+            # A lock conflict means someone else already has the port. Say what
+            # to do about it rather than leaving the reader to decode
+            # "Could not exclusively lock port".
+            if exclusive and e.errno in (errno.EACCES, errno.EAGAIN, errno.EWOULDBLOCK):
+                raise serial.SerialException(
+                    f'Serial port {port} is already locked by another process; '
+                    f'not opening it a second time. Is a logger already writing '
+                    f'to this port? "fuser -v {port}" or "lsof {port}" will name '
+                    f'the process. To allow shared access anyway, set '
+                    f'exclusive: false. Underlying error: {e}')
             raise serial.SerialException(f'Failed to open serial port {port}: {e}')
 
         # 'eol' comes in as a (probably escaped) string. We need to
