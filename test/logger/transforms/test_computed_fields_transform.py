@@ -115,6 +115,35 @@ class TestComputedFieldsTransform(unittest.TestCase):
         self.assertEqual(result.fields, {'Conc': 10.0, 'Sat': 15.0})
 
     ###############
+    def test_derived_only_emits_nothing_when_nothing_computed(self):
+        """In a read-compute-write-back pipeline, a record that triggers no
+        computation must not republish its raw inputs under the derived
+        measurement's name."""
+        transform = ComputedFieldsTransform(
+            fields={'Corr': {'equation': 'Conc + Temp'}},
+            update_on_fields=['Conc'],
+            delete_input_fields=True, delete_other_fields=True)
+
+        # A secondary input on its own: cached, but nothing to publish
+        self.assertIsNone(
+            transform.transform(DASRecord(timestamp=1, fields={'Temp': 10.0})))
+        # An unrelated record likewise
+        self.assertIsNone(
+            transform.transform(DASRecord(timestamp=2, fields={'Other': 1})))
+        # The trigger arrives: now there is something to say
+        result = transform.transform(DASRecord(timestamp=3, fields={'Conc': 5.0}))
+        self.assertEqual(result.fields, {'Corr': 15.0})
+
+    ###############
+    def test_enhancing_mode_still_passes_records_through(self):
+        """The same situation while enhancing a stream must pass the record
+        along untouched, not swallow it."""
+        transform = ComputedFieldsTransform(fields={'Corr': {'equation': 'A + B'}})
+        result = transform.transform(DASRecord(timestamp=1, fields={'Other': 1}))
+        self.assertIsNotNone(result)
+        self.assertEqual(result.fields, {'Other': 1})
+
+    ###############
     def test_dict_round_trip(self):
         """Hand back the shape we were given, as SelectFieldsTransform and
         DeltaTransform do."""

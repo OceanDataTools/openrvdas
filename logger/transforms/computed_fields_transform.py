@@ -581,6 +581,16 @@ class ComputedFieldsTransform(DerivedDataTransform):
             elif self.delete_other_fields and field not in computed:
                 del result.fields[field]
 
+        # If the caller asked for derived values only and this record did not
+        # produce any, there is nothing to publish. Returning the surviving
+        # input fields would republish raw readings under the derived
+        # measurement's name - in a CachedDataServer round-trip that means a
+        # CTD value reappearing as though it were an oxygen correction.
+        # DeltaTransform sets the precedent of returning None when it has
+        # nothing to say.
+        if self.delete_other_fields and not computed:
+            return None
+
         for output_name, value in computed.items():
             if output_name in fields and not self.quiet:
                 logging.warning('ComputedFieldsTransform overwriting existing '
