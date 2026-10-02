@@ -59,7 +59,8 @@ class ConfigValidator:
     }
 
     KNOWN_TRANSFORMS = {
-        'ConvertFieldsTransform', 'CountTransform', 'DeltaTransform',
+        'ComputedFieldsTransform', 'ConvertFieldsTransform',
+        'CountTransform', 'DeltaTransform',
         'DerivedDataTransform', 'ExtractFieldTransform', 'FormatTransform',
         'FromJsonTransform', 'GeofenceTransform', 'InterpolationTransform',
         'MaxMinTransform', 'ModifyValueTransform', 'NMEAChecksumTransform',
