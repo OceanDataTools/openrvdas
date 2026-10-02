@@ -5,12 +5,26 @@ See issue #643. This is the general case of ModifyValueTransform, which
 remains in place for the linear slope/offset case it already serves.
 """
 
-import ast
 import copy
 import logging
 import math
 import time
 from typing import Union
+
+# Don't break the whole transforms package if this import somehow fails -
+# logger/transforms/__init__.py imports this module unconditionally, so an
+# import error here would take every transform down with it. Complain only
+# when someone actually tries to use this transform.
+#
+# NOTE: ast is in the standard library, so unlike the guards around paho-mqtt
+# or geopandas this is belt-and-braces rather than an optional dependency. It
+# is here to keep the failure local, and so that the whitelist below has
+# somewhere to degrade to.
+try:
+    import ast
+    AST_MODULE_FOUND = True
+except ModuleNotFoundError:
+    AST_MODULE_FOUND = False
 
 from logger.utils.das_record import DASRecord  # noqa: E402
 from logger.transforms.derived_data_transform import DerivedDataTransform  # noqa: E402
@@ -30,20 +44,25 @@ from logger.transforms.derived_data_transform import DerivedDataTransform  # noq
 # allowlist that permits it is not a sandbox at all. Emptying __builtins__ is
 # necessary but nowhere near sufficient on its own.
 
-# Node types an expression may contain. Everything else is refused.
-ALLOWED_NODES = (
-    ast.Expression,
-    ast.BinOp, ast.UnaryOp, ast.BoolOp, ast.Compare, ast.IfExp,
-    ast.Call, ast.Name, ast.Load, ast.Constant,
-)
+if AST_MODULE_FOUND:
+    # Node types an expression may contain. Everything else is refused.
+    ALLOWED_NODES = (
+        ast.Expression,
+        ast.BinOp, ast.UnaryOp, ast.BoolOp, ast.Compare, ast.IfExp,
+        ast.Call, ast.Name, ast.Load, ast.Constant,
+    )
 
-# Operators. Mod is here for angular wrapping (e.g. "(dir + offset) % 360").
-ALLOWED_OPS = (
-    ast.Add, ast.Sub, ast.Mult, ast.Div, ast.FloorDiv, ast.Mod, ast.Pow,
-    ast.USub, ast.UAdd, ast.Not,
-    ast.And, ast.Or,
-    ast.Eq, ast.NotEq, ast.Lt, ast.LtE, ast.Gt, ast.GtE,
-)
+    # Operators. Mod is here for angular wrapping, e.g. "(dir + offset) % 360".
+    ALLOWED_OPS = (
+        ast.Add, ast.Sub, ast.Mult, ast.Div, ast.FloorDiv, ast.Mod, ast.Pow,
+        ast.USub, ast.UAdd, ast.Not,
+        ast.And, ast.Or,
+        ast.Eq, ast.NotEq, ast.Lt, ast.LtE, ast.Gt, ast.GtE,
+    )
+else:
+    # Nothing is permitted without a parser to check it against.
+    ALLOWED_NODES = ()
+    ALLOWED_OPS = ()
 
 # Functions an expression may call. Chosen to cover the calibration maths
 # that actually comes up: exp/log for dissolved oxygen saturation, sin and
@@ -78,6 +97,11 @@ def validate_expression(expression, where=''):
     Returns the parsed ast.Expression. Raises UnsafeExpressionError with a
     message naming the offending construct otherwise.
     """
+    if not AST_MODULE_FOUND:
+        raise RuntimeError('Expression evaluation is not available: could not '
+                           'import the standard library "ast" module, so there '
+                           'is no way to check an equation before running it.')
+
     prefix = f'{where}: ' if where else ''
 
     if not isinstance(expression, str):
@@ -276,6 +300,12 @@ class ComputedFieldsTransform(DerivedDataTransform):
         ```
         """
         super().__init__(**kwargs)  # processes 'quiet' and type hints
+
+        if not AST_MODULE_FOUND:
+            raise RuntimeError('ComputedFieldsTransform is not available: '
+                               'could not import the standard library "ast" '
+                               'module, which is needed to parse and check '
+                               'equations before they are evaluated.')
 
         if not isinstance(fields, dict) or not fields:
             raise ValueError('ComputedFieldsTransform requires a non-empty '
