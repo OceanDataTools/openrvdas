@@ -1,0 +1,280 @@
+# ---------------------------------------------------------------------------
+# Template: computed_fields_logger_template
+#
+# Description:
+#   A general-purpose correction logger. It subscribes to raw fields from the
+#   CachedDataServer, computes one or more new fields from an algebraic
+#   expression, and writes the results back to CDS, InfluxDB and/or a text
+#   file.
+#
+#   The point of this template is that the arithmetic lives in the config
+#   rather than in Python. One template covers linear calibrations,
+#   polynomials, angular corrections, sign-from-hemisphere, conditional
+#   terms and multi-instrument formulae - cases that would otherwise each
+#   need their own transform module and their own logger template.
+#
+# Required logger variables:
+#   - output_field       (string) Name of the field to compute
+#   - equation           (string) The expression to evaluate. Bare names refer
+#                                 to record fields, to entries in 'constants',
+#                                 to aliases in 'inputs', or to one of the
+#                                 built-in maths functions.
+#   - subscribe_fields   (dict)   The CDS subscription, e.g.
+#                                   {MyField: {seconds: 0}}
+#   - measurement_name   (string) Measurement name for the InfluxDB writers
+#
+# Optional logger variables:
+#   - constants          (dict)   Named values the equation may use. May be
+#                                 numbers, booleans or strings. A constant
+#                                 whose value is null disables the rule, which
+#                                 is the tidy way to say "this device is not
+#                                 calibrated yet" without removing the logger.
+#   - inputs             (dict)   alias -> field name, so a standard formula
+#                                 can be written in textbook notation and
+#                                 pointed at differently-named fields.
+#   - update_on_fields   (list)   Compute only when one of these fields
+#                                 arrives. Needed whenever inputs come from
+#                                 more than one instrument - without it a new
+#                                 value is emitted every time any secondary
+#                                 input ticks.
+#   - max_field_age      (dict)   field -> seconds. A cached value older than
+#                                 its limit counts as missing, so the rule
+#                                 will not fire on stale data.
+#   - header_file        (string) Defaults to <<header_dir>>/computed_hdr.txt
+#   - file_suffix        (string) Defaults to the output field name
+#
+# Expects these globals, as used elsewhere in the cruise definition:
+#   <<cdw_port>>, <<influxdb_default_bucket>>, <<influxdb_restricted_bucket>>,
+#   <<header_dir>>, <<file_root>>, <<cruise>>
+#
+# ---------------------------------------------------------------------------
+# WORKED EXAMPLES - put these in your cruise definition's "loggers:" section
+# ---------------------------------------------------------------------------
+#
+# 1. Linear calibration. Coefficients come from an included calibration file,
+#    so the cruise definition does not change when a sensor is recalibrated.
+#
+#   rtmp_cal:
+#     logger_template: computed_fields_logger_template
+#     variables:
+#       output_field: CalibratedRTmpValue
+#       equation: "slope * RTmpValue + offset"
+#       constants:
+#         slope:  <<rtmp_slope|1.0>>
+#         offset: <<rtmp_offset|0.0>>
+#       subscribe_fields:
+#         RTmpValue: {seconds: 0}
+#       measurement_name: rtmp
+#
+# 2. Polynomial response - the same template, a longer equation.
+#
+#   pressure_cal:
+#     logger_template: computed_fields_logger_template
+#     variables:
+#       output_field: PressureCorrected
+#       equation: "1.0e-5 * Pressure**2 + 0.998 * Pressure - 0.12"
+#       subscribe_fields:
+#         Pressure: {seconds: 0}
+#       measurement_name: pressure
+#
+# 3. Conditional term - whether to subtract atmospheric pressure is config,
+#    not a different equation.
+#
+#   sb_ctd_depth_corr:
+#     logger_template: computed_fields_logger_template
+#     variables:
+#       output_field: SB_CTD_SBE49_Depth_Corr
+#       equation: "(SB_CTD_SBE49_WaterPres - (10.1325 if pressure_abs else 0))
+#                  * conv_coefficient"
+#       constants:
+#         pressure_abs: false
+#         conv_coefficient: 1.0
+#       subscribe_fields:
+#         SB_CTD_SBE49_WaterPres: {seconds: 0}
+#       measurement_name: sb_ctd_sbe49
+#
+# 4. Angular correction - note the modulo, and that the offset is a constant.
+#
+#   windsonic_dir_corr:
+#     logger_template: computed_fields_logger_template
+#     variables:
+#       output_field: Windsonic_WindDir_Corr
+#       equation: "(Windsonic_WindDir + zero_line_reference) % 360"
+#       constants:
+#         zero_line_reference: 180
+#       subscribe_fields:
+#         Windsonic_WindDir: {seconds: 0}
+#       measurement_name: windsonic_fm
+#
+# 5. Sign from a companion field. Field values are not coerced to numbers, so
+#    a hemisphere field valued 'N'/'S' can be compared directly.
+#
+#   hugin_latitude:
+#     logger_template: computed_fields_logger_template
+#     variables:
+#       output_field: Latitude
+#       equation: "LatitudeDD * (-1 if LatHemi == 'S' else 1)"
+#       subscribe_fields:
+#         LatitudeDD: {seconds: 0}
+#         LatHemi:    {seconds: 0}
+#       measurement_name: emp_hugin_rt
+#
+# 6. Cross-instrument. Oxygen concentration compensated using temperature and
+#    salinity from a *different* instrument.
+#
+#    update_on_fields says "recompute when a new oxygen reading arrives, not
+#    every time the CTD ticks". max_field_age says "only trust the CTD values
+#    if they are less than two seconds old". Both are needed as soon as inputs
+#    span instruments; they are the same two options TrueWindsTransform has.
+#
+#   sb_oxygen_corr_sbe49:
+#     logger_template: computed_fields_logger_template
+#     variables:
+#       output_field: SB_Oxygen_Concentration_Corr_sbe49
+#       equation: "Conc * (1 + 0.032*(Temp - 20)) - 0.08*(Sal - 35)"
+#       inputs:
+#         Conc: SB_Oxygen_Concentration
+#         Temp: SB_CTD_SBE49_WaterTemp
+#         Sal:  SB_CTD_SBE49_Salinity
+#       subscribe_fields:
+#         SB_Oxygen_Concentration:  {seconds: 0}
+#         SB_CTD_SBE49_WaterTemp:   {seconds: 0}
+#         SB_CTD_SBE49_Salinity:    {seconds: 0}
+#       update_on_fields:
+#       - SB_Oxygen_Concentration
+#       max_field_age:
+#         SB_CTD_SBE49_WaterTemp: 2
+#         SB_CTD_SBE49_Salinity:  2
+#       measurement_name: sb_oxygen
+#
+# ---------------------------------------------------------------------------
+# NOTES
+#
+# * Equations are checked when the logger starts, not per record, so a typo
+#   or an unsafe construct stops the logger immediately rather than failing
+#   quietly mid-cruise. "validate_config" will catch it before you sail.
+#
+# * Expressions are not eval()'d naively: they are parsed and every construct
+#   is checked against an allowlist, with no builtins and no attribute access.
+#   Arithmetic, comparisons, conditional expressions and this set of functions
+#   are available:
+#     abs min max round pow int float
+#     exp log log10 sqrt sin cos tan asin acos atan atan2 hypot
+#     degrees radians floor ceil fmod      (plus the constants pi and e)
+#
+# * The exponent of ** must be a literal number (and at most 64). This is a
+#   deliberate guard: "9**9**9" is otherwise an ordinary expression that would
+#   hang the logger.
+#
+# * delete_input_fields/delete_other_fields are both set true below, because
+#   this template is for the read-from-CDS-and-write-back pattern where only
+#   the derived value should be published. For a logger that *enhances* an
+#   inline stream instead, set them false and the record passes through with
+#   the computed field added.
+#
+# * If a rule's inputs are not in the record, it quietly does not fire - a
+#   stream may carry many record types and only some will have the fields you
+#   want. Set warn_missing_inputs: true while you are debugging. Partial
+#   presence (some inputs there, others not) is always logged at debug level.
+# ---------------------------------------------------------------------------
+
+logger_templates:
+  #################
+  computed_fields_logger_template:
+
+    # Common base defining the core read/compute logic.
+    # Its output is always structured data.
+    base: &base
+      readers:
+      - class: CachedDataReader
+        kwargs:
+          data_server: <<cdw_port>>
+          subscription:
+            fields: <<subscribe_fields>>
+      transforms:
+      - class: ComputedFieldsTransform
+        kwargs:
+          fields:
+            <<output_field>>:
+              equation: <<equation>>
+              constants: <<constants|{}>>
+              inputs: <<inputs|{}>>
+          update_on_fields: <<update_on_fields|[]>>
+          max_field_age: <<max_field_age|{}>>
+          # Publish only the derived value; see NOTES above if you want the
+          # inputs to pass through as well.
+          delete_input_fields: true
+          delete_other_fields: true
+          warn_missing_inputs: <<warn_missing_inputs|false>>
+
+    # Available reusable writer components
+    writers: &writers
+      cached: &cached_writer
+        class: CachedDataWriter
+        kwargs:
+          data_server: <<cdw_port>>
+      influx: &influx_writer
+        class: InfluxDBWriter
+        kwargs:
+          bucket_name: <<influxdb_default_bucket>>
+          measurement_name: <<measurement_name>>
+      influx_restricted: &influx_writer_restricted
+        class: InfluxDBWriter
+        kwargs:
+          bucket_name: <<influxdb_restricted_bucket>>
+          measurement_name: <<measurement_name>>
+
+      # Base file writer definition (wrapped by the ComposedWriter below)
+      file: &file_writer
+        class: LogfileWriter
+        kwargs:
+          header_file: <<header_file|<<header_dir>>/computed_hdr.txt>>
+          filebase: <<file_root>>/<<cruise>>_<<file_suffix|<<output_field>>>>
+          split_char: ','
+          suffix: '.txt'
+
+      # ComposedWriter to format structured data into a string for file output
+      file_from_structured: &file_from_structured
+        class: ComposedWriter
+        kwargs:
+          transforms:
+          - class: FormatTransform
+            module: logger.transforms.format_transform
+            kwargs:
+              format_str: '{<<output_field>>}'
+          - class: TimestampTransform
+            kwargs:
+              sep: ','
+          writers:
+          - *file_writer
+
+    # Compose logger from defined components
+    configs:
+      'off': {}
+
+      # Writes structured data directly to InfluxDB and cdw
+      influx:
+        <<: *base
+        writers:
+        - *cached_writer
+        - *influx_writer
+
+      influx_restricted:
+        <<: *base
+        writers:
+        - *cached_writer
+        - *influx_writer_restricted
+
+      # Takes structured data, formats it and writes to file
+      file:
+        <<: *base
+        writers:
+        - *file_from_structured
+
+      # Writes to both destinations, applying formatting only for the file
+      file+influx:
+        <<: *base
+        writers:
+        - *cached_writer
+        - *influx_writer
+        - *file_from_structured
