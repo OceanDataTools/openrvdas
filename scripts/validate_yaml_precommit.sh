@@ -26,6 +26,31 @@ if [ ! -f "$VALIDATOR" ]; then
     exit 0
 fi
 
+# Prefer the project's own venv. Otherwise this runs under whatever python3
+# happens to be first on PATH - a pyenv shim, an unrelated venv, the distro
+# python - which need not have PyYAML. OpenRVDAS installs its dependencies
+# into $REPO_ROOT/venv, so a developer who has not activated it is the normal
+# case rather than the unusual one. See issue #646.
+PYTHON=python3
+if [ -x "$REPO_ROOT/venv/bin/python3" ]; then
+    PYTHON="$REPO_ROOT/venv/bin/python3"
+fi
+
+# Being unable to run the check is not the same as the YAML being wrong. Warn
+# and let the commit through - as we already do just above for a missing
+# validator - rather than reporting valid YAML as broken, which also trains
+# people to reach for --no-verify as a matter of habit.
+if ! "$PYTHON" -c 'import yaml' 2> /dev/null; then
+    # Report the interpreter we actually resolved to, not the word "python3" -
+    # which one got picked is the whole question when this fires.
+    RESOLVED="$(command -v "$PYTHON" || echo "$PYTHON")"
+    echo "Warning: PyYAML is not available to $RESOLVED, so YAML files were"
+    echo "         not validated. Activate the OpenRVDAS virtual environment,"
+    echo "         or install it there:"
+    echo "             $RESOLVED -m pip install pyyaml"
+    exit 0
+fi
+
 # Validate staged YAML files
 echo "Validating YAML configuration files..."
 
@@ -37,7 +62,7 @@ for file in $STAGED_YAML; do
     fi
 
     # Run validator
-    if ! python3 "$VALIDATOR" "$REPO_ROOT/$file" 2>&1; then
+    if ! "$PYTHON" "$VALIDATOR" "$REPO_ROOT/$file" 2>&1; then
         ERRORS=1
     fi
 done
