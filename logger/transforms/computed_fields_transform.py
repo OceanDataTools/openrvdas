@@ -91,12 +91,21 @@ class UnsafeExpressionError(ValueError):
     """Raised when an expression contains something we refuse to evaluate."""
 
 
-def validate_expression(expression, where=''):
+def validate_expression(expression, where='', functions=None):
     """Parse an expression and refuse anything not on the allowlist.
 
     Returns the parsed ast.Expression. Raises UnsafeExpressionError with a
     message naming the offending construct otherwise.
+
+    'functions' is the set of callable names the expression may use. It
+    defaults to SAFE_FUNCTIONS; a ComputedFieldsTransform subclass that widens
+    its FUNCTIONS table passes that in, so that validation and evaluation agree
+    about what exists. They must agree: a name permitted here but absent at
+    evaluation would fail per record instead of at startup, and a name
+    available at evaluation but refused here could never be reached.
     """
+    if functions is None:
+        functions = SAFE_FUNCTIONS
     if not AST_MODULE_FOUND:
         raise RuntimeError('Expression evaluation is not available: could not '
                            'import the standard library "ast" module, so there '
@@ -132,7 +141,7 @@ def validate_expression(expression, where=''):
                 f'{prefix}{type(node).__name__} is not allowed in an equation. '
                 f'Equations may use arithmetic, comparisons, conditional '
                 f'expressions and the functions '
-                f'{", ".join(sorted(SAFE_FUNCTIONS))}.')
+                f'{", ".join(sorted(functions))}.')
 
         if isinstance(node, ast.Call):
             # Only direct calls to whitelisted names. No attribute calls, no
@@ -140,10 +149,10 @@ def validate_expression(expression, where=''):
             if not isinstance(node.func, ast.Name):
                 raise UnsafeExpressionError(
                     f'{prefix}only direct calls to named functions are allowed')
-            if node.func.id not in SAFE_FUNCTIONS:
+            if node.func.id not in functions:
                 raise UnsafeExpressionError(
                     f'{prefix}unknown function "{node.func.id}". Available: '
-                    f'{", ".join(sorted(SAFE_FUNCTIONS))}')
+                    f'{", ".join(sorted(functions))}')
             if node.keywords:
                 raise UnsafeExpressionError(
                     f'{prefix}keyword arguments are not allowed in equations')
@@ -179,7 +188,27 @@ def expression_names(tree):
 ################################################################################
 class ComputedFieldsTransform(DerivedDataTransform):
     """Compute new record fields from algebraic expressions over existing ones.
+
+    The callables and named constants an equation may use are class attributes,
+    so a subclass can widen them without touching this module - and without
+    this module acquiring the subclass's dependencies:
+
+        class GSWComputedFieldsTransform(ComputedFieldsTransform):
+            FUNCTIONS = {**ComputedFieldsTransform.FUNCTIONS,
+                         'gsw_z_from_p': gsw.z_from_p}
+
+    Names must be flat. Attribute access is refused by the expression checker -
+    it is the main sandbox escape - so "gsw.z_from_p(...)" could never parse.
+
+    A subclass adding functions that can return NaN rather than raising, as the
+    TEOS-10 routines do, should guard against that: everything in the default
+    table raises on bad input, so a NaN would otherwise travel quietly into the
+    data stream.
     """
+
+    # Widen these in a subclass, not in place.
+    FUNCTIONS = SAFE_FUNCTIONS
+    CONSTANTS = SAFE_CONSTANTS
 
     def __init__(self, fields,
                  delete_input_fields=False, delete_other_fields=False,
@@ -384,7 +413,8 @@ class ComputedFieldsTransform(DerivedDataTransform):
         # record means a bad equation stops the logger at startup, where
         # someone will see it, instead of silently mid-cruise - and lets
         # validate_config catch it before anyone sails.
-        tree = validate_expression(equation, where=f'field "{output_name}"')
+        tree = validate_expression(equation, where=f'field "{output_name}"',
+                                   functions=self.FUNCTIONS)
 
         # A null constant is how a config says "this device has no calibration".
         # Disable the rule rather than computing something plausible-looking
@@ -401,8 +431,8 @@ class ComputedFieldsTransform(DerivedDataTransform):
         # fields. Anything not otherwise accounted for is a field reference.
         input_fields = {}
         for name in expression_names(tree):
-            if name in constants or name in SAFE_FUNCTIONS \
-               or name in SAFE_CONSTANTS:
+            if name in constants or name in self.FUNCTIONS \
+               or name in self.CONSTANTS:
                 continue
             # An alias resolves to the field it names; a bare name is the
             # field name itself.
@@ -493,8 +523,8 @@ class ComputedFieldsTransform(DerivedDataTransform):
     ############################
     def _evaluate(self, output_name, rule, values):
         """Evaluate one rule. Returns None if it could not be computed."""
-        namespace = dict(SAFE_CONSTANTS)
-        namespace.update(SAFE_FUNCTIONS)
+        namespace = dict(self.CONSTANTS)
+        namespace.update(self.FUNCTIONS)
         namespace.update(rule['constants'])
         namespace.update(values)
         try:
