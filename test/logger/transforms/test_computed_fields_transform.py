@@ -350,6 +350,44 @@ class TestComputedFieldsTransform(unittest.TestCase):
         self.assertIn('overwriting', ''.join(cm.output))
         self.assertEqual(result.fields['Raw'], 10.0)
 
+    ###############
+    def test_subclass_can_widen_the_function_table(self):
+        """The callable table is a class attribute so a subclass can add to it
+        - which is how an optional library such as gsw would be offered without
+        this module taking the dependency. Before that change the table was a
+        module global read by the validator, so a subclass could change what
+        evaluated but not what was *allowed*, and any added call was refused at
+        config load."""
+
+        def fake_z_from_p(p, lat):
+            return -(p * 0.9947)
+
+        class WidenedTransform(ComputedFieldsTransform):
+            FUNCTIONS = {**ComputedFieldsTransform.FUNCTIONS,
+                         'gsw_z_from_p': fake_z_from_p}
+
+        transform = WidenedTransform(fields={
+            'Depth': {'equation': 'gsw_z_from_p(Pressure, Latitude)'}})
+        result = transform.transform(DASRecord(
+            timestamp=1, fields={'Pressure': 100.0, 'Latitude': -45.0}))
+        self.assertAlmostEqual(result.fields['Depth'], -99.47)
+
+        # The base class must be unaffected - no leakage between tables
+        with self.assertRaises(UnsafeExpressionError):
+            ComputedFieldsTransform(fields={
+                'Depth': {'equation': 'gsw_z_from_p(Pressure, Latitude)'}})
+
+    ###############
+    def test_added_function_name_is_not_mistaken_for_a_field(self):
+        """Names are sorted into constants, functions and fields, so a widened
+        table must not leave its own function names looking like inputs."""
+        class WidenedTransform(ComputedFieldsTransform):
+            FUNCTIONS = {**ComputedFieldsTransform.FUNCTIONS,
+                         'half': lambda x: x / 2}
+
+        transform = WidenedTransform(fields={'H': {'equation': 'half(Raw)'}})
+        self.assertEqual(transform.rules['H']['input_fields'], {'Raw': 'Raw'})
+
 
 ################################################################################
 if __name__ == '__main__':
