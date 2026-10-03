@@ -248,7 +248,7 @@ class ComputedFieldsTransform(DerivedDataTransform):
             equation (required)
                 The expression to evaluate. Bare names refer to record fields,
                 to entries in 'constants', to entries in 'inputs', or to one of
-                the maths functions listed below.
+                the functions listed under "Writing equations" below.
 
             constants (default {})
                 Values to make available to the equation by name. These may be
@@ -326,6 +326,36 @@ class ComputedFieldsTransform(DerivedDataTransform):
 
         metadata_interval (default None)
             If set, how often in seconds to attach field metadata to records.
+
+        Writing equations
+        -----------------
+        An equation may use arithmetic (+ - * / // % **), comparisons, boolean
+        operators, and conditional expressions ("x if cond else y"). Field
+        values are passed through as they arrive and are not coerced, so a
+        field holding 'N' or 'S' can be compared as a string.
+
+        These functions are available:
+
+                abs acos asin atan atan2 ceil cos degrees exp float floor
+                fmod hypot int log log10 max min pow radians round sin sqrt
+                tan
+
+        along with the constants pi and e.
+
+        The exponent of ** must be a literal number, and at most 64. This is a
+        deliberate guard rather than an oversight: "9**9**9" is otherwise an
+        ordinary expression that would hang the logger and exhaust its memory.
+
+        Equations are checked when the transform is constructed, not per
+        record, so a typo or a refused construct stops the logger at startup
+        rather than failing quietly mid-cruise - and validate_config can catch
+        it before anyone sails. They are not eval()'d naively: the expression
+        is parsed and every construct checked against an allowlist, with no
+        builtins and no attribute access.
+
+        To make further functions available - the TEOS-10 routines in gsw, for
+        instance - subclass this transform and widen its FUNCTIONS table rather
+        than editing it in place. See the class docstring.
         ```
         """
         super().__init__(**kwargs)  # processes 'quiet' and type hints

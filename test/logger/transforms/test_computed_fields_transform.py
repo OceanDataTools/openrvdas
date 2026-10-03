@@ -5,7 +5,7 @@ import unittest
 
 from logger.utils.das_record import DASRecord  # noqa: E402
 from logger.transforms.computed_fields_transform import (  # noqa: E402
-    ComputedFieldsTransform, UnsafeExpressionError)
+    ComputedFieldsTransform, UnsafeExpressionError, SAFE_FUNCTIONS, SAFE_CONSTANTS)
 
 
 class TestComputedFieldsTransform(unittest.TestCase):
@@ -387,6 +387,19 @@ class TestComputedFieldsTransform(unittest.TestCase):
 
         transform = WidenedTransform(fields={'H': {'equation': 'half(Raw)'}})
         self.assertEqual(transform.rules['H']['input_fields'], {'Raw': 'Raw'})
+
+    ###############
+    def test_docstring_lists_every_available_function(self):
+        """The config docstring is the only place a config author learns what
+        they can call, and it once said "the maths functions listed below"
+        with nothing listed below. Keep the list honest."""
+        doc = ComputedFieldsTransform.__init__.__doc__
+        for name in SAFE_FUNCTIONS:
+            self.assertIn(name, doc,
+                          f'"{name}" is callable in an equation but is not '
+                          f'mentioned in the kwargs docstring')
+        for name in SAFE_CONSTANTS:
+            self.assertIn(name, doc)
 
 
 ################################################################################
