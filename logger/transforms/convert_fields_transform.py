@@ -90,15 +90,6 @@ class ConvertFieldsTransform(Transform):
         # We need to make a deep copy because we modify the record in place
         new_record = copy.deepcopy(record)
 
-        # Handle list of records
-        if isinstance(new_record, list):
-            new_record_list = []
-            for single_record in new_record:
-                result = self.transform(single_record)
-                if result:
-                    new_record_list.append(result)
-            return new_record_list
-
         # Identify the fields dictionary
         if isinstance(new_record, DASRecord):
             fields = new_record.fields

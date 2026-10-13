@@ -79,6 +79,14 @@ class BaseModule:
     the subclass is valid for mirroring, i.e. not a Writer), BaseModule
     will spin up a thread and a queue to asynchronously write a copy of
     every record it processes to the specified Writer.
+
+    The intent is to mirror the records that are handed downstream, and
+    nothing else. Mirroring is done by wrapping the public read() or
+    transform() method, so every call to that method mirrors what it
+    returns. A module should therefore never call its own read() or
+    transform() for internal work, such as processing the elements of a
+    list or skipping ahead in a file. Put that work in a private helper
+    method (or use digest_record()) and have the public method call it.
     """
     ############################
     def __init__(self, quiet=False, encoding='utf-8', encoding_errors='ignore',
@@ -104,7 +112,8 @@ class BaseModule:
                 by this module (if it is a Reader or Transform) will be
                 "mirrored" (copied). Mirroring happens asynchronously via
                 a queue and background thread to minimize impact on the
-                primary data flow. Writers cannot be mirrored.
+                primary data flow. Only records handed downstream should
+                be mirrored (see class docstring). Writers cannot be mirrored.
         ```
         """
         if kwargs.get('input_format'):
@@ -160,18 +169,18 @@ class BaseModule:
             except Exception as e:
                 logging.warning(f'Error writing to mirror_to: {e}')
 
-    def _wrapped_read(self):
+    def _wrapped_read(self, *args, **kwargs):
         """Wrapped version of read() that intercepts records and sends
         them to the mirror_to writer."""
-        record = self._original_read()
+        record = self._original_read(*args, **kwargs)
         if record is not None:
             self.mirror_queue.put(record)
         return record
 
-    def _wrapped_transform(self, record):
+    def _wrapped_transform(self, record, *args, **kwargs):
         """Wrapped version of transform() that intercepts records and sends
         them to the mirror_to writer."""
-        result = self._original_transform(record)
+        result = self._original_transform(record, *args, **kwargs)
         if result is not None:
             self.mirror_queue.put(result)
         return result

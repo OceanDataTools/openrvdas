@@ -10,6 +10,7 @@ import warnings
 from logger.utils import timestamp  # noqa: E402
 from logger.utils.das_record import DASRecord  # noqa: E402
 from logger.readers.logfile_reader import LogfileReader  # noqa: E402
+from logger.writers.writer import Writer  # noqa: E402
 
 SAMPLE_DATA = """\
 2017-11-04T05:12:19.441672Z 3.5kHz,5360.54,1,,,,1500,-39.580717,-37.461886
@@ -286,6 +287,40 @@ class TestLogfileReader(unittest.TestCase):
             self.assertEqual(sample_lines[5], reader.read())
             self.assertEqual(END_TIMESTAMP, reader.seek_time(0, 'end'))
             self.assertEqual(None, reader.read())
+
+    ############################
+    # Records that are skipped over by a seek are not handed downstream,
+    # so should not be sent to a mirror_to writer.
+    def test_seek_not_mirrored(self):
+        class MockWriter(Writer):
+            def __init__(self, **kwargs):
+                super().__init__(**kwargs)
+                self.records = []
+
+            def write(self, record):
+                self.records.append(record)
+
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            logging.info('created temporary directory "%s"', tmpdirname)
+            filebase = tmpdirname + '/mylog-'
+            sample_lines = []
+            for f in sorted(SAMPLE_DATA_2):
+                create_file(filebase + f, SAMPLE_DATA_2[f])
+                sample_lines.extend(SAMPLE_DATA_2[f])
+            END_TIMESTAMP = get_msec_timestamp(sample_lines[-1])
+
+            writer = MockWriter()
+            reader = LogfileReader(filebase, mirror_to=writer)
+            self.assertEqual(sample_lines[0], reader.read())
+            self.assertEqual(END_TIMESTAMP, reader.seek_time(0, 'end'))
+            self.assertEqual(None, reader.read())
+            self.assertEqual(END_TIMESTAMP - 1000, reader.seek_time(-1000, 'end'))
+            self.assertEqual(sample_lines[9], reader.read())
+
+            # Mirroring is asynchronous; give the thread a moment
+            time.sleep(0.1)
+
+            self.assertEqual(writer.records, [sample_lines[0], sample_lines[9]])
 
     ############################
     def test_seek_current(self):
