@@ -68,8 +68,17 @@ class TimestampTransform(Transform):
                 time_drift_threshold=nmea_time_drift_threshold)
 
     ############################
-    def transform(self, record: str, ts=None) -> str:
+    def transform(self, record: str) -> str:
         """Prepend a timestamp"""
+        return self._add_timestamp(record)
+
+    ############################
+    def _add_timestamp(self, record, ts=None):
+        """Do the work of transform(). Lists are handled by calling this
+        method on each element, passing along the timestamp to use."""
+        # Why not just recurse on transform()? If we have a mirror_to writer,
+        # transform() is wrapped to mirror its result, and we only want to
+        # mirror the full list we hand downstream, not each element (#648).
 
         # If they've not given us a timestamp, find one.
         if ts is None:
@@ -95,7 +104,7 @@ class TimestampTransform(Transform):
             # along the same initial timestamp so all elements in the list
             # share the same timestamp.
             if isinstance(record, list):
-                return [self.transform(r, ts) for r in record]
+                return [self._add_timestamp(r, ts) for r in record]
             # If not str and not list, pass it along to digest_record()
             # to let it try and/or complain.
             else:

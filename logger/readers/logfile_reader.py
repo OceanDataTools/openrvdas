@@ -147,6 +147,14 @@ class LogfileReader(TimestampedReader):
           if not record:
             could be EOF or simply an empty next line
         """
+        return self._read()
+
+    ############################
+    def _read(self):
+        """Do the work of read(). Internal code that consumes records without
+        handing them downstream (e.g. when seeking) should call this rather
+        than read() because, if we have a mirror_to writer, every record
+        returned by read() is mirrored."""
 
         # NOTE: It feels like we should check here that the reader's
         # current file really does match our logfile name format...
@@ -333,7 +341,7 @@ class LogfileReader(TimestampedReader):
             return desired_time
 
         elif origin == 'end':
-            while self.read() is not None:
+            while self._read() is not None:
                 pass
             if self.prev_record is None:
                 return None
