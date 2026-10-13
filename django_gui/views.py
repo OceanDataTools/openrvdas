@@ -5,10 +5,8 @@ from django_gui.settings import WEBSOCKET_DATA_SERVER
 import logging
 import yaml
 
-from json import JSONDecodeError
 from os import listdir
 from os.path import dirname, isfile, isdir, abspath, relpath
-from yaml.scanner import ScannerError
 
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
@@ -21,6 +19,65 @@ from logger.utils.read_config import read_config, expand_cruise_definition  # no
 ############################
 # We're going to interact with the Django DB via its API class
 api = None
+
+
+################################################################################
+def load_cruise_definition(filename, preserve_mode=False):
+    """Read the cruise definition in the named file and, if it is valid,
+    load it. Return a list of error messages, which will be empty if the
+    definition was loaded. If the list is not empty, the definition was
+    not loaded, and whatever definition was previously loaded (if any) is
+    still in effect.
+
+    filename       Path of the cruise definition file to load.
+
+    preserve_mode  If False, switch to the definition's default mode. If
+                   True (which is what we want when reloading a definition
+                   whose file has changed), keep any unchanged loggers
+                   running and don't revert to the default mode.
+    """
+    global api
+    if api is None:
+        api = DjangoServerAPI()
+
+    errors = []
+    try:
+        # Load the file to memory and parse to a dict. Passing in "errors"
+        # gets us the reason if the file can't be read or parsed, and gets
+        # us all of the problems in the definition, rather than just the
+        # first one.
+        config = read_config(filename, errors=errors)
+        if not errors:
+            config = expand_cruise_definition(config, errors=errors)
+        if errors:
+            return errors
+
+        # Add the name of the file we've just loaded to the dict.
+        if 'cruise' in config:
+            config['cruise']['config_filename'] = filename
+
+        # Signal that we want to preserve the mode by slipping some side
+        # information into the config.
+        if preserve_mode:
+            config['preserve_mode'] = True
+
+        api.load_configuration(config)
+
+        if not preserve_mode:
+            default_mode = api.get_default_mode()
+            if default_mode:
+                api.set_active_mode(default_mode)
+
+    except ValueError as e:
+        errors.append(str(e))
+
+    # We don't know what else a malformed definition might provoke, but
+    # whatever it is, we want the user to see it.
+    except Exception as e:
+        logging.exception('Unexpected error loading cruise definition "%s"', filename)
+        errors.append('Unexpected error (%s): %s' % (type(e).__name__, str(e)))
+
+    return errors
 
 
 def login(request):
@@ -66,6 +123,8 @@ def index(request):
     # If we've gotten a POST request
     # cruise_id = ''
     errors = []
+    load_errors = []         # any errors reloading the cruise definition
+    load_error_summary = ''  # what we were trying to do when we got them
     if request.method == 'POST':
         logging.debug('POST: %s', request.POST)
 
@@ -90,26 +149,26 @@ def index(request):
         elif 'reload_button' in request.POST:
             logging.info('reloading current configuration file')
             try:
-                cruise = api.get_configuration()
-                filename = cruise['config_filename']
+                filename = api.get_configuration()['config_filename']
+            except (ValueError, AttributeError, KeyError, TypeError):
+                filename = None
 
-                # Load the file to memory and parse to a dict. Add the name
-                # of the file we've just loaded to the dict.
-                config = read_config(filename)
-                config = expand_cruise_definition(config)
-
-                if 'cruise' in config:
-                    config['cruise']['config_filename'] = filename
-
+            if not filename:
+                load_error_summary = 'Could not reload the cruise definition.'
+                load_errors = ['There is no cruise definition file to reload.']
+            else:
                 # Since we're reloading, we'd like to keep any unchanged
                 # loggers running and not revert to the cruise's default
-                # mode. Signal this by slipping some side information into
-                # the config.
-                config['preserve_mode'] = True
+                # mode.
+                load_errors = load_cruise_definition(filename, preserve_mode=True)
+                if load_errors:
+                    load_error_summary = (
+                        'Could not reload "%s". The definition that was '
+                        'already loaded is still in effect.' % filename)
 
-                api.load_configuration(config)
-            except ValueError as e:
-                logging.warning('Error reloading current configuration: %s', str(e))
+            if load_errors:
+                logging.warning('Error reloading current configuration: %s',
+                                load_errors)
 
         # If they canceled the upload
         elif 'cancel' in request.POST:
@@ -123,6 +182,8 @@ def index(request):
     template_vars = {
         'websocket_server': WEBSOCKET_DATA_SERVER,
         'errors': {'django': errors},
+        'load_errors': load_errors,
+        'load_error_summary': load_error_summary,
     }
     try:
         configuration = api.get_configuration()
@@ -274,6 +335,7 @@ def choose_file(request, selection=None):
     # Start of choose_file() code
     target_file = None  # file we're going to load
     load_errors = []    # where we store any errors
+    load_error_summary = ''  # what we were trying to do when we got them
 
     # If post, figure out what user selected
     if request.method == 'POST':
@@ -283,30 +345,17 @@ def choose_file(request, selection=None):
         # Was this a request to load the target file?
         target_file = request.POST.get('target_file')
         if target_file:
-            try:
-                # Load the file to memory and parse to a dict. Add the name of
-                # the file we've just loaded to the dict.
-                config = read_config(target_file)
-                config = expand_cruise_definition(config)
-
-                if 'cruise' in config:
-                    config['cruise']['config_filename'] = target_file
-
-                # Load the config and set to the default mode
-                api.load_configuration(config)
-                default_mode = api.get_default_mode()
-                if default_mode:
-                    api.set_active_mode(default_mode)
-            except (JSONDecodeError, ScannerError) as e:
-                load_errors.append('Error loading "%s": %s' % (target_file, str(e)))
-            except ValueError as e:
-                load_errors.append(str(e))
+            # Load the definition and set to the default mode
+            load_errors = load_cruise_definition(target_file)
 
             # If no errors, go home; otherwise reset back to previous page
             if not load_errors:
                 return HttpResponse('<script>window.close()</script>')
             else:
                 logging.warning('Errors loading cruise definition: %s', load_errors)
+                load_error_summary = (
+                    'Could not load "%s". Any definition that was already '
+                    'loaded is still in effect.' % target_file)
                 target_file = None
 
         # Okay, it wasn't a request to load a target file. Do we have a
@@ -356,7 +405,8 @@ def choose_file(request, selection=None):
                   {'target_file': target_file,
                    'dir_name': dir_name,
                    'listing': listing,
-                   'load_errors': load_errors})
+                   'load_errors': load_errors,
+                   'load_error_summary': load_error_summary})
 
 
 ################################################################################

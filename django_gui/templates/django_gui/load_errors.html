@@ -1,0 +1,17 @@
+{# Display any errors we got while loading or reloading a cruise     #}
+{# definition. Expects "load_errors" (a list of str) and, optionally, #}
+{# "load_error_summary" (a str saying what could not be done).        #}
+{% if load_errors %}
+<div id="load_errors" class="load-errors" role="alert">
+  <button type="button" class="load-errors-dismiss btn-secondary"
+          onclick="document.getElementById('load_errors').style.display = 'none';">
+    Dismiss
+  </button>
+  <div class="load-errors-summary">
+    {{ load_error_summary|default:"Could not load the cruise definition." }}
+  </div>
+  {% for error in load_errors %}
+    <pre class="load-errors-detail">{{ error }}</pre>
+  {% endfor %}
+</div>
+{% endif %}

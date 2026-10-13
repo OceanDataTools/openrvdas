@@ -143,6 +143,54 @@ class TestReadConfig(unittest.TestCase):
                 mock_log.assert_called_once()
                 self.assertIn("Invalid YAML syntax", mock_log.call_args[0][0])
 
+    def test_read_config_collects_errors(self):
+        """If passed a list for errors, read_config says why it failed."""
+        # A file that can't be found
+        errors = []
+        with patch('logging.error') as mock_log:
+            result = read_config.read_config("nonexistent.yaml", errors=errors)
+        self.assertEqual(result, {})
+        mock_log.assert_called_once()  # it's still logged
+        self.assertEqual(len(errors), 1)
+        self.assertIn('not found', errors[0])
+        self.assertIn('nonexistent.yaml', errors[0])
+
+        # A file with a syntax error; the message should say where
+        errors = []
+        with patch('builtins.open', mock_open(read_data='key1: [unclosed\n')):
+            with patch('logging.error'):
+                result = read_config.read_config("invalid.yaml", errors=errors)
+        self.assertEqual(result, {})
+        self.assertEqual(len(errors), 1)
+        self.assertIn('Invalid YAML syntax in "invalid.yaml"', errors[0])
+        self.assertIn('line 1', errors[0])
+
+        # A file that is merely empty is not an error
+        errors = []
+        with patch('builtins.open', mock_open(read_data='')):
+            result = read_config.read_config("empty.yaml", errors=errors)
+        self.assertEqual(result, {})
+        self.assertEqual(errors, [])
+
+    def test_expand_cruise_definition_collects_include_errors(self):
+        """An included file that can't be parsed is reported via errors."""
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            with open(os.path.join(tmpdirname, 'included.yaml'), 'w') as f:
+                f.write('configs: [unclosed\n')
+            definition = {
+                'includes_base_dir': tmpdirname,
+                'includes': ['included.yaml'],
+                'loggers': {},
+                'configs': {},
+            }
+            errors = []
+            with patch('logging.error'):
+                read_config.expand_cruise_definition(definition, errors=errors)
+
+        self.assertEqual(len(errors), 1)
+        self.assertIn('Invalid YAML syntax', errors[0])
+        self.assertIn('included.yaml', errors[0])
+
     def test_integration_read_config(self):
         """Integration test for read_config with real files."""
         # Create the main config file
