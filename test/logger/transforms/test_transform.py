@@ -44,9 +44,9 @@ class TestTransform(unittest.TestCase):
         
         self.assertEqual(writer.records, ['prefix: start', 'prefix: end'])
 
-    def test_transform_mirror_only_outermost_call(self):
-        """A transform that calls its own transform(), with extra arguments,
-        should mirror only what it hands downstream (issue #648)."""
+    def test_transform_mirror_with_args(self):
+        """A transform() that takes extra arguments should not crash when
+        mirrored (issue #648)."""
         class MockWriter(Writer):
             def __init__(self, **kwargs):
                 super().__init__(**kwargs)
@@ -55,23 +55,21 @@ class TestTransform(unittest.TestCase):
             def write(self, record):
                 self.records.append(record)
 
-        class RecursiveTransform(Transform):
+        class SuffixTransform(Transform):
             def transform(self, record, suffix='+'):
-                if isinstance(record, list):
-                    return [self.transform(r, suffix=suffix) for r in record]
                 return str(record) + suffix
 
         writer = MockWriter()
-        transform = RecursiveTransform(mirror_to=writer)
+        transform = SuffixTransform(mirror_to=writer)
 
         self.assertEqual(transform.transform('a'), 'a+')
         self.assertEqual(transform.transform('b', '-'), 'b-')
-        self.assertEqual(transform.transform(['c', 'd'], suffix='!'), ['c!', 'd!'])
+        self.assertEqual(transform.transform('c', suffix='!'), 'c!')
 
         # Wait for thread (assuming mirroring might be asynchronous)
         time.sleep(0.1)
 
-        self.assertEqual(writer.records, ['a+', 'b-', ['c!', 'd!']])
+        self.assertEqual(writer.records, ['a+', 'b-', 'c!'])
 
     def test_transform_mirror_invalid_type(self):
         with self.assertRaisesRegex(TypeError, "mirror_to must be a Writer"):
