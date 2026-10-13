@@ -44,6 +44,33 @@ class TestTransform(unittest.TestCase):
         
         self.assertEqual(writer.records, ['prefix: start', 'prefix: end'])
 
+    def test_transform_mirror_with_args(self):
+        """A transform() that takes extra arguments should not crash when
+        mirrored (issue #648)."""
+        class MockWriter(Writer):
+            def __init__(self, **kwargs):
+                super().__init__(**kwargs)
+                self.records = []
+
+            def write(self, record):
+                self.records.append(record)
+
+        class SuffixTransform(Transform):
+            def transform(self, record, suffix='+'):
+                return str(record) + suffix
+
+        writer = MockWriter()
+        transform = SuffixTransform(mirror_to=writer)
+
+        self.assertEqual(transform.transform('a'), 'a+')
+        self.assertEqual(transform.transform('b', '-'), 'b-')
+        self.assertEqual(transform.transform('c', suffix='!'), 'c!')
+
+        # Wait for thread (assuming mirroring might be asynchronous)
+        time.sleep(0.1)
+
+        self.assertEqual(writer.records, ['a+', 'b-', 'c!'])
+
     def test_transform_mirror_invalid_type(self):
         with self.assertRaisesRegex(TypeError, "mirror_to must be a Writer"):
             PrefixTransform(prefix='p', mirror_to="not a writer")

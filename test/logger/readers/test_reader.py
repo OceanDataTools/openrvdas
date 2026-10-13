@@ -47,6 +47,27 @@ class TestReaderMirror(unittest.TestCase):
         
         self.assertEqual(writer.records, records)
 
+    def test_reader_mirror_read_with_args(self):
+        """A read() that takes optional arguments should still be mirrored."""
+        class SizedReader(MockReader):
+            def read(self, size=None):
+                record = super().read()
+                if record is not None and size is not None:
+                    record = record[:size]
+                return record
+
+        writer = MockWriter()
+        reader = SizedReader(records=['rec1', 'rec2', 'rec3'], mirror_to=writer)
+
+        self.assertEqual(reader.read(), 'rec1')
+        self.assertEqual(reader.read(2), 're')
+        self.assertEqual(reader.read(size=3), 'rec')
+
+        # Wait for thread to empty queue
+        time.sleep(0.1)
+
+        self.assertEqual(writer.records, ['rec1', 're', 'rec'])
+
     def test_reader_mirror_invalid_type(self):
         with self.assertRaisesRegex(TypeError, "mirror_to must be a Writer"):
             MockReader(records=[], mirror_to="not a writer")

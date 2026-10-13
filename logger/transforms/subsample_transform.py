@@ -136,14 +136,20 @@ class SubsampleTransform(DerivedDataTransform):
         """Incorporate any useable fields in this record, and if it gives
         us any new subsampled values, aggregate and return them.
         """
+        return self._subsample(record)
 
-        # If we've got a list, hope it's a list of records. Recurse,
-        # calling transform() on each of the list elements in order and
-        # return the resulting list.
+    ############################
+    def _subsample(self, record):
+        """Do the work of transform()."""
+
+        # If we've got a list, hope it's a list of records. Recurse on each
+        # of the list elements in order and return the resulting list. We
+        # recurse on this method rather than transform() because, if we
+        # have a mirror_to writer, every call to transform() is mirrored.
         if type(record) is list:
             results = []
             for single_record in record:
-                results.append(self.transform(single_record))
+                results.append(self._subsample(single_record))
             return results
 
         # Clean out old data

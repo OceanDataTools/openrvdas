@@ -4,7 +4,9 @@ import time
 import unittest
 
 from logger.utils import timestamp  # noqa: E402
+from logger.transforms.split_transform import SplitTransform  # noqa: E402
 from logger.transforms.timestamp_transform import TimestampTransform  # noqa: E402
+from logger.writers.writer import Writer  # noqa: E402
 
 
 class TestTimestampTransform(unittest.TestCase):
@@ -41,6 +43,35 @@ class TestTimestampTransform(unittest.TestCase):
 
         sources = [r.split()[1] for r in result]
         self.assertEqual(sources, record)
+
+    ############################
+    # Issue #648: a list of records (e.g. from a SplitTransform) crashed a
+    # TimestampTransform that had a mirror_to writer.
+    def test_list_with_mirror(self):
+        class MockWriter(Writer):
+            def __init__(self, **kwargs):
+                super().__init__(**kwargs)
+                self.records = []
+
+            def write(self, record):
+                self.records.append(record)
+
+        writer = MockWriter()
+        transform = TimestampTransform(mirror_to=writer)
+
+        record = SplitTransform(sep='\r\n').transform('foo\r\nbar\r\nbaz\r\n')
+        result = transform.transform(record)
+
+        self.assertEqual([r.split()[1] for r in result], ['foo', 'bar', 'baz'])
+        timestamps = [r.split()[0] for r in result]
+        self.assertEqual(timestamps[0], timestamps[1])
+        self.assertEqual(timestamps[1], timestamps[2])
+
+        # Mirroring is asynchronous; give the thread a moment
+        time.sleep(0.1)
+
+        # The mirror gets what was handed downstream, once: the list.
+        self.assertEqual(writer.records, [result])
 
     ############################
     # Try handing a custom timestamp format (in this case, a date).  It
