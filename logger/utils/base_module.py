@@ -27,6 +27,7 @@ to initialize the type checking and set its debugging level. If it is not explic
 initialized, it will be done implicitly the first time can_process_record() or
 digest_record() are called, but with the default of quiet=False.
 """
+import contextlib
 import inspect
 import logging
 import threading
@@ -79,6 +80,14 @@ class BaseModule:
     the subclass is valid for mirroring, i.e. not a Writer), BaseModule
     will spin up a thread and a queue to asynchronously write a copy of
     every record it processes to the specified Writer.
+
+    Only records that are handed downstream are mirrored, i.e. what the
+    outermost call to read() or transform() returns to its caller. Calls
+    that a module makes to its own read() or transform() from inside one
+    of those calls are not mirrored. A module that calls its own read()
+    or transform() from some other method, to consume records that it
+    will not hand on (e.g. to skip ahead in a file), should do so inside
+    a "with self._mirroring_suspended():" block.
     """
     ############################
     def __init__(self, quiet=False, encoding='utf-8', encoding_errors='ignore',
@@ -104,7 +113,8 @@ class BaseModule:
                 by this module (if it is a Reader or Transform) will be
                 "mirrored" (copied). Mirroring happens asynchronously via
                 a queue and background thread to minimize impact on the
-                primary data flow. Writers cannot be mirrored.
+                primary data flow. Only records handed downstream are
+                mirrored (see class docstring). Writers cannot be mirrored.
         ```
         """
         if kwargs.get('input_format'):
@@ -138,6 +148,8 @@ class BaseModule:
                 raise TypeError(f'mirror_to must be a Writer, not {type(self.mirror_to)}')
             else:
                 self.mirror_queue = queue.Queue()
+                # Per-thread flag; set while mirroring should be skipped
+                self._mirror_state = threading.local()
                 self.mirror_thread = threading.Thread(target=self._mirror_output_thread,
                                                       daemon=True)
                 self.mirror_thread.start()
@@ -160,19 +172,44 @@ class BaseModule:
             except Exception as e:
                 logging.warning(f'Error writing to mirror_to: {e}')
 
-    def _wrapped_read(self):
+    @contextlib.contextmanager
+    def _mirroring_suspended(self):
+        """Context manager inside of which calls to this module's read() or
+        transform() are not mirrored. Use it around records that are being
+        consumed but not handed downstream. Safe to use (and a no-op) when
+        the module has no mirror_to writer."""
+        state = getattr(self, '_mirror_state', None)
+        if state is None:
+            yield
+            return
+
+        was_suspended = getattr(state, 'suspended', False)
+        state.suspended = True
+        try:
+            yield
+        finally:
+            state.suspended = was_suspended
+
+    def _wrapped_read(self, *args, **kwargs):
         """Wrapped version of read() that intercepts records and sends
-        them to the mirror_to writer."""
-        record = self._original_read()
-        if record is not None:
+        them to the mirror_to writer. Only the outermost call mirrors, so
+        a read() that calls itself does not mirror records twice."""
+        suspended = getattr(self._mirror_state, 'suspended', False)
+        with self._mirroring_suspended():
+            record = self._original_read(*args, **kwargs)
+        if record is not None and not suspended:
             self.mirror_queue.put(record)
         return record
 
-    def _wrapped_transform(self, record):
+    def _wrapped_transform(self, record, *args, **kwargs):
         """Wrapped version of transform() that intercepts records and sends
-        them to the mirror_to writer."""
-        result = self._original_transform(record)
-        if result is not None:
+        them to the mirror_to writer. Only the outermost call mirrors, so
+        a transform() that calls itself (e.g. on the elements of a list)
+        mirrors just the result it hands downstream."""
+        suspended = getattr(self._mirror_state, 'suspended', False)
+        with self._mirroring_suspended():
+            result = self._original_transform(record, *args, **kwargs)
+        if result is not None and not suspended:
             self.mirror_queue.put(result)
         return result
 

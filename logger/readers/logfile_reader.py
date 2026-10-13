@@ -333,8 +333,11 @@ class LogfileReader(TimestampedReader):
             return desired_time
 
         elif origin == 'end':
-            while self.read() is not None:
-                pass
+            # We're skipping these records, not handing them downstream,
+            # so they should not be sent to any mirror_to writer.
+            with self._mirroring_suspended():
+                while self.read() is not None:
+                    pass
             if self.prev_record is None:
                 return None
             end_timestamp = self._get_msec_timestamp(self.prev_record)
