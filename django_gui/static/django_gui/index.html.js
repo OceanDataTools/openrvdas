@@ -459,7 +459,46 @@ function message_window() {
 }
 
 ///////////////////////////////
-// When user clicks a logger config button.
+// Open a window showing the passed path or, if we already have a window
+// open with the passed name, just bring that window to the front.
+//
+// Asking the browser to open a named window with an empty URL gives us the
+// window that already has that name, if there is one, without reloading it
+// (which would throw away any selection the user had made in it but not
+// yet submitted). If there isn't one, it gives us a new, blank window,
+// which we then point at the path we want.
+//
+// We look the window up by name each time, rather than hold on to what
+// window.open() returns, because this page gets reloaded (e.g. when the
+// cruise definition is reloaded), and would lose track of its windows.
+function open_or_focus_window(path, window_name, window_args) {
+  var child_window = window.open('', window_name, window_args.join());
+
+  // If the browser has blocked the pop-up, there's nothing more we can do.
+  if (!child_window) {
+    console.log('Unable to open window "' + window_name + '"; are pop-ups '
+                + 'blocked for this site?');
+    return null;
+  }
+
+  // If the window isn't showing anything yet, it's one we've just created.
+  var is_new_window = true;
+  try {
+    is_new_window = (child_window.location.href == 'about:blank');
+  } catch (error) {
+    // We can't read the location of a window that has gone off to another
+    // site. Treat it as new, to bring it back to the page we want.
+  }
+  if (is_new_window) {
+    // Resolve the path relative to this page, not the blank window.
+    child_window.location.href = new URL(path, window.location.href).href;
+  }
+  child_window.focus();
+  return child_window;
+}
+
+///////////////////////////////
+// When user clicks the mode button.
 function open_change_mode(click_event) {
   if (!click_event) click_event = window.event;
   var window_args = [
@@ -472,7 +511,7 @@ function open_change_mode(click_event) {
     'scrollbars=yes',
     'status=no'
   ];
-  window.open('../change_mode/', '_blank', window_args.join());
+  open_or_focus_window('../change_mode/', 'openrvdas_change_mode', window_args);
 }
 
 ///////////////////////////////
@@ -489,7 +528,9 @@ function open_edit_config(click_event, logger_name) {
     'scrollbars=yes',
     'status=no'
   ];
-  window.open('../edit_config/' + logger_name, '_blank', window_args.join());
+  // One window per logger, so each logger's window needs its own name.
+  open_or_focus_window('../edit_config/' + logger_name,
+                       'openrvdas_edit_config_' + logger_name, window_args);
 }
 
 ///////////////////////////////
@@ -506,5 +547,5 @@ function open_load_definition(click_event) {
     'scrollbars=yes',
     'status=no'
   ];
-  window.open('../choose_file/', '_blank', window_args.join());
+  open_or_focus_window('../choose_file/', 'openrvdas_choose_file', window_args);
 }
