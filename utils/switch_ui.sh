@@ -381,6 +381,139 @@ function check_nginx_configs {
 
 ###########################################################################
 ###########################################################################
+# Print the port given by command-line flag $2 (e.g. --port) on the active
+# "command=" line of supervisor config file $1. The flag's value may be a
+# bare port or host:port. Prints nothing if the file or flag isn't there.
+function supervisor_flag_port {
+    [ -f "$1" ] || return 0
+    awk -v flag="$2" '
+        /^command=/ {
+            for (i = 1; i < NF; i++) {
+                if ($i == flag) {
+                    value = $(i + 1)
+                    sub(/.*:/, "", value)
+                    print value
+                    exit
+                }
+            }
+        }' "$1"
+}
+
+###########################################################################
+###########################################################################
+# Print the port that nginx config file $1 proxies /cds-ws to. Prints the
+# whole proxy_pass target if it has no port, and nothing if the file or the
+# /cds-ws location isn't there.
+function nginx_cds_port {
+    [ -f "$1" ] || return 0
+    awk '
+        /^[[:space:]]*location[[:space:]]+\/cds-ws[[:space:]{]/ { in_cds = 1 }
+        in_cds && /^[[:space:]]*proxy_pass[[:space:]]/ {
+            value = $2
+            sub(/;.*/, "", value)
+            sub(/\/+$/, "", value)
+            if (match(value, /:[0-9]+$/)) {
+                value = substr(value, RSTART + 1)
+            }
+            print value
+            exit
+        }' "$1"
+}
+
+###########################################################################
+###########################################################################
+# Print the CACHED_DATA_SERVER_PORT setting in env file $1, or nothing if
+# the file or setting isn't there. We read just this one line: the file
+# also holds the React backend's secrets.
+function env_file_cds_port {
+    [ -f "$1" ] || return 0
+    awk -F= '
+        $1 == "CACHED_DATA_SERVER_PORT" {
+            value = $2
+            gsub(/[^0-9]/, "", value)
+            print value
+            exit
+        }' "$1"
+}
+
+###########################################################################
+###########################################################################
+# Warn if anything is configured to reach the CachedDataServer on a port
+# other than the one it actually listens on.
+#
+# The port is chosen at install time and written into several files - the
+# CachedDataServer's own supervisor entry, logger_manager's, both UIs'
+# nginx configs and the React backend's .env - which are written at
+# different times and can drift apart. When they do, every process shows as
+# RUNNING, and the only symptom is a console that can't get data: the
+# browser reports a 502 from wss://<host>/cds-ws. See issue #654.
+function check_cds_ports {
+    CDS_FILE=$SUPERVISOR_DIR/openrvdas_cached_data.${SUPERVISOR_SUFFIX}
+    CDS_PORT=$(supervisor_flag_port "$CDS_FILE" --port)
+
+    if [ -z "$CDS_PORT" ]; then
+        echo
+        echo "NOTE: could not find the CachedDataServer's --port in"
+        echo "  $CDS_FILE"
+        echo "so can't check that everything else is configured to use it."
+        return
+    fi
+
+    # Compare each place the port is configured with the port the server
+    # is started on, and note any that don't match.
+    MISMATCHES=
+    for CHECK in logger_manager django_nginx react_nginx react_env; do
+        case "$CHECK" in
+            logger_manager)
+                CHECK_FILE=$LOGGER_MANAGER_FILE
+                CHECK_WHAT='logger_manager --data_server_websocket'
+                CHECK_PORT=$(supervisor_flag_port "$CHECK_FILE" --data_server_websocket) ;;
+            django_nginx)
+                CHECK_FILE=${OPENRVDAS_ROOT}/django_gui/openrvdas_nginx.conf
+                CHECK_WHAT='Django UI nginx proxy for /cds-ws'
+                CHECK_PORT=$(nginx_cds_port "$CHECK_FILE") ;;
+            react_nginx)
+                CHECK_FILE=${OPENRVDAS_ROOT}/web_frontend/openrvdas_nginx.conf
+                CHECK_WHAT='React UI nginx proxy for /cds-ws'
+                CHECK_PORT=$(nginx_cds_port "$CHECK_FILE") ;;
+            react_env)
+                CHECK_FILE=${OPENRVDAS_ROOT}/web_backend/.env
+                CHECK_WHAT='React backend CACHED_DATA_SERVER_PORT'
+                CHECK_PORT=$(env_file_cds_port "$CHECK_FILE") ;;
+        esac
+
+        # A file that isn't there, or doesn't mention the port, belongs to
+        # something that isn't installed; nothing to check.
+        if [ -n "$CHECK_PORT" ] && [ "$CHECK_PORT" != "$CDS_PORT" ]; then
+            MISMATCHES="${MISMATCHES}  ${CHECK_WHAT}: ${CHECK_PORT}\n    (${CHECK_FILE})\n"
+        fi
+    done
+
+    if [ -z "$MISMATCHES" ]; then
+        return
+    fi
+
+    echo
+    echo "WARNING: the CachedDataServer listens on port ${CDS_PORT}"
+    echo "    (${CDS_FILE})"
+    echo "but these are configured to reach it on a different port:"
+    echo -e "$MISMATCHES"
+    echo "Anything pointed at the wrong port can't reach the CachedDataServer,"
+    echo "even though every process shows as RUNNING:"
+    echo "  - nginx: the web console can't get data, and the browser reports"
+    echo "    \"Unexpected response code: 502\" from /cds-ws"
+    echo "  - logger_manager: logger status and data never reach the console"
+    echo "  - React backend: the React UI's server side can't get data"
+    echo
+    echo "To fix, change each port listed above to ${CDS_PORT} - in an nginx"
+    echo "config it is the proxy_pass line under 'location /cds-ws' - and"
+    echo "restart the affected processes. Or re-run the installer, which writes"
+    echo "all of these files consistently:"
+    echo "  bash ${OPENRVDAS_ROOT}/utils/install_openrvdas.sh"
+}
+
+###########################################################################
+###########################################################################
 # Verify that the UI we're switching to has actually been installed. We
 # only switch configs here; we don't build anything.
 function check_prerequisites {
@@ -585,6 +718,8 @@ if [ "$CURRENT_UI" == 'broken' ]; then
     echo "Supervisor cannot run both (each defines [program:nginx]). Switching"
     echo "to a single UI below will repair this."
 fi
+
+check_cds_ports
 
 # 'status' (or no argument at all) just reports and exits.
 if [ -z "$TARGET_UI" ] || [ "$TARGET_UI" == 'status' ]; then
