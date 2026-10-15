@@ -247,8 +247,9 @@ class ComputedFieldsTransform(DerivedDataTransform):
 
             equation (required)
                 The expression to evaluate. Bare names refer to record fields,
-                to entries in 'constants', to entries in 'inputs', or to one of
-                the functions listed under "Writing equations" below.
+                to the results of rules listed before this one, to entries in
+                'constants', to entries in 'inputs', or to one of the functions
+                listed under "Writing equations" below.
 
             constants (default {})
                 Values to make available to the equation by name. These may be
@@ -266,8 +267,14 @@ class ComputedFieldsTransform(DerivedDataTransform):
                 Whether the fields this rule read should be dropped from the
                 result.
 
+            intermediate (default False)
+                If true, this rule's result is available to the rules listed
+                after it, but is not added to the output. See "Rules in
+                sequence" below.
+
             metadata (default None)
-                Metadata to attach for the computed field.
+                Metadata to attach for the computed field. Ignored for an
+                intermediate rule.
 
         delete_input_fields (default False)
             Drop the fields that equations read from the result.
@@ -346,6 +353,44 @@ class ComputedFieldsTransform(DerivedDataTransform):
         deliberate guard rather than an oversight: "9**9**9" is otherwise an
         ordinary expression that would hang the logger and exhaust its memory.
 
+        Rules in sequence
+        -----------------
+        Rules are evaluated in the order they are listed, and an equation can
+        use the result of any rule listed before it, by that rule's name (or
+        through an alias in 'inputs'). Mark a rule "intermediate: true" to use
+        its result in later rules without outputting it:
+
+            fields:
+              x:
+                equation: "wspd * cos(radians(270 - wdir))"
+                intermediate: true
+              y:
+                equation: "wspd * sin(radians(270 - wdir))"
+                intermediate: true
+              WindSpeed:
+                equation: "hypot(x, y)"
+
+        If an earlier rule produces no value for a record - because its inputs
+        are missing, or its equation gives None, or it is disabled by a null
+        constant - then no rule that uses its result fires either. So an
+        intermediate rule such as
+
+              valid:
+                equation: "True if 0 <= heading <= 360 else None"
+                intermediate: true
+
+        lets a later rule compute only from sensible inputs by mentioning it:
+        "(heading + offset) % 360 if valid else None".
+
+        A name matching a rule listed *after* the one using it is not that
+        rule's result: it is read from the record. That is what lets a rule
+        use a raw value that a later rule replaces in place, but as it is more
+        often a rule listed in the wrong order, it is logged as a warning when
+        the transform starts.
+
+        test/configs/computed_true_winds.yaml is a worked example: true winds,
+        computed with the formulas TrueWindsTransform uses.
+
         Equations are checked when the transform is constructed, not per
         record, so a typo or a refused construct stops the logger at startup
         rather than failing quietly mid-cruise - and validate_config can catch
@@ -395,19 +440,50 @@ class ComputedFieldsTransform(DerivedDataTransform):
 
         self.rules = {}
         self.metadata = {}
+        # Every output named so far, including those of disabled rules: a
+        # rule that uses a disabled rule's result must not fire, rather than
+        # quietly reading a record field that happens to have the same name.
+        earlier_outputs = set()
         for output_name, spec in fields.items():
             rule = self._build_rule(output_name, spec)
             if rule:
+                # Rules are evaluated in the order given, and a name that
+                # matches an earlier rule's output reads that rule's result
+                # rather than a record field.
+                rule['earlier_results'] = {
+                    name for name, field in rule['input_fields'].items()
+                    if field in earlier_outputs}
                 self.rules[output_name] = rule
-                if rule['metadata']:
+                if rule['metadata'] and not rule['intermediate']:
                     self.metadata[output_name] = rule['metadata']
+            earlier_outputs.add(output_name)
 
-        # Every field any rule might read. Used to tell an "input" from an
-        # "other" field when applying the two deletion flags, and to decide
+        # A name matching a *later* rule's output still reads a record field.
+        # That is right for a rule that uses a raw value which a later rule
+        # replaces, but is more often a rule listed in the wrong order, so say
+        # so at startup.
+        if not self.quiet:
+            outputs = list(fields)
+            for output_name, rule in self.rules.items():
+                later = outputs[outputs.index(output_name) + 1:]
+                for name, field in rule['input_fields'].items():
+                    if field in later:
+                        logging.warning(
+                            'ComputedFieldsTransform: "%s" uses "%s", which is '
+                            'also the output of a rule listed after it. Rules '
+                            'can use only the results of rules listed before '
+                            'them, so this reads the record field "%s". If you '
+                            'meant the computed value, move "%s" after "%s".',
+                            output_name, name, field, output_name, field)
+
+        # Every record field any rule might read. Used to tell an "input" from
+        # an "other" field when applying the two deletion flags, and to decide
         # what is worth caching.
         self.all_input_fields = set()
         for rule in self.rules.values():
-            self.all_input_fields.update(rule['input_fields'].values())
+            self.all_input_fields.update(
+                field for name, field in rule['input_fields'].items()
+                if name not in rule['earlier_results'])
 
     ############################
     def _build_rule(self, output_name, spec):
@@ -418,7 +494,8 @@ class ComputedFieldsTransform(DerivedDataTransform):
                              f'{type(spec).__name__}')
 
         unknown = set(spec) - {'equation', 'constants', 'inputs',
-                               'delete_input_fields', 'metadata'}
+                               'delete_input_fields', 'metadata',
+                               'intermediate'}
         if unknown:
             raise ValueError(f'ComputedFieldsTransform: unrecognized key(s) '
                              f'{sorted(unknown)} in spec for "{output_name}"')
@@ -489,11 +566,12 @@ class ComputedFieldsTransform(DerivedDataTransform):
             'delete_input_fields': spec.get('delete_input_fields',
                                             self.delete_input_fields),
             'metadata': spec.get('metadata'),
+            'intermediate': bool(spec.get('intermediate', False)),
             'warned': False,
         }
 
     ############################
-    def _resolve_inputs(self, rule, fields, timestamp):
+    def _resolve_inputs(self, rule, fields, timestamp, computed):
         """Gather a rule's inputs. Returns (values, missing) where missing maps
         each unavailable field to why it is unavailable."""
         values = {}
@@ -501,6 +579,13 @@ class ComputedFieldsTransform(DerivedDataTransform):
         for name, field in rule['input_fields'].items():
             value = None
             found = False
+
+            if name in rule['earlier_results']:
+                if field in computed:
+                    values[name] = computed[field]
+                else:
+                    missing[field] = 'not computed for this record'
+                continue
 
             if field in fields:
                 value = fields[field]
@@ -617,7 +702,8 @@ class ComputedFieldsTransform(DerivedDataTransform):
         consumed = set()
         if triggered:
             for output_name, rule in self.rules.items():
-                values, missing = self._resolve_inputs(rule, fields, timestamp)
+                values, missing = self._resolve_inputs(rule, fields, timestamp,
+                                                       computed)
                 if missing:
                     self._note_missing(output_name, rule, missing, len(values))
                     continue
@@ -627,6 +713,8 @@ class ComputedFieldsTransform(DerivedDataTransform):
                 computed[output_name] = value
                 if rule['delete_input_fields']:
                     consumed.update(rule['input_fields'].values())
+            computed = {name: value for name, value in computed.items()
+                        if not self.rules[name]['intermediate']}
         else:
             logging.debug('ComputedFieldsTransform: no field in %s updated; '
                           'not recomputing', self.update_on_fields)

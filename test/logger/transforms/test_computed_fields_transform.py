@@ -1,11 +1,21 @@
 #!/usr/bin/env python3
 
 import logging
+import os
+import random
 import unittest
+
+import yaml
 
 from logger.utils.das_record import DASRecord  # noqa: E402
 from logger.transforms.computed_fields_transform import (  # noqa: E402
     ComputedFieldsTransform, UnsafeExpressionError, SAFE_FUNCTIONS, SAFE_CONSTANTS)
+from logger.transforms.true_winds_transform import TrueWindsTransform  # noqa: E402
+
+TRUE_WINDS_CONFIG = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(
+        os.path.abspath(__file__))))),
+    'test', 'configs', 'computed_true_winds.yaml')
 
 
 class TestComputedFieldsTransform(unittest.TestCase):
@@ -403,6 +413,262 @@ class TestComputedFieldsTransform(unittest.TestCase):
 
 
 ################################################################################
+
+################################################################################
+class TestRulesInSequence(unittest.TestCase):
+    """Rules are evaluated in order, and can use earlier rules' results."""
+
+    def compute(self, fields, record_fields, **kwargs):
+        transform = ComputedFieldsTransform(fields=fields, **kwargs)
+        result = transform.transform(DASRecord(timestamp=1, fields=record_fields))
+        return result.fields if result else None
+
+    ###############
+    def test_later_rule_uses_earlier_result(self):
+        result = self.compute(
+            {'Doubled': {'equation': 'Volts * 2'},
+             'Quadrupled': {'equation': 'Doubled * 2'}},
+            {'Volts': 3.0})
+        self.assertEqual(result, {'Volts': 3.0, 'Doubled': 6.0, 'Quadrupled': 12.0})
+
+    def test_alias_can_name_earlier_result(self):
+        result = self.compute(
+            {'Doubled': {'equation': 'Volts * 2'},
+             'Plus': {'equation': 'd + 1', 'inputs': {'d': 'Doubled'}}},
+            {'Volts': 3.0})
+        self.assertEqual(result['Plus'], 7.0)
+
+    def test_earlier_result_overrides_record_field(self):
+        """Once a rule has computed X, later rules see that, not the record's X."""
+        result = self.compute(
+            {'Temp': {'equation': 'Temp + 0.5'},
+             'TempF': {'equation': 'Temp * 9 / 5 + 32'}},
+            {'Temp': 10.0}, quiet=True)
+        self.assertEqual(result['Temp'], 10.5)
+        self.assertAlmostEqual(result['TempF'], 50.9)
+
+    ###############
+    def test_intermediate_results_are_not_output(self):
+        transform = ComputedFieldsTransform(fields={
+            'x': {'equation': 'Speed * cos(radians(Dir))', 'intermediate': True,
+                  'metadata': 'not output'},
+            'Doubled': {'equation': 'x * 2', 'metadata': 'output'}},
+            metadata_interval=10)
+        result = transform.transform(DASRecord(
+            timestamp=100, fields={'Speed': 2.0, 'Dir': 0.0}))
+        self.assertEqual(result.fields, {'Speed': 2.0, 'Dir': 0.0, 'Doubled': 4.0})
+        self.assertEqual(result.metadata, {'Doubled': 'output'})
+
+    def test_only_intermediate_results_counts_as_nothing_computed(self):
+        """In derived-only mode, a record that produced only intermediate
+        values has nothing to publish."""
+        result = self.compute(
+            {'x': {'equation': 'Volts * 2', 'intermediate': True},
+             'Needs': {'equation': 'x + Missing'}},
+            {'Volts': 3.0}, delete_other_fields=True)
+        self.assertIsNone(result)
+
+    ###############
+    def test_missing_earlier_result_stops_later_rules(self):
+        result = self.compute(
+            {'Doubled': {'equation': 'Volts * 2'},
+             'Quadrupled': {'equation': 'Doubled * 2'},
+             'Other': {'equation': 'Amps * 2'}},
+            {'Amps': 1.0})
+        self.assertEqual(result, {'Amps': 1.0, 'Other': 2.0})
+
+    def test_none_result_stops_later_rules(self):
+        """An intermediate check that gives None gates everything after it."""
+        fields = {
+            'valid': {'equation': 'True if 0 <= Dir <= 360 else None',
+                      'intermediate': True},
+            'DirPlus': {'equation': '(Dir + 10) % 360 if valid else None'},
+            'Doubled': {'equation': 'DirPlus * 2'}}
+        self.assertEqual(self.compute(fields, {'Dir': 355.0}),
+                         {'Dir': 355.0, 'DirPlus': 5.0, 'Doubled': 10.0})
+        self.assertEqual(self.compute(fields, {'Dir': 400.0}), {'Dir': 400.0})
+
+    def test_disabled_rule_stops_later_rules(self):
+        """A later rule must not quietly fall back to a record field with the
+        same name as a disabled rule."""
+        result = self.compute(
+            {'Calibrated': {'equation': 'a0 * Volts', 'constants': {'a0': None}},
+             'Doubled': {'equation': 'Calibrated * 2'}},
+            {'Volts': 3.0, 'Calibrated': 99.0})
+        self.assertEqual(result, {'Volts': 3.0, 'Calibrated': 99.0})
+
+    ###############
+    def test_rule_reading_its_own_name_reads_the_record(self):
+        """Calibrating in place still works."""
+        result = self.compute({'Temp': {'equation': 'Temp + 0.5'}},
+                              {'Temp': 10.0}, quiet=True)
+        self.assertEqual(result, {'Temp': 10.5})
+
+    def test_later_rule_name_reads_record_and_warns(self):
+        fields = {'First': {'equation': 'Second + 1'},
+                  'Second': {'equation': 'Volts * 2'}}
+        with self.assertLogs(level='WARNING') as logs:
+            transform = ComputedFieldsTransform(fields=fields)
+        self.assertTrue(any('"First" uses "Second", which is also the output '
+                            'of a rule listed after it' in line
+                            for line in logs.output))
+
+        # It reads the record's Second, not the computed one
+        result = transform.transform(DASRecord(
+            timestamp=1, fields={'Volts': 3.0, 'Second': 100.0}))
+        self.assertEqual(result.fields['First'], 101.0)
+        self.assertEqual(result.fields['Second'], 6.0)
+
+    def test_later_rule_warning_respects_quiet(self):
+        fields = {'First': {'equation': 'Second + 1'},
+                  'Second': {'equation': 'Volts * 2'}}
+        with self.assertNoLogs(level='WARNING'):
+            ComputedFieldsTransform(fields=fields, quiet=True)
+
+    def test_unknown_key_still_rejected(self):
+        with self.assertRaises(ValueError):
+            ComputedFieldsTransform(fields={
+                'x': {'equation': 'Volts * 2', 'intermedate': True}})
+
+    ###############
+    def test_earlier_results_are_not_record_inputs(self):
+        """Deletion flags apply to record fields only: a rule that uses an
+        earlier result doesn't make that name an input to be deleted or
+        cached."""
+        transform = ComputedFieldsTransform(fields={
+            'Doubled': {'equation': 'Volts * 2'},
+            'Quadrupled': {'equation': 'Doubled * 2'}},
+            delete_input_fields=True, cache_inputs=True)
+        self.assertEqual(transform.all_input_fields, {'Volts'})
+        result = transform.transform(DASRecord(timestamp=1, fields={'Volts': 3.0}))
+        self.assertEqual(result.fields, {'Doubled': 6.0, 'Quadrupled': 12.0})
+        self.assertNotIn('Doubled', transform.cache)
+
+
+################################################################################
+class TestTrueWindsExample(unittest.TestCase):
+    """test/configs/computed_true_winds.yaml computes true winds with a
+    ComputedFieldsTransform whose rules build on each other. Check that it
+    gives the same results as TrueWindsTransform, so that the example stays
+    correct."""
+
+    NAV_FIELDS = ('S330CourseTrue', 'S330HeadingTrue', 'S330SpeedKt')
+    WIND_FIELDS = ('MwxPortRelWindDir', 'MwxPortRelWindSpeed')
+    OUTPUTS = ('PortTrueWindDir', 'PortTrueWindSpeed', 'PortApparentWindDir')
+
+    def setUp(self):
+        # truew() warns about each invalid input; we feed it some on purpose
+        logging.disable(logging.WARNING)
+        self.addCleanup(logging.disable, logging.NOTSET)
+
+        with open(TRUE_WINDS_CONFIG) as f:
+            config = yaml.safe_load(f)
+        self.stages = [ComputedFieldsTransform(**transform['kwargs'])
+                       for transform in config['transforms']]
+        self.reference = TrueWindsTransform(
+            course_field='S330CourseTrue', speed_field='S330SpeedKt',
+            heading_field='S330HeadingTrue', wind_dir_field='MwxPortRelWindDir',
+            wind_speed_field='MwxPortRelWindSpeed',
+            apparent_dir_name='PortApparentWindDir',
+            true_dir_name='PortTrueWindDir', true_speed_name='PortTrueWindSpeed',
+            convert_speed_factor=0.5144, update_on_fields=['MwxPortRelWindDir'],
+            max_field_age={field: 15
+                           for field in self.NAV_FIELDS + self.WIND_FIELDS})
+
+    def computed(self, record):
+        for stage in self.stages:
+            record = stage.transform(record)
+            if record is None:
+                return None
+        return record
+
+    def assert_same_results(self, records):
+        """Feed (timestamp, fields) pairs to both and compare what comes out."""
+        for timestamp, fields in records:
+            computed = self.computed(DASRecord(timestamp=timestamp, fields=dict(fields)))
+            reference = self.reference.transform(
+                DASRecord(timestamp=timestamp, fields=dict(fields)))
+            reference = reference[0] if reference else None
+
+            with self.subTest(fields=fields):
+                self.assertEqual(computed is None, reference is None)
+                if computed is None:
+                    continue
+                self.assertEqual(sorted(computed.fields), sorted(self.OUTPUTS))
+                self.assertAlmostEqual(computed.fields['PortTrueWindSpeed'],
+                                       reference.fields['PortTrueWindSpeed'],
+                                       places=9)
+                for name in ('PortTrueWindDir', 'PortApparentWindDir'):
+                    # Directions to 1e-6 degrees: near calm, rounding alone
+                    # moves the direction by around 1e-9 degrees.
+                    self.assertAlmostEqual(computed.fields[name],
+                                           reference.fields[name], places=6)
+
+    ############################
+    def test_random_readings(self):
+        rng = random.Random(643)
+        self.assert_same_results(
+            (timestamp, {'S330CourseTrue': rng.uniform(0, 360),
+                         'S330HeadingTrue': rng.uniform(0, 360),
+                         'S330SpeedKt': rng.uniform(0, 15),
+                         'MwxPortRelWindDir': rng.uniform(0, 360),
+                         'MwxPortRelWindSpeed': rng.uniform(0, 30)})
+            for timestamp in range(1, 2001))
+
+    def test_edge_cases(self):
+        """Due north, south, east and west; ship stopped; calm; a wind that
+        exactly cancels the ship's motion; angles of both 0 and 360."""
+        records = []
+        timestamp = 0
+        for course in (0, 90, 180, 270, 360):
+            for heading in (0, 45, 359.9, 360):
+                for rel_dir in (0, 90, 180, 270, 360):
+                    for speed_kt, wind_speed in ((0, 0), (0, 10), (10, 0),
+                                                 (10, 5.144), (19.44, 10)):
+                        timestamp += 1
+                        records.append((timestamp, {
+                            'S330CourseTrue': course, 'S330HeadingTrue': heading,
+                            'S330SpeedKt': speed_kt, 'MwxPortRelWindDir': rel_dir,
+                            'MwxPortRelWindSpeed': wind_speed}))
+        self.assert_same_results(records)
+
+    def test_invalid_inputs(self):
+        """Inputs truew() refuses produce no output from either."""
+        records = []
+        for timestamp, bad in enumerate(
+                ({'S330CourseTrue': 361}, {'S330CourseTrue': -1111},
+                 {'S330HeadingTrue': 400}, {'MwxPortRelWindDir': -5},
+                 {'MwxPortRelWindSpeed': 9999}, {'MwxPortRelWindSpeed': -1},
+                 {'S330SpeedKt': -3}), start=1):
+            fields = {'S330CourseTrue': 10, 'S330HeadingTrue': 20,
+                      'S330SpeedKt': 5, 'MwxPortRelWindDir': 30,
+                      'MwxPortRelWindSpeed': 8}
+            fields.update(bad)
+            records.append((timestamp, fields))
+        self.assert_same_results(records)
+        self.assertIsNone(self.computed(DASRecord(timestamp=100, fields=fields)))
+
+    def test_inputs_in_separate_records(self):
+        """As from a CachedDataServer: navigation and wind arrive separately,
+        sometimes late, so update_on_fields and max_field_age matter."""
+        rng = random.Random(654)
+        records = []
+        timestamp = 0
+        for _ in range(2000):
+            timestamp += rng.choice((0.5, 1, 2, 20))   # sometimes over 15s
+            if rng.random() < 0.5:
+                records.append((timestamp, {
+                    'S330CourseTrue': rng.uniform(0, 360),
+                    'S330HeadingTrue': rng.uniform(0, 360),
+                    'S330SpeedKt': rng.uniform(0, 15)}))
+            else:
+                fields = {'MwxPortRelWindDir': rng.uniform(0, 360)}
+                if rng.random() < 0.7:
+                    fields['MwxPortRelWindSpeed'] = rng.uniform(0, 30)
+                records.append((timestamp, fields))
+        self.assert_same_results(records)
+
+
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()

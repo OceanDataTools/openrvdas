@@ -147,6 +147,14 @@
 #         SB_CTD_SBE49_Salinity:  2
 #       measurement_name: sb_oxygen
 #
+# 7. Several equations in sequence. Rules are evaluated in order, and a rule
+#    can use the results of the rules listed before it; a rule marked
+#    "intermediate: true" is used that way but not output. This template
+#    computes a single field, so for a calculation like that, write the
+#    logger config directly. test/configs/computed_true_winds.yaml is a
+#    complete example: true winds, reproducing TrueWindsTransform with the
+#    formulas from logger/utils/truewinds/truew.py.
+#
 # ---------------------------------------------------------------------------
 # NOTES
 #
