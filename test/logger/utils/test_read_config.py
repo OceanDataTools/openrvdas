@@ -1733,6 +1733,92 @@ class TestExpandCruiseDefinitionErrors(unittest.TestCase):
         self.assertGreaterEqual(len(errors), 2)
 
 
+class TestAveragingLoggerTemplate(unittest.TestCase):
+    """contrib/logger_templates/averaging_logger_template.yaml takes the fields
+    to average as variables; snapshot_logger_template.yaml, which hard-codes
+    them, is unchanged so existing cruise definitions keep working (#663)."""
+
+    def expand(self, snapshot_variables, template='averaging_logger_template'):
+        """Expand a minimal cruise definition with a snapshot logger."""
+        definition = {
+            'includes': [f'contrib/logger_templates/{template}.yaml'],
+            'variables': {'data_server': 'localhost:8766',
+                          'influx_bucket_name': 'openrvdas'},
+            'loggers': {'snapshot': {'logger_template': template,
+                                     'variables': snapshot_variables}},
+        }
+        errors = []
+        with self.assertNoLogs(level='ERROR'):  # e.g. unexpanded variables
+            result = read_config.expand_cruise_definition(definition, errors=errors)
+        self.assertEqual(errors, [])
+        return result['configs']['snapshot-on']
+
+    def field_spec(self, config):
+        return {spec['algorithm']: spec['sources']
+                for spec in config['transforms'][0]['kwargs']['field_spec']}
+
+    def test_fields_come_from_variables(self):
+        config = self.expand({
+            'snapshot_fields': ['AirTemp', 'WindSpeed', 'WindDir'],
+            'average_fields': ['AirTemp', 'WindSpeed'],
+            'direction_fields': ['WindDir'],
+            'interval': 30, 'window': 30})
+        self.assertEqual(config['readers'][0]['kwargs']['subscription']['fields'],
+                         ['AirTemp', 'WindSpeed', 'WindDir'])
+        self.assertEqual(self.field_spec(config),
+                         {'boxcar_average': ['AirTemp', 'WindSpeed'],
+                          'polar_average': ['WindDir']})
+
+    def test_no_direction_fields(self):
+        """A ship with nothing to average as a direction can pass []."""
+        from logger.transforms.interpolation_transform import InterpolationTransform
+        from logger.utils.das_record import DASRecord
+
+        config = self.expand({
+            'snapshot_fields': ['AirTemp'], 'average_fields': ['AirTemp'],
+            'direction_fields': [], 'interval': 10, 'window': 30})
+        self.assertEqual(self.field_spec(config)['polar_average'], [])
+
+        transform = InterpolationTransform(**config['transforms'][0]['kwargs'])
+        results = []
+        for second in range(40):
+            result = transform.transform(
+                DASRecord(timestamp=1000 + second, fields={'AirTemp': 20.0}))
+            results.extend(result if isinstance(result, list) else [result] if result else [])
+        self.assertTrue(results)
+        self.assertEqual(results[-1]['fields'], {'AvgAirTemp': 20.0})
+
+    def test_snapshot_template_unchanged(self):
+        """A cruise definition written for the old template - which supplies
+        only snapshot_fields - must still expand and run exactly as before."""
+        from logger.transforms.interpolation_transform import InterpolationTransform
+
+        config = self.expand({
+            'snapshot_fields': ['MwxAirTemp', 'PortTrueWindDir'],
+            'interval': 30, 'window': 30}, template='snapshot_logger_template')
+        self.assertEqual(self.field_spec(config), {
+            'boxcar_average': ['MwxAirTemp', 'RTMPTemp', 'PortTrueWindSpeed',
+                               'StbdTrueWindSpeed', 'MwxBarometer', 'KnudDepthHF',
+                               'KnudDepthLF', 'Grv1Value'],
+            'polar_average': ['PortTrueWindDir', 'StbdTrueWindDir']})
+        InterpolationTransform(**config['transforms'][0]['kwargs'])
+
+    def test_sample_cruise_definitions(self):
+        """The NBP1406 sample cruises average what they subscribe to."""
+        for filename in ('test/NBP1406/NBP1406_cruise.yaml',
+                         'test/NBP1406/NBP1406_cruise_config_templates.yaml'):
+            with self.subTest(filename=filename):
+                errors = []
+                cruise = read_config.expand_cruise_definition(
+                    read_config.read_config(filename, errors=errors), errors=errors)
+                self.assertEqual(errors, [])
+                config = cruise['configs']['snapshot-on']
+                subscribed = config['readers'][0]['kwargs']['subscription']['fields']
+                averaged = [field for sources in self.field_spec(config).values()
+                            for field in sources]
+                self.assertEqual(sorted(averaged), sorted(subscribed))
+
+
 if __name__ == "__main__":
     import argparse
 

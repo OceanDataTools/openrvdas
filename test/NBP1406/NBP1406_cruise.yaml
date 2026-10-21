@@ -18,7 +18,7 @@ includes:
   - contrib/logger_templates/serial_logger_template.yaml
   - contrib/logger_templates/parse_data_logger_template.yaml
   - contrib/logger_templates/true_winds_logger_template.yaml
-  - contrib/logger_templates/snapshot_logger_template.yaml
+  - contrib/logger_templates/averaging_logger_template.yaml
 
 ###########################################################
 # Global variables - can be overridden by individual loggers
@@ -209,12 +209,18 @@ loggers:
       true_speed_name: StbdTrueWindSpeed
 
   # Read a bunch of variables from CDS, compute 30-second snapshot and write back
-  # to CDS and optionally InfluxDB. This *totally* needs a way to be generalized!!!
+  # to CDS and optionally InfluxDB.
   snapshot:
-    logger_template: snapshot_logger_template
+    logger_template: averaging_logger_template
     variables:
+      # Every field to read: the two lists below together
       snapshot_fields: [MwxAirTemp, RTMPTemp, PortTrueWindDir, PortTrueWindSpeed, StbdTrueWindDir,
                         StbdTrueWindSpeed, MwxBarometer, KnudDepthHF, KnudDepthLF, Grv1Value]
+      # Averaged as plain numbers
+      average_fields: [MwxAirTemp, RTMPTemp, PortTrueWindSpeed, StbdTrueWindSpeed,
+                       MwxBarometer, KnudDepthHF, KnudDepthLF, Grv1Value]
+      # Averaged as directions, so that 359 and 1 average to 0
+      direction_fields: [PortTrueWindDir, StbdTrueWindDir]
       interval: 30
       window: 30
 
