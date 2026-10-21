@@ -108,12 +108,17 @@ loggers:
       true_dir_name: PortTrueWindDir
       true_speed_name: PortTrueWindSpeed
 
-  # # Read a bunch of variables from CDS, compute 30-second snapshot and write back
-  # # to CDS and optionally InfluxDB. This *totally* needs a way to be generalized!!!
+  # Read a bunch of variables from CDS, compute 30-second snapshot and write back
+  # to CDS and optionally InfluxDB.
   snapshot:
     logger_template: snapshot_logger_template
     variables:
+      # Every field to read: the two lists below together
       snapshot_fields: [MwxAirTemp, PortTrueWindDir, PortTrueWindSpeed, MwxBarometer]
+      # Averaged as plain numbers
+      average_fields: [MwxAirTemp, PortTrueWindSpeed, MwxBarometer]
+      # Averaged as directions, so that 359 and 1 average to 0
+      direction_fields: [PortTrueWindDir]
       interval: 30
       window: 30
 
