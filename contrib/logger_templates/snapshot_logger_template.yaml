@@ -1,10 +1,27 @@
 ###############################################################################
-# NOTE: this template averages a fixed set of NB Palmer field names
-# (MwxAirTemp, PortTrueWindDir, KnudDepthHF and so on); only the fields it
-# reads come from the snapshot_fields variable. It is kept unchanged so that
-# existing cruise definitions keep working. For another ship, use
-# averaging_logger_template.yaml, which takes the fields to average as
-# variables.
+###############################################################################
+##                                                                           ##
+##   HISTORICAL SPECIAL CASE - DO NOT USE FOR NEW CRUISE DEFINITIONS.        ##
+##                                                                           ##
+##   Use averaging_logger_template.yaml in this directory instead.           ##
+##                                                                           ##
+###############################################################################
+###############################################################################
+#
+# This template was written for the NB Palmer, and averages a fixed set of
+# its field names (MwxAirTemp, RTMPTemp, PortTrueWindDir, KnudDepthHF and so
+# on). Only the fields it *reads* come from the snapshot_fields variable, so
+# pointed at any other ship's fields it reads them but averages nothing.
+#
+# averaging_logger_template.yaml does the same job with the fields to average
+# given as variables (average_fields and direction_fields), and works for any
+# ship. To switch, include that file instead of this one, change
+# "logger_template: snapshot_logger_template" to
+# "logger_template: averaging_logger_template", and add the two variables
+# alongside snapshot_fields.
+#
+# This file is kept, unchanged, only so that existing cruise definitions that
+# use it keep working.
 ###############################################################################
 logger_templates:
   #################
