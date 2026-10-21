@@ -5,7 +5,7 @@
 import logging
 import bisect
 
-from math import degrees, radians, sin, cos, atan2
+from math import degrees, radians, sin, cos, atan2, isnan
 from statistics import mean
 from typing import Union, Any
 
@@ -59,6 +59,27 @@ class InterpolationTransform(DerivedDataTransform):
                  }
                ]
 
+               Any other keys in a list entry, such as min_count, are passed
+               to the algorithm along with its window.
+
+               Algorithms:
+
+                 boxcar_average - mean of the values within the window,
+                       centred on the output time
+                 polar_average - mean direction of angles (in degrees)
+                       within the window, so that 359 and 1 average to 0
+                 nearest - the value nearest the output time
+
+               Missing values - None, or NaN as some instruments report when
+               they have no reading - are ignored by all three, so one missing
+               reading doesn't make a whole average NaN. If a window holds
+               nothing but missing values, no value is output for it.
+
+               boxcar_average and polar_average also take an optional
+               min_count (default 1): output no value for a window that holds
+               fewer than this many valid values, rather than reporting an
+               average of one or two readings as if the window were full.
+
         interval - At what intervals (in seconds) should the interpolation
                be computed?
 
@@ -101,12 +122,16 @@ class InterpolationTransform(DerivedDataTransform):
                     raise ValueError('InterpolationTransform: sources for field spec must be '
                                      f'a list ; found {type(spec_instance)}')
 
-                # Expand source list into a traditional field_spec
+                # Expand source list into a traditional field_spec. Keys other
+                # than these (e.g. min_count) are options for the algorithm.
                 algorithm = spec_instance.get('algorithm')
                 window = spec_instance.get('window')
                 result_prefix = spec_instance.get('result_prefix')
+                options = {k: v for k, v in spec_instance.items()
+                           if k not in ('sources', 'algorithm', 'window', 'result_prefix')}
                 for source in sources:
-                    entry = {'source': source, 'algorithm': {'type': algorithm, 'window': window}}
+                    entry = {'source': source,
+                             'algorithm': {'type': algorithm, 'window': window, **options}}
                     result_field = result_prefix + source
                     self.field_spec[result_field] = entry
 
@@ -303,13 +328,22 @@ class InterpolationTransform(DerivedDataTransform):
 
 
 ############################
+def _is_missing(value):
+    """Is this a missing value: None, or a NaN?"""
+    return value is None or (isinstance(value, float) and isnan(value))
+
+
+############################
 def interpolate(algorithm, values, timestamp, now):
     """An omnibus routine for taking a list of timestamped values, a
     specification of an averaging algorithm, and returning a value
     computed at the specified timestamp. Returns None if there aren't
     enough data to compute a value.
 
-    algorithm    The name of the algorithm to be used
+    algorithm    A dict specifying the algorithm to be used: its 'type', and
+                 options such as 'window' and 'min_count'
+
+                 Missing values (None or NaN) are ignored by every algorithm.
 
     values       A list of [(timestamp, value),...] pairs
 
@@ -322,13 +356,18 @@ def interpolate(algorithm, values, timestamp, now):
         logging.warning('Function interpolate() handed non-dict algorithm '
                         'specification: %s', algorithm)
         return None
+    # Ignore missing values: None, or NaN as some instruments send when
+    # they have no reading. Otherwise one of them would make a whole
+    # average NaN, or be returned as the nearest value.
+    values = [(ts, val) for ts, val in values if not _is_missing(val)]
     if not values:
-        logging.debug('Function interpolate() handed empty values list')
+        logging.debug('Function interpolate() has no values to work with')
         return None
 
     ##################
     # Select algorithm
     alg_type = algorithm.get('type')
+    min_count = algorithm.get('min_count') or 1
 
     # boxcar_average: all values within symmetric interval window get
     # same weight.
@@ -338,7 +377,7 @@ def interpolate(algorithm, values, timestamp, now):
         upper_limit = timestamp + window / 2
         vals_to_average = [val for ts, val in values
                            if ts >= lower_limit and ts <= upper_limit]
-        if not vals_to_average:
+        if len(vals_to_average) < min_count:
             return None
 
         try:
@@ -371,7 +410,7 @@ def interpolate(algorithm, values, timestamp, now):
         upper_limit = timestamp + window / 2
         vals_to_average = [val for ts, val in values
                            if ts >= lower_limit and ts <= upper_limit]
-        if not vals_to_average:
+        if len(vals_to_average) < min_count:
             return None
 
         try:
