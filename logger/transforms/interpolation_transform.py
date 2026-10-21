@@ -6,7 +6,7 @@ import logging
 import bisect
 
 from math import degrees, radians, sin, cos, atan2, isnan
-from statistics import mean
+from statistics import mean, median
 from typing import Union, Any
 
 
@@ -69,16 +69,30 @@ class InterpolationTransform(DerivedDataTransform):
                  polar_average - mean direction of angles (in degrees)
                        within the window, so that 359 and 1 average to 0
                  nearest - the value nearest the output time
+                 median - median of the values within the window; unlike a
+                       mean, unaffected by a few spikes or dropouts
+                 trimmed_mean - mean of the values within the window after
+                       dropping the highest and lowest; the option 'trim'
+                       (default 0.1) is the fraction dropped from each end
 
                Missing values - None, or NaN as some instruments report when
-               they have no reading - are ignored by all three, so one missing
-               reading doesn't make a whole average NaN. If a window holds
-               nothing but missing values, no value is output for it.
+               they have no reading - are ignored by all of them, so one
+               missing reading doesn't make a whole average NaN. If a window
+               holds nothing but missing values, no value is output for it.
 
-               boxcar_average and polar_average also take an optional
-               min_count (default 1): output no value for a window that holds
-               fewer than this many valid values, rather than reporting an
-               average of one or two readings as if the window were full.
+               Every algorithm but nearest also takes an optional min_count
+               (default 1): output no value for a window that holds fewer than
+               this many valid values, rather than reporting an average of one
+               or two readings as if the window were full.
+
+               boxcar_average, median and trimmed_mean also take an optional
+               outlier_mads: before averaging, drop values more than this many
+               median absolute deviations (MADs) from the window's median.
+               It must be at least 1, so that at least half the window is
+               always kept; 3 is a common choice. If more than half the values in a window
+               are identical, the MAD is zero and any value that differs from
+               them is dropped. min_count counts values before outliers are
+               dropped.
 
         interval - At what intervals (in seconds) should the interpolation
                be computed?
@@ -141,6 +155,9 @@ class InterpolationTransform(DerivedDataTransform):
         else:
             raise ValueError('InterpolationTransform: field_spec must be either list '
                              f'or dict. Found {type(field_spec)}')
+
+        for result_field, entry in self.field_spec.items():
+            _check_algorithm_options(result_field, entry.get('algorithm'))
 
         self.interval = interval
         self.window = window
@@ -328,6 +345,47 @@ class InterpolationTransform(DerivedDataTransform):
 
 
 ############################
+def _check_algorithm_options(result_field, algorithm):
+    """Raise ValueError if an algorithm is given an option it can't use, or
+    an invalid value for one."""
+    if not isinstance(algorithm, dict):
+        return
+    alg_type = algorithm.get('type')
+
+    outlier_mads = algorithm.get('outlier_mads')
+    if outlier_mads is not None:
+        if alg_type not in ('boxcar_average', 'median', 'trimmed_mean'):
+            raise ValueError(f'InterpolationTransform: {result_field}: outlier_mads '
+                             f'can be used with boxcar_average, median or '
+                             f'trimmed_mean, not {alg_type}')
+        # At least 1, so that at least half of each window is always kept:
+        # by definition, half the values are within one MAD of the median.
+        if not isinstance(outlier_mads, (int, float)) or outlier_mads < 1:
+            raise ValueError(f'InterpolationTransform: {result_field}: outlier_mads '
+                             f'must be a number no less than 1; found {outlier_mads!r}')
+
+    trim = algorithm.get('trim')
+    if trim is not None:
+        if alg_type != 'trimmed_mean':
+            raise ValueError(f'InterpolationTransform: {result_field}: trim can '
+                             f'only be used with trimmed_mean, not {alg_type}')
+        if not isinstance(trim, (int, float)) or not 0 <= trim < 0.5:
+            raise ValueError(f'InterpolationTransform: {result_field}: trim must '
+                             f'be at least 0 and less than 0.5; found {trim!r}')
+
+
+############################
+def _reject_outliers(vals, outlier_mads):
+    """Drop values more than outlier_mads median absolute deviations from
+    the median. If the MAD is zero, drop every value not equal to the median."""
+    center = median(vals)
+    deviations = [abs(val - center) for val in vals]
+    mad = median(deviations)
+    return [val for val, deviation in zip(vals, deviations)
+            if deviation <= outlier_mads * mad]
+
+
+############################
 def _is_missing(value):
     """Is this a missing value: None, or a NaN?"""
     return value is None or (isinstance(value, float) and isnan(value))
@@ -381,6 +439,11 @@ def interpolate(algorithm, values, timestamp, now):
             return None
 
         try:
+            outlier_mads = algorithm.get('outlier_mads')
+            if outlier_mads:
+                vals_to_average = _reject_outliers(vals_to_average, outlier_mads)
+                if not vals_to_average:
+                    return None
             return mean(vals_to_average)
         except TypeError:
             logging.error('Non-numeric value in interpolation list: %s', vals_to_average)
@@ -421,6 +484,34 @@ def interpolate(algorithm, values, timestamp, now):
             if angle < 0:
                 angle += 360
             return angle
+        except TypeError:
+            logging.error('Non-numeric value in interpolation list: %s', vals_to_average)
+            return None
+
+    # median and trimmed_mean: robust to a few spikes or dropouts.
+    if alg_type in ('median', 'trimmed_mean'):
+        window = algorithm.get('window', 10)  # How far back/forward to look
+        lower_limit = timestamp - window / 2
+        upper_limit = timestamp + window / 2
+        vals_to_average = [val for ts, val in values
+                           if ts >= lower_limit and ts <= upper_limit]
+        if len(vals_to_average) < min_count:
+            return None
+
+        try:
+            outlier_mads = algorithm.get('outlier_mads')
+            if outlier_mads:
+                vals_to_average = _reject_outliers(vals_to_average, outlier_mads)
+                if not vals_to_average:
+                    return None
+            if alg_type == 'median':
+                return median(vals_to_average)
+
+            vals_to_average = sorted(vals_to_average)
+            drop = int(len(vals_to_average) * algorithm.get('trim', 0.1))
+            if drop:
+                vals_to_average = vals_to_average[drop:-drop]
+            return mean(vals_to_average)
         except TypeError:
             logging.error('Non-numeric value in interpolation list: %s', vals_to_average)
             return None

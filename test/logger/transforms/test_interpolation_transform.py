@@ -4,7 +4,8 @@
 import logging
 import unittest
 
-from logger.transforms.interpolation_transform import InterpolationTransform  # noqa: E402
+from logger.transforms.interpolation_transform import (  # noqa: E402
+    InterpolationTransform, _reject_outliers)
 from logger.utils.das_record import DASRecord  # noqa: E402
 
 
@@ -521,6 +522,100 @@ class TestMissingValues(unittest.TestCase):
         transform = InterpolationTransform(self.spec('boxcar_average'), 10, 20)
         self.assertEqual(transform.field_spec['AvgX']['algorithm'],
                          {'type': 'boxcar_average', 'window': 20})
+
+
+################################################################################
+class TestRobustAverages(unittest.TestCase):
+    """median and trimmed_mean algorithms, and the outlier_mads option,
+    which resist spikes and dropouts (issue #664)."""
+
+    # A steady reading of about 10, with a spike and a dropout
+    READINGS = [10.0, 10.2, 9.9, 10.1, 250.0, 10.0, 9.8, 10.3, 0.0, 10.1]
+
+    def setUp(self):
+        logging.getLogger().setLevel(logging.ERROR)
+
+    def run_transform(self, **algorithm):
+        """Feed READINGS repeatedly, one per second, and return the outputs
+        for field 'X' once the window is full."""
+        spec = [dict(sources=['X'], window=20, result_prefix='Avg', **algorithm)]
+        transform = InterpolationTransform(spec, 10, 20)
+        outputs = []
+        for second in range(100):
+            value = self.READINGS[second % len(self.READINGS)]
+            result = transform.transform(
+                DASRecord(timestamp=1000 + second, fields={'X': value}))
+            for r in result or []:
+                if r['timestamp'] - 1000 >= 20 and 'AvgX' in r['fields']:
+                    outputs.append(r['fields']['AvgX'])
+        self.assertTrue(outputs)
+        return outputs
+
+    ############################
+    def test_spikes_skew_a_plain_mean(self):
+        """The baseline the other tests improve on."""
+        for value in self.run_transform(algorithm='boxcar_average'):
+            self.assertGreater(abs(value - 10), 5)
+
+    def test_median(self):
+        for value in self.run_transform(algorithm='median'):
+            self.assertAlmostEqual(value, 10.05, delta=0.1)
+
+    def test_trimmed_mean(self):
+        for value in self.run_transform(algorithm='trimmed_mean'):
+            self.assertAlmostEqual(value, 10.05, delta=0.1)
+
+    def test_trim_option(self):
+        """With trim 0, a trimmed mean is a plain mean."""
+        plain = self.run_transform(algorithm='boxcar_average')
+        untrimmed = self.run_transform(algorithm='trimmed_mean', trim=0)
+        for a, b in zip(plain, untrimmed):
+            self.assertAlmostEqual(a, b)
+
+    def test_outlier_mads(self):
+        for algorithm in ('boxcar_average', 'median', 'trimmed_mean'):
+            with self.subTest(algorithm=algorithm):
+                for value in self.run_transform(algorithm=algorithm, outlier_mads=3):
+                    self.assertAlmostEqual(value, 10.05, delta=0.1)
+
+    def test_min_count(self):
+        """One reading a second gives about 20 in a 20-second window."""
+        for algorithm in ('median', 'trimmed_mean'):
+            with self.subTest(algorithm=algorithm):
+                spec = [dict(sources=['X'], algorithm=algorithm, window=20,
+                             result_prefix='Avg', min_count=30)]
+                transform = InterpolationTransform(spec, 10, 20)
+                for second in range(100):
+                    result = transform.transform(
+                        DASRecord(timestamp=1000 + second, fields={'X': 10.0}))
+                    for r in result or []:
+                        self.assertNotIn('AvgX', r['fields'])
+
+    ############################
+    def test_reject_outliers(self):
+        self.assertEqual(_reject_outliers([10, 11, 9, 10, 50], 3), [10, 11, 9, 10])
+        # A MAD of zero drops everything that differs from the median
+        self.assertEqual(_reject_outliers([10, 10, 10, 10, 99], 3), [10, 10, 10, 10])
+
+    def test_invalid_options_rejected_at_startup(self):
+        for options in ({'algorithm': 'polar_average', 'outlier_mads': 3},
+                        {'algorithm': 'nearest', 'outlier_mads': 3},
+                        {'algorithm': 'median', 'outlier_mads': 0.5},
+                        {'algorithm': 'median', 'outlier_mads': 'three'},
+                        {'algorithm': 'boxcar_average', 'trim': 0.1},
+                        {'algorithm': 'trimmed_mean', 'trim': 0.5},
+                        {'algorithm': 'trimmed_mean', 'trim': -0.1}):
+            with self.subTest(options=options):
+                with self.assertRaises(ValueError):
+                    InterpolationTransform(
+                        [dict(sources=['X'], window=20, result_prefix='Avg', **options)],
+                        10, 20)
+                # And the same through the dict form of field_spec
+                algorithm = dict(options, type=options['algorithm'], window=20)
+                del algorithm['algorithm']
+                with self.assertRaises(ValueError):
+                    InterpolationTransform(
+                        {'AvgX': {'source': 'X', 'algorithm': algorithm}}, 10, 20)
 
 
 if __name__ == '__main__':
