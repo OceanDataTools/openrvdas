@@ -45,13 +45,22 @@ NMEA_GPS:
     GGA: "${:2l}GGA,{GPSTime:of},{Latitude:nlat},{NorS:ow},{Longitude:nlat},{EorW:ow},{FixQuality:od},{NumSats:od},{HDOP:of},{AntennaHeight:of},M,{GeoidHeight:of},M,{LastDGPSUpdate:of},{DGPSStationID:od}*{CheckSum:x}"
 
     # Geographic Position - Latitude/Longitude
-    GLL: "${:2l}GLL,{Latitude:nlat},{NorS:ow},{Longitude:nlat},{EorW:ow},{GPSTime:of},{Status:ow},{Mode:ow}*{CheckSum:x}"
+    GLL:
+      - "${:2l}GLL,{Latitude:nlat},{NorS:ow},{Longitude:nlat},{EorW:ow},{GPSTime:of},{Status:ow},{Mode:ow}*{CheckSum:x}"
+      # NMEA before 2.3 has no mode indicator field
+      - "${:2l}GLL,{Latitude:nlat},{NorS:ow},{Longitude:nlat},{EorW:ow},{GPSTime:of},{Status:ow}*{CheckSum:x}"
 
     # Recommended Minimum Navigation Information
-    RMC: "${:2l}RMC,{GPSTime:of},{Status:ow},{Latitude:nlat},{NorS:ow},{Longitude:nlat},{EorW:ow},{SpeedKt:of},{CourseTrue:of},{GPSDate:ow},{MagVar:of},{MagVarDir:ow},{Mode:ow}*{CheckSum:x}"
+    RMC:
+      - "${:2l}RMC,{GPSTime:of},{Status:ow},{Latitude:nlat},{NorS:ow},{Longitude:nlat},{EorW:ow},{SpeedKt:of},{CourseTrue:of},{GPSDate:ow},{MagVar:of},{MagVarDir:ow},{Mode:ow}*{CheckSum:x}"
+      # NMEA before 2.3 has no mode indicator field
+      - "${:2l}RMC,{GPSTime:of},{Status:ow},{Latitude:nlat},{NorS:ow},{Longitude:nlat},{EorW:ow},{SpeedKt:of},{CourseTrue:of},{GPSDate:ow},{MagVar:of},{MagVarDir:ow}*{CheckSum:x}"
 
     # Course Over Ground and Ground Speed
-    VTG: "${:2l}VTG,{CourseTrue:of},T,{CourseMag:of},M,{SpeedKt:of},N,{SpeedKm:of},K,{Mode:ow}*{CheckSum:x}"
+    VTG:
+      - "${:2l}VTG,{CourseTrue:of},T,{CourseMag:of},M,{SpeedKt:of},N,{SpeedKm:of},K,{Mode:ow}*{CheckSum:x}"
+      # NMEA before 2.3 has no mode indicator field
+      - "${:2l}VTG,{CourseTrue:of},T,{CourseMag:of},M,{SpeedKt:of},N,{SpeedKm:of},K*{CheckSum:x}"
 
     # Time and Date
     ZDA: "${:2l}ZDA,{GPSTime:of},{Day:od},{Month:od},{Year:od},{LocalHours:od},{LocalMinutes:od}*{CheckSum:x}"
@@ -415,9 +424,18 @@ NMEA_GPS_INS:
     ########################################
 
     GGA: "${:2l}GGA,{GPSTime:of},{Latitude:nlat},{NorS:ow},{Longitude:nlat},{EorW:ow},{FixQuality:od},{NumSats:od},{HDOP:of},{AntennaHeight:of},M,{GeoidHeight:of},M,{LastDGPSUpdate:of},{DGPSStationID:od}*{CheckSum:x}"
-    GLL: "${:2l}GLL,{Latitude:nlat},{NorS:ow},{Longitude:nlat},{EorW:ow},{GPSTime:of},{Status:ow},{Mode:ow}*{CheckSum:x}"
-    RMC: "${:2l}RMC,{GPSTime:of},{Status:ow},{Latitude:nlat},{NorS:ow},{Longitude:nlat},{EorW:ow},{SpeedKt:of},{CourseTrue:of},{GPSDate:ow},{MagVar:of},{MagVarDir:ow},{Mode:ow}*{CheckSum:x}"
-    VTG: "${:2l}VTG,{CourseTrue:of},T,{CourseMag:of},M,{SpeedKt:of},N,{SpeedKm:of},K,{Mode:ow}*{CheckSum:x}"
+    GLL:
+      - "${:2l}GLL,{Latitude:nlat},{NorS:ow},{Longitude:nlat},{EorW:ow},{GPSTime:of},{Status:ow},{Mode:ow}*{CheckSum:x}"
+      # NMEA before 2.3 has no mode indicator field
+      - "${:2l}GLL,{Latitude:nlat},{NorS:ow},{Longitude:nlat},{EorW:ow},{GPSTime:of},{Status:ow}*{CheckSum:x}"
+    RMC:
+      - "${:2l}RMC,{GPSTime:of},{Status:ow},{Latitude:nlat},{NorS:ow},{Longitude:nlat},{EorW:ow},{SpeedKt:of},{CourseTrue:of},{GPSDate:ow},{MagVar:of},{MagVarDir:ow},{Mode:ow}*{CheckSum:x}"
+      # NMEA before 2.3 has no mode indicator field
+      - "${:2l}RMC,{GPSTime:of},{Status:ow},{Latitude:nlat},{NorS:ow},{Longitude:nlat},{EorW:ow},{SpeedKt:of},{CourseTrue:of},{GPSDate:ow},{MagVar:of},{MagVarDir:ow}*{CheckSum:x}"
+    VTG:
+      - "${:2l}VTG,{CourseTrue:of},T,{CourseMag:of},M,{SpeedKt:of},N,{SpeedKm:of},K,{Mode:ow}*{CheckSum:x}"
+      # NMEA before 2.3 has no mode indicator field
+      - "${:2l}VTG,{CourseTrue:of},T,{CourseMag:of},M,{SpeedKt:of},N,{SpeedKm:of},K*{CheckSum:x}"
     ZDA: "${:2l}ZDA,{GPSTime:of},{Day:od},{Month:od},{Year:od},{LocalHours:od},{LocalMinutes:od}*{CheckSum:x}"
 
     ########################################

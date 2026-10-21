@@ -737,6 +737,71 @@ class TestRecordParser(unittest.TestCase):
                                               'Seap200HeadingTrue': 235.77,
                                               'Seap200Pitch': 0.01}))
 
+################################################################################
+class TestStandardNMEADefinitions(unittest.TestCase):
+    """Sentences parsed with the device types in logger/devices/NMEA_0183.yaml."""
+
+    def setUp(self):
+        self.tmpdir = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmpdir.cleanup)
+        self.definitions = self.tmpdir.name + '/devices.yaml'
+        with open(self.definitions, 'w') as f:
+            f.write('includes:\n'
+                    '  - logger/devices/NMEA_0183.yaml\n'
+                    'devices:\n'
+                    '  gps:\n'
+                    '    category: device\n'
+                    '    device_type: NMEA_GPS\n'
+                    '    fields: {Latitude: Lat, CourseTrue: COG, SpeedKt: SOG,\n'
+                    '             Mode: Mode}\n'
+                    '  ins:\n'
+                    '    category: device\n'
+                    '    device_type: NMEA_GPS_INS\n'
+                    '    fields: {Latitude: Lat, CourseTrue: COG, SpeedKt: SOG,\n'
+                    '             Mode: Mode}\n')
+
+    def parse(self, record):
+        parser = RecordParser(definition_path=self.definitions, quiet=True)
+        result = parser.parse_record(record)
+        self.assertIsNotNone(result, record)
+        return result['fields']
+
+    ############################
+    def test_rmc_vtg_gll_with_and_without_mode(self):
+        """NMEA 2.3 added a mode indicator field to RMC, VTG and GLL; devices
+        that predate it, like the Garmin GPS 24xd, omit it. Both must parse."""
+        ts = '2026-10-20T23:33:58.959091Z'
+        for device in ('gps', 'ins'):
+            with self.subTest(device=device, sentence='RMC, pre-2.3'):
+                fields = self.parse(f'{device} {ts} $GPRMC,233342.00,A,4738.9683,N,'
+                                    '12218.7760,W,0.05,306.35,201026,15.55,*0F')
+                self.assertEqual(fields['COG'], 306.35)
+                self.assertEqual(fields['SOG'], 0.05)
+                self.assertAlmostEqual(fields['Lat'], 47.6494717, places=6)
+                self.assertNotIn('Mode', fields)
+            with self.subTest(device=device, sentence='RMC, 2.3+'):
+                fields = self.parse(f'{device} {ts} $GNRMC,233342.00,A,4738.9683,N,'
+                                    '12218.7760,W,0.05,306.35,201026,15.55,E,D*1F')
+                self.assertEqual(fields['COG'], 306.35)
+                self.assertEqual(fields['Mode'], 'D')
+            with self.subTest(device=device, sentence='VTG, pre-2.3'):
+                fields = self.parse(f'{device} {ts} $GPVTG,306.35,T,290.80,M,0.05,N,'
+                                    '0.10,K*4A')
+                self.assertEqual(fields, {'COG': 306.35, 'SOG': 0.05})
+            with self.subTest(device=device, sentence='VTG, 2.3+'):
+                fields = self.parse(f'{device} {ts} $GPVTG,306.35,T,290.80,M,0.05,N,'
+                                    '0.10,K,A*25')
+                self.assertEqual(fields, {'COG': 306.35, 'SOG': 0.05, 'Mode': 'A'})
+            with self.subTest(device=device, sentence='GLL, pre-2.3'):
+                fields = self.parse(f'{device} {ts} $GPGLL,4738.9683,N,12218.7760,W,'
+                                    '233342.00,A*2C')
+                self.assertAlmostEqual(fields['Lat'], 47.6494717, places=6)
+                self.assertNotIn('Mode', fields)
+            with self.subTest(device=device, sentence='GLL, 2.3+'):
+                fields = self.parse(f'{device} {ts} $GPGLL,4738.9683,N,12218.7760,W,'
+                                    '233342.00,A,D*44')
+                self.assertEqual(fields['Mode'], 'D')
+
 
 ################################################################################
 if __name__ == '__main__':
