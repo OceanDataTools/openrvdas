@@ -1733,17 +1733,18 @@ class TestExpandCruiseDefinitionErrors(unittest.TestCase):
         self.assertGreaterEqual(len(errors), 2)
 
 
-class TestSnapshotLoggerTemplate(unittest.TestCase):
-    """contrib/logger_templates/snapshot_logger_template.yaml takes the fields
-    to average as variables (issue #663)."""
+class TestAveragingLoggerTemplate(unittest.TestCase):
+    """contrib/logger_templates/averaging_logger_template.yaml takes the fields
+    to average as variables; snapshot_logger_template.yaml, which hard-codes
+    them, is unchanged so existing cruise definitions keep working (#663)."""
 
-    def expand(self, snapshot_variables):
+    def expand(self, snapshot_variables, template='averaging_logger_template'):
         """Expand a minimal cruise definition with a snapshot logger."""
         definition = {
-            'includes': ['contrib/logger_templates/snapshot_logger_template.yaml'],
+            'includes': [f'contrib/logger_templates/{template}.yaml'],
             'variables': {'data_server': 'localhost:8766',
                           'influx_bucket_name': 'openrvdas'},
-            'loggers': {'snapshot': {'logger_template': 'snapshot_logger_template',
+            'loggers': {'snapshot': {'logger_template': template,
                                      'variables': snapshot_variables}},
         }
         errors = []
@@ -1786,6 +1787,21 @@ class TestSnapshotLoggerTemplate(unittest.TestCase):
             results.extend(result if isinstance(result, list) else [result] if result else [])
         self.assertTrue(results)
         self.assertEqual(results[-1]['fields'], {'AvgAirTemp': 20.0})
+
+    def test_snapshot_template_unchanged(self):
+        """A cruise definition written for the old template - which supplies
+        only snapshot_fields - must still expand and run exactly as before."""
+        from logger.transforms.interpolation_transform import InterpolationTransform
+
+        config = self.expand({
+            'snapshot_fields': ['MwxAirTemp', 'PortTrueWindDir'],
+            'interval': 30, 'window': 30}, template='snapshot_logger_template')
+        self.assertEqual(self.field_spec(config), {
+            'boxcar_average': ['MwxAirTemp', 'RTMPTemp', 'PortTrueWindSpeed',
+                               'StbdTrueWindSpeed', 'MwxBarometer', 'KnudDepthHF',
+                               'KnudDepthLF', 'Grv1Value'],
+            'polar_average': ['PortTrueWindDir', 'StbdTrueWindDir']})
+        InterpolationTransform(**config['transforms'][0]['kwargs'])
 
     def test_sample_cruise_definitions(self):
         """The NBP1406 sample cruises average what they subscribe to."""

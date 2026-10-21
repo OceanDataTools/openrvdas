@@ -18,7 +18,7 @@ includes:
   - contrib/logger_templates/serial_logger_template.yaml
   - contrib/logger_templates/parse_data_logger_template.yaml
   - contrib/logger_templates/true_winds_logger_template.yaml
-  - contrib/logger_templates/snapshot_logger_template.yaml
+  - contrib/logger_templates/averaging_logger_template.yaml
 
 ###########################################################
 # Global variables - can be overridden by individual loggers
@@ -211,7 +211,7 @@ loggers:
   # Read a bunch of variables from CDS, compute 30-second snapshot and write back
   # to CDS and optionally InfluxDB.
   snapshot:
-    logger_template: snapshot_logger_template
+    logger_template: averaging_logger_template
     variables:
       # Every field to read: the two lists below together
       snapshot_fields: [MwxAirTemp, RTMPTemp, PortTrueWindDir, PortTrueWindSpeed, StbdTrueWindDir,
