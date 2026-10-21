@@ -417,5 +417,111 @@ class TestInterpolationTransform(unittest.TestCase):
         self.assertEqual(field_metadata['device_type_field'], 'AvgTemperature')
 
 
+################################################################################
+class TestMissingValues(unittest.TestCase):
+    """Missing values (None, NaN) are ignored, and min_count suppresses
+    averages of too few values (issue #664)."""
+
+    NAN = float('nan')
+
+    def setUp(self):
+        logging.getLogger().setLevel(logging.ERROR)
+
+    def run_transform(self, field_spec, values, interval=10, window=20):
+        """Feed (seconds, value) pairs for field 'X' one per record, and return
+        {output timestamp: output fields}."""
+        transform = InterpolationTransform(field_spec, interval, window)
+        results = {}
+        for second, value in values:
+            result = transform.transform(
+                DASRecord(timestamp=1000 + second, fields={'X': value}))
+            for r in result or []:
+                results[r['timestamp'] - 1000] = r['fields']
+        return results
+
+    def spec(self, algorithm, **options):
+        return [dict(sources=['X'], algorithm=algorithm, window=20,
+                     result_prefix='Avg', **options)]
+
+    ############################
+    def test_boxcar_ignores_nan_and_none(self):
+        values = [(t, self.NAN if t % 3 == 0 else None if t % 7 == 0 else 10.0)
+                  for t in range(0, 60)]
+        results = self.run_transform(self.spec('boxcar_average'), values)
+        self.assertTrue(results)
+        for t, fields in results.items():
+            self.assertEqual(fields, {'AvgX': 10.0}, t)
+
+    def test_polar_ignores_nan(self):
+        values = [(t, self.NAN if t % 2 else (350.0 if t % 4 else 10.0))
+                  for t in range(0, 60)]
+        results = self.run_transform(self.spec('polar_average'), values)
+        self.assertTrue(results)
+        for t, fields in results.items():
+            # A window may hold one more 350 than 10, or vice versa, so the
+            # average is near north, not exactly north - but nowhere near the
+            # 180 a plain average would give, nor NaN.
+            direction = fields['AvgX']
+            self.assertLess(min(direction, 360 - direction), 5, t)
+
+    def test_nearest_skips_nan(self):
+        values = [(t, float(t) if t % 10 else self.NAN) for t in range(0, 60)]
+        results = self.run_transform(
+            [{'sources': ['X'], 'algorithm': 'nearest', 'window': 20,
+              'result_prefix': 'Near'}],
+            values)
+        self.assertTrue(results)
+        for t, fields in results.items():
+            # Every output time is a multiple of 10, where the value is NaN,
+            # so the nearest valid value is a second either side of it
+            self.assertIn(fields['NearX'], (t - 1.0, t + 1.0), t)
+
+    def test_window_of_only_missing_values_outputs_nothing(self):
+        values = [(t, 10.0 if t < 20 else self.NAN) for t in range(0, 80)]
+        results = self.run_transform(self.spec('boxcar_average'), values)
+        self.assertEqual(results[10], {'AvgX': 10.0})
+        # Once the window holds only NaNs, there is nothing to output - and
+        # in particular no NaN average
+        for t, fields in results.items():
+            if t >= 40:
+                self.assertNotIn('AvgX', fields, t)
+
+    ############################
+    def test_min_count(self):
+        """One reading every 5 seconds gives 4 or 5 in a 20-second window."""
+        values = [(t, 10.0) for t in range(0, 80, 5)]
+        self.assertTrue(self.run_transform(
+            self.spec('boxcar_average', min_count=4), values))
+        self.assertFalse(self.run_transform(
+            self.spec('boxcar_average', min_count=6), values))
+        self.assertFalse(self.run_transform(
+            self.spec('polar_average', min_count=6), values))
+
+    def test_min_count_counts_only_valid_values(self):
+        values = [(t, 10.0 if t % 2 == 0 else self.NAN) for t in range(0, 80)]
+        self.assertTrue(self.run_transform(
+            self.spec('boxcar_average', min_count=10), values))
+        self.assertFalse(self.run_transform(
+            self.spec('boxcar_average', min_count=12), values))
+
+    def test_min_count_in_dict_form(self):
+        field_spec = {'AvgX': {'source': 'X', 'algorithm': {
+            'type': 'boxcar_average', 'window': 20, 'min_count': 6}}}
+        self.assertFalse(self.run_transform(
+            field_spec, [(t, 10.0) for t in range(0, 80, 5)]))
+
+    ############################
+    def test_list_form_passes_options_through(self):
+        transform = InterpolationTransform(
+            self.spec('boxcar_average', min_count=3), 10, 20)
+        self.assertEqual(transform.field_spec['AvgX']['algorithm'],
+                         {'type': 'boxcar_average', 'window': 20, 'min_count': 3})
+
+        # Without options, the algorithm spec is exactly what it always was
+        transform = InterpolationTransform(self.spec('boxcar_average'), 10, 20)
+        self.assertEqual(transform.field_spec['AvgX']['algorithm'],
+                         {'type': 'boxcar_average', 'window': 20})
+
+
 if __name__ == '__main__':
     unittest.main()
