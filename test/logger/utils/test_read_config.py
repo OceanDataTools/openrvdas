@@ -1819,6 +1819,52 @@ class TestAveragingLoggerTemplate(unittest.TestCase):
                 self.assertEqual(sorted(averaged), sorted(subscribed))
 
 
+class TestUDPLoggerTemplate(unittest.TestCase):
+    """contrib/logger_templates/udp_logger_template.yaml takes an optional
+    udp_eol variable, whose default comes from the template file itself."""
+
+    def expand(self, global_variables=None, logger_variables=None):
+        definition = {
+            'includes': ['contrib/logger_templates/udp_logger_template.yaml'],
+            'variables': {'cruise': 'TEST', 'raw_udp_port': 6224,
+                          'udp_destination': '255.255.255.255',
+                          'file_root': '/var/tmp/log', **(global_variables or {})},
+            'loggers': {'gyro': {'logger_template': 'udp_logger_template',
+                                 'variables': {'reader_udp_port': 13001,
+                                               **(logger_variables or {})}}},
+        }
+        errors = []
+        with self.assertNoLogs(level='ERROR'):  # e.g. unexpanded variables
+            cruise = read_config.expand_cruise_definition(definition, errors=errors)
+        self.assertEqual(errors, [])
+        return {name: cruise['configs'][f'gyro-{name}']['readers'][0]['kwargs']
+                for name in ('net', 'net+file')}
+
+    def test_default_is_one_record_per_packet(self):
+        """A cruise definition that doesn't mention udp_eol - every existing
+        one - gets UDPReader's own default, so behaves exactly as before."""
+        for config, reader_kwargs in self.expand().items():
+            with self.subTest(config=config):
+                self.assertEqual(reader_kwargs, {'port': 13001, 'eol': None})
+
+    def test_logger_can_set_eol(self):
+        for config, reader_kwargs in self.expand(
+                logger_variables={'udp_eol': '\r\n'}).items():
+            with self.subTest(config=config):
+                self.assertEqual(reader_kwargs['eol'], '\r\n')
+
+    def test_cruise_can_set_eol_for_all_loggers(self):
+        for config, reader_kwargs in self.expand(
+                global_variables={'udp_eol': '\n'}).items():
+            with self.subTest(config=config):
+                self.assertEqual(reader_kwargs['eol'], '\n')
+
+    def test_logger_setting_overrides_cruise_setting(self):
+        reader_kwargs = self.expand(global_variables={'udp_eol': '\n'},
+                                    logger_variables={'udp_eol': '\r\n'})
+        self.assertEqual(reader_kwargs['net']['eol'], '\r\n')
+
+
 if __name__ == "__main__":
     import argparse
 
