@@ -79,7 +79,7 @@ def git_info() -> None:
 
 
 def cruise_snapshot() -> None:
-    _run("logger.utils.cruise_snapshot")
+    _run("server.cruise_snapshot")
 
 
 def openrvdas_manage() -> None:

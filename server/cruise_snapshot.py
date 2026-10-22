@@ -27,6 +27,20 @@ which writes a directory (and, with --tar, a .tar.gz of it) named
                            sources/_abs/), so the tree can be loaded again
     patches/               for each repository with uncommitted changes, the
                            output of "git diff HEAD"
+    logger_manager_journal.jsonl
+                           the logger manager's journal entries (issue #670)
+                           from its last start before this cruise definition
+                           was loaded: every mode change, config change,
+                           logger start, stop, crash and recovery since then
+
+From the journal, the manifest also records:
+
+  - whether the definition the logger manager loaded is the one being
+    snapshotted, by comparing the sha256 the journal recorded for it at load
+    time with the file's sha256 now;
+  - the current state: the active mode, and each logger's config, whether it
+    is running, crashing or failed, and whether the config it is running is
+    identical to the one in this definition (by comparing config hashes).
 
 Files captured are the cruise definition; every file it includes; the device
 definition files named by any ParseTransform or RegexParseTransform (or the
@@ -43,6 +57,7 @@ import datetime
 import glob
 import hashlib
 import importlib.metadata
+import json
 import logging
 import os
 import platform
@@ -56,8 +71,9 @@ import tarfile
 import yaml
 
 from logger.utils import read_config  # noqa: E402
+from server.state_journal import config_hash  # noqa: E402
 
-OPENRVDAS_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+OPENRVDAS_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Default definition path for a ParseTransform that doesn't name one. Kept as
 # a string rather than imported, so that taking a snapshot doesn't depend on
@@ -79,6 +95,12 @@ SECRET_LINE = re.compile(r'^\s*-?\s*["\']?[\w.-]*' + SECRET_PATTERN +
 REDACTED = '<redacted>'
 
 TIME_FORMAT = '%Y-%m-%dT%H:%M:%SZ'
+
+# Where the logger manager writes its journal by default; must match
+# DEFAULT_STATE_JOURNAL in server/logger_manager.py, which isn't imported so
+# that taking a snapshot doesn't import the logger manager.
+DEFAULT_JOURNAL = '/var/log/openrvdas/logger_manager_journal'
+JOURNAL_FILE = 'logger_manager_journal.jsonl'
 
 
 ################################################################################
@@ -239,8 +261,108 @@ def environment_info():
 
 
 ################################################################################
+def read_journal(filebase):
+    """Read the logger manager's journal: a list of (line, record dict), in
+    order. Lines that aren't JSON are skipped."""
+    entries = []
+    for path in sorted(glob.glob(filebase + '-*')):
+        with open(path, errors='replace') as f:
+            for line in f:
+                line = line.rstrip('\n')
+                try:
+                    record = json.loads(line)
+                except ValueError:
+                    continue
+                if isinstance(record, dict) and isinstance(record.get('fields'), dict):
+                    entries.append((line, record))
+    entries.sort(key=lambda entry: entry[1].get('timestamp') or 0)
+    return entries
+
+
+def _same_file(journal_filename, cruise_file):
+    """Is the file the journal says was loaded the one we're snapshotting?
+    The logger manager may have been given a relative path; it runs in the
+    OpenRVDAS directory, so resolve against that."""
+    if not journal_filename:
+        return False
+    return os.path.realpath(_resolve(journal_filename)) == os.path.realpath(cruise_file)
+
+
+def last_load(entries, cruise_file):
+    """Index of the latest definition_loaded entry for this cruise file, or
+    None if the journal doesn't record it being loaded."""
+    for index in range(len(entries) - 1, -1, -1):
+        record = entries[index][1]
+        if record.get('message_type') == 'definition_loaded' and \
+                _same_file(record['fields'].get('filename'), cruise_file):
+            return index
+    return None
+
+
+def run_start(entries, load_index):
+    """Index of the logger manager's start preceding the load at load_index
+    (or 0 if the journal doesn't go back that far).
+
+    State has to be replayed from here rather than from the load itself:
+    the logger manager applies a newly loaded definition's configs - mode
+    change, loggers started - just before it records definition_loaded, and
+    the state is cumulative in any case."""
+    for index in range(load_index, -1, -1):
+        if entries[index][1].get('message_type') == 'manager_start':
+            return index
+    return 0
+
+
+def _config_matches(config, config_name, journal_sha256):
+    """Is the config the logger manager ran (as hashed in the journal) this
+    definition's config? The data stores add the config's name to each
+    config when it is loaded - so that is what the logger manager hashes -
+    but accept the bare config too, in case a store doesn't."""
+    if config is None or not journal_sha256:
+        return False
+    return journal_sha256 in (config_hash({**config, 'name': config_name}),
+                              config_hash(config))
+
+
+def current_state(records, configs):
+    """Replay journal records to find the active mode and each logger's
+    state, and check each running config against this definition's."""
+    mode = None
+    loggers = {}
+    for record in records:
+        event, fields = record.get('message_type'), record['fields']
+        logger = fields.get('logger')
+        if event == 'mode_changed':
+            mode = fields.get('to')
+        elif event in ('logger_started', 'config_changed'):
+            loggers[logger] = {'config': fields.get('config') or fields.get('to'),
+                               'config_sha256': fields.get('config_sha256'),
+                               'status': 'running', 'since': fields.get('time')}
+        elif event == 'logger_stopped' and logger in loggers:
+            loggers[logger].update(status='stopped', since=fields.get('time'))
+        elif event == 'logger_crashed' and logger in loggers:
+            loggers[logger].update(status='crashing', since=fields.get('time'))
+        elif event == 'logger_recovered' and logger in loggers:
+            loggers[logger].update(status='running', since=fields.get('time'),
+                                   crashes_before_recovery=fields.get('crashes'))
+        elif event == 'logger_failed' and logger in loggers:
+            loggers[logger].update(status='failed', since=fields.get('time'),
+                                   crashes=fields.get('crashes'))
+        elif event == 'manager_stop':
+            for state in loggers.values():
+                state.update(status='stopped', since=fields.get('time'))
+
+    for state in loggers.values():
+        state['matches_definition'] = _config_matches(
+            configs.get(state['config']), state['config'], state['config_sha256'])
+    return {'as_of': records[-1]['fields'].get('time') if records else None,
+            'active_mode': mode,
+            'loggers': dict(sorted(loggers.items()))}
+
+
+################################################################################
 def take_snapshot(cruise_file, output_dir='.', make_tar=False, redact_secrets=True,
-                  loaded_time=None):
+                  loaded_time=None, journal=DEFAULT_JOURNAL):
     """Snapshot a cruise definition and everything it depends on.
 
     cruise_file     Path of the cruise definition file.
@@ -250,7 +372,10 @@ def take_snapshot(cruise_file, output_dir='.', make_tar=False, redact_secrets=Tr
     loaded_time     Optional datetime (UTC) when the definition was loaded
                     into the logger manager. Any captured file modified after
                     it is flagged, since the snapshot may then differ from
-                    what is actually running.
+                    what is actually running. If not given, taken from the
+                    logger manager's journal, if it records loading this file.
+    journal         Path prefix of the logger manager's journal files
+                    (--state_journal), or None not to look for them.
 
     Returns the path of the snapshot directory (or of the .tar.gz, if
     make_tar is set).
@@ -272,6 +397,49 @@ def take_snapshot(cruise_file, output_dir='.', make_tar=False, redact_secrets=Tr
 
     cruise_id = str((expanded.get('cruise') or {}).get('id') or
                     os.path.splitext(os.path.basename(cruise_file))[0])
+
+    # The logger manager's journal, from when it last loaded this definition.
+    journal_info, journal_lines, state = None, [], None
+    entries = read_journal(journal) if journal else []
+    if journal and not entries:
+        errors.append(f'No logger manager journal found at {journal}-*')
+    elif entries:
+        start = last_load(entries, cruise_file)
+        if start is None:
+            errors.append(f'The logger manager journal at {journal} does not record '
+                          f'loading {cruise_file}, so the current state is unknown')
+        else:
+            loaded = entries[start][1]['fields']
+            start = run_start(entries, start)
+            file_sha256 = _sha256(cruise_file)
+            journal_lines = [line for line, _ in entries[start:]]
+            journal_info = {
+                'source': journal,
+                'path': JOURNAL_FILE,
+                'entries': len(journal_lines),
+                'since': entries[start][1]['fields'].get('time'),
+                'definition_loaded': loaded.get('loaded_time'),
+                'definition_sha256_at_load': loaded.get('file_sha256'),
+                'definition_unchanged_since_load': loaded.get('file_sha256') == file_sha256,
+            }
+            if not journal_info['definition_unchanged_since_load']:
+                errors.append(f'{cruise_file} has changed since the logger manager loaded '
+                              f'it, so what is running may not match this snapshot')
+            state = current_state([record for _, record in entries[start:]],
+                                  expanded.get('configs', {}))
+            mismatched = [name for name, s in state['loggers'].items()
+                          if not s['matches_definition'] and s['status'] != 'stopped']
+            if mismatched:
+                errors.append('These loggers are running configs that differ from this '
+                              f'definition: {", ".join(mismatched)}')
+            if loaded_time is None and loaded.get('loaded_time'):
+                try:
+                    loaded_time = datetime.datetime.strptime(
+                        loaded['loaded_time'], '%Y-%m-%dT%H:%M:%S.%fZ').replace(
+                            tzinfo=datetime.timezone.utc)
+                except ValueError:
+                    pass
+
     base_name = re.sub(r'[^\w.-]+', '_', cruise_id) + '_' + now.strftime('%Y%m%dT%H%M%SZ')
     # Two snapshots in the same second get _2, _3... rather than colliding.
     name, count = base_name, 1
@@ -331,6 +499,10 @@ def take_snapshot(cruise_file, output_dir='.', make_tar=False, redact_secrets=Tr
         yaml.safe_dump(redact(copy.deepcopy(expanded)) if redact_secrets else expanded,
                        f, sort_keys=False, default_flow_style=False)
 
+    if journal_lines:
+        with open(os.path.join(snapshot_dir, JOURNAL_FILE), 'w') as f:
+            f.write('\n'.join(journal_lines) + '\n')
+
     manifest = {
         'snapshot': {
             'taken': now.strftime(TIME_FORMAT),
@@ -344,6 +516,8 @@ def take_snapshot(cruise_file, output_dir='.', make_tar=False, redact_secrets=Tr
         'environment': environment_info(),
         'repositories': repositories,
         'files': files,
+        'journal': journal_info,
+        'current_state': state,
         'warnings': errors,
     }
     with open(os.path.join(snapshot_dir, 'MANIFEST.yaml'), 'w') as f:
@@ -382,6 +556,9 @@ def main(argv=None):
                         help='Also write the snapshot as a .tar.gz')
     parser.add_argument('--no-redact', dest='redact', action='store_false',
                         help='Don\'t redact secrets in expanded_cruise.yaml')
+    parser.add_argument('--journal', default=DEFAULT_JOURNAL,
+                        help='Path prefix of the logger manager\'s journal files '
+                        f'(default: {DEFAULT_JOURNAL}); "none" not to use one')
     parser.add_argument('--loaded-time',
                         help='When the definition was loaded, as UTC '
                         'YYYY-MM-DDTHH:MM:SSZ; files modified since are flagged')
@@ -392,8 +569,10 @@ def main(argv=None):
     if args.loaded_time:
         loaded_time = datetime.datetime.strptime(args.loaded_time, TIME_FORMAT).replace(
             tzinfo=datetime.timezone.utc)
+    journal = None if args.journal.lower() == 'none' else args.journal
     print(take_snapshot(args.cruise_file, output_dir=args.output, make_tar=args.tar,
-                        redact_secrets=args.redact, loaded_time=loaded_time))
+                        redact_secrets=args.redact, loaded_time=loaded_time,
+                        journal=journal))
 
 
 if __name__ == '__main__':
