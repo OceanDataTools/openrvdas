@@ -27,6 +27,7 @@ database backing it:
 """
 import datetime
 import getpass  # to get username
+import hashlib
 import logging
 import multiprocessing
 import os
@@ -41,6 +42,7 @@ from server.cached_data_server import CachedDataServer  # noqa: E402
 from server.logger_runner import (LoggerRunner, STDERR_MAX_BYTES,
                                   STDERR_BACKUP_COUNT)  # noqa: E402
 from server.server_api import ServerAPI  # noqa: E402
+from server.state_journal import StateJournal, config_hash  # noqa: E402
 from logger.transforms.to_das_record_transform import ToDASRecordTransform  # noqa: E402
 from logger.utils.stderr_logging import DEFAULT_LOGGING_FORMAT  # noqa: E402
 from logger.utils.stderr_logging import StdErrLoggingHandler  # noqa: E402
@@ -65,6 +67,7 @@ USER = getpass.getuser()
 HOSTNAME = socket.gethostname()
 
 DEFAULT_DATA_SERVER_WEBSOCKET = 'localhost:8766'
+DEFAULT_STATE_JOURNAL = '/var/log/openrvdas/logger_manager_journal'
 
 ############################
 
@@ -90,6 +93,12 @@ class LoggerState:
         self.last_started = time.time()
         self.restart_count = 0
 
+        # For the state journal: how many times the logger has crashed in
+        # the current run of crashes, and when that run began. Kept apart
+        # from restart_count, which the restart policy resets as it sees fit.
+        self.crash_count = 0
+        self.crash_episode_start = None
+
 ################################################################################
 ################################################################################
 
@@ -102,7 +111,8 @@ class LoggerManager:
                  stderr_max_bytes=STDERR_MAX_BYTES,
                  stderr_backup_count=STDERR_BACKUP_COUNT,
                  max_tries=DEFAULT_MAX_TRIES, min_uptime=DEFAULT_MIN_UPTIME,
-                 interval=0.5, logger_log_level=logging.WARNING):
+                 interval=0.5, logger_log_level=logging.WARNING,
+                 state_journal=None):
         """Read desired logger configs from the data store and try to keep
         the loggers specified in those configs running.
         ```
@@ -136,6 +146,12 @@ class LoggerManager:
 
         logger_log_level - at what logging level our component loggers
               should operate.
+
+        state_journal - path prefix of daily files in which to record each
+              change of state - definition loaded, mode changed, logger
+              started, stopped, reconfigured, crashed or recovered - as a
+              line of JSON. See server/state_journal.py. If None, changes
+              aren't recorded.
         ```
         """
         # Set signal to catch SIGTERM and convert it into a
@@ -174,6 +190,20 @@ class LoggerManager:
         self.min_uptime = min_uptime
         self.interval = interval
         self.logger_log_level = logger_log_level
+        self.journal = StateJournal(state_journal)
+        self.journaled_mode = None  # the last mode recorded in the journal
+        self.journaled_mode_lock = threading.Lock()
+        self.journaled_definition = None  # (cruise id, load time) last recorded
+
+        # Recorded here rather than in start(), because the API's callbacks
+        # can load a definition and start loggers before start() is called.
+        try:
+            from logger.utils.read_version import get_version
+            version = get_version()
+        except Exception as e:  # noqa: BLE001 - must not stop the manager
+            version = f'unknown ({e})'
+        self.journal.record('manager_start', host=HOSTNAME, user=USER,
+                            pid=os.getpid(), openrvdas_version=version)
 
         # How our various loops and threads will know it's time to quit
         self.quit_flag = False
@@ -232,7 +262,9 @@ class LoggerManager:
         self.quit_flag = True
         with self.config_lock:
             for logger in list(self.logger_states):
+                self._journal_logger_stopped(logger, reason='manager stopping')
                 self._delete_logger(logger)
+        self.journal.record('manager_stop', host=HOSTNAME, pid=os.getpid())
 
         # Give our data server writer a chance to deliver anything still
         # queued (e.g. the loggers' final stderr lines) before we exit.
@@ -276,9 +308,18 @@ class LoggerManager:
             logging.debug('New: %s', new_loggers)
             logging.debug('Other: %s', other_loggers)
 
+            # If anything is about to change, record any change of mode
+            # first, since it is usually the cause.
+            changing = stale_loggers or new_loggers or any(
+                configs[logger] != self.logger_states[logger].config
+                for logger in other_loggers)
+            if changing:
+                self._journal_mode(self.api.get_active_mode())
+
             # Find and shut down loggers that don't exist in our new configs
             for logger in stale_loggers:
                 logging.info('Shutting down logger %s.', logger)
+                self._journal_logger_stopped(logger, reason='no longer configured')
                 self._delete_logger(logger)
 
             # Add loggers that have first appeared in our new config and
@@ -288,6 +329,10 @@ class LoggerManager:
                 logging.info('Starting new logger %s with %s.', logger,
                              new_config.get('name', 'no_name'))
                 self._start_logger(logger, new_config)
+                self.journal.record('logger_started', logger=logger,
+                                    config=new_config.get('name'),
+                                    config_sha256=config_hash(new_config),
+                                    pid=self._pid(logger))
 
             # For existing loggers, see whether their configs have
             # changed. If so, stop and restart with new config.
@@ -301,10 +346,44 @@ class LoggerManager:
                 logging.info('Updating %s from %s to %s', logger,
                              old_config.get('name', 'no_name'),
                              new_config.get('name', 'no_name'))
+                crashes = self.logger_states[logger].crash_count
                 self._delete_logger(logger)
                 self._start_logger(logger, new_config)
+                entry = dict(logger=logger, **{'from': old_config.get('name')},
+                             to=new_config.get('name'),
+                             config_sha256=config_hash(new_config),
+                             pid=self._pid(logger))
+                if crashes:
+                    entry['crashes_before_change'] = crashes
+                self.journal.record('config_changed', **entry)
 
             self.active_configs = configs
+
+    ############################
+    def _journal_mode(self, mode):
+        """Record the active mode in the journal if it has changed. Called
+        from both the update loop and the API's update callback, so locked."""
+        with self.journaled_mode_lock:
+            if mode != self.journaled_mode:
+                self.journal.record('mode_changed', **{'from': self.journaled_mode},
+                                    to=mode)
+                self.journaled_mode = mode
+
+    def _journal_logger_stopped(self, logger, reason):
+        """Record that a logger is being stopped, with how many times it had
+        crashed if it was in the middle of a run of crashes."""
+        state = self.logger_states.get(logger)
+        if not state:
+            return
+        entry = dict(logger=logger, config=state.config.get('name'), reason=reason)
+        if state.crash_count:
+            entry['crashes_before_stop'] = state.crash_count
+        self.journal.record('logger_stopped', **entry)
+
+    def _pid(self, logger):
+        state = self.logger_states.get(logger)
+        process = state.runner.process if state else None
+        return process.pid if process else None
 
     ############################
     def _start_logger(self, logger, config):
@@ -363,6 +442,25 @@ class LoggerManager:
         with self.config_lock:
             for logger, state in self.logger_states.items():
                 self._consider_restart(logger, state)
+                self._check_recovery(logger, state)
+
+    ############################
+    def _check_recovery(self, logger, state):
+        """If a logger that has been crashing has now stayed up for
+        min_uptime seconds, record in the journal that it has recovered, and
+        how many times it crashed. ONLY CALL THIS WITH config_lock HELD."""
+        if not state.crash_count or not state.runner.is_alive():
+            return
+        if time.time() - state.last_started < self.min_uptime:
+            return
+        self.journal.record('logger_recovered', logger=logger,
+                            config=state.config.get('name'),
+                            crashes=state.crash_count,
+                            crashing_for_seconds=round(state.last_started -
+                                                       state.crash_episode_start, 1),
+                            pid=self._pid(logger))
+        state.crash_count = 0
+        state.crash_episode_start = None
 
     ############################
     def _consider_restart(self, logger, state):
@@ -383,6 +481,15 @@ class LoggerManager:
         # yet been labeled as a failed logger.
         logging.warning('%s unexpectedly dead.', logger)
 
+        # Journal only the first crash of a run of crashes; the rest are
+        # counted, and reported when the logger recovers, fails or stops.
+        if not state.crash_count:
+            state.crash_episode_start = time.time()
+            exit_code = runner.process.returncode if runner.process else None
+            self.journal.record('logger_crashed', logger=logger,
+                                config=state.config.get('name'), exit_code=exit_code)
+        state.crash_count += 1
+
         # How long was it up? If long enough, give it a clean slate.
         if time.time() - state.last_started < self.min_uptime:
             state.restart_count += 1
@@ -395,6 +502,9 @@ class LoggerManager:
             runner.failed = True
             logging.warning('%s has failed %s times; not restarting',
                             logger, state.restart_count)
+            self.journal.record('logger_failed', logger=logger,
+                                config=state.config.get('name'),
+                                crashes=state.crash_count)
             return
 
         # If here, we're going to try restarting.
@@ -490,6 +600,10 @@ class LoggerManager:
         mode_map = {'active_mode': self.api.get_active_mode()}
         self._write_record_to_data_server('status:cruise_mode', mode_map)
 
+        # Record a mode change that didn't change any logger's config (one
+        # that did was recorded when the configs were applied).
+        self._journal_mode(mode_map['active_mode'])
+
     ############################
     def load_definition_from_api(self):
         """Fetch a new cruise definition from the API and build local maps.
@@ -513,6 +627,7 @@ class LoggerManager:
             loaded_time = self.cruise.get('loaded_time')
             self.cruise_loaded_time = datetime.datetime.timestamp(loaded_time)
             self.active_mode = self.api.get_active_mode()
+            self._journal_definition_loaded(loaded_time)
 
             # Send updated cruise definition to CDS for console to read.
             cruise_dict = {
@@ -528,6 +643,38 @@ class LoggerManager:
                 'status:cruise_definition', cruise_dict)
         except Exception as e:
             logging.info('Failed to update cruise definition: %s', e)
+
+    ############################
+    def _journal_definition_loaded(self, loaded_time):
+        """Record a newly loaded cruise definition, with a hash of its file
+        so the journal can be matched to a snapshot of it."""
+        # Some data stores report the cruise id and filename at the top
+        # level of the configuration, others under its 'cruise' key.
+        cruise_section = self.cruise.get('cruise') or {}
+        cruise_id = self.cruise.get('id') or cruise_section.get('id')
+        filename = self.cruise_filename or cruise_section.get('config_filename')
+
+        # The same load is reported both by the API's callback and by the
+        # loop that watches for new definitions; record it once.
+        if (cruise_id, loaded_time) == self.journaled_definition:
+            return
+        self.journaled_definition = (cruise_id, loaded_time)
+
+        # Data stores give the load time as a datetime, naive UTC or aware.
+        if isinstance(loaded_time, datetime.datetime):
+            if loaded_time.tzinfo is not None:
+                loaded_time = loaded_time.astimezone(datetime.timezone.utc).replace(tzinfo=None)
+            loaded_time = loaded_time.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
+
+        file_sha256 = None
+        if filename:
+            try:
+                with open(filename, 'rb') as f:
+                    file_sha256 = hashlib.sha256(f.read()).hexdigest()
+            except OSError:
+                pass
+        self.journal.record('definition_loaded', cruise_id=cruise_id, filename=filename,
+                            loaded_time=loaded_time, file_sha256=file_sha256)
 
     ############################
     def _send_cruise_definition_loop(self):
@@ -688,6 +835,13 @@ if __name__ == '__main__':  # noqa: C901
     parser.add_argument('--interval', dest='interval', action='store',
                         type=float, default=0.5,
                         help='How many seconds to sleep between logger checks.')
+    parser.add_argument('--state_journal', dest='state_journal',
+                        default=DEFAULT_STATE_JOURNAL,
+                        help='Path prefix of daily files recording each change '
+                        'of mode, logger config and logger state, one DASRecord '
+                        'per line, readable by LogfileReader. Use "none" to '
+                        'turn the journal off. Default: '
+                        f'{DEFAULT_STATE_JOURNAL}')
     parser.add_argument('--max_tries', dest='max_tries', action='store', type=int,
                         default=DEFAULT_MAX_TRIES,
                         help='Number of times to retry failed loggers. If '
@@ -765,6 +919,7 @@ if __name__ == '__main__':  # noqa: C901
         max_tries=args.max_tries,
         min_uptime=args.min_uptime,
         interval=args.interval,
+        state_journal=None if args.state_journal.lower() == 'none' else args.state_journal,
         logger_log_level=logger_log_level)
 
     # When told to quit, shut down gracefully
