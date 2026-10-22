@@ -128,6 +128,7 @@ simulate_serial = "openrvdas_cli:simulate_serial"
 check_parse_format = "openrvdas_cli:check_parse_format"
 cruise_config_generator = "openrvdas_cli:cruise_config_generator"
 git_info = "openrvdas_cli:git_info"
+cruise_snapshot = "openrvdas_cli:cruise_snapshot"
 openrvdas_manage = "openrvdas_cli:openrvdas_manage"
 
 [tool.setuptools]

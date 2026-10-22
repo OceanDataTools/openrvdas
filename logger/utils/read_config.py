@@ -17,7 +17,8 @@ except ModuleNotFoundError:
 
 ###############################################################################
 def read_config(file_path: str,
-                errors: Optional[List[str]] = None) -> Dict[str, Any]:
+                errors: Optional[List[str]] = None,
+                files_read: Optional[List[str]] = None) -> Dict[str, Any]:
     """
     Read a YAML configuration file.
 
@@ -29,6 +30,10 @@ def read_config(file_path: str,
                 also appended to it, so that the caller can tell a file
                 that could not be read from one that is empty, and can
                 report why.
+        files_read: Optional list to record files into. When provided, the
+                absolute path of the file is appended to it if it was opened
+                and read. Used to record exactly which files a configuration
+                was built from (see server/cruise_snapshot.py).
 
     Returns:
         Dictionary containing the YAML content or empty dict on error
@@ -37,6 +42,8 @@ def read_config(file_path: str,
         # Load the YAML file
         with open(file_path, 'r') as file:
             file_content = file.read()
+        if files_read is not None:
+            files_read.append(os.path.abspath(file_path))
         return parse(file_content, file_path, errors=errors)
 
     except FileNotFoundError:
@@ -91,7 +98,8 @@ def parse(content: str, file_path: str = None,
 
 
 ###################
-def expand_cruise_definition(input_dict, errors: Optional[List[str]] = None):
+def expand_cruise_definition(input_dict, errors: Optional[List[str]] = None,
+                             files_read: Optional[List[str]] = None):
     """
     Expand a configuration dictionary with loggers and configs structure.
 
@@ -103,9 +111,11 @@ def expand_cruise_definition(input_dict, errors: Optional[List[str]] = None):
                 surfaced at once. Fatal structural errors (missing 'loggers'
                 key, etc.) still raise ValueError regardless. Errors
                 reading or parsing an included file are also appended.
+        files_read: Optional list into which the absolute path of each
+                included file read is appended; see read_config().
     """
     # First handle includes to get all templates loaded
-    result = expand_includes(input_dict, errors=errors)
+    result = expand_includes(input_dict, errors=errors, files_read=files_read)
 
     # Process both logger and config templates
     result = expand_templates(result, errors=errors)
@@ -156,7 +166,8 @@ def expand_wildcards(include_pattern: str, base_dir: str) -> List[str]:
 
 ###################
 def expand_includes(input_dict: dict,
-                    errors: Optional[List[str]] = None) -> Dict[str, Any]:
+                    errors: Optional[List[str]] = None,
+                    files_read: Optional[List[str]] = None) -> Dict[str, Any]:
     """
     Recursively process any included YAML files and merge them into the top
     level.
@@ -166,6 +177,8 @@ def expand_includes(input_dict: dict,
                            'includes' and 'includes_base_dir' keys.
         errors: Optional list to collect errors reading or parsing the
                 included files into; see read_config()
+        files_read: Optional list to record the included files read into;
+                see read_config()
 
     Returns:
         Dictionary containing the merged YAML content or empty dict on error
@@ -204,7 +217,8 @@ def expand_includes(input_dict: dict,
                 file_path = os.path.join(base_dir, include_path)
 
                 # Load the included file
-                included_content = read_config(file_path, errors=errors)
+                included_content = read_config(file_path, errors=errors,
+                                               files_read=files_read)
 
                 # Merge with current data
                 included_data = deep_merge(included_data, included_content)
@@ -996,7 +1010,7 @@ def _extract_from_string(text: str) -> List[str]:
 
 
 ##############################################################################
-def load_definitions(definition_path):
+def load_definitions(definition_path, files_read: Optional[List[str]] = None):
     """
     Load and merge device definitions from YAML files.
 
@@ -1024,6 +1038,8 @@ def load_definitions(definition_path):
     Args:
         definition_path: Comma-separated glob patterns for definition files.
                         Example: 'local/devices/*.yaml,contrib/devices/*.yaml'
+        files_read: Optional list to record each definition file read, and
+                        any file it includes, into; see read_config().
 
     Returns:
         Dict with structure:
@@ -1050,8 +1066,8 @@ def load_definitions(definition_path):
         return definitions
 
     for filename in def_files:
-        file_defs = read_config(filename)
-        file_defs = expand_includes(file_defs)
+        file_defs = read_config(filename, files_read=files_read)
+        file_defs = expand_includes(file_defs, files_read=files_read)
 
         for key, val in file_defs.items():
             # New format: 'devices' key contains dict of device definitions
