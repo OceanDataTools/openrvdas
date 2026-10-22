@@ -523,10 +523,13 @@ def take_snapshot(cruise_file, output_dir='.', make_tar=False, redact_secrets=Tr
     with open(os.path.join(snapshot_dir, 'MANIFEST.yaml'), 'w') as f:
         yaml.safe_dump(manifest, f, sort_keys=False, default_flow_style=False)
 
-    secrets = [e['path'] for e in files if e.get('possible_secrets_on_lines')]
-    if secrets:
+    # Only the files' paths are logged; MANIFEST.yaml gives the line numbers.
+    files_with_possible_secrets = [e['path'] for e in files
+                                   if e.get('possible_secrets_on_lines')]
+    if files_with_possible_secrets:
         logging.warning('These captured files may contain passwords or tokens, '
-                        'copied as-is: %s. See MANIFEST.yaml.', ', '.join(secrets))
+                        'copied as-is: %s. See MANIFEST.yaml.',
+                        ', '.join(files_with_possible_secrets))
     changed = [e['path'] for e in files if e.get('modified_after_load')]
     if changed:
         logging.warning('These files have changed since the definition was '
