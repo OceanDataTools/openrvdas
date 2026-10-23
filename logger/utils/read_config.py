@@ -33,7 +33,7 @@ def read_config(file_path: str,
         files_read: Optional list to record files into. When provided, the
                 absolute path of the file is appended to it if it was opened
                 and read. Used to record exactly which files a configuration
-                was built from (see server/cruise_snapshot.py).
+                was built from (see server/config_snapshot.py).
 
     Returns:
         Dictionary containing the YAML content or empty dict on error

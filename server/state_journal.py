@@ -45,7 +45,7 @@ DATA_ID = 'logger_manager'
 def config_hash(config):
     """sha256 identifying a logger config's exact contents. Computed from
     canonical JSON, so the same config gives the same hash wherever it is
-    computed - e.g. from a cruise snapshot's expanded_cruise.yaml."""
+    computed - e.g. from a config snapshot's expanded_config.yaml."""
     canonical = json.dumps(config, sort_keys=True, separators=(',', ':'), default=str)
     return hashlib.sha256(canonical.encode('utf-8')).hexdigest()
 

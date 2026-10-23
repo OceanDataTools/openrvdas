@@ -7,8 +7,8 @@ environment it ran in. See issue #413.
 
 Usage:
 
-    cruise_snapshot test/NBP1406/NBP1406_cruise.yaml --output /var/data/snapshots
-    cruise_snapshot my_cruise.yaml --tar
+    config_snapshot test/NBP1406/NBP1406_cruise.yaml --output /var/data/snapshots
+    config_snapshot my_cruise.yaml --tar
 
 which writes a directory (and, with --tar, a .tar.gz of it) named
 <cruise id>_<UTC time>, containing:
@@ -16,10 +16,11 @@ which writes a directory (and, with --tar, a .tar.gz of it) named
     MANIFEST.yaml          when and where the snapshot was taken; the OpenRVDAS
                            version; git commit, branch, tag and remote of each
                            repository a file came from, and whether it had
-                           uncommitted changes; the OS, Python and installed
+                           uncommitted changes, and its code version (see
+                           code_version()); the OS, Python and installed
                            packages; and every captured file with its sha256,
                            size, modification time and git status
-    expanded_cruise.yaml   the fully expanded cruise definition, as the logger
+    expanded_config.yaml   the fully expanded cruise definition, as the logger
                            manager sees it, with passwords, tokens and other
                            secrets redacted
     sources/               every file captured, at its path relative to the
@@ -40,7 +41,9 @@ From the journal, the manifest also records:
     time with the file's sha256 now;
   - the current state: the active mode, and each logger's config, whether it
     is running, crashing or failed, and whether the config it is running is
-    identical to the one in this definition (by comparing config hashes).
+    identical to the one in this definition (by comparing config hashes),
+    and the code version it was started with - which may differ from the
+    repository's now, if the code has changed since.
 
 Files captured are the cruise definition; every file it includes; the device
 definition files named by any ParseTransform or RegexParseTransform (or the
@@ -125,6 +128,38 @@ def _git(args, cwd):
         return None
 
 
+def code_version(repo_root=OPENRVDAS_ROOT):
+    """A short string identifying the exact code in a git working tree: its
+    'git describe', plus - if it differs from that commit - a hash of the
+    differences, e.g. v2.6.3.dev0-12-g2c1a06f5-dirty.3fa94c1e02ab. The hash
+    covers uncommitted changes and untracked Python files (which 'git
+    describe --dirty' ignores), so two different sets of local edits give
+    two different versions. Returns None if repo_root isn't in a git
+    repository or git isn't available.
+
+    The logger manager records this in its journal each time it starts a
+    logger, and a snapshot records it for the repository, so the two can be
+    compared."""
+    describe = _git(['describe', '--tags', '--always'], repo_root)
+    if describe is None:
+        return None
+    digest = hashlib.sha256()
+    diff = _git(['diff', 'HEAD'], repo_root) or ''
+    digest.update(diff.encode('utf-8'))
+    untracked = _git(['ls-files', '--others', '--exclude-standard', '--', '*.py'],
+                     repo_root) or ''
+    for rel in sorted(untracked.splitlines()):
+        digest.update(b'\0' + rel.encode('utf-8') + b'\0')
+        try:
+            with open(os.path.join(repo_root, rel), 'rb') as f:
+                digest.update(f.read())
+        except OSError:
+            pass
+    if not diff and not untracked:
+        return describe
+    return f'{describe}-dirty.{digest.hexdigest()[:12]}'
+
+
 ################################################################################
 def find_definition_files(configs, files_read, errors):
     """Find the device definition files and header files that the logger
@@ -173,6 +208,36 @@ def _read_definitions(definition_path, files_read, errors):
 
 
 ################################################################################
+def definition_files(cruise_file):
+    """Load and expand a cruise definition, recording every file it is built
+    from. Returns (expanded definition, list of absolute paths in the order
+    first read, list of problems found). Raises ValueError if the definition
+    itself can't be read."""
+    errors, files_read = [], []
+    definition = read_config.read_config(cruise_file, errors=errors, files_read=files_read)
+    if errors:
+        raise ValueError(f'Could not read cruise definition: {"; ".join(errors)}')
+    expanded = read_config.expand_cruise_definition(definition, errors=errors,
+                                                    files_read=files_read)
+    find_definition_files(expanded.get('configs', {}), files_read, errors)
+    return expanded, list(dict.fromkeys(files_read)), errors
+
+
+def definition_file_hashes(cruise_file):
+    """{absolute path: sha256} for every file a cruise definition is built
+    from. The logger manager records this when it loads a definition, so a
+    later snapshot can tell exactly which files have changed since."""
+    _, paths, _ = definition_files(_resolve(cruise_file))
+    hashes = {}
+    for path in paths:
+        try:
+            hashes[path] = _sha256(path)
+        except OSError:
+            hashes[path] = None
+    return hashes
+
+
+################################################################################
 def redact(node):
     """Return a copy of node with the values of secret-looking keys replaced."""
     if isinstance(node, dict):
@@ -204,6 +269,8 @@ def repository_info(repo_root, captured_paths):
         'describe': _git(['describe', '--tags', '--always', '--dirty'], repo_root),
         'remote': (_git(['remote', 'get-url', 'origin'], repo_root)
                    or None),
+        # Comparable with the 'code' the logger manager journals for each logger
+        'code_version': code_version(repo_root),
     }
     if info['branch'] == 'HEAD':
         info['branch'] = None  # detached
@@ -288,15 +355,28 @@ def _same_file(journal_filename, cruise_file):
     return os.path.realpath(_resolve(journal_filename)) == os.path.realpath(cruise_file)
 
 
-def last_load(entries, cruise_file):
-    """Index of the latest definition_loaded entry for this cruise file, or
-    None if the journal doesn't record it being loaded."""
+def last_load(entries, cruise_file=None):
+    """Index of the latest definition_loaded entry for this cruise file (or
+    for any file, if cruise_file is None), or None if the journal doesn't
+    record it being loaded."""
     for index in range(len(entries) - 1, -1, -1):
         record = entries[index][1]
-        if record.get('message_type') == 'definition_loaded' and \
-                _same_file(record['fields'].get('filename'), cruise_file):
+        if record.get('message_type') == 'definition_loaded' and (
+                cruise_file is None or
+                _same_file(record['fields'].get('filename'), cruise_file)):
             return index
     return None
+
+
+def last_loaded_file(journal):
+    """The cruise definition file the logger manager most recently loaded,
+    according to its journal, or None."""
+    entries = read_journal(journal) if journal else []
+    index = last_load(entries)
+    if index is None:
+        return None
+    filename = entries[index][1]['fields'].get('filename')
+    return _resolve(filename) if filename else None
 
 
 def run_start(entries, load_index):
@@ -337,6 +417,7 @@ def current_state(records, configs):
         elif event in ('logger_started', 'config_changed'):
             loggers[logger] = {'config': fields.get('config') or fields.get('to'),
                                'config_sha256': fields.get('config_sha256'),
+                               'code': fields.get('code'),
                                'status': 'running', 'since': fields.get('time')}
         elif event == 'logger_stopped' and logger in loggers:
             loggers[logger].update(status='stopped', since=fields.get('time'))
@@ -344,6 +425,7 @@ def current_state(records, configs):
             loggers[logger].update(status='crashing', since=fields.get('time'))
         elif event == 'logger_recovered' and logger in loggers:
             loggers[logger].update(status='running', since=fields.get('time'),
+                                   code=fields.get('code', loggers[logger]['code']),
                                    crashes_before_recovery=fields.get('crashes'))
         elif event == 'logger_failed' and logger in loggers:
             loggers[logger].update(status='failed', since=fields.get('time'),
@@ -361,14 +443,16 @@ def current_state(records, configs):
 
 
 ################################################################################
-def take_snapshot(cruise_file, output_dir='.', make_tar=False, redact_secrets=True,
+def take_snapshot(cruise_file=None, output_dir='.', make_tar=False, redact_secrets=True,
                   loaded_time=None, journal=DEFAULT_JOURNAL):
     """Snapshot a cruise definition and everything it depends on.
 
-    cruise_file     Path of the cruise definition file.
+    cruise_file     Path of the cruise definition file. If None, the file the
+                    logger manager most recently loaded, according to its
+                    journal - i.e. a snapshot of what is running now.
     output_dir      Directory in which to create the snapshot directory.
     make_tar        Also write <snapshot>.tar.gz next to the directory.
-    redact_secrets  Redact secret-looking values in expanded_cruise.yaml.
+    redact_secrets  Redact secret-looking values in expanded_config.yaml.
     loaded_time     Optional datetime (UTC) when the definition was loaded
                     into the logger manager. Any captured file modified after
                     it is flagged, since the snapshot may then differ from
@@ -381,25 +465,21 @@ def take_snapshot(cruise_file, output_dir='.', make_tar=False, redact_secrets=Tr
     make_tar is set).
     """
     now = datetime.datetime.now(datetime.timezone.utc)
+    if cruise_file is None:
+        cruise_file = last_loaded_file(journal)
+        if cruise_file is None:
+            raise ValueError('No cruise definition given, and no logger manager '
+                             f'journal at {journal} records loading one')
     cruise_file = os.path.abspath(cruise_file)
 
-    # Load and expand the definition, recording every file read.
-    errors, files_read = [], []
-    definition = read_config.read_config(cruise_file, errors=errors, files_read=files_read)
-    if errors:
-        raise ValueError(f'Could not read cruise definition: {"; ".join(errors)}')
-    expanded = read_config.expand_cruise_definition(definition, errors=errors,
-                                                    files_read=files_read)
-    find_definition_files(expanded.get('configs', {}), files_read, errors)
-
-    # Unique files, in the order first read
-    captured = list(dict.fromkeys(files_read))
+    # Load and expand the definition, recording every file it is built from.
+    expanded, captured, errors = definition_files(cruise_file)
 
     cruise_id = str((expanded.get('cruise') or {}).get('id') or
                     os.path.splitext(os.path.basename(cruise_file))[0])
 
     # The logger manager's journal, from when it last loaded this definition.
-    journal_info, journal_lines, state = None, [], None
+    journal_info, journal_lines, state, hashes_at_load = None, [], None, None
     entries = read_journal(journal) if journal else []
     if journal and not entries:
         errors.append(f'No logger manager journal found at {journal}-*')
@@ -432,6 +512,20 @@ def take_snapshot(cruise_file, output_dir='.', make_tar=False, redact_secrets=Tr
             if mismatched:
                 errors.append('These loggers are running configs that differ from this '
                               f'definition: {", ".join(mismatched)}')
+            # Which files have changed since the definition was loaded: exact,
+            # if the logger manager recorded each file's hash at load time.
+            hashes_at_load = loaded.get('files')
+            if isinstance(hashes_at_load, dict):
+                journal_info['files_added_since_load'] = sorted(
+                    set(captured) - set(hashes_at_load))
+                journal_info['files_removed_since_load'] = sorted(
+                    set(hashes_at_load) - set(captured))
+                for kind in ('added', 'removed'):
+                    if journal_info[f'files_{kind}_since_load']:
+                        errors.append(f'Files {kind} since the definition was loaded: '
+                                      + ', '.join(journal_info[f'files_{kind}_since_load']))
+            else:
+                hashes_at_load = None
             if loaded_time is None and loaded.get('loaded_time'):
                 try:
                     loaded_time = datetime.datetime.strptime(
@@ -462,7 +556,12 @@ def take_snapshot(cruise_file, output_dir='.', make_tar=False, redact_secrets=Tr
         stat = os.stat(path)
         entry = {'path': archive_path, 'source': path, 'sha256': _sha256(path),
                  'size': stat.st_size, 'modified': _utc_iso(stat.st_mtime)}
-        if loaded_time is not None:
+        if hashes_at_load is not None:
+            # Exact: compare with the hash recorded when it was loaded
+            entry['modified_after_load'] = (path in hashes_at_load and
+                                            hashes_at_load[path] != entry['sha256'])
+        elif loaded_time is not None:
+            # Approximate: by modification time, which git operations change too
             entry['modified_after_load'] = stat.st_mtime > loaded_time.timestamp()
         secret_lines = find_secret_lines(path)
         if secret_lines:
@@ -495,7 +594,7 @@ def take_snapshot(cruise_file, output_dir='.', make_tar=False, redact_secrets=Tr
         repositories.append(info)
 
     # The expanded definition, as the logger manager sees it.
-    with open(os.path.join(snapshot_dir, 'expanded_cruise.yaml'), 'w') as f:
+    with open(os.path.join(snapshot_dir, 'expanded_config.yaml'), 'w') as f:
         yaml.safe_dump(redact(copy.deepcopy(expanded)) if redact_secrets else expanded,
                        f, sort_keys=False, default_flow_style=False)
 
@@ -510,7 +609,7 @@ def take_snapshot(cruise_file, output_dir='.', make_tar=False, redact_secrets=Tr
             'cruise_definition': cruise_file,
             'cruise_definition_loaded': (loaded_time.strftime(TIME_FORMAT)
                                          if loaded_time else None),
-            'expanded_definition': 'expanded_cruise.yaml',
+            'expanded_definition': 'expanded_config.yaml',
             'secrets_redacted': redact_secrets,
         },
         'environment': environment_info(),
@@ -552,13 +651,16 @@ def main(argv=None):
         'from, the device definitions it uses, the code version and the '
         'environment, so that data can be traced back to how they were '
         'acquired and processed.')
-    parser.add_argument('cruise_file', help='Cruise definition file')
+    parser.add_argument('cruise_file', nargs='?', default=None,
+                        help='Cruise definition file. If omitted, the one the '
+                        'logger manager most recently loaded, according to its '
+                        'journal: a snapshot of what is running now.')
     parser.add_argument('--output', default='.',
                         help='Directory to write the snapshot in (default: .)')
     parser.add_argument('--tar', action='store_true',
                         help='Also write the snapshot as a .tar.gz')
     parser.add_argument('--no-redact', dest='redact', action='store_false',
-                        help='Don\'t redact secrets in expanded_cruise.yaml')
+                        help='Don\'t redact secrets in expanded_config.yaml')
     parser.add_argument('--journal', default=DEFAULT_JOURNAL,
                         help='Path prefix of the logger manager\'s journal files '
                         f'(default: {DEFAULT_JOURNAL}); "none" not to use one')
