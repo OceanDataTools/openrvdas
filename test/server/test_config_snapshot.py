@@ -252,6 +252,21 @@ class TestCruiseSnapshot(SnapshotTestCase):
             config_snapshot.take_snapshot(os.path.join(self.tmp, 'missing.yaml'),
                                           output_dir=self.output, journal=None)
 
+    def test_symlinks_record_what_they_resolve_to(self):
+        """A link to the current dated file records which file that was (#679)."""
+        types = os.path.join(self.tmp, 'devices', 'types.yaml')
+        dated = os.path.join(self.tmp, 'devices', 'types_2026-10-01.yaml')
+        os.rename(types, dated)
+        os.symlink('types_2026-10-01.yaml', types)
+
+        path, manifest = self.snapshot()
+        entry = self.source(manifest, types)
+        self.assertEqual(entry['resolves_to'], dated)
+        self.assertEqual(entry['sha256'], sha256(dated))
+        # Files that aren't reached through a symlink don't say so
+        self.assertNotIn('resolves_to',
+                         self.source(manifest, os.path.join(self.tmp, 'cruise.yaml')))
+
 
 class TestSnapshotJournal(SnapshotTestCase):
     """What a snapshot takes from the logger manager's journal (#670)."""

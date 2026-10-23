@@ -19,7 +19,9 @@ which writes a directory (and, with --tar, a .tar.gz of it) named
                            uncommitted changes, and its code version (see
                            code_version()); the OS, Python and installed
                            packages; and every captured file with its sha256,
-                           size, modification time and git status
+                           size, modification time and git status, and - if it
+                           was reached through a symlink - the file it
+                           resolves to
     expanded_config.yaml   the fully expanded cruise definition, as the logger
                            manager sees it, with passwords, tokens and other
                            secrets redacted
@@ -556,6 +558,12 @@ def take_snapshot(cruise_file=None, output_dir='.', make_tar=False, redact_secre
         stat = os.stat(path)
         entry = {'path': archive_path, 'source': path, 'sha256': _sha256(path),
                  'size': stat.st_size, 'modified': _utc_iso(stat.st_mtime)}
+        # Reached through a symlink - such as a calibrations.yaml link to the
+        # current dated file, or a local/ linked to another repository? Then
+        # record what it really is, which the contents alone don't say.
+        real_path = os.path.realpath(path)
+        if real_path != os.path.abspath(path):
+            entry['resolves_to'] = real_path
         if hashes_at_load is not None:
             # Exact: compare with the hash recorded when it was loaded
             entry['modified_after_load'] = (path in hashes_at_load and

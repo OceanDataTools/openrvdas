@@ -6,6 +6,13 @@ Validates three types of YAML configuration files:
 2. Logger configurations (individual logger configs)
 3. Cruise definitions (cruise config files with loggers, modes, etc.)
 
+Beyond checking structure, it builds the transforms listed in
+BUILDABLE_TRANSFORMS - such as ComputedFieldsTransform, whose equations are
+checked when it is built - so that errors they would only report when a
+logger starts are found here. A cruise definition is expanded first, as the
+logger manager would expand it; if it can't be expanded on this machine (an
+include that exists only on the ship, say), that check is skipped.
+
 Usage:
     # Validate a single file
     python logger/utils/validate_config.py path/to/config.yaml
@@ -21,6 +28,7 @@ Usage:
 """
 import argparse
 import glob
+import importlib
 import os
 import sys
 from typing import Dict, List, Any, Tuple
@@ -81,6 +89,14 @@ class ConfigValidator:
         'TCPWriter', 'TextFileWriter', 'UDPWriter'
     }
 
+    # Transforms that check their arguments when they are built, and are
+    # pure - building one opens no ports or files - so can safely be built
+    # here, to find what would otherwise be found only when a logger starts.
+    BUILDABLE_TRANSFORMS = {
+        'ComputedFieldsTransform': 'logger.transforms.computed_fields_transform',
+        'InterpolationTransform': 'logger.transforms.interpolation_transform',
+    }
+
     def __init__(self, verbose: bool = False):
         self.verbose = verbose
         self.errors: List[ValidationError] = []
@@ -134,16 +150,18 @@ class ConfigValidator:
             self._validate_device_definitions(data)
         elif file_type == "logger_config":
             self._validate_logger_config(data)
+            self._build_logger_config_transforms(data)
         elif file_type == "cruise_definition":
             self._validate_cruise_definition(data)
+            self._build_cruise_definition_transforms(file_path)
         elif file_type == "logger_template":
             self._validate_logger_template(data)
         elif file_type == "config_template":
             self._validate_config_template(data)
         else:
             self.errors.append(ValidationError(
-                f"Unknown file type. Expected device definitions, logger config, "
-                f"or cruise definition.", severity="warning"))
+                "Unknown file type. Expected device definitions, logger config, "
+                "or cruise definition.", severity="warning"))
 
         is_valid = not any(e.severity == "error" for e in self.errors)
         return is_valid, self.errors
@@ -198,14 +216,14 @@ class ConfigValidator:
         for name, definition in data.items():
             if not isinstance(definition, dict):
                 self.errors.append(ValidationError(
-                    f"Expected dictionary for definition",
+                    "Expected dictionary for definition",
                     path=name))
                 continue
 
             category = definition.get('category')
             if category not in ('device', 'device_type'):
                 self.errors.append(ValidationError(
-                    f"Missing or invalid 'category' (expected 'device' or 'device_type')",
+                    "Missing or invalid 'category' (expected 'device' or 'device_type')",
                     path=name))
                 continue
 
@@ -248,7 +266,7 @@ class ConfigValidator:
                                 alt, f"{name}.format.{msg_type}[{i}]")
                         else:
                             self.errors.append(ValidationError(
-                                f"Format alternative must be a string",
+                                "Format alternative must be a string",
                                 path=f"{name}.format.{msg_type}[{i}]"))
                 else:
                     self.errors.append(ValidationError(
@@ -263,7 +281,7 @@ class ConfigValidator:
         fields = definition.get('fields')
         if fields is not None and not isinstance(fields, dict):
             self.errors.append(ValidationError(
-                f"'fields' must be a dictionary",
+                "'fields' must be a dictionary",
                 path=name))
 
     def _validate_format_string(self, fmt: str, path: str):
@@ -312,7 +330,7 @@ class ConfigValidator:
                     self._validate_single_logger_config(config, config_name)
 
     def _validate_single_logger_config(self, config: Dict, path: str,
-                                        allow_empty: bool = True):
+                                       allow_empty: bool = True):
         """Validate a single logger configuration."""
         # Empty config is valid (represents "off" state)
         if not config:
@@ -381,14 +399,14 @@ class ConfigValidator:
 
             if not isinstance(comp, dict):
                 self.errors.append(ValidationError(
-                    f"Component must be a dictionary",
+                    "Component must be a dictionary",
                     path=comp_path))
                 continue
 
             # Must have 'class' key
             if 'class' not in comp:
                 self.errors.append(ValidationError(
-                    f"Missing 'class' key",
+                    "Missing 'class' key",
                     path=comp_path))
                 continue
 
@@ -405,8 +423,74 @@ class ConfigValidator:
             kwargs = comp.get('kwargs')
             if kwargs is not None and not isinstance(kwargs, dict):
                 self.errors.append(ValidationError(
-                    f"'kwargs' must be a dictionary",
+                    "'kwargs' must be a dictionary",
                     path=comp_path))
+
+    def _build_transforms(self, config: Any, path: str, skip_variables: bool):
+        """Build each of a logger config's transforms that is in
+        BUILDABLE_TRANSFORMS, reporting any error that building it raises.
+        skip_variables: skip any whose kwargs still hold <<variables>>, as an
+        unexpanded template's will."""
+        if not isinstance(config, dict):
+            return
+        transforms = config.get('transforms') or []
+        if isinstance(transforms, dict):
+            transforms = [transforms]
+        if not isinstance(transforms, list):
+            return
+        for i, comp in enumerate(transforms):
+            if not isinstance(comp, dict):
+                continue
+            class_name = comp.get('class')
+            module_name = self.BUILDABLE_TRANSFORMS.get(class_name)
+            kwargs = comp.get('kwargs') or {}
+            if not module_name or not isinstance(kwargs, dict):
+                continue
+            if skip_variables and '<<' in str(kwargs):
+                continue
+            comp_path = f"{path}.transforms[{i}]" if path else f"transforms[{i}]"
+            try:
+                transform_class = getattr(importlib.import_module(module_name), class_name)
+                transform_class(**kwargs)
+            except ImportError as e:
+                if self.verbose:
+                    print(f"  Not building {class_name}: {e}")
+            except Exception as e:  # noqa: BLE001 - whatever it raises is the finding
+                self.errors.append(ValidationError(
+                    f"{class_name} would fail when the logger starts: {e}",
+                    path=comp_path))
+
+    def _build_logger_config_transforms(self, data: Dict):
+        """Build the transforms of a logger config file - a single config or
+        a dict of named configs."""
+        if 'readers' in data or 'writers' in data:
+            self._build_transforms(data, "", skip_variables=True)
+        else:
+            for config_name, config in data.items():
+                self._build_transforms(config, config_name, skip_variables=True)
+
+    def _build_cruise_definition_transforms(self, file_path: str):
+        """Expand a cruise definition as the logger manager would, and build
+        the transforms in each of its configs. If it can't be expanded here,
+        skip this check: the structural checks have already had their say."""
+        try:
+            from logger.utils import read_config
+            problems = []
+            definition = read_config.read_config(file_path, errors=problems)
+            expanded = (read_config.expand_cruise_definition(definition, errors=problems)
+                        if not problems else None)
+        except Exception as e:  # noqa: BLE001 - can't expand here: skip, as below
+            problems, expanded = [str(e)], None
+        if problems or not isinstance(expanded, dict):
+            if self.verbose:
+                print(f"  Not building transforms: could not expand definition "
+                      f"({'; '.join(str(p) for p in problems)})")
+            return
+        configs = expanded.get('configs') or {}
+        if isinstance(configs, dict):
+            for config_name, config in configs.items():
+                self._build_transforms(config, f"configs.{config_name}",
+                                       skip_variables=False)
 
     def _validate_cruise_definition(self, data: Dict):
         """Validate a cruise definition file."""

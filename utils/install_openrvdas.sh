@@ -319,6 +319,10 @@ function set_default_variables {
     DEFAULT_STDERR_LOGFILE_MAXBYTES=10000000   # 10M
     DEFAULT_STDERR_LOGFILE_MAXBACKUPS=100
 
+    # Where logger_manager saves automatic config snapshots (--snapshot_dir),
+    # e.g. /var/log/openrvdas/snapshots. Empty means none are taken.
+    DEFAULT_LOGGER_MANAGER_SNAPSHOT_DIR=
+
     DEFAULT_SUPERVISORD_WEBINTERFACE=no
     DEFAULT_SUPERVISORD_WEBINTERFACE_AUTH=no
     DEFAULT_SUPERVISORD_WEBINTERFACE_PORT=9001
@@ -374,6 +378,8 @@ DEFAULT_RUN_SIMULATE_NBP=$RUN_SIMULATE_NBP
 
 DEFAULT_STDERR_LOGFILE_MAXBYTES=$STDERR_LOGFILE_MAXBYTES
 DEFAULT_STDERR_LOGFILE_MAXBACKUPS=$STDERR_LOGFILE_MAXBACKUPS
+
+DEFAULT_LOGGER_MANAGER_SNAPSHOT_DIR=$LOGGER_MANAGER_SNAPSHOT_DIR
 
 DEFAULT_SUPERVISORD_WEBINTERFACE=$SUPERVISORD_WEBINTERFACE
 DEFAULT_SUPERVISORD_WEBINTERFACE_AUTH=$SUPERVISORD_WEBINTERFACE_AUTH
@@ -1702,10 +1708,14 @@ EOF
     else
         LOGGER_MANAGER_DATABASE=django
     fi
+    LOGGER_MANAGER_SNAPSHOT_ARG=
+    if [ -n "$LOGGER_MANAGER_SNAPSHOT_DIR" ]; then
+        LOGGER_MANAGER_SNAPSHOT_ARG=" --snapshot_dir ${LOGGER_MANAGER_SNAPSHOT_DIR}"
+    fi
     cat > $TEMP_FILE <<EOF
 ; Supervisor configurations for LoggerManager
 [program:logger_manager]
-command=${VENV_BIN}/python server/logger_manager.py --database ${LOGGER_MANAGER_DATABASE} --data_server_websocket :${CACHED_DATA_SERVER_PORT} -v -V --no-console
+command=${VENV_BIN}/python server/logger_manager.py --database ${LOGGER_MANAGER_DATABASE} --data_server_websocket :${CACHED_DATA_SERVER_PORT} -v -V --no-console${LOGGER_MANAGER_SNAPSHOT_ARG}
 environment=PYTHONPATH="${INSTALL_ROOT}/openrvdas",PATH="${VENV_BIN}:/usr/bin:/usr/local/bin"
 directory=${INSTALL_ROOT}/openrvdas
 priority=20
@@ -2394,6 +2404,12 @@ echo
 # separately by logger_manager (--stderr_max_bytes, --stderr_backup_count).
 STDERR_LOGFILE_MAXBYTES=${DEFAULT_STDERR_LOGFILE_MAXBYTES}
 STDERR_LOGFILE_MAXBACKUPS=${DEFAULT_STDERR_LOGFILE_MAXBACKUPS}
+
+# Directory for logger_manager's automatic config snapshots (--snapshot_dir).
+# Not prompted for, and off unless set: to turn snapshots on, set
+# DEFAULT_LOGGER_MANAGER_SNAPSHOT_DIR in $PREFERENCES_FILE (e.g. to
+# /var/log/openrvdas/snapshots) and re-run. It is kept from then on.
+LOGGER_MANAGER_SNAPSHOT_DIR=${DEFAULT_LOGGER_MANAGER_SNAPSHOT_DIR}
 
 #########################################################################
 #########################################################################
