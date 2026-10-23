@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
-"""Tests for server/cruise_snapshot.py (issue #413)."""
+"""Tests for server/config_snapshot.py (issue #413)."""
 import datetime
 import hashlib
 import io
 import json
 import logging
 import os
+import shutil
+import subprocess
 import tarfile
 import tempfile
 import time
@@ -14,7 +16,7 @@ from contextlib import redirect_stdout
 
 import yaml
 
-from server import cruise_snapshot  # noqa: E402
+from server import config_snapshot  # noqa: E402
 from server.state_journal import StateJournal, config_hash  # noqa: E402
 from logger.utils import read_config  # noqa: E402
 
@@ -118,7 +120,7 @@ class SnapshotTestCase(unittest.TestCase):
     def snapshot(self, **kwargs):
         # Don't pick up a journal from wherever the tests happen to run
         kwargs.setdefault('journal', None)
-        path = cruise_snapshot.take_snapshot(os.path.join(self.tmp, 'cruise.yaml'),
+        path = config_snapshot.take_snapshot(os.path.join(self.tmp, 'cruise.yaml'),
                                              output_dir=self.output, **kwargs)
         with open(os.path.join(path, 'MANIFEST.yaml')) as f:
             return path, yaml.safe_load(f)
@@ -140,7 +142,7 @@ class TestCruiseSnapshot(SnapshotTestCase):
                     'devices/ship_devices.yaml', 'devices/types.yaml', 'header.txt'):
             self.assertIn(os.path.join(self.tmp, rel), captured)
         # The ParseTransform with no definition_path uses the default files
-        self.assertIn(os.path.join(cruise_snapshot.OPENRVDAS_ROOT,
+        self.assertIn(os.path.join(config_snapshot.OPENRVDAS_ROOT,
                                    'logger', 'devices', 'NMEA_0183.yaml'), captured)
         self.assertEqual(manifest['warnings'], [])
 
@@ -156,7 +158,7 @@ class TestCruiseSnapshot(SnapshotTestCase):
         """Files in the OpenRVDAS tree keep their relative paths; others go
         under sources/_abs/ at their absolute path."""
         path, manifest = self.snapshot()
-        nmea = os.path.join(cruise_snapshot.OPENRVDAS_ROOT, 'logger/devices/NMEA_0183.yaml')
+        nmea = os.path.join(config_snapshot.OPENRVDAS_ROOT, 'logger/devices/NMEA_0183.yaml')
         self.assertEqual(self.source(manifest, nmea)['path'],
                          'sources/logger/devices/NMEA_0183.yaml')
         cruise = os.path.join(self.tmp, 'cruise.yaml')
@@ -165,17 +167,17 @@ class TestCruiseSnapshot(SnapshotTestCase):
 
     def test_expanded_definition_redacts_secrets(self):
         path, manifest = self.snapshot()
-        with open(os.path.join(path, 'expanded_cruise.yaml')) as f:
+        with open(os.path.join(path, 'expanded_config.yaml')) as f:
             text = f.read()
         self.assertNotIn('not-a-real-token', text)
         expanded = yaml.safe_load(text)
         writer = expanded['configs']['gyro-on']['writers'][1]
-        self.assertEqual(writer['kwargs']['auth_token'], cruise_snapshot.REDACTED)
+        self.assertEqual(writer['kwargs']['auth_token'], config_snapshot.REDACTED)
         self.assertEqual(writer['kwargs']['bucket_name'], 'test')
         self.assertTrue(manifest['snapshot']['secrets_redacted'])
 
         path, manifest = self.snapshot(redact_secrets=False)
-        with open(os.path.join(path, 'expanded_cruise.yaml')) as f:
+        with open(os.path.join(path, 'expanded_config.yaml')) as f:
             self.assertIn('not-a-real-token', f.read())
 
     def test_secrets_in_source_files_are_flagged(self):
@@ -207,7 +209,7 @@ class TestCruiseSnapshot(SnapshotTestCase):
         # The temporary files aren't in git; the default definitions are
         self.assertEqual(self.source(manifest, os.path.join(self.tmp, 'cruise.yaml'))['git'],
                          'not in a git repository')
-        nmea = os.path.join(cruise_snapshot.OPENRVDAS_ROOT, 'logger/devices/NMEA_0183.yaml')
+        nmea = os.path.join(config_snapshot.OPENRVDAS_ROOT, 'logger/devices/NMEA_0183.yaml')
         if self.source(manifest, nmea).get('git') != 'not in a git repository':
             repo = manifest['repositories'][0]
             self.assertEqual(len(repo['commit']), 40)
@@ -216,7 +218,7 @@ class TestCruiseSnapshot(SnapshotTestCase):
                 self.assertTrue(os.path.isfile(os.path.join(path, repo['patch'])))
 
     def test_tar(self):
-        path = cruise_snapshot.take_snapshot(os.path.join(self.tmp, 'cruise.yaml'),
+        path = config_snapshot.take_snapshot(os.path.join(self.tmp, 'cruise.yaml'),
                                              output_dir=self.output, make_tar=True,
                                              journal=None)
         self.assertTrue(path.endswith('.tar.gz'))
@@ -225,12 +227,12 @@ class TestCruiseSnapshot(SnapshotTestCase):
         name = os.path.basename(path)[:-len('.tar.gz')]
         self.assertTrue(name.startswith('TEST01_'))
         self.assertIn(f'{name}/MANIFEST.yaml', names)
-        self.assertIn(f'{name}/expanded_cruise.yaml', names)
+        self.assertIn(f'{name}/expanded_config.yaml', names)
 
     def test_command_line(self):
         output = io.StringIO()
         with redirect_stdout(output):
-            cruise_snapshot.main([os.path.join(self.tmp, 'cruise.yaml'),
+            config_snapshot.main([os.path.join(self.tmp, 'cruise.yaml'),
                                   '--output', self.output, '--journal', 'none',
                                   '--loaded-time', '2026-01-01T00:00:00Z'])
         path = output.getvalue().strip()
@@ -247,7 +249,7 @@ class TestCruiseSnapshot(SnapshotTestCase):
 
     def test_unreadable_definition(self):
         with self.assertRaises(ValueError):
-            cruise_snapshot.take_snapshot(os.path.join(self.tmp, 'missing.yaml'),
+            config_snapshot.take_snapshot(os.path.join(self.tmp, 'missing.yaml'),
                                           output_dir=self.output, journal=None)
 
 
@@ -263,11 +265,15 @@ class TestSnapshotJournal(SnapshotTestCase):
         self.configs = read_config.expand_cruise_definition(
             read_config.read_config(self.cruise_file))['configs']
 
-    def load(self, filename=None, loaded_time='2026-10-22T12:00:00.000Z'):
-        """Journal a definition load, as the logger manager would."""
+    def load(self, filename=None, loaded_time='2026-10-22T12:00:00.000Z', files=False):
+        """Journal a definition load, as the logger manager would - with the
+        hash of every file it is built from if files is true."""
         filename = filename or self.cruise_file
+        extra = {}
+        if files:
+            extra['files'] = config_snapshot.definition_file_hashes(filename)
         self.journal.record('definition_loaded', cruise_id='TEST01', filename=filename,
-                            loaded_time=loaded_time, file_sha256=sha256(filename))
+                            loaded_time=loaded_time, file_sha256=sha256(filename), **extra)
 
     def served(self, config_name):
         """A config as the data stores give it to the logger manager: with
@@ -378,6 +384,75 @@ class TestSnapshotJournal(SnapshotTestCase):
         gyro = self.take()[1]['current_state']['loggers']['gyro']
         self.assertEqual((gyro['status'], gyro['crashes_before_recovery']), ('running', 4))
 
+    def test_code_each_logger_was_started_with(self):
+        self.load()
+        self.journal.record('logger_started', logger='gyro', config='gyro-on',
+                            config_sha256=config_hash(self.served('gyro-on')), code='v1')
+        self.journal.record('logger_started', logger='knud', config='knud-off',
+                            config_sha256=config_hash(self.served('knud-off')), code='v1')
+        self.journal.record('logger_crashed', logger='gyro', config='gyro-on', code='v1')
+        self.journal.record('logger_recovered', logger='gyro', config='gyro-on',
+                            crashes=2, code='v2')
+        loggers = self.take()[1]['current_state']['loggers']
+        self.assertEqual({name: s['code'] for name, s in loggers.items()},
+                         {'gyro': 'v2', 'knud': 'v1'})
+
+    def test_definition_file_hashes(self):
+        hashes = config_snapshot.definition_file_hashes(self.cruise_file)
+        for rel in ('cruise.yaml', 'templates/gyro_template.yaml',
+                    'devices/ship_devices.yaml', 'devices/types.yaml', 'header.txt'):
+            path = os.path.join(self.tmp, rel)
+            self.assertEqual(hashes[path], sha256(path))
+
+    def test_exact_comparison_with_files_at_load(self):
+        """With the hashes recorded at load time, a changed file is flagged
+        even if its modification time is older than the load."""
+        self.load(files=True, loaded_time='2099-01-01T00:00:00.000Z')
+        types = self.write('devices/types.yaml', TYPES + '# edited\n')
+        os.utime(types, (0, 0))   # an old modification time
+        path, manifest = self.take()
+        flags = {os.path.relpath(f['source'], self.tmp): f['modified_after_load']
+                 for f in manifest['files'] if f['source'].startswith(self.tmp)}
+        self.assertTrue(flags['devices/types.yaml'])
+        self.assertFalse(flags['cruise.yaml'])
+        self.assertEqual(manifest['journal']['files_added_since_load'], [])
+        self.assertEqual(manifest['journal']['files_removed_since_load'], [])
+
+    def test_files_added_and_removed_since_load(self):
+        self.load(files=True)
+        # The device file now includes a different file than at load time
+        self.write('devices/more_types.yaml', TYPES.replace('Gyro', 'Gyro2'))
+        self.write('devices/ship_devices.yaml',
+                   DEVICES.replace('<<tmp>>', self.tmp).replace('types.yaml', 'more_types.yaml'))
+        path, manifest = self.take()
+        journal = manifest['journal']
+        self.assertEqual(journal['files_added_since_load'],
+                         [os.path.join(self.tmp, 'devices/more_types.yaml')])
+        self.assertEqual(journal['files_removed_since_load'],
+                         [os.path.join(self.tmp, 'devices/types.yaml')])
+        self.assertTrue(any('Files added since' in w for w in manifest['warnings']))
+        self.assertTrue(any('Files removed since' in w for w in manifest['warnings']))
+
+    def test_snapshot_of_what_is_running(self):
+        """With no cruise file given, snapshot the one last loaded."""
+        other = self.write('other.yaml', CRUISE.replace('<<tmp>>', self.tmp)
+                           .replace('TEST01', 'OTHER'))
+        self.load(filename=other)
+        self.load()
+        path = config_snapshot.take_snapshot(output_dir=self.output, journal=self.journal_base)
+        with open(os.path.join(path, 'MANIFEST.yaml')) as f:
+            manifest = yaml.safe_load(f)
+        self.assertEqual(manifest['snapshot']['cruise_definition'], self.cruise_file)
+
+        output = io.StringIO()
+        with redirect_stdout(output):
+            config_snapshot.main(['--output', self.output, '--journal', self.journal_base])
+        self.assertTrue(os.path.isfile(os.path.join(output.getvalue().strip(), 'MANIFEST.yaml')))
+
+    def test_nothing_running_and_no_file_given(self):
+        with self.assertRaises(ValueError):
+            config_snapshot.take_snapshot(output_dir=self.output, journal=self.journal_base)
+
     def test_journal_missing_or_not_recording_this_definition(self):
         path, manifest = self.take()
         self.assertIsNone(manifest['journal'])
@@ -389,6 +464,61 @@ class TestSnapshotJournal(SnapshotTestCase):
         self.assertIsNone(manifest['current_state'])
         self.assertTrue(any('does not record loading' in w for w in manifest['warnings']))
         self.assertFalse(os.path.exists(os.path.join(path, 'logger_manager_journal.jsonl')))
+
+
+@unittest.skipUnless(shutil.which('git'), 'git not available')
+class TestCodeVersion(unittest.TestCase):
+
+    def setUp(self):
+        self.temp_dir = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp_dir.cleanup)
+        self.repo = self.temp_dir.name
+        self.git('init', '-q')
+        self.write('module.py', 'x = 1\n')
+        self.git('add', 'module.py')
+        self.git('-c', 'user.name=test', '-c', 'user.email=test@example.com',
+                 'commit', '-q', '-m', 'first')
+
+    def git(self, *args):
+        subprocess.run(['git'] + list(args), cwd=self.repo, check=True,
+                       capture_output=True)
+
+    def write(self, name, content):
+        with open(os.path.join(self.repo, name), 'w') as f:
+            f.write(content)
+
+    def test_clean_tree_is_its_commit(self):
+        version = config_snapshot.code_version(self.repo)
+        self.assertRegex(version, r'^[0-9a-f]{7,}$')
+        self.write('notes.txt', 'not code\n')   # untracked non-code: no difference
+        self.assertEqual(config_snapshot.code_version(self.repo), version)
+
+    def test_different_changes_give_different_versions(self):
+        clean = config_snapshot.code_version(self.repo)
+        self.write('module.py', 'x = 2\n')
+        edit_1 = config_snapshot.code_version(self.repo)
+        self.assertRegex(edit_1, '^' + clean + r'-dirty\.[0-9a-f]{12}$')
+        self.assertEqual(config_snapshot.code_version(self.repo), edit_1)  # repeatable
+        self.write('module.py', 'x = 3\n')
+        self.assertNotEqual(config_snapshot.code_version(self.repo), edit_1)
+        self.write('module.py', 'x = 1\n')
+        self.assertEqual(config_snapshot.code_version(self.repo), clean)
+
+    def test_untracked_code_counts(self):
+        clean = config_snapshot.code_version(self.repo)
+        self.write('new_reader.py', 'y = 1\n')
+        new_1 = config_snapshot.code_version(self.repo)
+        self.assertTrue(new_1.startswith(clean + '-dirty.'))
+        self.write('new_reader.py', 'y = 2\n')
+        self.assertNotEqual(config_snapshot.code_version(self.repo), new_1)
+
+    def test_not_a_repository(self):
+        shutil.rmtree(os.path.join(self.repo, '.git'))
+        self.assertIsNone(config_snapshot.code_version(self.repo))
+
+    def test_snapshot_records_it(self):
+        info, statuses, diff = config_snapshot.repository_info(self.repo, [])
+        self.assertEqual(info['code_version'], config_snapshot.code_version(self.repo))
 
 
 class TestFilesRead(unittest.TestCase):

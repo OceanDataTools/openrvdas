@@ -2,6 +2,7 @@
 """Tests for the logger manager's state journal (issue #670)."""
 import datetime
 import glob
+import hashlib
 import json
 import logging
 import os
@@ -10,8 +11,12 @@ import threading
 import time
 import unittest
 import warnings
+from unittest import mock
+
+import yaml
 
 from logger.readers.logfile_reader import LogfileReader  # noqa: E402
+from logger.utils.read_config import read_config, expand_cruise_definition  # noqa: E402
 from logger.utils.das_record import DASRecord  # noqa: E402
 from logger.writers.text_file_writer import TextFileWriter  # noqa: E402
 from server.in_memory_server_api import InMemoryServerAPI  # noqa: E402
@@ -286,6 +291,43 @@ class TestLoggerManagerJournal(unittest.TestCase):
         self.assertEqual(started[0]['pid'], os.getpid())
         self.assertTrue(started[0]['openrvdas_version'])
 
+    def test_code_version_of_each_start(self):
+        """Each start and restart records the code it was started with, and
+        a crash the code that crashed."""
+        code = {'version': 'v1'}
+        with mock.patch('server.config_snapshot.code_version', lambda: code['version']), \
+                mock.patch('server.logger_manager.CODE_VERSION_CACHE_SECONDS', 0):
+            definition = make_cruise_definition(self.source, self.dest)
+            api, manager = self.make_manager(definition, min_uptime=1)
+            manager.update_configs()
+            code['version'] = 'v2'
+            api.set_active_mode('on')
+            manager.update_configs()
+            self.wait_for(lambda: manager.get_status()['test']['status'] == 'RUNNING')
+
+            # The code changes, and the logger crashes and is restarted
+            code['version'] = 'v3'
+            old_pid = manager._pid('test')
+            manager.logger_states['test'].runner.process.kill()
+            self.wait_for(lambda: manager._pid('test') not in (None, old_pid)
+                          and manager.get_status()['test']['status'] == 'RUNNING')
+            manager.logger_states['test'].last_started = time.time() - 2
+            manager._check_loggers()
+
+        self.assertEqual(self.entries('manager_start')[0]['code'], 'v1')
+        self.assertEqual(self.entries('logger_started')[0]['code'], 'v1')
+        self.assertEqual(self.entries('config_changed')[0]['code'], 'v2')
+        self.assertEqual(self.entries('logger_crashed')[0]['code'], 'v2')
+        self.assertEqual(self.entries('logger_recovered')[0]['code'], 'v3')
+
+    def test_code_version_is_real(self):
+        """Without mocking: the manager records the repository's version."""
+        from server.config_snapshot import code_version
+        definition = make_cruise_definition(self.source, self.dest)
+        api, manager = self.make_manager(definition)
+        manager.update_configs()
+        self.assertEqual(self.entries('logger_started')[0]['code'], code_version())
+
     def test_journal_off(self):
         definition = make_cruise_definition(self.source, self.dest)
         api = InMemoryServerAPI()
@@ -295,6 +337,155 @@ class TestLoggerManagerJournal(unittest.TestCase):
         manager.update_configs()
         manager.quit()
         self.assertEqual(glob.glob(self.filebase + '*'), [])
+
+
+################################################################################
+TEMPLATE_FILE = """
+logger_templates:
+  probe_template:
+    configs:
+      'off': {}
+      'on':
+        readers: {class: TextFileReader, kwargs: {file_spec: <<source>>, tail: true}}
+        writers: {class: TextFileWriter, kwargs: {filename: <<dest>>}}
+"""
+
+CRUISE_FILE = """
+cruise: {id: FILES}
+includes_base_dir: <<tmp>>
+includes: [probe_template.yaml]
+variables: {source: <<source>>, dest: <<dest>>}
+loggers:
+  probe: {logger_template: probe_template}
+modes:
+  'off': [probe-off]
+  'on': [probe-on]
+"""
+
+
+class TestDefinitionFiles(unittest.TestCase):
+    """The files a loaded definition is built from: recorded, watched, and
+    snapshotted (issue #413)."""
+
+    def setUp(self):
+        warnings.simplefilter('ignore', ResourceWarning)
+        self.temp_dir = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp_dir.cleanup)
+        self.tmp = os.path.realpath(self.temp_dir.name)
+        self.filebase = os.path.join(self.tmp, 'journal')
+        self.template = self.write('probe_template.yaml', TEMPLATE_FILE)
+        self.cruise_file = self.write('cruise.yaml', CRUISE_FILE)
+        logging.disable(logging.WARNING)
+        self.addCleanup(logging.disable, logging.NOTSET)
+
+    def write(self, name, content):
+        path = os.path.join(self.tmp, name)
+        content = (content.replace('<<tmp>>', self.tmp)
+                   .replace('<<source>>', os.path.join(self.tmp, 'source.txt'))
+                   .replace('<<dest>>', os.path.join(self.tmp, 'dest.txt')))
+        with open(path, 'w') as f:
+            f.write(content)
+        return path
+
+    def make_manager(self, **kwargs):
+        definition = expand_cruise_definition(read_config(self.cruise_file))
+        definition['cruise']['config_filename'] = self.cruise_file
+        api = InMemoryServerAPI()
+        api.load_configuration(definition)
+        manager = LoggerManager(api=api, interval=0.1,
+                                stderr_file_pattern=self.tmp + '/{logger}.stderr',
+                                **kwargs)
+        self.addCleanup(manager.quit)
+        manager.load_definition_from_api()
+        return manager
+
+    def entries(self, event):
+        lines = []
+        for path in sorted(glob.glob(self.filebase + '-*')):
+            with open(path) as f:
+                lines.extend(json.loads(line)['fields'] for line in f)
+        return [e for e in lines if e['event'] == event]
+
+    def sha256(self, path):
+        with open(path, 'rb') as f:
+            return hashlib.sha256(f.read()).hexdigest()
+
+    ############################
+    def test_load_records_every_files_hash(self):
+        self.make_manager(state_journal=self.filebase)
+        loaded = self.entries('definition_loaded')[0]
+        self.assertEqual(loaded['files'], {self.cruise_file: self.sha256(self.cruise_file),
+                                           self.template: self.sha256(self.template)})
+
+    def test_changed_file_is_journaled_once(self):
+        manager = self.make_manager(state_journal=self.filebase)
+        manager._check_definition_files()
+        self.assertEqual(self.entries('definition_files_changed'), [])
+
+        time.sleep(0.05)
+        self.write('probe_template.yaml', TEMPLATE_FILE + '# edited\n')
+        manager._check_definition_files()
+        manager._check_definition_files()
+        changed = self.entries('definition_files_changed')
+        self.assertEqual(len(changed), 1)
+        self.assertEqual(changed[0]['files'], {self.template: self.sha256(self.template)})
+
+    def test_touching_a_file_without_changing_it_is_not_a_change(self):
+        manager = self.make_manager(state_journal=self.filebase)
+        os.utime(self.template, (time.time() + 10, time.time() + 10))
+        manager._check_definition_files()
+        self.assertEqual(self.entries('definition_files_changed'), [])
+
+    def test_deleted_file_is_a_change(self):
+        manager = self.make_manager(state_journal=self.filebase)
+        os.remove(self.template)
+        manager._check_definition_files()
+        self.assertEqual(self.entries('definition_files_changed')[0]['files'],
+                         {self.template: None})
+
+    def test_snapshots_on_load_and_on_change(self):
+        snapshot_dir = os.path.join(self.tmp, 'snapshots')
+        os.makedirs(snapshot_dir)
+        manager = self.make_manager(state_journal=self.filebase, snapshot_dir=snapshot_dir)
+        self.wait_for(lambda: self.entries('snapshot_taken'))
+        taken = self.entries('snapshot_taken')[0]
+        self.assertEqual(taken['reason'], 'definition loaded')
+        self.assertTrue(os.path.isfile(os.path.join(taken['path'], 'MANIFEST.yaml')))
+
+        time.sleep(1.1)   # so the second snapshot gets a different name
+        self.write('probe_template.yaml', TEMPLATE_FILE + '# edited\n')
+        manager._check_definition_files()
+        self.wait_for(lambda: len(self.entries('snapshot_taken')) == 2)
+        self.assertEqual(self.entries('definition_files_changed')[0]['filename'],
+                         self.cruise_file)
+        changed = self.entries('snapshot_taken')[1]
+        self.assertEqual(changed['reason'], 'definition files changed')
+        with open(os.path.join(changed['path'], 'MANIFEST.yaml')) as f:
+            manifest = yaml.safe_load(f)
+        flags = {os.path.basename(e['source']): e['modified_after_load']
+                 for e in manifest['files']}
+        self.assertEqual(flags, {'cruise.yaml': False, 'probe_template.yaml': True})
+
+    def test_snapshot_failure_is_journaled_not_raised(self):
+        # A file where the snapshot directory should be: can't write into it
+        not_a_directory = self.write('not_a_directory', 'just a file\n')
+        manager = self.make_manager(state_journal=self.filebase, snapshot_dir=not_a_directory)
+        self.wait_for(lambda: self.entries('snapshot_failed'))
+        self.assertEqual(self.entries('snapshot_failed')[0]['reason'], 'definition loaded')
+        self.assertEqual(self.entries('snapshot_taken'), [])
+        manager.update_configs()   # and the manager carries on
+
+    def test_nothing_listed_without_journal_or_snapshots(self):
+        manager = self.make_manager()
+        self.assertEqual(manager.definition_files, {})
+
+    def wait_for(self, condition, timeout=30):
+        end = time.time() + timeout
+        while time.time() < end:
+            if condition():
+                return
+            time.sleep(0.1)
+        self.fail('Timed out waiting for condition')
 
 
 if __name__ == '__main__':
