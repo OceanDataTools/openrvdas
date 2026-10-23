@@ -130,10 +130,14 @@ def to_event(record: Union[SealogEvent, DASRecord, str],
     record_fields = record.get("fields", {})
 
     if not field_map:
+        # Remove the prefix exactly: str.lstrip() would strip any of its
+        # letters, turning e.g. 'event_option_previous_mode' into
+        # 'revious_mode'. (str.removeprefix() needs Python 3.9.)
+        prefix = "event_option_"
         event_options.extend([
-            {"event_option_name": k.lstrip("event_option_"), "event_option_value": v}
+            {"event_option_name": k[len(prefix):], "event_option_value": v}
             for k, v in record_fields.items()
-            if k.startswith("event_option_")
+            if k.startswith(prefix)
         ])
     else:
         event_options.extend(
