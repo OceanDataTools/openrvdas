@@ -10,8 +10,13 @@ Beyond checking structure, it builds the transforms listed in
 BUILDABLE_TRANSFORMS - such as ComputedFieldsTransform, whose equations are
 checked when it is built - so that errors they would only report when a
 logger starts are found here. A cruise definition is expanded first, as the
-logger manager would expand it; if it can't be expanded on this machine (an
-include that exists only on the ship, say), that check is skipped.
+logger manager would expand it, and any <<variable>> left in a config after
+expansion - misspelled, or never given a value - is reported. If the
+definition can't be expanded on this machine (an include that exists only on
+the ship, say), these checks are skipped.
+
+A variable given a default in its template, as <<slope|1.0>>, can't be
+checked: if the logger misspells it, the default is used.
 
 Usage:
     # Validate a single file
@@ -153,7 +158,7 @@ class ConfigValidator:
             self._build_logger_config_transforms(data)
         elif file_type == "cruise_definition":
             self._validate_cruise_definition(data)
-            self._build_cruise_definition_transforms(file_path)
+            self._check_expanded_cruise_definition(file_path)
         elif file_type == "logger_template":
             self._validate_logger_template(data)
         elif file_type == "config_template":
@@ -469,10 +474,11 @@ class ConfigValidator:
             for config_name, config in data.items():
                 self._build_transforms(config, config_name, skip_variables=True)
 
-    def _build_cruise_definition_transforms(self, file_path: str):
-        """Expand a cruise definition as the logger manager would, and build
-        the transforms in each of its configs. If it can't be expanded here,
-        skip this check: the structural checks have already had their say."""
+    def _check_expanded_cruise_definition(self, file_path: str):
+        """Expand a cruise definition as the logger manager would, report any
+        <<variable>> left in its configs, and build the transforms in the
+        others. If it can't be expanded here, skip these checks: the
+        structural checks have already had their say."""
         try:
             from logger.utils import read_config
             problems = []
@@ -483,14 +489,24 @@ class ConfigValidator:
             problems, expanded = [str(e)], None
         if problems or not isinstance(expanded, dict):
             if self.verbose:
-                print(f"  Not building transforms: could not expand definition "
+                print(f"  Not checking expanded definition: could not expand it "
                       f"({'; '.join(str(p) for p in problems)})")
             return
         configs = expanded.get('configs') or {}
-        if isinstance(configs, dict):
-            for config_name, config in configs.items():
-                self._build_transforms(config, f"configs.{config_name}",
-                                       skip_variables=False)
+        if not isinstance(configs, dict):
+            return
+        for config_name, config in configs.items():
+            path = f"configs.{config_name}"
+            # A variable left after expansion was misspelled, or never given
+            # a value: the logger would run with the literal "<<name>>".
+            unexpanded = sorted(set(read_config.find_unmatched_variables(config)))
+            if unexpanded:
+                self.errors.append(ValidationError(
+                    f"unexpanded variable{'s' if len(unexpanded) > 1 else ''} "
+                    f"{', '.join(unexpanded)} (misspelled or missing?)",
+                    path=path))
+                continue  # building it would only fail on the same thing
+            self._build_transforms(config, path, skip_variables=False)
 
     def _validate_cruise_definition(self, data: Dict):
         """Validate a cruise definition file."""
