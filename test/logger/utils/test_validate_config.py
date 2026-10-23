@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Tests for logger/utils/validate_config.py: that it builds the transforms
 in BUILDABLE_TRANSFORMS, so errors they would only report when a logger
-starts are found beforehand (#677)."""
+starts are found beforehand (#677), and reports <<variables>> left in a
+cruise definition's configs after expansion (#681)."""
 import logging
 import os
 import tempfile
@@ -23,6 +24,19 @@ logger_templates:
           kwargs:
             fields:
               Out: {equation: "<<equation>>"}
+        writers: {class: TextFileWriter}
+  cal_template:
+    configs:
+      'off': {}
+      'on':
+        readers: {class: UDPReader, kwargs: {port: "<<port>>"}}
+        transforms:
+        - class: ComputedFieldsTransform
+          kwargs:
+            fields:
+              Out:
+                equation: "slope * In"
+                constants: {slope: "<<slope>>"}
         writers: {class: TextFileWriter}
 loggers:
   calc:
@@ -66,6 +80,22 @@ class TestBuildTransforms(unittest.TestCase):
         build_errors = [str(e) for e in errors if 'would fail' in e.message]
         return is_valid, build_errors
 
+    def unexpanded(self, content):
+        """The errors reporting unexpanded variables."""
+        path = os.path.join(self.temp_dir.name, 'config.yaml')
+        with open(path, 'w') as f:
+            f.write(content)
+        is_valid, errors = ConfigValidator().validate_file(path)
+        return [str(e) for e in errors if 'unexpanded variable' in e.message]
+
+    def cal_cruise(self, variables):
+        """CRUISE with a 'cal' logger from cal_template, given variables."""
+        return self.cruise().replace(
+            "  'off': [calc-off]\n  'on': [calc-on]",
+            "  'off': [calc-off, cal-off]\n  'on': [calc-on, cal-on]").replace(
+            'loggers:\n', f'loggers:\n  cal:\n    logger_template: cal_template\n'
+                          f'    variables: {variables}\n')
+
     def cruise(self, variable='equation', value='2 * In'):
         return CRUISE.replace('<<variable>>', variable).replace('<<value>>', value)
 
@@ -84,11 +114,38 @@ class TestBuildTransforms(unittest.TestCase):
                 self.assertIn('configs.calc-on.transforms[0]', build_errors[0])
                 self.assertIn('ComputedFieldsTransform', build_errors[0])
 
-    def test_misspelled_template_variable(self):
-        """The template's <<equation>> is left unexpanded, so can't be parsed."""
+    ############################
+    def test_misspelled_variable_in_an_equation(self):
+        """The template's <<equation>> is left unexpanded: reported as such,
+        rather than as the parse error it would cause (#681)."""
         is_valid, build_errors = self.validate(self.cruise(variable='equaton'))
         self.assertFalse(is_valid)
-        self.assertEqual(len(build_errors), 1, build_errors)
+        self.assertEqual(build_errors, [])
+        self.assertEqual(self.unexpanded(self.cruise(variable='equaton')),
+                         ['[ERROR] configs.calc-on: unexpanded variable <<equation>> '
+                          '(misspelled or missing?)'])
+
+    def test_misspelled_variable_that_would_still_build(self):
+        """A constant left as the string "<<slope>>" builds - and fails on
+        every record at runtime. It must be reported (#681)."""
+        content = self.cal_cruise('{port: 6225, slpoe: 1.002}')
+        self.assertEqual(self.unexpanded(content),
+                         ['[ERROR] configs.cal-on: unexpanded variable <<slope>> '
+                          '(misspelled or missing?)'])
+
+    def test_unexpanded_variables_anywhere_in_a_config(self):
+        """Not only in transforms: a reader's port, too - all in one error."""
+        content = self.cal_cruise('{prot: 6225, slpoe: 1.002}')
+        self.assertEqual(self.unexpanded(content),
+                         ['[ERROR] configs.cal-on: unexpanded variables <<port>>, <<slope>> '
+                          '(misspelled or missing?)'])
+
+    def test_all_variables_given(self):
+        content = self.cal_cruise('{port: 6225, slope: 1.002}')
+        self.assertEqual(self.unexpanded(content), [])
+        is_valid, build_errors = self.validate(content)
+        self.assertTrue(is_valid)
+        self.assertEqual(build_errors, [])
 
     def test_definition_that_cant_be_expanded_here_is_skipped(self):
         """If the template comes from an include that exists only on the
