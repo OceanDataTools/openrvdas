@@ -5,8 +5,8 @@
 import logging
 import bisect
 
-from math import degrees, radians, sin, cos, atan2, isnan
-from statistics import mean, median
+from math import degrees, radians, sin, cos, asin, atan2, exp, isnan, sqrt
+from statistics import mean, median, stdev
 from typing import Union, Any
 
 
@@ -74,19 +74,64 @@ class InterpolationTransform(DerivedDataTransform):
                  trimmed_mean - mean of the values within the window after
                        dropping the highest and lowest; the option 'trim'
                        (default 0.1) is the fraction dropped from each end
+                 time_weighted_average - mean of the values within the window,
+                       each weighted by the time it covers (integrating
+                       linearly between readings), so that a burst of
+                       readings, or a gap, doesn't skew the mean as it does a
+                       boxcar_average's. Readings are joined across a gap
+                       left by missing values.
+                 gaussian_average - values within the window weighted by
+                       exp(-dt**2 / 2 sigma**2), dt being their distance from
+                       the output time. Smoother than a boxcar, and doesn't
+                       jump as a value enters or leaves the window. The option
+                       'sigma' defaults to a sixth of the window, so that the
+                       window spans 3 sigma either side
+                 triangular_average - values within the window weighted from
+                       1 at the output time down to 0 at the window's edges;
+                       much like gaussian_average, and simpler
+                 exponential_average - an exponential moving average, with
+                       the option 'time_constant' (in seconds, required): each
+                       new value moves the average by 1 - exp(-dt /
+                       time_constant) of the way towards it, dt being the time
+                       since the previous value. Unlike the other algorithms
+                       it uses only values up to the output time, and remembers
+                       the average from one output to the next, so its time
+                       constant can be longer than the window. Outputs are
+                       still delayed by half the transform's window, as all
+                       outputs are, so for a live display give it a transform
+                       of its own with a short window - but no shorter than
+                       twice the interval, or values may be discarded before
+                       it sees them. No value is output once the field's
+                       latest value is more than a window old.
+
+               Window statistics, for quality control. Each is an algorithm
+               of its own, so to output several statistics of a field, list
+               it once for each, with a different result_prefix:
+                 min, max - smallest and largest value within the window.
+                       max of a short-term average gives wind gusts: the
+                       WMO gust is the maximum 3-second average, i.e. max
+                       over the output of a 3-second boxcar_average
+                 std_dev - sample standard deviation of the values within
+                       the window; needs at least two values
+                 circular_std_dev - standard deviation of angles (in
+                       degrees) within the window, by the Yamartino method,
+                       so that values either side of 0/360 are close together
+                 count - how many valid values the window holds; 0, rather
+                       than no value, when it holds none
 
                Missing values - None, or NaN as some instruments report when
                they have no reading - are ignored by all of them, so one
                missing reading doesn't make a whole average NaN. If a window
                holds nothing but missing values, no value is output for it.
 
-               Every algorithm but nearest also takes an optional min_count
-               (default 1): output no value for a window that holds fewer than
-               this many valid values, rather than reporting an average of one
-               or two readings as if the window were full.
+               Every algorithm but nearest, count and exponential_average
+               also takes an optional
+               min_count (default 1): output no value for a window that holds
+               fewer than this many valid values, rather than reporting an
+               average of one or two readings as if the window were full.
 
-               boxcar_average, median and trimmed_mean also take an optional
-               outlier_mads: before averaging, drop values more than this many
+               boxcar_average, median, trimmed_mean, min, max and std_dev
+               also take an optional outlier_mads: before averaging, drop values more than this many
                median absolute deviations (MADs) from the window's median.
                It must be at least 1, so that at least half the window is
                always kept; 3 is a common choice. If more than half the values in a window
@@ -174,6 +219,10 @@ class InterpolationTransform(DerivedDataTransform):
         self.earliest_timestamp = float('inf')  # Track earliest timestamp we've seen
         self.latest_timestamp = 0
         self.last_metadata_send = 0  # last time we've sent metadata
+
+        # For each exponential_average: (timestamp of the latest value it
+        # has taken in, the average then)
+        self.exponential_averages = {}
 
     ############################
     def fields(self):
@@ -272,6 +321,34 @@ class InterpolationTransform(DerivedDataTransform):
             self.cached_values[field] = cache[keep_index:]
 
     ############################
+    def _exponential_average(self, result_field, algorithm, values, timestamp):
+        """Bring result_field's exponential moving average up to timestamp,
+        taking in the values since the latest it has taken in, and return it
+        - or None if there is no recent value."""
+        latest, average = self.exponential_averages.get(result_field, (None, None))
+        time_constant = algorithm['time_constant']
+        try:
+            for ts, val in values:
+                if ts > timestamp:
+                    break
+                if _is_missing(val) or (latest is not None and ts <= latest):
+                    continue
+                if average is None:
+                    average = val
+                else:
+                    average += (1 - exp(-(ts - latest) / time_constant)) * (val - average)
+                latest = ts
+        except TypeError:
+            logging.error('Non-numeric value in interpolation list: %s', values)
+            return None
+        self.exponential_averages[result_field] = (latest, average)
+
+        # Don't go on reporting the average of a field that has stopped
+        if latest is None or timestamp - latest > (algorithm.get('window') or self.window):
+            return None
+        return average
+
+    ############################
     def transform(self, record: Union[DASRecord, dict]):
         """Incorporate any useable fields in this record, and if it gives
         us any new interpolated values, aggregate and return them as a list of
@@ -329,9 +406,13 @@ class InterpolationTransform(DerivedDataTransform):
                 algorithm = entry.get('algorithm')
                 # logging.warning('%s->%s: %d values',
                 #                source, result_field, len(source_values))
-                value = interpolate(algorithm, source_values,
-                                    self.next_timestamp,
-                                    self.latest_timestamp)
+                if algorithm.get('type') == 'exponential_average':
+                    value = self._exponential_average(result_field, algorithm,
+                                                      source_values, self.next_timestamp)
+                else:
+                    value = interpolate(algorithm, source_values,
+                                        self.next_timestamp,
+                                        self.latest_timestamp)
                 if value is not None:
                     result[result_field] = value
             if result:
@@ -344,6 +425,13 @@ class InterpolationTransform(DerivedDataTransform):
         return results
 
 
+# Algorithms that take the outlier_mads option
+OUTLIER_ALGORITHMS = ('boxcar_average', 'median', 'trimmed_mean', 'min', 'max', 'std_dev')
+
+# Window statistics, each its own algorithm
+WINDOW_STATISTICS = ('min', 'max', 'std_dev', 'circular_std_dev', 'count')
+
+
 ############################
 def _check_algorithm_options(result_field, algorithm):
     """Raise ValueError if an algorithm is given an option it can't use, or
@@ -354,15 +442,38 @@ def _check_algorithm_options(result_field, algorithm):
 
     outlier_mads = algorithm.get('outlier_mads')
     if outlier_mads is not None:
-        if alg_type not in ('boxcar_average', 'median', 'trimmed_mean'):
+        if alg_type not in OUTLIER_ALGORITHMS:
             raise ValueError(f'InterpolationTransform: {result_field}: outlier_mads '
-                             f'can be used with boxcar_average, median or '
-                             f'trimmed_mean, not {alg_type}')
+                             f'can be used with {", ".join(OUTLIER_ALGORITHMS)}, '
+                             f'not {alg_type}')
         # At least 1, so that at least half of each window is always kept:
         # by definition, half the values are within one MAD of the median.
         if not isinstance(outlier_mads, (int, float)) or outlier_mads < 1:
             raise ValueError(f'InterpolationTransform: {result_field}: outlier_mads '
                              f'must be a number no less than 1; found {outlier_mads!r}')
+
+    # count reports however many values there are, and an exponential
+    # average carries on from one output to the next: a minimum makes no
+    # sense for either
+    if alg_type in ('count', 'exponential_average') and \
+            algorithm.get('min_count') is not None:
+        raise ValueError(f'InterpolationTransform: {result_field}: min_count '
+                         f'can not be used with {alg_type}')
+
+    for option, option_alg_type in (('sigma', 'gaussian_average'),
+                                    ('time_constant', 'exponential_average')):
+        value = algorithm.get(option)
+        if value is None:
+            if option == 'time_constant' and alg_type == option_alg_type:
+                raise ValueError(f'InterpolationTransform: {result_field}: '
+                                 f'exponential_average needs a time_constant')
+            continue
+        if alg_type != option_alg_type:
+            raise ValueError(f'InterpolationTransform: {result_field}: {option} can '
+                             f'only be used with {option_alg_type}, not {alg_type}')
+        if isinstance(value, bool) or not isinstance(value, (int, float)) or value <= 0:
+            raise ValueError(f'InterpolationTransform: {result_field}: {option} must '
+                             f'be a number greater than 0; found {value!r}')
 
     trim = algorithm.get('trim')
     if trim is not None:
@@ -383,6 +494,18 @@ def _reject_outliers(vals, outlier_mads):
     mad = median(deviations)
     return [val for val, deviation in zip(vals, deviations)
             if deviation <= outlier_mads * mad]
+
+
+############################
+def _circular_std_dev(angles):
+    """Standard deviation of angles in degrees, by the Yamartino method:
+    from how far the mean of their unit vectors falls short of length 1."""
+    val_radians = [radians(val) for val in angles]
+    sin_mean = mean([sin(val) for val in val_radians])
+    cos_mean = mean([cos(val) for val in val_radians])
+    # max() because rounding can take 1 - (length squared) just below zero
+    epsilon = sqrt(max(0.0, 1 - (sin_mean ** 2 + cos_mean ** 2)))
+    return degrees(asin(epsilon) * (1 + (2 / sqrt(3) - 1) * epsilon ** 3))
 
 
 ############################
@@ -420,7 +543,8 @@ def interpolate(algorithm, values, timestamp, now):
     values = [(ts, val) for ts, val in values if not _is_missing(val)]
     if not values:
         logging.debug('Function interpolate() has no values to work with')
-        return None
+        # An empty window is exactly what count is there to report
+        return 0 if algorithm.get('type') == 'count' else None
 
     ##################
     # Select algorithm
@@ -514,6 +638,85 @@ def interpolate(algorithm, values, timestamp, now):
             return mean(vals_to_average)
         except TypeError:
             logging.error('Non-numeric value in interpolation list: %s', vals_to_average)
+            return None
+
+    # time_weighted_average: integrate linearly between readings (the
+    # trapezoidal rule) and divide by the time they span, so each value
+    # counts for the time it covers rather than once.
+    if alg_type == 'time_weighted_average':
+        window = algorithm.get('window', 10)  # How far back/forward to average
+        lower_limit = timestamp - window / 2
+        upper_limit = timestamp + window / 2
+        in_window = [(ts, val) for ts, val in values
+                     if ts >= lower_limit and ts <= upper_limit]
+        if len(in_window) < min_count:
+            return None
+
+        try:
+            span = in_window[-1][0] - in_window[0][0]
+            if not span:  # all at one time, so no time to weight them by
+                return mean([val for ts, val in in_window])
+            area = sum((ts_1 - ts_0) * (val_0 + val_1) / 2
+                       for (ts_0, val_0), (ts_1, val_1) in zip(in_window, in_window[1:]))
+            return area / span
+        except TypeError:
+            logging.error('Non-numeric value in interpolation list: %s', in_window)
+            return None
+
+    # gaussian_average and triangular_average: weight values by their
+    # distance from the output time.
+    if alg_type in ('gaussian_average', 'triangular_average'):
+        window = algorithm.get('window', 10)  # How far back/forward to average
+        lower_limit = timestamp - window / 2
+        upper_limit = timestamp + window / 2
+        in_window = [(ts, val) for ts, val in values
+                     if ts >= lower_limit and ts <= upper_limit]
+        if len(in_window) < min_count:
+            return None
+
+        if alg_type == 'gaussian_average':
+            sigma = algorithm.get('sigma') or window / 6
+            weights = [exp(-(ts - timestamp) ** 2 / (2 * sigma ** 2))
+                       for ts, val in in_window]
+        else:
+            weights = [1 - abs(ts - timestamp) / (window / 2) for ts, val in in_window]
+        total_weight = sum(weights)
+        if not total_weight:  # e.g. a triangle's only values at its very edges
+            return None
+        try:
+            return sum(weight * val for weight, (ts, val)
+                       in zip(weights, in_window)) / total_weight
+        except TypeError:
+            logging.error('Non-numeric value in interpolation list: %s', in_window)
+            return None
+
+    # Window statistics, for quality control
+    if alg_type in WINDOW_STATISTICS:
+        window = algorithm.get('window', 10)  # How far back/forward to look
+        lower_limit = timestamp - window / 2
+        upper_limit = timestamp + window / 2
+        vals_in_window = [val for ts, val in values
+                          if ts >= lower_limit and ts <= upper_limit]
+        if alg_type == 'count':
+            return len(vals_in_window)
+        if len(vals_in_window) < min_count:
+            return None
+
+        try:
+            outlier_mads = algorithm.get('outlier_mads')
+            if outlier_mads:
+                vals_in_window = _reject_outliers(vals_in_window, outlier_mads)
+                if not vals_in_window:
+                    return None
+            if alg_type == 'min':
+                return min(vals_in_window)
+            if alg_type == 'max':
+                return max(vals_in_window)
+            if alg_type == 'std_dev':
+                return stdev(vals_in_window) if len(vals_in_window) > 1 else None
+            return _circular_std_dev(vals_in_window)
+        except TypeError:
+            logging.error('Non-numeric value in interpolation list: %s', vals_in_window)
             return None
 
     # Not an algorithm we recognize
