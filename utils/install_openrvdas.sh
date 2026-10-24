@@ -907,6 +907,13 @@ function setup_nginx {
         SSL_COMMENT='#'   # do comment out SSL stuff
     fi
 
+    # Where nginx's mime.types lives; both UIs' configs include it
+    if [ $OS_TYPE == 'MacOS' ]; then
+        NGINX_ETC_HOME=${HOMEBREW_PREFIX}/etc
+    else
+        NGINX_ETC_HOME=/etc
+    fi
+
     # Write the nginx config for BOTH UIs, not just the one selected on this
     # run. Only the selected UI's config is actually loaded (supervisor
     # decides that), but generating both keeps their port/SSL settings in
@@ -934,7 +941,7 @@ events {
 }
 
 http {
-    #include       mime.types;
+    include       ${NGINX_ETC_HOME}/nginx/mime.types;
     default_type  application/octet-stream;
 
     #log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
@@ -998,7 +1005,6 @@ http {
         }
         location /static {
             alias ${INSTALL_ROOT}/openrvdas/django_gui/static; # project static files
-            types { text/css css; text/javascript js; }
             autoindex on;
         }
         location /docs {
@@ -1042,12 +1048,6 @@ EOF
 # Write the nginx config for the React/FastAPI UI
 function setup_nginx_react {
     REACT_NGINX_CONF=$INSTALL_ROOT/openrvdas/web_frontend/openrvdas_nginx.conf
-
-    if [ $OS_TYPE == 'MacOS' ]; then
-        NGINX_ETC_HOME=${HOMEBREW_PREFIX}/etc
-    else
-        NGINX_ETC_HOME=/etc
-    fi
 
     cat > $REACT_NGINX_CONF<<EOF
 # openrvdas_nginx.conf - React/FastAPI UI
