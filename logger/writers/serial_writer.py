@@ -74,7 +74,10 @@ class SerialWriter(Writer):
                     f'Serial port {port} is already locked by another process; '
                     f'not opening it a second time. Is a logger already writing '
                     f'to this port? "fuser -v {port}" or "lsof {port}" will name '
-                    f'the process. To allow shared access anyway, set '
+                    f'the process. If it is another copy of this logger, '
+                    f'several logger managers may be running: '
+                    f'"pgrep -fl logger_manager" lists them. To allow shared '
+                    f'access anyway, set '
                     f'exclusive: false. Underlying error: {e}')
             raise serial.SerialException(f'Failed to open serial port {port}: {e}')
 

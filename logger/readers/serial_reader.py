@@ -105,7 +105,10 @@ class SerialReader(Reader):
                     f'between readers rather than copied to each, so both '
                     f'would get partial data. Is a logger already running on '
                     f'this port? "fuser -v {port}" or "lsof {port}" will name '
-                    f'the process. To allow shared access anyway, set '
+                    f'the process. If it is another copy of this logger, '
+                    f'several logger managers may be running: '
+                    f'"pgrep -fl logger_manager" lists them. To allow shared '
+                    f'access anyway, set '
                     f'exclusive: false. Underlying error: {e}')
                 logging.fatal(message)
                 # Carry the guidance on the exception too, not just in the log:

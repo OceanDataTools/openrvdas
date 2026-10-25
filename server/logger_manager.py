@@ -26,6 +26,7 @@ database backing it:
 ```
 """
 import datetime
+import fcntl
 import getpass  # to get username
 import hashlib
 import logging
@@ -33,6 +34,7 @@ import multiprocessing
 import os
 import signal
 import socket  # to get hostname
+import sys
 import threading
 import time
 
@@ -68,6 +70,10 @@ HOSTNAME = socket.gethostname()
 
 DEFAULT_DATA_SERVER_WEBSOCKET = 'localhost:8766'
 DEFAULT_STATE_JOURNAL = '/var/log/openrvdas/logger_manager_journal'
+
+# Held while a logger manager runs, so that a second can't start on the same
+# host (#686).
+DEFAULT_LOCK_FILE = '/var/tmp/openrvdas/logger_manager.lock'
 
 # How long to reuse a computed code version: long enough that a mode change
 # starting many loggers computes it once, short enough that an edit made just
@@ -873,9 +879,55 @@ class LoggerManager:
         else:
             logging.info('Update: %s: %s', field_name, record)
 
+
 ################################################################################
+class AnotherManagerRunning(Exception):
+    """Raised by acquire_lock() when another logger manager holds the lock."""
+
+    def __init__(self, running_pid):
+        super().__init__(running_pid)
+        self.running_pid = running_pid
 
 
+def acquire_lock(lock_file):
+    """Take an exclusive lock on lock_file, so that only one logger manager
+    runs on this host at a time, and write our pid into it (#686).
+
+    Returns the open lock file, which must be kept open: the lock lasts as
+    long as it does, and the operating system releases it when this process
+    exits, however it exits, so a crash leaves no stale lock to clear. Returns
+    None, with a warning, if the lock can't be taken for any reason other than
+    another manager holding it - an unwritable directory, say - so that the
+    manager still runs. Raises AnotherManagerRunning, with the pid recorded in
+    the file, if another manager holds it.
+    """
+    try:
+        os.makedirs(os.path.dirname(os.path.abspath(lock_file)), exist_ok=True)
+        lock = open(lock_file, 'a+')  # not 'w': that would empty a held lock's pid
+    except OSError as e:
+        logging.warning('Could not open lock file %s (%s), so not checking for '
+                        'another logger manager on this host.', lock_file, e)
+        return None
+    try:
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except BlockingIOError:
+        lock.seek(0)
+        running_pid = lock.read().strip() or 'unknown'
+        lock.close()
+        raise AnotherManagerRunning(running_pid)
+    except OSError as e:
+        logging.warning('Could not lock %s (%s), so not checking for another '
+                        'logger manager on this host.', lock_file, e)
+        lock.close()
+        return None
+    lock.seek(0)
+    lock.truncate()
+    lock.write(f'{os.getpid()}\n')
+    lock.flush()
+    return lock
+
+
+################################################################################
 def run_data_server(data_server_websocket,
                     data_server_back_seconds, data_server_cleanup_interval,
                     data_server_interval):
@@ -973,6 +1025,11 @@ if __name__ == '__main__':  # noqa: C901
                         'everything it depends on in this directory each time a '
                         'definition is loaded or a file it depends on changes. '
                         'See server/config_snapshot.py.')
+    parser.add_argument('--lock_file', dest='lock_file', default=DEFAULT_LOCK_FILE,
+                        help='File to lock while running, so that a second logger '
+                        'manager can\'t start on this host. Give separate installs '
+                        'on one host separate lock files. Use "none" to turn the '
+                        f'check off. Default: {DEFAULT_LOCK_FILE}')
     parser.add_argument('--max_tries', dest='max_tries', action='store', type=int,
                         default=DEFAULT_MAX_TRIES,
                         help='Number of times to retry failed loggers. If '
@@ -1003,6 +1060,26 @@ if __name__ == '__main__':  # noqa: C901
 
     # What level do we want our component loggers to write?
     logger_log_level = LOG_LEVELS[min(args.logger_verbosity, max(LOG_LEVELS))]
+
+    ############################
+    # Refuse to start if another logger manager is running on this host:
+    # each would run its own copy of every logger (#686). Keep the lock
+    # file open for as long as we run.
+    manager_lock = None
+    if args.lock_file.lower() != 'none':
+        try:
+            manager_lock = acquire_lock(args.lock_file)
+        except AnotherManagerRunning as e:
+            logging.fatal('Another logger manager (pid %s) is already running on '
+                          'this host, holding %s. Not starting a second one, which '
+                          'would run a second copy of every logger. Stop it first '
+                          '("pgrep -fl logger_manager" lists them), or use '
+                          '--lock_file none to run anyway.', e.running_pid, args.lock_file)
+            journal = None if args.state_journal.lower() == 'none' else args.state_journal
+            StateJournal(journal).record('manager_refused', host=HOSTNAME, user=USER,
+                                         pid=os.getpid(), running_pid=e.running_pid,
+                                         lock_file=args.lock_file)
+            sys.exit(1)
 
     ############################
     # First off, start any servers we're supposed to be running
