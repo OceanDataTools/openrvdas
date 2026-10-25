@@ -319,8 +319,9 @@ function set_default_variables {
     DEFAULT_STDERR_LOGFILE_MAXBYTES=10000000   # 10M
     DEFAULT_STDERR_LOGFILE_MAXBACKUPS=100
 
-    # Where logger_manager saves automatic config snapshots (--snapshot_dir),
-    # e.g. /var/log/openrvdas/snapshots. Empty means none are taken.
+    # Whether logger_manager saves automatic config snapshots, and where
+    # (--snapshot_dir). Both are settled after the preferences file is read.
+    DEFAULT_LOGGER_MANAGER_SNAPSHOTS=
     DEFAULT_LOGGER_MANAGER_SNAPSHOT_DIR=
 
     DEFAULT_SUPERVISORD_WEBINTERFACE=no
@@ -334,6 +335,17 @@ function set_default_variables {
         echo Reading pre-saved defaults from "$PREFERENCES_FILE"
         source $PREFERENCES_FILE
     fi
+
+    # Preferences saved by v2.7.0rc2-rc4 have a snapshot directory but no
+    # yes/no: a directory that was set there meant yes. Otherwise, no.
+    if [ -z "$DEFAULT_LOGGER_MANAGER_SNAPSHOTS" ]; then
+        if [ -n "$DEFAULT_LOGGER_MANAGER_SNAPSHOT_DIR" ]; then
+            DEFAULT_LOGGER_MANAGER_SNAPSHOTS=yes
+        else
+            DEFAULT_LOGGER_MANAGER_SNAPSHOTS=no
+        fi
+    fi
+    DEFAULT_LOGGER_MANAGER_SNAPSHOT_DIR=${DEFAULT_LOGGER_MANAGER_SNAPSHOT_DIR:-/var/log/openrvdas/snapshots}
 }
 
 ###########################################################################
@@ -379,6 +391,7 @@ DEFAULT_RUN_SIMULATE_NBP=$RUN_SIMULATE_NBP
 DEFAULT_STDERR_LOGFILE_MAXBYTES=$STDERR_LOGFILE_MAXBYTES
 DEFAULT_STDERR_LOGFILE_MAXBACKUPS=$STDERR_LOGFILE_MAXBACKUPS
 
+DEFAULT_LOGGER_MANAGER_SNAPSHOTS=$LOGGER_MANAGER_SNAPSHOTS
 DEFAULT_LOGGER_MANAGER_SNAPSHOT_DIR=$LOGGER_MANAGER_SNAPSHOT_DIR
 
 DEFAULT_SUPERVISORD_WEBINTERFACE=$SUPERVISORD_WEBINTERFACE
@@ -1709,7 +1722,7 @@ EOF
         LOGGER_MANAGER_DATABASE=django
     fi
     LOGGER_MANAGER_SNAPSHOT_ARG=
-    if [ -n "$LOGGER_MANAGER_SNAPSHOT_DIR" ]; then
+    if [ "$LOGGER_MANAGER_SNAPSHOTS" == 'yes' ] && [ -n "$LOGGER_MANAGER_SNAPSHOT_DIR" ]; then
         LOGGER_MANAGER_SNAPSHOT_ARG=" --snapshot_dir ${LOGGER_MANAGER_SNAPSHOT_DIR}"
     fi
     cat > $TEMP_FILE <<EOF
@@ -2397,6 +2410,27 @@ echo
 
 #########################################################################
 #########################################################################
+# Automatic config snapshots (logger_manager --snapshot_dir)
+echo "#####################################################################"
+echo "The logger manager can save a snapshot of the cruise definition - every"
+echo "file it is built from, the code version and the environment - whenever a"
+echo "definition is loaded or one of its files changes, as a record of what ran."
+echo "Each takes about 200 KB."
+echo
+yes_no "Take automatic snapshots of the cruise definition?" $DEFAULT_LOGGER_MANAGER_SNAPSHOTS
+LOGGER_MANAGER_SNAPSHOTS=$YES_NO_RESULT
+
+# Ask where only if they're wanted, but keep the directory either way, so
+# that turning snapshots back on later suggests the same place.
+LOGGER_MANAGER_SNAPSHOT_DIR=$DEFAULT_LOGGER_MANAGER_SNAPSHOT_DIR
+if [ "$LOGGER_MANAGER_SNAPSHOTS" == 'yes' ]; then
+    read -p "Directory for snapshots? ($DEFAULT_LOGGER_MANAGER_SNAPSHOT_DIR) " LOGGER_MANAGER_SNAPSHOT_DIR
+    LOGGER_MANAGER_SNAPSHOT_DIR=${LOGGER_MANAGER_SNAPSHOT_DIR:-$DEFAULT_LOGGER_MANAGER_SNAPSHOT_DIR}
+fi
+echo
+
+#########################################################################
+#########################################################################
 # Rotation limits for the stderr of the services supervisord runs. Not
 # prompted for - the defaults suit most installs, and the install already asks
 # plenty. To change them, edit these in $PREFERENCES_FILE and re-run; they
@@ -2404,12 +2438,6 @@ echo
 # separately by logger_manager (--stderr_max_bytes, --stderr_backup_count).
 STDERR_LOGFILE_MAXBYTES=${DEFAULT_STDERR_LOGFILE_MAXBYTES}
 STDERR_LOGFILE_MAXBACKUPS=${DEFAULT_STDERR_LOGFILE_MAXBACKUPS}
-
-# Directory for logger_manager's automatic config snapshots (--snapshot_dir).
-# Not prompted for, and off unless set: to turn snapshots on, set
-# DEFAULT_LOGGER_MANAGER_SNAPSHOT_DIR in $PREFERENCES_FILE (e.g. to
-# /var/log/openrvdas/snapshots) and re-run. It is kept from then on.
-LOGGER_MANAGER_SNAPSHOT_DIR=${DEFAULT_LOGGER_MANAGER_SNAPSHOT_DIR}
 
 #########################################################################
 #########################################################################
@@ -2529,6 +2557,13 @@ sudo chgrp -R ${RVDAS_GROUP} ${INSTALL_ROOT}/openrvdas
 sudo mkdir -p /var/log/openrvdas/loggers /var/tmp/openrvdas
 sudo chown $RVDAS_USER /var/log/openrvdas /var/log/openrvdas/loggers /var/tmp/openrvdas
 sudo chgrp $RVDAS_GROUP /var/log/openrvdas /var/log/openrvdas/loggers /var/tmp/openrvdas
+
+# The directory for automatic config snapshots, if they're wanted
+if [ "$LOGGER_MANAGER_SNAPSHOTS" == 'yes' ]; then
+    sudo mkdir -p "$LOGGER_MANAGER_SNAPSHOT_DIR"
+    sudo chown $RVDAS_USER "$LOGGER_MANAGER_SNAPSHOT_DIR"
+    sudo chgrp $RVDAS_GROUP "$LOGGER_MANAGER_SNAPSHOT_DIR"
+fi
 
 echo
 echo "#####################################################################"
