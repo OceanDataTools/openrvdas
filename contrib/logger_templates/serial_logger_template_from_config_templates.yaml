@@ -1,4 +1,11 @@
 ###################
+# serial_logger_template, built from config templates: each of its configs
+# is a config template from contrib/config_templates/
+# serial_reader_config_template.yaml, which a cruise definition must include
+# too. It defines the same logger template as serial_logger_template.yaml,
+# so include one or the other, not both. See
+# test/NBP1406/NBP1406_cruise_config_templates.yaml for an example.
+###################
 logger_templates:
   #################
   serial_logger_template:

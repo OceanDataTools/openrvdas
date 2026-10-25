@@ -1,11 +1,12 @@
 ###########################################################
 ###########################################################
-# YAML cruise definition file for OpenRVDAS.
+# Sample cruise definition for OpenRVDAS: the instruments of the
+# N.B. Palmer's 2014 NBP1406 cruise, each read by serial_logger_template
+# from a simulated serial port (see simulate_NBP1406.yaml), and parsed with
+# the device definitions in devices/nbp_devices.yaml.
 #
-# Created by:
-#   command:  <<command_line>>
-#   time:     <<date_time>> UTC
-#   user:     <<user>>
+# NBP1406_cruise_config_templates.yaml shows the same ship, cut down to two
+# instruments, built with config templates instead.
 #
 ###########################################################
 cruise:
@@ -55,10 +56,6 @@ variables:
 
   data_server: localhost:8766
   influx_bucket_name: openrvdas
-
-  command_line: local/usap/create_template_cruise.py test/NBP1406/NBP1406_port_defs.yaml
-  date_time: Thu Mar 13 04:38:45 2025
-  user: pablo
 
 ###########################################################
 loggers:
@@ -225,8 +222,10 @@ loggers:
       window: 30
 
 ###########################################################
+default_mode: 'off'
+
 modes:
-  'off':  # without a 'default_mode' key, first defined mode will be default
+  'off':
     [PCOD-off, cwnc-off, gp02-off, gyr1-off, adcp-off, eng1-off, svp1-off, twnc-off, mbdp-off, knud-off, grv1-off, mwx1-off, pco2-off, pguv-off, s330-off, tsg1-off, rtmp-off, hdas-off, tsg2-off, seap-off, parse_data-off, true_winds_port-off, true_winds_stbd-off, snapshot-off]
 
   no_write:
