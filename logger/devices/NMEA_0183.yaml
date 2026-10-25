@@ -63,7 +63,10 @@ NMEA_GPS:
       - "${:2l}VTG,{CourseTrue:of},T,{CourseMag:of},M,{SpeedKt:of},N,{SpeedKm:of},K*{CheckSum:x}"
 
     # Time and Date
-    ZDA: "${:2l}ZDA,{GPSTime:of},{Day:od},{Month:od},{Year:od},{LocalHours:od},{LocalMinutes:od}*{CheckSum:x}"
+    ZDA:
+      - "${:2l}ZDA,{GPSTime:of},{Day:od},{Month:od},{Year:od},{LocalHours:od},{LocalMinutes:od}*{CheckSum:x}"
+      # Some receivers (e.g. Trimble) send an extra empty field before the checksum
+      - "${:2l}ZDA,{GPSTime:of},{Day:od},{Month:od},{Year:od},{LocalHours:od},{LocalMinutes:od},*{CheckSum:x}"
 
     # GNSS DOP and Active Satellites
     GSA:
@@ -436,7 +439,10 @@ NMEA_GPS_INS:
       - "${:2l}VTG,{CourseTrue:of},T,{CourseMag:of},M,{SpeedKt:of},N,{SpeedKm:of},K,{Mode:ow}*{CheckSum:x}"
       # NMEA before 2.3 has no mode indicator field
       - "${:2l}VTG,{CourseTrue:of},T,{CourseMag:of},M,{SpeedKt:of},N,{SpeedKm:of},K*{CheckSum:x}"
-    ZDA: "${:2l}ZDA,{GPSTime:of},{Day:od},{Month:od},{Year:od},{LocalHours:od},{LocalMinutes:od}*{CheckSum:x}"
+    ZDA:
+      - "${:2l}ZDA,{GPSTime:of},{Day:od},{Month:od},{Year:od},{LocalHours:od},{LocalMinutes:od}*{CheckSum:x}"
+      # Some receivers (e.g. Trimble) send an extra empty field before the checksum
+      - "${:2l}ZDA,{GPSTime:of},{Day:od},{Month:od},{Year:od},{LocalHours:od},{LocalMinutes:od},*{CheckSum:x}"
 
     ########################################
     # Standard NMEA Heading Sentences
