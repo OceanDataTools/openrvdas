@@ -245,6 +245,7 @@ class TestSerialWriter(unittest.TestCase):
             with self.assertRaises(serial.SerialException) as cm:
                 SerialWriter(port=temp_port + '_in')
             self.assertIn('locked by another process', str(cm.exception))
+            self.assertIn('pgrep -fl logger_manager', str(cm.exception))
         finally:
             first.serial.close()
 

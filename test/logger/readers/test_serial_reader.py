@@ -189,6 +189,8 @@ class TestSerialReader(unittest.TestCase):
             message = str(cm.exception)
             self.assertIn(port, message)
             self.assertIn('locked by another process', message)
+            # ...including the commonest cause: a second logger manager (#686)
+            self.assertIn('pgrep -fl logger_manager', message)
         finally:
             first.serial.close()
 
