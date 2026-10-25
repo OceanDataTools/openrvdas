@@ -1,11 +1,18 @@
 ###########################################################
 ###########################################################
-# YAML cruise definition file for OpenRVDAS.
+# Sample cruise definition demonstrating config templates.
 #
-# Created by:
-#   command:  <<command_line>>
-#   time:     <<date_time>> UTC
-#   user:     <<user>>
+# A logger_template (as NBP1406_cruise.yaml uses throughout) templates a
+# whole logger: all of its configs. A config_template templates a single
+# config, so that loggers can build their configs from shared pieces. Here:
+#
+#   - mwx1 uses serial_logger_template_from_config_templates.yaml, a logger
+#     template whose configs are themselves config templates;
+#   - s330 lists its configs explicitly, each one a config template from
+#     contrib/config_templates/serial_reader_config_template.yaml.
+#
+# It is a cut-down NBP1406_cruise.yaml - two of the ship's instruments, and
+# the same derived-data loggers - so see that file for the whole ship.
 #
 ###########################################################
 cruise:
@@ -16,7 +23,7 @@ cruise:
 ###########################################################
 includes:
   - contrib/config_templates/serial_reader_config_template.yaml
-  - contrib/logger_templates/serial_logger_template_new.yaml
+  - contrib/logger_templates/serial_logger_template_from_config_templates.yaml
   - contrib/logger_templates/parse_data_logger_template.yaml
   - contrib/logger_templates/true_winds_logger_template.yaml
   - contrib/logger_templates/averaging_logger_template.yaml
@@ -56,10 +63,6 @@ variables:
 
   data_server: localhost:8766
   influx_bucket_name: openrvdas
-
-  command_line: local/usap/create_template_cruise.py test/NBP1406/NBP1406_port_defs.yaml
-  date_time: Thu Mar 13 04:38:45 2025
-  user: pablo
 
 ###########################################################
 loggers:
@@ -123,8 +126,10 @@ loggers:
       window: 30
 
 ###########################################################
+default_mode: 'off'
+
 modes:
-  'off':  # without a 'default_mode' key, first defined mode will be default
+  'off':
     [s330-off, mwx1-off, parse_data-off, true_winds_port-off, snapshot-off]
 
   no_write:
