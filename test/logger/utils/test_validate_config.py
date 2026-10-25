@@ -177,5 +177,78 @@ class TestBuildTransforms(unittest.TestCase):
         self.assertEqual(build_errors, [])
 
 
+CONFIG_TEMPLATE_CRUISE = """
+cruise: {id: TEST}
+default_mode: 'off'
+<<includes>>
+config_templates:
+  udp_net_config_template:
+    readers: {class: UDPReader, kwargs: {port: "<<port>>"}}
+    writers: {class: TextFileWriter}
+loggers:
+  probe:
+    configs:
+      'off': {}
+      'on':
+        config_template: <<template>>
+        variables: {<<variable>>: 6225}
+modes:
+  'off': [probe-off]
+  'on': [probe-on]
+"""
+
+
+class TestConfigTemplates(unittest.TestCase):
+    """Configs built from config templates (#692)."""
+
+    def setUp(self):
+        self.temp_dir = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp_dir.cleanup)
+        logging.disable(logging.ERROR)  # read_config logs what it can't find
+        self.addCleanup(logging.disable, logging.NOTSET)
+
+    def validate(self, template='udp_net_config_template', variable='port', includes=''):
+        content = (CONFIG_TEMPLATE_CRUISE.replace('<<template>>', template)
+                   .replace('<<variable>>', variable).replace('<<includes>>', includes))
+        path = os.path.join(self.temp_dir.name, 'cruise.yaml')
+        with open(path, 'w') as f:
+            f.write(content)
+        is_valid, errors = ConfigValidator().validate_file(path)
+        return is_valid, [str(e) for e in errors]
+
+    def test_no_readers_or_writers_warning(self):
+        """The template supplies them."""
+        self.assertEqual(self.validate(), (True, []))
+
+    def test_misspelled_template_name(self):
+        is_valid, errors = self.validate(template='udp_net_config_tempalte')
+        self.assertFalse(is_valid)
+        self.assertEqual(len(errors), 1, errors)
+        self.assertIn("loggers.probe.configs.on", errors[0])
+        self.assertIn("config_template 'udp_net_config_tempalte' is not defined", errors[0])
+        self.assertIn('defined: udp_net_config_template', errors[0])
+
+    def test_template_from_an_include(self):
+        """Templates defined in an included file count."""
+        is_valid, errors = self.validate(
+            template='serial_net_config_template',
+            includes='includes: [contrib/config_templates/serial_reader_config_template.yaml]')
+        self.assertEqual([e for e in errors if 'not defined' in e], [])
+
+    def test_include_missing_here_skips_the_check(self):
+        """The template might be defined in an include only on the ship."""
+        is_valid, errors = self.validate(
+            template='ship_only_config_template',
+            includes='includes: [/nonexistent/ship_only_templates.yaml]')
+        self.assertEqual([e for e in errors if 'not defined' in e], [])
+
+    def test_misspelled_variable_is_still_reported(self):
+        """Its variables are checked once the definition is expanded (#681)."""
+        is_valid, errors = self.validate(variable='prot')
+        self.assertFalse(is_valid)
+        self.assertEqual(errors, ['[ERROR] configs.probe-on: unexpanded variable <<port>> '
+                                  '(misspelled or missing?)'])
+
+
 if __name__ == '__main__':
     unittest.main()
