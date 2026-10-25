@@ -4,6 +4,7 @@
 
 import json
 import logging
+import os
 import pprint
 import tempfile
 import time
@@ -801,6 +802,73 @@ class TestStandardNMEADefinitions(unittest.TestCase):
                 fields = self.parse(f'{device} {ts} $GPGLL,4738.9683,N,12218.7760,W,'
                                     '233342.00,A,D*44')
                 self.assertEqual(fields['Mode'], 'D')
+
+
+################################################################################
+class TestTimestampsWithoutTimeZone(unittest.TestCase):
+    """A timestamp with no time zone is UTC, wherever it is parsed (#690)."""
+
+    # 2014-08-01T20:28:46.352 UTC
+    UTC_TIMESTAMP = 1406924926.352
+
+    # A device whose records carry their own time, with no zone - as the
+    # NBP winches' do
+    DEFINITIONS = """
+Winch:
+  category: device_type
+  format: "{LANID:nc},{WinchTime:ti}"
+winch:
+  category: device
+  device_type: Winch
+  fields: {LANID: LANID, WinchTime: WinchTime}
+"""
+
+    def setUp(self):
+        definitions = tempfile.NamedTemporaryFile('w', suffix='.yaml', delete=False)
+        definitions.write(self.DEFINITIONS)
+        definitions.close()
+        self.definition_path = definitions.name
+        self.addCleanup(os.unlink, definitions.name)
+
+        saved_tz = os.environ.get('TZ')
+
+        def restore():
+            if saved_tz is None:
+                os.environ.pop('TZ', None)
+            else:
+                os.environ['TZ'] = saved_tz
+            time.tzset()
+        self.addCleanup(restore)
+
+    def parse_in(self, tz, record, **kwargs):
+        os.environ['TZ'] = tz
+        time.tzset()
+        return RecordParser(**kwargs).parse_record(record)
+
+    def winch_time(self, tz, value):
+        r = self.parse_in(tz, f'winch 2014-08-01T00:00:00Z 01RD,{value}',
+                          definition_path=self.definition_path)
+        return r['fields']['WinchTime']
+
+    def test_field_without_time_zone(self):
+        for tz in ('UTC', 'America/Los_Angeles', 'Asia/Tokyo'):
+            with self.subTest(tz=tz):
+                self.assertEqual(self.winch_time(tz, '2014-08-01T20:28:46.352'),
+                                 self.UTC_TIMESTAMP)
+
+    def test_record_timestamp_without_time_zone(self):
+        for tz in ('UTC', 'America/Los_Angeles', 'Asia/Tokyo'):
+            with self.subTest(tz=tz):
+                r = self.parse_in(tz, '2014-08-01T20:28:46.352 01:024557 00',
+                                  record_format='{timestamp:ti} {field_string}',
+                                  field_patterns=['{CounterUnits:d}:{GravityValue:d} {GravityError:d}'])
+                self.assertEqual(r['timestamp'], self.UTC_TIMESTAMP)
+
+    def test_explicit_time_zones_are_unchanged(self):
+        for value in ('2014-08-01T20:28:46.352Z', '2014-08-01T22:28:46.352+02:00'):
+            with self.subTest(value=value):
+                self.assertEqual(self.winch_time('America/Los_Angeles', value),
+                                 self.UTC_TIMESTAMP)
 
 
 ################################################################################
