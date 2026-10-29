@@ -612,8 +612,9 @@ def interpolate(algorithm, values, timestamp, now):
             if angle >= 360:
                 angle -= 360
             return angle
-        except TypeError:
-            logging.error('Non-numeric value in interpolation list: %s', vals_to_average)
+        except (TypeError, ValueError):  # ValueError: sin() or cos() of inf
+            logging.error('Non-numeric or infinite value in interpolation list: %s',
+                          vals_to_average)
             return None
 
     # median and trimmed_mean: robust to a few spikes or dropouts.
@@ -719,8 +720,9 @@ def interpolate(algorithm, values, timestamp, now):
             if alg_type == 'std_dev':
                 return stdev(vals_in_window) if len(vals_in_window) > 1 else None
             return _circular_std_dev(vals_in_window)
-        except TypeError:
-            logging.error('Non-numeric value in interpolation list: %s', vals_in_window)
+        except (TypeError, ValueError):  # ValueError: sin() or cos() of inf
+            logging.error('Non-numeric or infinite value in interpolation list: %s',
+                          vals_in_window)
             return None
 
     # Not an algorithm we recognize
