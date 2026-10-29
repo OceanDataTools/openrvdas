@@ -159,7 +159,7 @@ class ConfigValidator:
         elif file_type == "cruise_definition":
             self._validate_cruise_definition(data)
             self._check_config_template_names(file_path, data)
-            self._check_expanded_cruise_definition(file_path)
+            self._check_expanded_cruise_definition(file_path, data)
         elif file_type == "logger_template":
             self._validate_logger_template(data)
         elif file_type == "config_template":
@@ -487,6 +487,21 @@ class ConfigValidator:
             for config_name, config in data.items():
                 self._build_transforms(config, config_name, skip_variables=True)
 
+    @staticmethod
+    def _missing_includes(data: Dict) -> List[str]:
+        """The include patterns in a cruise definition that match no file on
+        this machine - for example, one that exists only on the ship."""
+        includes = data.get('includes') or []
+        if not isinstance(includes, list):
+            return []
+        base_dir = data.get('includes_base_dir')
+        if not isinstance(base_dir, str):
+            # As read_config.expand_includes(): the OpenRVDAS root
+            base_dir = os.path.dirname(os.path.dirname(os.path.dirname(
+                os.path.abspath(__file__))))
+        return [pattern for pattern in includes if isinstance(pattern, str)
+                and not glob.glob(os.path.join(base_dir, pattern.strip()))]
+
     def _check_config_template_names(self, file_path: str, data: Dict):
         """Report a config_template that names a template not defined in the
         definition or the files it includes - most likely a misspelling
@@ -498,19 +513,12 @@ class ConfigValidator:
             from logger.utils import read_config
         except ImportError:
             return
-        base_dir = data.get('includes_base_dir')
-        if not isinstance(base_dir, str):
-            base_dir = os.path.dirname(os.path.dirname(os.path.dirname(
-                os.path.abspath(read_config.__file__))))
-        includes = data.get('includes') or []
-        if isinstance(includes, list):
-            missing = [pattern for pattern in includes if isinstance(pattern, str)
-                       and not glob.glob(os.path.join(base_dir, pattern.strip()))]
-            if missing:
-                if self.verbose:
-                    print(f"  Not checking config template names: no file matches "
-                          f"include(s) {', '.join(missing)}")
-                return
+        missing = self._missing_includes(data)
+        if missing:
+            if self.verbose:
+                print(f"  Not checking config template names: no file matches "
+                      f"include(s) {', '.join(missing)}")
+            return
         try:
             # The definition with its includes merged in, templates unexpanded
             merged = read_config.expand_includes(
@@ -542,23 +550,40 @@ class ConfigValidator:
                     f"config_template '{template_name}' is not defined "
                     f"(misspelled? defined: {known})", path=path))
 
-    def _check_expanded_cruise_definition(self, file_path: str):
+    def _check_expanded_cruise_definition(self, file_path: str, data: Dict):
         """Expand a cruise definition as the logger manager would, report any
         <<variable>> left in its configs, and build the transforms in the
-        others. If it can't be expanded here, skip these checks: the
-        structural checks have already had their say."""
+        others.
+
+        If an include matches no file on this machine, the definition may
+        be complete only on the ship, so skip these checks. So too if the
+        structural checks have already found an error. Otherwise, a
+        definition that can't be expanded can't be loaded by the logger
+        manager either - e.g. a mode naming a config that doesn't exist
+        (#711) - so report why as an error."""
+        missing = self._missing_includes(data)
+        if missing:
+            if self.verbose:
+                print(f"  Not checking expanded definition: no file matches "
+                      f"include(s) {', '.join(missing)}")
+            return
         try:
             from logger.utils import read_config
             problems = []
             definition = read_config.read_config(file_path, errors=problems)
             expanded = (read_config.expand_cruise_definition(definition, errors=problems)
                         if not problems else None)
-        except Exception as e:  # noqa: BLE001 - can't expand here: skip, as below
+        except Exception as e:  # noqa: BLE001 - whatever it raises is the finding
             problems, expanded = [str(e)], None
         if problems or not isinstance(expanded, dict):
-            if self.verbose:
-                print(f"  Not checking expanded definition: could not expand it "
-                      f"({'; '.join(str(p) for p in problems)})")
+            if any(e.severity == 'error' for e in self.errors):
+                if self.verbose:
+                    print(f"  Not checking expanded definition: could not expand it "
+                          f"({'; '.join(str(p) for p in problems)})")
+                return
+            for problem in problems or ['expanded to something other than a dict']:
+                self.errors.append(ValidationError(
+                    f"Cruise definition can't be loaded: {problem}"))
             return
         configs = expanded.get('configs') or {}
         if not isinstance(configs, dict):
