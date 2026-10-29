@@ -702,6 +702,26 @@ class TestWindowStatistics(unittest.TestCase):
         for fields in self.run_transform(spec, self.reading, other_fields={}).values():
             self.assertEqual(fields, {'count_X': 21, 'count_Y': 0})
 
+    def test_polar_average_range(self):
+        """Angles that average to north give 0, never 360 (#706)."""
+        algorithm = {'type': 'polar_average', 'window': 20}
+        for angles in ([359, 1], [350, 10], [359.9, 0.1], [1, 359], [360, 0]):
+            result = interpolate(algorithm, [(0, a) for a in angles], 0, 100)
+            self.assertGreaterEqual(result, 0, angles)
+            self.assertLess(result, 360, angles)
+            self.assertAlmostEqual(result, 0, places=9, msg=angles)
+
+    def test_angle_algorithms_with_inf(self):
+        """An infinite angle is logged and gives no value, rather than
+        raising from sin() and cos()."""
+        values = [(0, 10.0), (1, float('inf')), (2, 20.0)]
+        for alg_type in ('polar_average', 'circular_std_dev'):
+            with self.subTest(alg_type=alg_type):
+                algorithm = {'type': alg_type, 'window': 20}
+                with self.assertLogs(level='ERROR') as logs:
+                    self.assertIsNone(interpolate(algorithm, values, 0, 100))
+                self.assertIn('infinite', logs.output[0])
+
     def test_std_dev_needs_two_values(self):
         algorithm = {'type': 'std_dev', 'window': 20}
         self.assertIsNone(interpolate(algorithm, [(0, 5.0)], 0, 100))
