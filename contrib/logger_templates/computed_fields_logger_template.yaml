@@ -53,6 +53,10 @@
 #
 # 1. Linear calibration. Coefficients come from an included calibration file,
 #    so the cruise definition does not change when a sensor is recalibrated.
+#    Give calibration coefficients no defaults: if the file is missing or a
+#    name is misspelled, validate_config then reports an unexpanded variable,
+#    where a default would quietly publish uncalibrated values under the
+#    calibrated field name.
 #
 #   rtmp_cal:
 #     logger_template: computed_fields_logger_template
@@ -60,8 +64,8 @@
 #       output_field: CalibratedRTmpValue
 #       equation: "slope * RTmpValue + offset"
 #       constants:
-#         slope:  <<rtmp_slope|1.0>>
-#         offset: <<rtmp_offset|0.0>>
+#         slope:  <<rtmp_slope>>
+#         offset: <<rtmp_offset>>
 #       subscribe_fields:
 #         RTmpValue: {seconds: 0}
 #       measurement_name: rtmp
