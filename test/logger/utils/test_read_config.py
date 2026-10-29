@@ -797,7 +797,6 @@ loggers:
         self.assertEqual(result["bool_var"], True)
         self.assertIsInstance(result["bool_var"], bool)
 
-
     def test_template_not_found(self) -> None:
         """Test that a ValueError is raised when a template is not found."""
         # Create a test config with a missing template
@@ -1474,7 +1473,6 @@ loggers:
             self.assertEqual(result["modes"]["mode2"]["logger2"], "logger2-config2")
 
 
-
 class TestExpandModesValidation(unittest.TestCase):
     """Tests for expand_modes, including the dict-mode config existence check."""
 
@@ -1787,6 +1785,30 @@ class TestAveragingLoggerTemplate(unittest.TestCase):
             results.extend(result if isinstance(result, list) else [result] if result else [])
         self.assertTrue(results)
         self.assertEqual(results[-1]['fields'], {'AvgAirTemp': 20.0})
+
+    def test_omit_direction_fields(self):
+        """direction_fields is optional and defaults to [] (#700)."""
+        from logger.transforms.interpolation_transform import InterpolationTransform
+
+        config = self.expand({
+            'snapshot_fields': ['AirTemp'], 'average_fields': ['AirTemp'],
+            'interval': 30, 'window': 30})
+        self.assertEqual(self.field_spec(config),
+                         {'boxcar_average': ['AirTemp'], 'polar_average': []})
+        transform = InterpolationTransform(**config['transforms'][0]['kwargs'])
+        self.assertEqual(list(transform.field_spec), ['AvgAirTemp'])
+
+    def test_omit_average_fields(self):
+        """average_fields is optional and defaults to [] (#700)."""
+        from logger.transforms.interpolation_transform import InterpolationTransform
+
+        config = self.expand({
+            'snapshot_fields': ['WindDir'], 'direction_fields': ['WindDir'],
+            'interval': 30, 'window': 30})
+        self.assertEqual(self.field_spec(config),
+                         {'boxcar_average': [], 'polar_average': ['WindDir']})
+        transform = InterpolationTransform(**config['transforms'][0]['kwargs'])
+        self.assertEqual(list(transform.field_spec), ['AvgWindDir'])
 
     def test_snapshot_template_unchanged(self):
         """A cruise definition written for the old template - which supplies

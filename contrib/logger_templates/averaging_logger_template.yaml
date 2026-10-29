@@ -10,10 +10,11 @@
 # Variables:
 #   snapshot_fields   every field to read: average_fields and direction_fields
 #                     together (a template can't combine two lists itself)
-#   average_fields    fields to average with a simple boxcar average
+#   average_fields    fields to average with a simple boxcar average.
+#                     Optional; omit if there are none.
 #   direction_fields  angles in degrees, averaged as directions (polar
 #                     average), so that 359 and 1 average to 0, not 180.
-#                     Use [] if there are none.
+#                     Optional; omit if there are none.
 #   interval          how often to output averages, in seconds
 #   window            how many seconds of data to average over
 #
@@ -54,12 +55,12 @@ logger_templates:
             metadata_interval: 60  # send metadata every 60 seconds
             field_spec:
             # These fields we do a simple boxcar average on
-            - sources: <<average_fields>>
+            - sources: <<average_fields|[]>>
               algorithm: boxcar_average
               window: <<window>>
               result_prefix: Avg  # Prefix each field name with this for output
             # These fields we do a polar average on
-            - sources: <<direction_fields>>
+            - sources: <<direction_fields|[]>>
               algorithm: polar_average
               window: <<window>>
               result_prefix: Avg  # Prefix each field name with this for output
