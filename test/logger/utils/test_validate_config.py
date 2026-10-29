@@ -291,5 +291,78 @@ class TestComponentModules(unittest.TestCase):
                 self.assertIn("'module' must be a module path", errors[0])
 
 
+class TestExpansionErrors(unittest.TestCase):
+    """A cruise definition the logger manager couldn't load is invalid, unless
+    it may be complete only on the ship (#711)."""
+
+    def setUp(self):
+        self.temp_dir = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp_dir.cleanup)
+        logging.disable(logging.ERROR)  # read_config logs what it can't find
+        self.addCleanup(logging.disable, logging.NOTSET)
+
+    def validate(self, content):
+        path = os.path.join(self.temp_dir.name, 'cruise.yaml')
+        with open(path, 'w') as f:
+            f.write(content)
+        is_valid, errors = ConfigValidator().validate_file(path)
+        return is_valid, [str(e) for e in errors]
+
+    def cant_be_loaded(self, errors):
+        return [e for e in errors if "can't be loaded" in e]
+
+    def test_templated_logger_mode_names_missing_config(self):
+        """The structural checks can't see a template's config names."""
+        is_valid, errors = self.validate(
+            CRUISE.replace('<<variable>>', 'equation').replace('<<value>>', '2 * In')
+            .replace("'on': [calc-on]", "'on': [calc-onn]"))
+        self.assertFalse(is_valid)
+        self.assertTrue(any('calc-onn' in e for e in self.cant_be_loaded(errors)), errors)
+
+    def test_plain_config_mode_names_missing_config(self):
+        is_valid, errors = self.validate(PLAIN_CRUISE.replace("'on': {gps: gps-on}",
+                                                              "'on': {gps: gps-onn}"))
+        self.assertFalse(is_valid)
+        self.assertEqual(self.cant_be_loaded(errors), [
+            "[ERROR] Cruise definition can't be loaded: Config 'gps-onn' for logger "
+            "'gps' in mode 'on' not found in top-level configs"])
+
+    def test_valid_definition(self):
+        self.assertEqual(self.validate(PLAIN_CRUISE), (True, []))
+
+    def test_include_missing_here_is_skipped(self):
+        """The missing config may be in a file that exists only on the ship."""
+        is_valid, errors = self.validate(
+            'includes: [/nonexistent/ship_only_configs.yaml]\n' +
+            PLAIN_CRUISE.replace("'on': {gps: gps-on}", "'on': {gps: gps-onn}"))
+        self.assertTrue(is_valid)
+        self.assertEqual(self.cant_be_loaded(errors), [])
+
+    def test_not_repeated_after_a_structural_error(self):
+        """Its expansion errors would only restate the structural one."""
+        is_valid, errors = self.validate(
+            PLAIN_CRUISE.replace("  'on': {gps: gps-onn}", "")
+            .replace("modes:\n  'off': {gps: gps-off}\n  'on': {gps: gps-on}", 'modes: [off]'))
+        self.assertFalse(is_valid)
+        self.assertIn("[ERROR] modes: 'modes' must be a dictionary", errors)
+        self.assertEqual(self.cant_be_loaded(errors), [])
+
+
+PLAIN_CRUISE = """
+cruise: {id: TEST}
+default_mode: 'off'
+loggers:
+  gps: {configs: [gps-off, gps-on]}
+configs:
+  gps-off: {}
+  gps-on:
+    readers: {class: UDPReader, kwargs: {port: 6224}}
+    writers: {class: TextFileWriter}
+modes:
+  'off': {gps: gps-off}
+  'on': {gps: gps-on}
+"""
+
+
 if __name__ == '__main__':
     unittest.main()
