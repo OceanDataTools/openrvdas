@@ -211,8 +211,8 @@ issue #590) and `websockets<18`.
 
 ## 5. `utils/install_openrvdas.sh` — platform constraints
 
-~2,500 lines of platform-conditional shell targeting macOS, Ubuntu/Debian,
-CentOS/RHEL, and AlmaLinux 8/9/10. Its correctness lives in environments no CI
+~2,500 lines of platform-conditional shell targeting macOS, Ubuntu 22–25,
+Debian 12, and RHEL/Rocky/AlmaLinux 9/10. Its correctness lives in environments no CI
 job reproduces. **Changes here need real machines, not a green `bash -n`.**
 
 ### macOS ships bash 3.2 — two constructs are unavailable
@@ -277,9 +277,9 @@ then a pointer-bump PR in the main repo picks it up (e.g. #632). Work that
 touches submodule pointers must be serialized — parallel branches collide on
 those two lines.
 
-`web_backend` requires **Python ≥ 3.11** (stdlib `tomllib`), while the core
-package supports ≥ 3.8. The installer refuses to install the React UI below that
-floor (#620). Node must be **≥ 22.13.0** for vite/vitest/jsdom (#633).
+`web_backend` requires **Python ≥ 3.11** (stdlib `tomllib`), the same floor as
+the core package since #716, so the installer builds both venvs with one
+interpreter. Node must be **≥ 22.13.0** for vite/vitest/jsdom (#633).
 
 ---
 

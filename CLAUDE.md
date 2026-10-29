@@ -190,7 +190,7 @@ are in `server/supervisord/`.
 
 ## Code Style
 
-- Python 3.8+ compatible (per `requires-python` in `pyproject.toml`)
+- Python 3.11+ (per `requires-python` in `pyproject.toml`)
 - Follow existing patterns in the file being modified — do not introduce new
   style conventions mid-file
 - Type hints are encouraged on `read()`/`write()`/`transform()` methods; see

@@ -68,7 +68,7 @@ Extensive online documentation, including quick start guides, is also available 
 ## Installation
 
 OpenRVDAS is written primarily in Python 3.[^1] The installation script at [utils/install_openrvdas.sh](utils/install_openrvdas.sh)
-has been tested on CentOS 7 and 8, Ubuntu 18 and 20, Raspbian and MacOS, but it may also work on other systems.
+supports MacOS, Ubuntu 22.04-25.10, Debian 12 (including Raspberry Pi OS bookworm), and RHEL/Rocky/AlmaLinux 9 and 10.
 Please refer to [INSTALL.md](./INSTALL.md) for details.
 
 ## Ship/Organization-Dependent Code
@@ -117,6 +117,4 @@ Creative Commons (CC) Attribution-NonCommercial licence.
   installation.** Please see the [Highcharts Licensing
   FAQ](https://shop.highsoft.com/faq/licensing) for details.
 
-[^1]: Recommended version of Python is 3.6 or higher, but most listener code has been verified
-to run on 3.5 and higher. Server code such as `logger_manager.py` may experience problems on 
-3.5 due to changes in the async module.
+[^1]: OpenRVDAS requires Python 3.11 or newer.

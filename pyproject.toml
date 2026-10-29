@@ -7,7 +7,7 @@ name = "openrvdas"
 dynamic = ["version"]
 description = "Open Research Vessel Data Acquisition System"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.11"
 license = { text = "MIT" }
 authors = [
   { name = "OpenRVDAS Contributors" }
@@ -101,10 +101,10 @@ dev = [
 # No LOWER bound on websockets, deliberately. websockets 14 moved serve() from
 # the legacy implementation to the asyncio one, and CachedDataServer's HTTP
 # routes (/fields, /latest/) only work with the latter - it detects which is
-# installed and skips those routes on older versions. A floor of >=14 would be
-# tempting but would make Python 3.8 installs (Ubuntu 20) unresolvable, since
-# websockets 14 requires Python >=3.9. Those installs get a working
-# CachedDataServer without the HTTP routes, which is the intended trade.
+# installed and skips those routes on older versions. The floor was left off
+# so that Python 3.8 installs (Ubuntu 20), which can't get websockets 14,
+# stayed resolvable. Since requires-python became >=3.11 (#716), a >=14 floor
+# - and dropping that legacy fallback - would be possible.
 # ---------------------------------------------------------------------------
 
 [project.urls]
