@@ -250,5 +250,46 @@ class TestConfigTemplates(unittest.TestCase):
                                   '(misspelled or missing?)'])
 
 
+MODULE_CONFIG = """
+readers: {class: UDPReader, kwargs: {port: 6224}}
+transforms:
+- class: MyTransform
+  <<module>>
+writers: {class: TextFileWriter}
+"""
+
+
+class TestComponentModules(unittest.TestCase):
+    """Components that name a 'module' aren't reported as unknown (#704)."""
+
+    def setUp(self):
+        self.temp_dir = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp_dir.cleanup)
+
+    def validate(self, module_line):
+        path = os.path.join(self.temp_dir.name, 'config.yaml')
+        with open(path, 'w') as f:
+            f.write(MODULE_CONFIG.replace('<<module>>', module_line))
+        is_valid, errors = ConfigValidator().validate_file(path)
+        return is_valid, [str(e) for e in errors]
+
+    def test_unknown_class_without_module(self):
+        self.assertEqual(self.validate(''), (True, [
+            "[WARNING] transforms: Unknown transform class: 'MyTransform'"]))
+
+    def test_module_given(self):
+        """The module isn't imported, so needn't be importable here."""
+        self.assertEqual(self.validate('module: local.my_ship.modules.my_transform'),
+                         (True, []))
+
+    def test_module_not_a_path(self):
+        for module_line in ('module: 42', "module: ''", 'module: [a, b]'):
+            with self.subTest(module_line=module_line):
+                is_valid, errors = self.validate(module_line)
+                self.assertFalse(is_valid)
+                self.assertEqual(len(errors), 1)
+                self.assertIn("'module' must be a module path", errors[0])
+
+
 if __name__ == '__main__':
     unittest.main()
