@@ -128,9 +128,9 @@ discussion of how format types work.</p>
 
                         <div class="pdoc-code codehilite"><pre><span></span><span id="L-1"><a href="#L-1"><span class="linenos">  1</span></a><span class="ch">#!/usr/bin/env python3</span>
 </span><span id="L-2"><a href="#L-2"><span class="linenos">  2</span></a>
-</span><span id="L-3"><a href="#L-3"><span class="linenos">  3</span></a><span class="sd">&quot;&quot;&quot;Custom format definitions for RecordParser.</span>
+</span><span id="L-3"><a href="#L-3"><span class="linenos">  3</span></a><span class="sd">"""Custom format definitions for RecordParser.</span>
 </span><span id="L-4"><a href="#L-4"><span class="linenos">  4</span></a>
-</span><span id="L-5"><a href="#L-5"><span class="linenos">  5</span></a><span class="sd">To use, import the &#39;extra_format_types&#39; dict and pass to the parser:</span>
+</span><span id="L-5"><a href="#L-5"><span class="linenos">  5</span></a><span class="sd">To use, import the 'extra_format_types' dict and pass to the parser:</span>
 </span><span id="L-6"><a href="#L-6"><span class="linenos">  6</span></a>
 </span><span id="L-7"><a href="#L-7"><span class="linenos">  7</span></a><span class="sd">import parse</span>
 </span><span id="L-8"><a href="#L-8"><span class="linenos">  8</span></a><span class="sd">from logger.utils.record_parser_formats import extra_format_types</span>
@@ -148,53 +148,53 @@ discussion of how format types work.</p>
 </span><span id="L-20"><a href="#L-20"><span class="linenos"> 20</span></a><span class="sd">These might be used, for example, in the following pattern where we</span>
 </span><span id="L-21"><a href="#L-21"><span class="linenos"> 21</span></a><span class="sd">might have either, both or neither of speed in knots and/or km/hour.</span>
 </span><span id="L-22"><a href="#L-22"><span class="linenos"> 22</span></a>
-</span><span id="L-23"><a href="#L-23"><span class="linenos"> 23</span></a><span class="sd">  &quot;{SpeedKt:of},N,{SpeedKm:of},K&quot;</span>
+</span><span id="L-23"><a href="#L-23"><span class="linenos"> 23</span></a><span class="sd">  "{SpeedKt:of},N,{SpeedKm:of},K"</span>
 </span><span id="L-24"><a href="#L-24"><span class="linenos"> 24</span></a>
 </span><span id="L-25"><a href="#L-25"><span class="linenos"> 25</span></a><span class="sd">The recognized format types we add are:</span>
 </span><span id="L-26"><a href="#L-26"><span class="linenos"> 26</span></a><span class="sd">  od   = optional integer</span>
 </span><span id="L-27"><a href="#L-27"><span class="linenos"> 27</span></a><span class="sd">  of   = optional generalized float</span>
-</span><span id="L-28"><a href="#L-28"><span class="linenos"> 28</span></a><span class="sd">  og   = optional generalized number - also handles &#39;#VALUE!&#39; as None</span>
+</span><span id="L-28"><a href="#L-28"><span class="linenos"> 28</span></a><span class="sd">  og   = optional generalized number - also handles '#VALUE!' as None</span>
 </span><span id="L-29"><a href="#L-29"><span class="linenos"> 29</span></a><span class="sd">  ow   = optional sequence of letters, numbers, underscores</span>
 </span><span id="L-30"><a href="#L-30"><span class="linenos"> 30</span></a><span class="sd">  os   = optional sequence of any characters - will match everything on line</span>
 </span><span id="L-31"><a href="#L-31"><span class="linenos"> 31</span></a>
 </span><span id="L-32"><a href="#L-32"><span class="linenos"> 32</span></a><span class="sd">  nlat = NMEA-formatted latitude or longitude, converted to decimal degrees</span>
 </span><span id="L-33"><a href="#L-33"><span class="linenos"> 33</span></a>
 </span><span id="L-34"><a href="#L-34"><span class="linenos"> 34</span></a><span class="sd">  nc = any ASCII text that is not a comma</span>
-</span><span id="L-35"><a href="#L-35"><span class="linenos"> 35</span></a><span class="sd">  ns = any ASCII text that is not an asterisk (&quot;star&quot;)</span>
+</span><span id="L-35"><a href="#L-35"><span class="linenos"> 35</span></a><span class="sd">  ns = any ASCII text that is not an asterisk ("star")</span>
 </span><span id="L-36"><a href="#L-36"><span class="linenos"> 36</span></a>
-</span><span id="L-37"><a href="#L-37"><span class="linenos"> 37</span></a><span class="sd">See &#39;Custom Type Conversions&#39; in https://pypi.org/project/parse/ for a</span>
+</span><span id="L-37"><a href="#L-37"><span class="linenos"> 37</span></a><span class="sd">See 'Custom Type Conversions' in https://pypi.org/project/parse/ for a</span>
 </span><span id="L-38"><a href="#L-38"><span class="linenos"> 38</span></a><span class="sd">discussion of how format types work.</span>
 </span><span id="L-39"><a href="#L-39"><span class="linenos"> 39</span></a>
 </span><span id="L-40"><a href="#L-40"><span class="linenos"> 40</span></a><span class="sd">TODO: allow device_type definitions to hand in their own format types.</span>
-</span><span id="L-41"><a href="#L-41"><span class="linenos"> 41</span></a><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="L-41"><a href="#L-41"><span class="linenos"> 41</span></a><span class="sd">"""</span>
 </span><span id="L-42"><a href="#L-42"><span class="linenos"> 42</span></a><span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 </span><span id="L-43"><a href="#L-43"><span class="linenos"> 43</span></a>
 </span><span id="L-44"><a href="#L-44"><span class="linenos"> 44</span></a>
 </span><span id="L-45"><a href="#L-45"><span class="linenos"> 45</span></a><span class="k">def</span><span class="w"> </span><span class="nf">optional_d</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
-</span><span id="L-46"><a href="#L-46"><span class="linenos"> 46</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Method for parsing an &#39;optional&#39; integer.&quot;&quot;&quot;</span>
+</span><span id="L-46"><a href="#L-46"><span class="linenos"> 46</span></a><span class="w">    </span><span class="sd">"""Method for parsing an 'optional' integer."""</span>
 </span><span id="L-47"><a href="#L-47"><span class="linenos"> 47</span></a>    <span class="k">if</span> <span class="n">text</span><span class="p">:</span>
 </span><span id="L-48"><a href="#L-48"><span class="linenos"> 48</span></a>        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
 </span><span id="L-49"><a href="#L-49"><span class="linenos"> 49</span></a>    <span class="k">else</span><span class="p">:</span>
 </span><span id="L-50"><a href="#L-50"><span class="linenos"> 50</span></a>        <span class="k">return</span> <span class="kc">None</span>
 </span><span id="L-51"><a href="#L-51"><span class="linenos"> 51</span></a>
 </span><span id="L-52"><a href="#L-52"><span class="linenos"> 52</span></a>
-</span><span id="L-53"><a href="#L-53"><span class="linenos"> 53</span></a><span class="n">optional_d</span><span class="o">.</span><span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;\s*[-+]?\d*&#39;</span>
+</span><span id="L-53"><a href="#L-53"><span class="linenos"> 53</span></a><span class="n">optional_d</span><span class="o">.</span><span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">'\s*[-+]?\d*'</span>
 </span><span id="L-54"><a href="#L-54"><span class="linenos"> 54</span></a>
 </span><span id="L-55"><a href="#L-55"><span class="linenos"> 55</span></a>
 </span><span id="L-56"><a href="#L-56"><span class="linenos"> 56</span></a><span class="k">def</span><span class="w"> </span><span class="nf">optional_f</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
-</span><span id="L-57"><a href="#L-57"><span class="linenos"> 57</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Method for parsing an &#39;optional&#39; generalized float.&quot;&quot;&quot;</span>
+</span><span id="L-57"><a href="#L-57"><span class="linenos"> 57</span></a><span class="w">    </span><span class="sd">"""Method for parsing an 'optional' generalized float."""</span>
 </span><span id="L-58"><a href="#L-58"><span class="linenos"> 58</span></a>    <span class="k">if</span> <span class="n">text</span><span class="p">:</span>
 </span><span id="L-59"><a href="#L-59"><span class="linenos"> 59</span></a>        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
 </span><span id="L-60"><a href="#L-60"><span class="linenos"> 60</span></a>    <span class="k">else</span><span class="p">:</span>
 </span><span id="L-61"><a href="#L-61"><span class="linenos"> 61</span></a>        <span class="k">return</span> <span class="kc">None</span>
 </span><span id="L-62"><a href="#L-62"><span class="linenos"> 62</span></a>
 </span><span id="L-63"><a href="#L-63"><span class="linenos"> 63</span></a>
-</span><span id="L-64"><a href="#L-64"><span class="linenos"> 64</span></a><span class="n">optional_f</span><span class="o">.</span><span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;(\s*[-+]?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?|)&#39;</span>
+</span><span id="L-64"><a href="#L-64"><span class="linenos"> 64</span></a><span class="n">optional_f</span><span class="o">.</span><span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">'(\s*[-+]?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?|)'</span>
 </span><span id="L-65"><a href="#L-65"><span class="linenos"> 65</span></a>
 </span><span id="L-66"><a href="#L-66"><span class="linenos"> 66</span></a>
 </span><span id="L-67"><a href="#L-67"><span class="linenos"> 67</span></a><span class="k">def</span><span class="w"> </span><span class="nf">optional_g</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
-</span><span id="L-68"><a href="#L-68"><span class="linenos"> 68</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Method for parsing an &#39;optional&#39; generalized number.&quot;&quot;&quot;</span>
-</span><span id="L-69"><a href="#L-69"><span class="linenos"> 69</span></a>    <span class="k">if</span> <span class="n">text</span> <span class="o">==</span> <span class="s1">&#39;#VALUE!&#39;</span><span class="p">:</span>
+</span><span id="L-68"><a href="#L-68"><span class="linenos"> 68</span></a><span class="w">    </span><span class="sd">"""Method for parsing an 'optional' generalized number."""</span>
+</span><span id="L-69"><a href="#L-69"><span class="linenos"> 69</span></a>    <span class="k">if</span> <span class="n">text</span> <span class="o">==</span> <span class="s1">'#VALUE!'</span><span class="p">:</span>
 </span><span id="L-70"><a href="#L-70"><span class="linenos"> 70</span></a>        <span class="k">return</span> <span class="kc">None</span>
 </span><span id="L-71"><a href="#L-71"><span class="linenos"> 71</span></a>    <span class="k">if</span> <span class="n">text</span><span class="p">:</span>
 </span><span id="L-72"><a href="#L-72"><span class="linenos"> 72</span></a>        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
@@ -202,108 +202,108 @@ discussion of how format types work.</p>
 </span><span id="L-74"><a href="#L-74"><span class="linenos"> 74</span></a>        <span class="k">return</span> <span class="kc">None</span>
 </span><span id="L-75"><a href="#L-75"><span class="linenos"> 75</span></a>
 </span><span id="L-76"><a href="#L-76"><span class="linenos"> 76</span></a>
-</span><span id="L-77"><a href="#L-77"><span class="linenos"> 77</span></a><span class="n">optional_g</span><span class="o">.</span><span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;(#VALUE!|\s*[-+]?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?|\d*)&#39;</span>
+</span><span id="L-77"><a href="#L-77"><span class="linenos"> 77</span></a><span class="n">optional_g</span><span class="o">.</span><span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">'(#VALUE!|\s*[-+]?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?|\d*)'</span>
 </span><span id="L-78"><a href="#L-78"><span class="linenos"> 78</span></a>
 </span><span id="L-79"><a href="#L-79"><span class="linenos"> 79</span></a>
 </span><span id="L-80"><a href="#L-80"><span class="linenos"> 80</span></a><span class="k">def</span><span class="w"> </span><span class="nf">optional_w</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
-</span><span id="L-81"><a href="#L-81"><span class="linenos"> 81</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Method for parsing an &#39;optional&#39; letters/numbers/underscore</span>
-</span><span id="L-82"><a href="#L-82"><span class="linenos"> 82</span></a><span class="sd">    string.&quot;&quot;&quot;</span>
+</span><span id="L-81"><a href="#L-81"><span class="linenos"> 81</span></a><span class="w">    </span><span class="sd">"""Method for parsing an 'optional' letters/numbers/underscore</span>
+</span><span id="L-82"><a href="#L-82"><span class="linenos"> 82</span></a><span class="sd">    string."""</span>
 </span><span id="L-83"><a href="#L-83"><span class="linenos"> 83</span></a>    <span class="k">if</span> <span class="n">text</span><span class="p">:</span>
 </span><span id="L-84"><a href="#L-84"><span class="linenos"> 84</span></a>        <span class="k">return</span> <span class="n">text</span>
 </span><span id="L-85"><a href="#L-85"><span class="linenos"> 85</span></a>    <span class="k">else</span><span class="p">:</span>
 </span><span id="L-86"><a href="#L-86"><span class="linenos"> 86</span></a>        <span class="k">return</span> <span class="kc">None</span>
 </span><span id="L-87"><a href="#L-87"><span class="linenos"> 87</span></a>
 </span><span id="L-88"><a href="#L-88"><span class="linenos"> 88</span></a>
-</span><span id="L-89"><a href="#L-89"><span class="linenos"> 89</span></a><span class="n">optional_w</span><span class="o">.</span><span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;\w*&#39;</span>
+</span><span id="L-89"><a href="#L-89"><span class="linenos"> 89</span></a><span class="n">optional_w</span><span class="o">.</span><span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">'\w*'</span>
 </span><span id="L-90"><a href="#L-90"><span class="linenos"> 90</span></a>
 </span><span id="L-91"><a href="#L-91"><span class="linenos"> 91</span></a>
 </span><span id="L-92"><a href="#L-92"><span class="linenos"> 92</span></a><span class="k">def</span><span class="w"> </span><span class="nf">optional_s</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
-</span><span id="L-93"><a href="#L-93"><span class="linenos"> 93</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Method for parsing any sequence of zero or more characters. Will absorb</span>
+</span><span id="L-93"><a href="#L-93"><span class="linenos"> 93</span></a><span class="w">    </span><span class="sd">"""Method for parsing any sequence of zero or more characters. Will absorb</span>
 </span><span id="L-94"><a href="#L-94"><span class="linenos"> 94</span></a><span class="sd">    everything in the string.</span>
-</span><span id="L-95"><a href="#L-95"><span class="linenos"> 95</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="L-95"><a href="#L-95"><span class="linenos"> 95</span></a><span class="sd">    """</span>
 </span><span id="L-96"><a href="#L-96"><span class="linenos"> 96</span></a>    <span class="k">if</span> <span class="n">text</span><span class="p">:</span>
 </span><span id="L-97"><a href="#L-97"><span class="linenos"> 97</span></a>        <span class="k">return</span> <span class="n">text</span>
 </span><span id="L-98"><a href="#L-98"><span class="linenos"> 98</span></a>    <span class="k">else</span><span class="p">:</span>
-</span><span id="L-99"><a href="#L-99"><span class="linenos"> 99</span></a>        <span class="k">return</span> <span class="s1">&#39;&#39;</span>
+</span><span id="L-99"><a href="#L-99"><span class="linenos"> 99</span></a>        <span class="k">return</span> <span class="s1">''</span>
 </span><span id="L-100"><a href="#L-100"><span class="linenos">100</span></a>
 </span><span id="L-101"><a href="#L-101"><span class="linenos">101</span></a>
-</span><span id="L-102"><a href="#L-102"><span class="linenos">102</span></a><span class="n">optional_s</span><span class="o">.</span><span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;.*&#39;</span>
+</span><span id="L-102"><a href="#L-102"><span class="linenos">102</span></a><span class="n">optional_s</span><span class="o">.</span><span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">'.*'</span>
 </span><span id="L-103"><a href="#L-103"><span class="linenos">103</span></a>
 </span><span id="L-104"><a href="#L-104"><span class="linenos">104</span></a>
 </span><span id="L-105"><a href="#L-105"><span class="linenos">105</span></a><span class="k">def</span><span class="w"> </span><span class="nf">nmea_lat_lon</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
-</span><span id="L-106"><a href="#L-106"><span class="linenos">106</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Method for parsing an NMEA latitude or longitude (DDDMM.MMMM) and</span>
+</span><span id="L-106"><a href="#L-106"><span class="linenos">106</span></a><span class="w">    </span><span class="sd">"""Method for parsing an NMEA latitude or longitude (DDDMM.MMMM) and</span>
 </span><span id="L-107"><a href="#L-107"><span class="linenos">107</span></a><span class="sd">    converting it into decimal degrees. Only handles the numeric part, not</span>
-</span><span id="L-108"><a href="#L-108"><span class="linenos">108</span></a><span class="sd">    any E/W or N/S component.&quot;&quot;&quot;</span>
+</span><span id="L-108"><a href="#L-108"><span class="linenos">108</span></a><span class="sd">    any E/W or N/S component."""</span>
 </span><span id="L-109"><a href="#L-109"><span class="linenos">109</span></a>    <span class="k">if</span> <span class="n">text</span><span class="p">:</span>
 </span><span id="L-110"><a href="#L-110"><span class="linenos">110</span></a>        <span class="n">nmea_value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
 </span><span id="L-111"><a href="#L-111"><span class="linenos">111</span></a>        <span class="n">normalized_value</span> <span class="o">=</span> <span class="n">nmea_value</span> <span class="o">/</span> <span class="mi">100</span>
 </span><span id="L-112"><a href="#L-112"><span class="linenos">112</span></a>        <span class="n">degrees</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">normalized_value</span><span class="p">)</span>
 </span><span id="L-113"><a href="#L-113"><span class="linenos">113</span></a>        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">degrees</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mf">180.0</span><span class="p">:</span>
-</span><span id="L-114"><a href="#L-114"><span class="linenos">114</span></a>            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Improper NMEA-style latitude/longitude: &quot;</span><span class="si">%s</span><span class="s1">&quot;&#39;</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+</span><span id="L-114"><a href="#L-114"><span class="linenos">114</span></a>            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">'Improper NMEA-style latitude/longitude: "</span><span class="si">%s</span><span class="s1">"'</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
 </span><span id="L-115"><a href="#L-115"><span class="linenos">115</span></a>            <span class="k">return</span> <span class="kc">None</span>
 </span><span id="L-116"><a href="#L-116"><span class="linenos">116</span></a>        <span class="n">fractional_degrees</span> <span class="o">=</span> <span class="p">(</span><span class="n">normalized_value</span> <span class="o">-</span> <span class="n">degrees</span><span class="p">)</span> <span class="o">/</span> <span class="mf">0.60</span>
 </span><span id="L-117"><a href="#L-117"><span class="linenos">117</span></a>        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">fractional_degrees</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mf">1.0</span><span class="p">:</span>
-</span><span id="L-118"><a href="#L-118"><span class="linenos">118</span></a>            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Improper NMEA-style latitude/longitude: &quot;</span><span class="si">%s</span><span class="s1">&quot;&#39;</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+</span><span id="L-118"><a href="#L-118"><span class="linenos">118</span></a>            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">'Improper NMEA-style latitude/longitude: "</span><span class="si">%s</span><span class="s1">"'</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
 </span><span id="L-119"><a href="#L-119"><span class="linenos">119</span></a>            <span class="k">return</span> <span class="kc">None</span>
 </span><span id="L-120"><a href="#L-120"><span class="linenos">120</span></a>        <span class="k">return</span> <span class="n">degrees</span> <span class="o">+</span> <span class="n">fractional_degrees</span>
 </span><span id="L-121"><a href="#L-121"><span class="linenos">121</span></a>    <span class="k">else</span><span class="p">:</span>
 </span><span id="L-122"><a href="#L-122"><span class="linenos">122</span></a>        <span class="k">return</span> <span class="kc">None</span>
 </span><span id="L-123"><a href="#L-123"><span class="linenos">123</span></a>
 </span><span id="L-124"><a href="#L-124"><span class="linenos">124</span></a>
-</span><span id="L-125"><a href="#L-125"><span class="linenos">125</span></a><span class="n">nmea_lat_lon</span><span class="o">.</span><span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;(\s*[-]?(\d+(\.\d*)?|\.\d+)?|)&#39;</span>
+</span><span id="L-125"><a href="#L-125"><span class="linenos">125</span></a><span class="n">nmea_lat_lon</span><span class="o">.</span><span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">'(\s*[-]?(\d+(\.\d*)?|\.\d+)?|)'</span>
 </span><span id="L-126"><a href="#L-126"><span class="linenos">126</span></a>
 </span><span id="L-127"><a href="#L-127"><span class="linenos">127</span></a>
 </span><span id="L-128"><a href="#L-128"><span class="linenos">128</span></a><span class="k">def</span><span class="w"> </span><span class="nf">nmea_lat_lon_dir</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
-</span><span id="L-129"><a href="#L-129"><span class="linenos">129</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Method for parsing an NMEA latitude or longitude (DDDMM.MMMM) along</span>
+</span><span id="L-129"><a href="#L-129"><span class="linenos">129</span></a><span class="w">    </span><span class="sd">"""Method for parsing an NMEA latitude or longitude (DDDMM.MMMM) along</span>
 </span><span id="L-130"><a href="#L-130"><span class="linenos">130</span></a><span class="sd">    with the hemisphere (E/W/N/S) and converting it into signed decimal</span>
 </span><span id="L-131"><a href="#L-131"><span class="linenos">131</span></a><span class="sd">    degrees. South and West are considered negative, North and East</span>
 </span><span id="L-132"><a href="#L-132"><span class="linenos">132</span></a><span class="sd">    positive.</span>
-</span><span id="L-133"><a href="#L-133"><span class="linenos">133</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="L-133"><a href="#L-133"><span class="linenos">133</span></a><span class="sd">    """</span>
 </span><span id="L-134"><a href="#L-134"><span class="linenos">134</span></a>    <span class="k">if</span> <span class="n">text</span><span class="p">:</span>
-</span><span id="L-135"><a href="#L-135"><span class="linenos">135</span></a>        <span class="n">nmea_str</span><span class="p">,</span> <span class="nb">dir</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span>
+</span><span id="L-135"><a href="#L-135"><span class="linenos">135</span></a>        <span class="n">nmea_str</span><span class="p">,</span> <span class="nb">dir</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">','</span><span class="p">)</span>
 </span><span id="L-136"><a href="#L-136"><span class="linenos">136</span></a>        <span class="n">nmea_value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">nmea_str</span><span class="p">)</span>
 </span><span id="L-137"><a href="#L-137"><span class="linenos">137</span></a>        <span class="n">normalized_value</span> <span class="o">=</span> <span class="n">nmea_value</span> <span class="o">/</span> <span class="mi">100</span>
 </span><span id="L-138"><a href="#L-138"><span class="linenos">138</span></a>        <span class="n">degrees</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">normalized_value</span><span class="p">)</span>
 </span><span id="L-139"><a href="#L-139"><span class="linenos">139</span></a>        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">degrees</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mf">180.0</span><span class="p">:</span>
-</span><span id="L-140"><a href="#L-140"><span class="linenos">140</span></a>            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Improper NMEA-style latitude/longitude: &quot;</span><span class="si">%s</span><span class="s1">&quot;&#39;</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+</span><span id="L-140"><a href="#L-140"><span class="linenos">140</span></a>            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">'Improper NMEA-style latitude/longitude: "</span><span class="si">%s</span><span class="s1">"'</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
 </span><span id="L-141"><a href="#L-141"><span class="linenos">141</span></a>            <span class="k">return</span> <span class="kc">None</span>
 </span><span id="L-142"><a href="#L-142"><span class="linenos">142</span></a>        <span class="n">fractional_degrees</span> <span class="o">=</span> <span class="p">(</span><span class="n">normalized_value</span> <span class="o">-</span> <span class="n">degrees</span><span class="p">)</span> <span class="o">/</span> <span class="mf">0.60</span>
 </span><span id="L-143"><a href="#L-143"><span class="linenos">143</span></a>        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">fractional_degrees</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mf">1.0</span><span class="p">:</span>
-</span><span id="L-144"><a href="#L-144"><span class="linenos">144</span></a>            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Improper NMEA-style latitude/longitude: &quot;</span><span class="si">%s</span><span class="s1">&quot;&#39;</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+</span><span id="L-144"><a href="#L-144"><span class="linenos">144</span></a>            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">'Improper NMEA-style latitude/longitude: "</span><span class="si">%s</span><span class="s1">"'</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
 </span><span id="L-145"><a href="#L-145"><span class="linenos">145</span></a>            <span class="k">return</span> <span class="kc">None</span>
 </span><span id="L-146"><a href="#L-146"><span class="linenos">146</span></a>        <span class="n">decimal_degrees</span> <span class="o">=</span> <span class="n">degrees</span> <span class="o">+</span> <span class="n">fractional_degrees</span>
-</span><span id="L-147"><a href="#L-147"><span class="linenos">147</span></a>        <span class="k">if</span> <span class="nb">dir</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;W&#39;</span><span class="p">,</span> <span class="s1">&#39;S&#39;</span><span class="p">]:</span>
+</span><span id="L-147"><a href="#L-147"><span class="linenos">147</span></a>        <span class="k">if</span> <span class="nb">dir</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">'W'</span><span class="p">,</span> <span class="s1">'S'</span><span class="p">]:</span>
 </span><span id="L-148"><a href="#L-148"><span class="linenos">148</span></a>            <span class="n">decimal_degrees</span> <span class="o">=</span> <span class="o">-</span><span class="n">decimal_degrees</span>
 </span><span id="L-149"><a href="#L-149"><span class="linenos">149</span></a>        <span class="k">return</span> <span class="n">decimal_degrees</span>
 </span><span id="L-150"><a href="#L-150"><span class="linenos">150</span></a>    <span class="k">else</span><span class="p">:</span>
 </span><span id="L-151"><a href="#L-151"><span class="linenos">151</span></a>        <span class="k">return</span> <span class="kc">None</span>
 </span><span id="L-152"><a href="#L-152"><span class="linenos">152</span></a>
 </span><span id="L-153"><a href="#L-153"><span class="linenos">153</span></a>
-</span><span id="L-154"><a href="#L-154"><span class="linenos">154</span></a><span class="n">nmea_lat_lon_dir</span><span class="o">.</span><span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;(\s*(\d+(\.\d*)?|\.\d+),[NEWS]?|)&#39;</span>
+</span><span id="L-154"><a href="#L-154"><span class="linenos">154</span></a><span class="n">nmea_lat_lon_dir</span><span class="o">.</span><span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">'(\s*(\d+(\.\d*)?|\.\d+),[NEWS]?|)'</span>
 </span><span id="L-155"><a href="#L-155"><span class="linenos">155</span></a>
 </span><span id="L-156"><a href="#L-156"><span class="linenos">156</span></a>
 </span><span id="L-157"><a href="#L-157"><span class="linenos">157</span></a><span class="k">def</span><span class="w"> </span><span class="nf">not_comma</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
-</span><span id="L-158"><a href="#L-158"><span class="linenos">158</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Method for parsing a string (or anything) between commas</span>
-</span><span id="L-159"><a href="#L-159"><span class="linenos">159</span></a><span class="sd">    string.&quot;&quot;&quot;</span>
+</span><span id="L-158"><a href="#L-158"><span class="linenos">158</span></a><span class="w">    </span><span class="sd">"""Method for parsing a string (or anything) between commas</span>
+</span><span id="L-159"><a href="#L-159"><span class="linenos">159</span></a><span class="sd">    string."""</span>
 </span><span id="L-160"><a href="#L-160"><span class="linenos">160</span></a>    <span class="k">if</span> <span class="n">text</span><span class="p">:</span>
 </span><span id="L-161"><a href="#L-161"><span class="linenos">161</span></a>        <span class="k">return</span> <span class="n">text</span>
 </span><span id="L-162"><a href="#L-162"><span class="linenos">162</span></a>    <span class="k">else</span><span class="p">:</span>
 </span><span id="L-163"><a href="#L-163"><span class="linenos">163</span></a>        <span class="k">return</span> <span class="kc">None</span>
 </span><span id="L-164"><a href="#L-164"><span class="linenos">164</span></a>
 </span><span id="L-165"><a href="#L-165"><span class="linenos">165</span></a>
-</span><span id="L-166"><a href="#L-166"><span class="linenos">166</span></a><span class="n">not_comma</span><span class="o">.</span><span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;[^,]*&#39;</span>
+</span><span id="L-166"><a href="#L-166"><span class="linenos">166</span></a><span class="n">not_comma</span><span class="o">.</span><span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">'[^,]*'</span>
 </span><span id="L-167"><a href="#L-167"><span class="linenos">167</span></a>
 </span><span id="L-168"><a href="#L-168"><span class="linenos">168</span></a>
 </span><span id="L-169"><a href="#L-169"><span class="linenos">169</span></a><span class="k">def</span><span class="w"> </span><span class="nf">not_star</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
-</span><span id="L-170"><a href="#L-170"><span class="linenos">170</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Method for parsing a string (or anything) terminated by a &quot;*&quot;</span>
-</span><span id="L-171"><a href="#L-171"><span class="linenos">171</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="L-170"><a href="#L-170"><span class="linenos">170</span></a><span class="w">    </span><span class="sd">"""Method for parsing a string (or anything) terminated by a "*"</span>
+</span><span id="L-171"><a href="#L-171"><span class="linenos">171</span></a><span class="sd">    """</span>
 </span><span id="L-172"><a href="#L-172"><span class="linenos">172</span></a>    <span class="k">if</span> <span class="n">text</span><span class="p">:</span>
 </span><span id="L-173"><a href="#L-173"><span class="linenos">173</span></a>        <span class="k">return</span> <span class="n">text</span>
 </span><span id="L-174"><a href="#L-174"><span class="linenos">174</span></a>    <span class="k">else</span><span class="p">:</span>
 </span><span id="L-175"><a href="#L-175"><span class="linenos">175</span></a>        <span class="k">return</span> <span class="kc">None</span>
 </span><span id="L-176"><a href="#L-176"><span class="linenos">176</span></a>
 </span><span id="L-177"><a href="#L-177"><span class="linenos">177</span></a>
-</span><span id="L-178"><a href="#L-178"><span class="linenos">178</span></a><span class="n">not_star</span><span class="o">.</span><span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;[^\*]*&#39;</span>
+</span><span id="L-178"><a href="#L-178"><span class="linenos">178</span></a><span class="n">not_star</span><span class="o">.</span><span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">'[^\*]*'</span>
 </span><span id="L-179"><a href="#L-179"><span class="linenos">179</span></a>
 </span><span id="L-180"><a href="#L-180"><span class="linenos">180</span></a>
 </span><span id="L-181"><a href="#L-181"><span class="linenos">181</span></a><span class="n">extra_format_types</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
@@ -334,7 +334,7 @@ discussion of how format types work.</p>
     </div>
     <a class="headerlink" href="#optional_d"></a>
             <div class="pdoc-code codehilite"><pre><span></span><span id="optional_d-46"><a href="#optional_d-46"><span class="linenos">46</span></a><span class="k">def</span><span class="w"> </span><span class="nf">optional_d</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
-</span><span id="optional_d-47"><a href="#optional_d-47"><span class="linenos">47</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Method for parsing an &#39;optional&#39; integer.&quot;&quot;&quot;</span>
+</span><span id="optional_d-47"><a href="#optional_d-47"><span class="linenos">47</span></a><span class="w">    </span><span class="sd">"""Method for parsing an 'optional' integer."""</span>
 </span><span id="optional_d-48"><a href="#optional_d-48"><span class="linenos">48</span></a>    <span class="k">if</span> <span class="n">text</span><span class="p">:</span>
 </span><span id="optional_d-49"><a href="#optional_d-49"><span class="linenos">49</span></a>        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
 </span><span id="optional_d-50"><a href="#optional_d-50"><span class="linenos">50</span></a>    <span class="k">else</span><span class="p">:</span>
@@ -359,7 +359,7 @@ discussion of how format types work.</p>
     </div>
     <a class="headerlink" href="#optional_f"></a>
             <div class="pdoc-code codehilite"><pre><span></span><span id="optional_f-57"><a href="#optional_f-57"><span class="linenos">57</span></a><span class="k">def</span><span class="w"> </span><span class="nf">optional_f</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
-</span><span id="optional_f-58"><a href="#optional_f-58"><span class="linenos">58</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Method for parsing an &#39;optional&#39; generalized float.&quot;&quot;&quot;</span>
+</span><span id="optional_f-58"><a href="#optional_f-58"><span class="linenos">58</span></a><span class="w">    </span><span class="sd">"""Method for parsing an 'optional' generalized float."""</span>
 </span><span id="optional_f-59"><a href="#optional_f-59"><span class="linenos">59</span></a>    <span class="k">if</span> <span class="n">text</span><span class="p">:</span>
 </span><span id="optional_f-60"><a href="#optional_f-60"><span class="linenos">60</span></a>        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
 </span><span id="optional_f-61"><a href="#optional_f-61"><span class="linenos">61</span></a>    <span class="k">else</span><span class="p">:</span>
@@ -384,8 +384,8 @@ discussion of how format types work.</p>
     </div>
     <a class="headerlink" href="#optional_g"></a>
             <div class="pdoc-code codehilite"><pre><span></span><span id="optional_g-68"><a href="#optional_g-68"><span class="linenos">68</span></a><span class="k">def</span><span class="w"> </span><span class="nf">optional_g</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
-</span><span id="optional_g-69"><a href="#optional_g-69"><span class="linenos">69</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Method for parsing an &#39;optional&#39; generalized number.&quot;&quot;&quot;</span>
-</span><span id="optional_g-70"><a href="#optional_g-70"><span class="linenos">70</span></a>    <span class="k">if</span> <span class="n">text</span> <span class="o">==</span> <span class="s1">&#39;#VALUE!&#39;</span><span class="p">:</span>
+</span><span id="optional_g-69"><a href="#optional_g-69"><span class="linenos">69</span></a><span class="w">    </span><span class="sd">"""Method for parsing an 'optional' generalized number."""</span>
+</span><span id="optional_g-70"><a href="#optional_g-70"><span class="linenos">70</span></a>    <span class="k">if</span> <span class="n">text</span> <span class="o">==</span> <span class="s1">'#VALUE!'</span><span class="p">:</span>
 </span><span id="optional_g-71"><a href="#optional_g-71"><span class="linenos">71</span></a>        <span class="k">return</span> <span class="kc">None</span>
 </span><span id="optional_g-72"><a href="#optional_g-72"><span class="linenos">72</span></a>    <span class="k">if</span> <span class="n">text</span><span class="p">:</span>
 </span><span id="optional_g-73"><a href="#optional_g-73"><span class="linenos">73</span></a>        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
@@ -411,8 +411,8 @@ discussion of how format types work.</p>
     </div>
     <a class="headerlink" href="#optional_w"></a>
             <div class="pdoc-code codehilite"><pre><span></span><span id="optional_w-81"><a href="#optional_w-81"><span class="linenos">81</span></a><span class="k">def</span><span class="w"> </span><span class="nf">optional_w</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
-</span><span id="optional_w-82"><a href="#optional_w-82"><span class="linenos">82</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Method for parsing an &#39;optional&#39; letters/numbers/underscore</span>
-</span><span id="optional_w-83"><a href="#optional_w-83"><span class="linenos">83</span></a><span class="sd">    string.&quot;&quot;&quot;</span>
+</span><span id="optional_w-82"><a href="#optional_w-82"><span class="linenos">82</span></a><span class="w">    </span><span class="sd">"""Method for parsing an 'optional' letters/numbers/underscore</span>
+</span><span id="optional_w-83"><a href="#optional_w-83"><span class="linenos">83</span></a><span class="sd">    string."""</span>
 </span><span id="optional_w-84"><a href="#optional_w-84"><span class="linenos">84</span></a>    <span class="k">if</span> <span class="n">text</span><span class="p">:</span>
 </span><span id="optional_w-85"><a href="#optional_w-85"><span class="linenos">85</span></a>        <span class="k">return</span> <span class="n">text</span>
 </span><span id="optional_w-86"><a href="#optional_w-86"><span class="linenos">86</span></a>    <span class="k">else</span><span class="p">:</span>
@@ -438,13 +438,13 @@ string.</p>
     </div>
     <a class="headerlink" href="#optional_s"></a>
             <div class="pdoc-code codehilite"><pre><span></span><span id="optional_s-93"><a href="#optional_s-93"><span class="linenos"> 93</span></a><span class="k">def</span><span class="w"> </span><span class="nf">optional_s</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
-</span><span id="optional_s-94"><a href="#optional_s-94"><span class="linenos"> 94</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Method for parsing any sequence of zero or more characters. Will absorb</span>
+</span><span id="optional_s-94"><a href="#optional_s-94"><span class="linenos"> 94</span></a><span class="w">    </span><span class="sd">"""Method for parsing any sequence of zero or more characters. Will absorb</span>
 </span><span id="optional_s-95"><a href="#optional_s-95"><span class="linenos"> 95</span></a><span class="sd">    everything in the string.</span>
-</span><span id="optional_s-96"><a href="#optional_s-96"><span class="linenos"> 96</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="optional_s-96"><a href="#optional_s-96"><span class="linenos"> 96</span></a><span class="sd">    """</span>
 </span><span id="optional_s-97"><a href="#optional_s-97"><span class="linenos"> 97</span></a>    <span class="k">if</span> <span class="n">text</span><span class="p">:</span>
 </span><span id="optional_s-98"><a href="#optional_s-98"><span class="linenos"> 98</span></a>        <span class="k">return</span> <span class="n">text</span>
 </span><span id="optional_s-99"><a href="#optional_s-99"><span class="linenos"> 99</span></a>    <span class="k">else</span><span class="p">:</span>
-</span><span id="optional_s-100"><a href="#optional_s-100"><span class="linenos">100</span></a>        <span class="k">return</span> <span class="s1">&#39;&#39;</span>
+</span><span id="optional_s-100"><a href="#optional_s-100"><span class="linenos">100</span></a>        <span class="k">return</span> <span class="s1">''</span>
 </span></pre></div>
 
 
@@ -466,19 +466,19 @@ everything in the string.</p>
     </div>
     <a class="headerlink" href="#nmea_lat_lon"></a>
             <div class="pdoc-code codehilite"><pre><span></span><span id="nmea_lat_lon-106"><a href="#nmea_lat_lon-106"><span class="linenos">106</span></a><span class="k">def</span><span class="w"> </span><span class="nf">nmea_lat_lon</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
-</span><span id="nmea_lat_lon-107"><a href="#nmea_lat_lon-107"><span class="linenos">107</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Method for parsing an NMEA latitude or longitude (DDDMM.MMMM) and</span>
+</span><span id="nmea_lat_lon-107"><a href="#nmea_lat_lon-107"><span class="linenos">107</span></a><span class="w">    </span><span class="sd">"""Method for parsing an NMEA latitude or longitude (DDDMM.MMMM) and</span>
 </span><span id="nmea_lat_lon-108"><a href="#nmea_lat_lon-108"><span class="linenos">108</span></a><span class="sd">    converting it into decimal degrees. Only handles the numeric part, not</span>
-</span><span id="nmea_lat_lon-109"><a href="#nmea_lat_lon-109"><span class="linenos">109</span></a><span class="sd">    any E/W or N/S component.&quot;&quot;&quot;</span>
+</span><span id="nmea_lat_lon-109"><a href="#nmea_lat_lon-109"><span class="linenos">109</span></a><span class="sd">    any E/W or N/S component."""</span>
 </span><span id="nmea_lat_lon-110"><a href="#nmea_lat_lon-110"><span class="linenos">110</span></a>    <span class="k">if</span> <span class="n">text</span><span class="p">:</span>
 </span><span id="nmea_lat_lon-111"><a href="#nmea_lat_lon-111"><span class="linenos">111</span></a>        <span class="n">nmea_value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
 </span><span id="nmea_lat_lon-112"><a href="#nmea_lat_lon-112"><span class="linenos">112</span></a>        <span class="n">normalized_value</span> <span class="o">=</span> <span class="n">nmea_value</span> <span class="o">/</span> <span class="mi">100</span>
 </span><span id="nmea_lat_lon-113"><a href="#nmea_lat_lon-113"><span class="linenos">113</span></a>        <span class="n">degrees</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">normalized_value</span><span class="p">)</span>
 </span><span id="nmea_lat_lon-114"><a href="#nmea_lat_lon-114"><span class="linenos">114</span></a>        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">degrees</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mf">180.0</span><span class="p">:</span>
-</span><span id="nmea_lat_lon-115"><a href="#nmea_lat_lon-115"><span class="linenos">115</span></a>            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Improper NMEA-style latitude/longitude: &quot;</span><span class="si">%s</span><span class="s1">&quot;&#39;</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+</span><span id="nmea_lat_lon-115"><a href="#nmea_lat_lon-115"><span class="linenos">115</span></a>            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">'Improper NMEA-style latitude/longitude: "</span><span class="si">%s</span><span class="s1">"'</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
 </span><span id="nmea_lat_lon-116"><a href="#nmea_lat_lon-116"><span class="linenos">116</span></a>            <span class="k">return</span> <span class="kc">None</span>
 </span><span id="nmea_lat_lon-117"><a href="#nmea_lat_lon-117"><span class="linenos">117</span></a>        <span class="n">fractional_degrees</span> <span class="o">=</span> <span class="p">(</span><span class="n">normalized_value</span> <span class="o">-</span> <span class="n">degrees</span><span class="p">)</span> <span class="o">/</span> <span class="mf">0.60</span>
 </span><span id="nmea_lat_lon-118"><a href="#nmea_lat_lon-118"><span class="linenos">118</span></a>        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">fractional_degrees</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mf">1.0</span><span class="p">:</span>
-</span><span id="nmea_lat_lon-119"><a href="#nmea_lat_lon-119"><span class="linenos">119</span></a>            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Improper NMEA-style latitude/longitude: &quot;</span><span class="si">%s</span><span class="s1">&quot;&#39;</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+</span><span id="nmea_lat_lon-119"><a href="#nmea_lat_lon-119"><span class="linenos">119</span></a>            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">'Improper NMEA-style latitude/longitude: "</span><span class="si">%s</span><span class="s1">"'</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
 </span><span id="nmea_lat_lon-120"><a href="#nmea_lat_lon-120"><span class="linenos">120</span></a>            <span class="k">return</span> <span class="kc">None</span>
 </span><span id="nmea_lat_lon-121"><a href="#nmea_lat_lon-121"><span class="linenos">121</span></a>        <span class="k">return</span> <span class="n">degrees</span> <span class="o">+</span> <span class="n">fractional_degrees</span>
 </span><span id="nmea_lat_lon-122"><a href="#nmea_lat_lon-122"><span class="linenos">122</span></a>    <span class="k">else</span><span class="p">:</span>
@@ -505,25 +505,25 @@ any E/W or N/S component.</p>
     </div>
     <a class="headerlink" href="#nmea_lat_lon_dir"></a>
             <div class="pdoc-code codehilite"><pre><span></span><span id="nmea_lat_lon_dir-129"><a href="#nmea_lat_lon_dir-129"><span class="linenos">129</span></a><span class="k">def</span><span class="w"> </span><span class="nf">nmea_lat_lon_dir</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
-</span><span id="nmea_lat_lon_dir-130"><a href="#nmea_lat_lon_dir-130"><span class="linenos">130</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Method for parsing an NMEA latitude or longitude (DDDMM.MMMM) along</span>
+</span><span id="nmea_lat_lon_dir-130"><a href="#nmea_lat_lon_dir-130"><span class="linenos">130</span></a><span class="w">    </span><span class="sd">"""Method for parsing an NMEA latitude or longitude (DDDMM.MMMM) along</span>
 </span><span id="nmea_lat_lon_dir-131"><a href="#nmea_lat_lon_dir-131"><span class="linenos">131</span></a><span class="sd">    with the hemisphere (E/W/N/S) and converting it into signed decimal</span>
 </span><span id="nmea_lat_lon_dir-132"><a href="#nmea_lat_lon_dir-132"><span class="linenos">132</span></a><span class="sd">    degrees. South and West are considered negative, North and East</span>
 </span><span id="nmea_lat_lon_dir-133"><a href="#nmea_lat_lon_dir-133"><span class="linenos">133</span></a><span class="sd">    positive.</span>
-</span><span id="nmea_lat_lon_dir-134"><a href="#nmea_lat_lon_dir-134"><span class="linenos">134</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="nmea_lat_lon_dir-134"><a href="#nmea_lat_lon_dir-134"><span class="linenos">134</span></a><span class="sd">    """</span>
 </span><span id="nmea_lat_lon_dir-135"><a href="#nmea_lat_lon_dir-135"><span class="linenos">135</span></a>    <span class="k">if</span> <span class="n">text</span><span class="p">:</span>
-</span><span id="nmea_lat_lon_dir-136"><a href="#nmea_lat_lon_dir-136"><span class="linenos">136</span></a>        <span class="n">nmea_str</span><span class="p">,</span> <span class="nb">dir</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span>
+</span><span id="nmea_lat_lon_dir-136"><a href="#nmea_lat_lon_dir-136"><span class="linenos">136</span></a>        <span class="n">nmea_str</span><span class="p">,</span> <span class="nb">dir</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">','</span><span class="p">)</span>
 </span><span id="nmea_lat_lon_dir-137"><a href="#nmea_lat_lon_dir-137"><span class="linenos">137</span></a>        <span class="n">nmea_value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">nmea_str</span><span class="p">)</span>
 </span><span id="nmea_lat_lon_dir-138"><a href="#nmea_lat_lon_dir-138"><span class="linenos">138</span></a>        <span class="n">normalized_value</span> <span class="o">=</span> <span class="n">nmea_value</span> <span class="o">/</span> <span class="mi">100</span>
 </span><span id="nmea_lat_lon_dir-139"><a href="#nmea_lat_lon_dir-139"><span class="linenos">139</span></a>        <span class="n">degrees</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">normalized_value</span><span class="p">)</span>
 </span><span id="nmea_lat_lon_dir-140"><a href="#nmea_lat_lon_dir-140"><span class="linenos">140</span></a>        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">degrees</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mf">180.0</span><span class="p">:</span>
-</span><span id="nmea_lat_lon_dir-141"><a href="#nmea_lat_lon_dir-141"><span class="linenos">141</span></a>            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Improper NMEA-style latitude/longitude: &quot;</span><span class="si">%s</span><span class="s1">&quot;&#39;</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+</span><span id="nmea_lat_lon_dir-141"><a href="#nmea_lat_lon_dir-141"><span class="linenos">141</span></a>            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">'Improper NMEA-style latitude/longitude: "</span><span class="si">%s</span><span class="s1">"'</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
 </span><span id="nmea_lat_lon_dir-142"><a href="#nmea_lat_lon_dir-142"><span class="linenos">142</span></a>            <span class="k">return</span> <span class="kc">None</span>
 </span><span id="nmea_lat_lon_dir-143"><a href="#nmea_lat_lon_dir-143"><span class="linenos">143</span></a>        <span class="n">fractional_degrees</span> <span class="o">=</span> <span class="p">(</span><span class="n">normalized_value</span> <span class="o">-</span> <span class="n">degrees</span><span class="p">)</span> <span class="o">/</span> <span class="mf">0.60</span>
 </span><span id="nmea_lat_lon_dir-144"><a href="#nmea_lat_lon_dir-144"><span class="linenos">144</span></a>        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">fractional_degrees</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mf">1.0</span><span class="p">:</span>
-</span><span id="nmea_lat_lon_dir-145"><a href="#nmea_lat_lon_dir-145"><span class="linenos">145</span></a>            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Improper NMEA-style latitude/longitude: &quot;</span><span class="si">%s</span><span class="s1">&quot;&#39;</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+</span><span id="nmea_lat_lon_dir-145"><a href="#nmea_lat_lon_dir-145"><span class="linenos">145</span></a>            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">'Improper NMEA-style latitude/longitude: "</span><span class="si">%s</span><span class="s1">"'</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
 </span><span id="nmea_lat_lon_dir-146"><a href="#nmea_lat_lon_dir-146"><span class="linenos">146</span></a>            <span class="k">return</span> <span class="kc">None</span>
 </span><span id="nmea_lat_lon_dir-147"><a href="#nmea_lat_lon_dir-147"><span class="linenos">147</span></a>        <span class="n">decimal_degrees</span> <span class="o">=</span> <span class="n">degrees</span> <span class="o">+</span> <span class="n">fractional_degrees</span>
-</span><span id="nmea_lat_lon_dir-148"><a href="#nmea_lat_lon_dir-148"><span class="linenos">148</span></a>        <span class="k">if</span> <span class="nb">dir</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;W&#39;</span><span class="p">,</span> <span class="s1">&#39;S&#39;</span><span class="p">]:</span>
+</span><span id="nmea_lat_lon_dir-148"><a href="#nmea_lat_lon_dir-148"><span class="linenos">148</span></a>        <span class="k">if</span> <span class="nb">dir</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">'W'</span><span class="p">,</span> <span class="s1">'S'</span><span class="p">]:</span>
 </span><span id="nmea_lat_lon_dir-149"><a href="#nmea_lat_lon_dir-149"><span class="linenos">149</span></a>            <span class="n">decimal_degrees</span> <span class="o">=</span> <span class="o">-</span><span class="n">decimal_degrees</span>
 </span><span id="nmea_lat_lon_dir-150"><a href="#nmea_lat_lon_dir-150"><span class="linenos">150</span></a>        <span class="k">return</span> <span class="n">decimal_degrees</span>
 </span><span id="nmea_lat_lon_dir-151"><a href="#nmea_lat_lon_dir-151"><span class="linenos">151</span></a>    <span class="k">else</span><span class="p">:</span>
@@ -551,8 +551,8 @@ positive.</p>
     </div>
     <a class="headerlink" href="#not_comma"></a>
             <div class="pdoc-code codehilite"><pre><span></span><span id="not_comma-158"><a href="#not_comma-158"><span class="linenos">158</span></a><span class="k">def</span><span class="w"> </span><span class="nf">not_comma</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
-</span><span id="not_comma-159"><a href="#not_comma-159"><span class="linenos">159</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Method for parsing a string (or anything) between commas</span>
-</span><span id="not_comma-160"><a href="#not_comma-160"><span class="linenos">160</span></a><span class="sd">    string.&quot;&quot;&quot;</span>
+</span><span id="not_comma-159"><a href="#not_comma-159"><span class="linenos">159</span></a><span class="w">    </span><span class="sd">"""Method for parsing a string (or anything) between commas</span>
+</span><span id="not_comma-160"><a href="#not_comma-160"><span class="linenos">160</span></a><span class="sd">    string."""</span>
 </span><span id="not_comma-161"><a href="#not_comma-161"><span class="linenos">161</span></a>    <span class="k">if</span> <span class="n">text</span><span class="p">:</span>
 </span><span id="not_comma-162"><a href="#not_comma-162"><span class="linenos">162</span></a>        <span class="k">return</span> <span class="n">text</span>
 </span><span id="not_comma-163"><a href="#not_comma-163"><span class="linenos">163</span></a>    <span class="k">else</span><span class="p">:</span>
@@ -578,8 +578,8 @@ string.</p>
     </div>
     <a class="headerlink" href="#not_star"></a>
             <div class="pdoc-code codehilite"><pre><span></span><span id="not_star-170"><a href="#not_star-170"><span class="linenos">170</span></a><span class="k">def</span><span class="w"> </span><span class="nf">not_star</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
-</span><span id="not_star-171"><a href="#not_star-171"><span class="linenos">171</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Method for parsing a string (or anything) terminated by a &quot;*&quot;</span>
-</span><span id="not_star-172"><a href="#not_star-172"><span class="linenos">172</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="not_star-171"><a href="#not_star-171"><span class="linenos">171</span></a><span class="w">    </span><span class="sd">"""Method for parsing a string (or anything) terminated by a "*"</span>
+</span><span id="not_star-172"><a href="#not_star-172"><span class="linenos">172</span></a><span class="sd">    """</span>
 </span><span id="not_star-173"><a href="#not_star-173"><span class="linenos">173</span></a>    <span class="k">if</span> <span class="n">text</span><span class="p">:</span>
 </span><span id="not_star-174"><a href="#not_star-174"><span class="linenos">174</span></a>        <span class="k">return</span> <span class="n">text</span>
 </span><span id="not_star-175"><a href="#not_star-175"><span class="linenos">175</span></a>    <span class="k">else</span><span class="p">:</span>
