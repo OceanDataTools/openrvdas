@@ -85,10 +85,21 @@ class TestInterpolationTransform(unittest.TestCase):
         with self.assertRaises(ValueError):
             InterpolationTransform([{'algorithm': 'boxcar_average'}], 10, 60)
 
-        # List with dict but sources not a list
-        with self.assertRaises(ValueError):
-            InterpolationTransform([{'sources': 'Temperature',
+        # List with dict but sources not a list; error should name the
+        # offending sources value, e.g. an unexpanded template variable
+        with self.assertRaisesRegex(ValueError, "<class 'str'>: '<<direction_fields>>'"):
+            InterpolationTransform([{'sources': '<<direction_fields>>',
                                      'algorithm': 'boxcar_average'}], 10, 60)
+
+    ############################
+    def test_empty_sources_list(self):
+        """An empty sources list in list form is allowed and yields no fields."""
+        transform = InterpolationTransform(
+            [{'sources': [], 'algorithm': 'boxcar_average', 'window': 10,
+              'result_prefix': 'Avg'},
+             {'sources': ['WindDir'], 'algorithm': 'polar_average', 'window': 10,
+              'result_prefix': 'Avg'}], 10, 60)
+        self.assertEqual(list(transform.field_spec), ['AvgWindDir'])
 
     ############################
     def test_boxcar_average_transform(self):

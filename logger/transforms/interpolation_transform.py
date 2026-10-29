@@ -179,7 +179,7 @@ class InterpolationTransform(DerivedDataTransform):
 
                 if not isinstance(sources, list):
                     raise ValueError('InterpolationTransform: sources for field spec must be '
-                                     f'a list ; found {type(spec_instance)}')
+                                     f'a list; found {type(sources)}: {sources!r}')
 
                 # Expand source list into a traditional field_spec. Keys other
                 # than these (e.g. min_count) are options for the algorithm.
