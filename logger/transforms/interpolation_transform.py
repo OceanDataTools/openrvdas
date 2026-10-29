@@ -607,6 +607,10 @@ def interpolate(algorithm, values, timestamp, now):
             angle = degrees(atan2(x_mean, y_mean))
             if angle < 0:
                 angle += 360
+            # A tiny negative angle (rounding error when angles cancel
+            # around north) plus 360 rounds to exactly 360.0
+            if angle >= 360:
+                angle -= 360
             return angle
         except TypeError:
             logging.error('Non-numeric value in interpolation list: %s', vals_to_average)
