@@ -417,9 +417,21 @@ class ConfigValidator:
                 continue
 
             class_name = comp['class']
+            module_name = comp.get('module')
 
-            # Check if it's a known class (skip if it contains variables)
-            if '<<' not in str(class_name) and class_name not in known_classes:
+            # A 'module' says where to find a class that isn't built in, e.g.
+            # a ship-specific component under local/. Don't import it here:
+            # that would run its code, and it may not be importable on the
+            # machine doing the validating. Just check it's a module path.
+            if module_name is not None:
+                if not isinstance(module_name, str) or not module_name.strip():
+                    self.errors.append(ValidationError(
+                        f"'module' must be a module path, e.g. "
+                        f"local.my_ship.modules.my_{component_type}; found {module_name!r}",
+                        path=comp_path))
+
+            # Otherwise check it's a known class (skip if it contains variables)
+            elif '<<' not in str(class_name) and class_name not in known_classes:
                 self.errors.append(ValidationError(
                     f"Unknown {component_type} class: '{class_name}'",
                     path=comp_path,
