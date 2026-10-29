@@ -232,6 +232,60 @@ class TestCachedDataServer(unittest.TestCase):
         time.sleep(1)
 
     ############################
+    def test_wildcard_back_seconds(self):
+        """Wildcard subscriptions should respect 'seconds' of 0 and -1 rather
+        than sending all cached back data for every matching field."""
+        WEBSOCKET_PORT = 8772
+        cds = CachedDataServer(port=WEBSOCKET_PORT)
+        now = time.time()
+        for i in range(10):
+            cds.cache_record({'timestamp': now - 10 + i,
+                              'fields': {'back_field_1': i,
+                                         'back_field_2': i,
+                                         'other_field': i}})
+
+        async def subscribe_and_ready(fields):
+            async with websockets.connect('ws://localhost:%d' % WEBSOCKET_PORT) as ws:
+                await ws.send(json.dumps({'type': 'subscribe', 'interval': 0.2,
+                                          'fields': fields}))
+                result = await ws.recv()
+                logging.info('got subscribe result: %s', result)
+
+                await ws.send(json.dumps({'type': 'ready'}))
+                result = await ws.recv()
+                logging.info('got ready 1 result: %s', result)
+                first = json.loads(result)['data']
+
+                cds.cache_record({'timestamp': time.time(),
+                                  'fields': {'back_field_1': 'new_1',
+                                             'other_field': 'new_other'}})
+                await ws.send(json.dumps({'type': 'ready'}))
+                result = await ws.recv()
+                logging.info('got ready 2 result: %s', result)
+                second = json.loads(result)['data']
+                return first, second
+
+        async def run_test():
+            await asyncio.sleep(0.1)
+
+            # seconds == 0: no back data, then only new values
+            first, second = await subscribe_and_ready({'back_field_*': {'seconds': 0}})
+            self.assertEqual(first, {})
+            self.assertEqual(list(second), ['back_field_1'])
+            self.assertEqual([v for ts, v in second['back_field_1']], ['new_1'])
+
+            # seconds == -1: most recent value only, then only new values
+            first, second = await subscribe_and_ready({'back_field_*': {'seconds': -1}})
+            self.assertEqual(sorted(first), ['back_field_1', 'back_field_2'])
+            self.assertEqual([v for ts, v in first['back_field_1']], ['new_1'])
+            self.assertEqual([v for ts, v in first['back_field_2']], [9])
+            self.assertEqual(list(second), ['back_field_1'])
+            self.assertEqual([v for ts, v in second['back_field_1']], ['new_1'])
+
+        asyncio.new_event_loop().run_until_complete(run_test())
+        time.sleep(1)
+
+    ############################
     def test_disk_cache(self):
         WEBSOCKET_PORT = 8770
         tmpdir = tempfile.TemporaryDirectory()
@@ -333,7 +387,6 @@ class TestCachedDataServer(unittest.TestCase):
 
         asyncio.new_event_loop().run_until_complete(run_test())
         time.sleep(1)
-
 
     ############################
     @unittest.skipUnless(_WEBSOCKETS_HAS_HTTP11, 'requires websockets >= 12')
