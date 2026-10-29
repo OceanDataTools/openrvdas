@@ -1,7 +1,8 @@
 # OpenRVDAS Installation Guide
-At the time of this writing OpenRVDAS has been built and tested against MacOS X, CentOS 7-9, Rocky 8-9, Ubuntu 18-23
-and Raspbian operating systems. It may be possible to build against other Linux-based operating systems, and guides
-will be added here as they are verified and documented.
+OpenRVDAS requires Python 3.11 or newer. The installation script supports MacOS, Ubuntu 22.04-25.10, Debian 12
+(including Raspberry Pi OS bookworm) and RHEL/Rocky/AlmaLinux 9 and 10; on Ubuntu 22.04 it installs Python 3.11 from
+the deadsnakes PPA, and on RHEL-family 9 from AppStream. It may be possible to build against other Linux-based
+operating systems, and guides will be added here as they are verified and documented.
 
 You will need to be able to run the ``sudo`` command. The script handles privilege escalation internally — do **not** run it with ``sudo`` directly.
 

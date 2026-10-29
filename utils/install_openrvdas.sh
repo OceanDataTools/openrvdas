@@ -213,6 +213,27 @@ function get_os_type {
 
 ###########################################################################
 ###########################################################################
+# OpenRVDAS requires Python 3.11+ (requires-python in pyproject.toml).
+# Refuse up front the platforms that have no packaged Python 3.11, rather
+# than failing partway through the install. Ubuntu 18/20/21 also cover
+# Debian 10/11 and Raspbian, which get_os_type maps onto them. RHEL 8
+# could install python3.11 from AppStream, but its SQLite 3.26 is too old
+# for any Django 5.x. See issue #716.
+function check_os_supported {
+    if { [ "$OS_TYPE" == 'Ubuntu' ] && \
+         { [ "$OS_VERSION" == '18' ] || [ "$OS_VERSION" == '20' ] || [ "$OS_VERSION" == '21' ]; }; } || \
+       { [ "$OS_TYPE" == 'CentOS' ] && \
+         { [ "$OS_VERSION" == '7' ] || [ "$OS_VERSION" == '8' ]; }; }; then
+        OS_NAME=$(grep '^PRETTY_NAME=' /etc/os-release 2> /dev/null | cut -d= -f2 | tr -d '"')
+        echo "Sorry - OpenRVDAS requires Python 3.11 or newer, which ${OS_NAME:-this OS} doesn't provide."
+        echo "Supported Linux versions are Ubuntu 22-25, Debian 12 (including Raspberry"
+        echo "Pi OS bookworm), Linux Mint 22, and RHEL/Rocky/AlmaLinux 9 and 10."
+        exit_gracefully
+    fi
+}
+
+###########################################################################
+###########################################################################
 function verify_existing_filename {
     FILENAME_PROMPT=$1
     EXISTING_FILENAME=$2
@@ -650,10 +671,6 @@ function install_prereqs {
 
     # CentOS/RHEL
     elif [ $OS_TYPE == 'CentOS' ]; then
-        if [ $OS_VERSION == '7' ]; then
-            sudo yum install -y deltarpm
-        fi
-
         # Check if EPEL repository is installed by trying to install supervisor
         if dnf list available supervisor --enablerepo=epel &> /dev/null; then
             echo "EPEL is already available - skipping installation."
@@ -676,47 +693,18 @@ function install_prereqs {
             #sqlite-devel \
             #python3 python3-devel python3-pip
 
-        # Django 3+ requires a more recent version of sqlite3 than is
-        # included in CentOS 7. So instead of yum installing python3 and
-        # sqlite3, we build them from scratch. Painfully slow, but hey -
-        # isn't that par for CentOS builds?
-        export LD_LIBRARY_PATH=/usr/local/lib
-        export LD_RUN_PATH=/usr/local/lib
-
-        # Check if correct SQLite3 is installed
-        SQLITE_VERSION=3320300
-        #required_version="3.32.3"
-
         if ! command -v sqlite3 &> /dev/null
         then
             echo "SQLite3 is not installed. Installing ..."
             sudo yum install -y sqlite sqlite-devel
         fi
 
-        if [ $OS_VERSION == '7' ] || [ $OS_VERSION == '8' ]; then
-            # Build Python, too, if we don't have right version
-            PYTHON_VERSION='3.8.3'
-            if [ "`/usr/local/bin/python3 --version`" == "Python $PYTHON_VERSION" ]; then
-                echo Already have appropriate version of Python3
-            else
-                OPENRVDAS_INSTALL_TMP_DIR=openrvdas_install_tmp
-                mkdir $OPENRVDAS_INSTALL_TMP_DIR
-                pushd $OPENRVDAS_INSTALL_TMP_DIR
-                yum install -y make
-                #cd /var/tmp    # Nope - some systems bar executing anything in /tmp
-                PYTHON_BASE=Python-${PYTHON_VERSION}
-                PYTHON_TGZ=${PYTHON_BASE}.tgz
-                [ -e $PYTHON_TGZ ] || wget https://www.python.org/ftp/python/${PYTHON_VERSION}/${PYTHON_TGZ}
-                tar xvf ${PYTHON_TGZ}
-                cd ${PYTHON_BASE}
-                sh ./configure # --enable-optimizations
-                sudo make altinstall
-
-                sudo ln -s -f /usr/local/bin/python3.8 /usr/local/bin/python3
-                sudo ln -s -f /usr/local/bin/pip3.8 /usr/local/bin/pip3
-                popd
-            fi
-        elif [ $OS_VERSION == '8' ] || [ $OS_VERSION == '9' ] || [ $OS_VERSION == '10' ]; then
+        # OpenRVDAS requires Python 3.11+. RHEL 9's python3 is 3.9, so
+        # install AppStream's python3.11 alongside it; RHEL 10's python3 is
+        # 3.12. find_python picks whichever is suitable.
+        if [ "$OS_VERSION" == '9' ]; then
+            sudo yum install -y python3.11 python3.11-devel
+        elif [ "$OS_VERSION" == '10' ]; then
             sudo yum install -y python3 python3-devel
         else
             echo "Install error: unknown OS_VERSION should have been caught earlier?!?"
@@ -736,7 +724,54 @@ function install_prereqs {
         sudo DEBIAN_FRONTEND=noninteractive apt install -y git nginx libreadline-dev \
             python3-dev python3-pip python3-venv libsqlite3-dev \
             openssh-server supervisor libssl-dev
+
+        # OpenRVDAS requires Python 3.11+. Ubuntu 22.04's python3 is 3.10,
+        # so install python3.11 from the deadsnakes PPA alongside it. (Every
+        # other platform check_os_supported allows has 3.11+ already.)
+        if ! python3 -c 'import sys; sys.exit(0 if sys.version_info >= (3, 11) else 1)'; then
+            echo "System python3 is $(python3 --version 2>&1); installing python3.11 from ppa:deadsnakes/ppa"
+            sudo DEBIAN_FRONTEND=noninteractive apt install -y software-properties-common
+            sudo add-apt-repository -y ppa:deadsnakes/ppa
+            sudo apt-get update
+            sudo DEBIAN_FRONTEND=noninteractive apt install -y \
+                python3.11 python3.11-venv python3.11-dev
+        fi
     fi
+}
+
+###########################################################################
+###########################################################################
+# Set PYTHON_BIN to the interpreter both virtual environments (the main one
+# and the React UI's backend) are built with. OpenRVDAS requires Python
+# 3.11+ (requires-python in pyproject.toml); install_prereqs makes sure
+# one is installed.
+function find_python {
+    # On macOS we install python@3.12 explicitly (uWSGI doesn't support 3.14+).
+    # python@3.12 is keg-only in Homebrew so it is not in PATH; use the opt path.
+    # Derive the Homebrew prefix inline in case install_prereqs hasn't set it.
+    if [ "${OS_TYPE:-}" == 'MacOS' ]; then
+        local brew_prefix="${HOMEBREW_PREFIX:-$( [ "$(uname -m)" = "arm64" ] && echo /opt/homebrew || echo /usr/local )}"
+        PYTHON_BIN="${brew_prefix}/opt/python@3.12/bin/python3.12"
+        if [ ! -x "$PYTHON_BIN" ]; then
+            echo "ERROR: python@3.12 not found at $PYTHON_BIN. Please run: brew install python@3.12"
+            exit_gracefully
+        fi
+        return
+    fi
+
+    # Prefer the system python3 if it's new enough, then the python3.11
+    # install_prereqs adds (deadsnakes on Ubuntu 22.04, AppStream on RHEL 9).
+    local candidate
+    for candidate in python3 python3.11 python3.12; do
+        if command -v "$candidate" > /dev/null && \
+           "$candidate" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 11) else 1)' 2> /dev/null; then
+            PYTHON_BIN=$(command -v "$candidate")
+            return
+        fi
+    done
+    echo "ERROR: OpenRVDAS requires Python 3.11 or newer, but found none;"
+    echo "python3 is $(python3 --version 2>&1)."
+    exit_gracefully
 }
 
 ###########################################################################
@@ -828,17 +863,7 @@ function setup_python_packages {
 
     echo "Creating virtual environment"
     cd $INSTALL_ROOT/openrvdas
-    # On macOS we install python@3.12 explicitly (uWSGI doesn't support 3.14+).
-    # python@3.12 is keg-only in Homebrew so it is not in PATH; use the opt path.
-    if [ "${OS_TYPE:-}" == 'MacOS' ]; then
-        PYTHON_BIN="${HOMEBREW_PREFIX}/opt/python@3.12/bin/python3.12"
-        if [ ! -x "$PYTHON_BIN" ]; then
-            echo "ERROR: python@3.12 not found at $PYTHON_BIN. Please run: brew install python@3.12"
-            exit_gracefully
-        fi
-    else
-        PYTHON_BIN=python3
-    fi
+    find_python
 
     # If an existing venv was built with a different Python, recreate it.
     if [ -d "$VENV_PATH" ]; then
@@ -1288,45 +1313,17 @@ ENVDEFAULTS
     fi
 
     echo "Creating web backend virtual environment..."
-    # Use the same explicit Python 3.12 binary as the main venv on macOS;
-    # bare `python3` may resolve to a different version that won't produce
-    # the python3.12 symlink downstream code expects.
-    # Derive HOMEBREW_PREFIX inline in case this function runs before
-    # install_prereqs has set it in the environment.
-    if [ "${OS_TYPE:-}" == 'MacOS' ]; then
-        _BREW_PFX="${HOMEBREW_PREFIX:-$( [ "$(uname -m)" = "arm64" ] && echo /opt/homebrew || echo /usr/local )}"
-        BACKEND_PYTHON="${_BREW_PFX}/opt/python@3.12/bin/python3.12"
-    else
-        # BACKEND_PYTHON may be pre-set in the environment (e.g. to a
-        # deadsnakes/EPEL python3.11+ interpreter) to override the bare
-        # `python3` default - see the version check just below.
-        BACKEND_PYTHON="${BACKEND_PYTHON:-python3}"
-    fi
-
-    # web_backend/pyproject.toml requires Python 3.11+ (its app/main.py uses
-    # the stdlib tomllib, which doesn't exist before 3.11); bare `python3` on
-    # non-macOS targets isn't guaranteed to meet that. Fail fast here with a
-    # clear error rather than letting the venv build "succeed" and the
-    # backend then crash on import at startup.
-    if ! "$BACKEND_PYTHON" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 11) else 1)' 2>/dev/null; then
-        BACKEND_PYTHON_VERSION="$("$BACKEND_PYTHON" --version 2>&1)"
-        echo "ERROR: The React/FastAPI UI (UI_TYPE=react) requires Python 3.11 or newer,"
-        echo "but '$BACKEND_PYTHON' resolves to: $BACKEND_PYTHON_VERSION"
-        echo
-        echo "Install a Python 3.11+ interpreter and re-run with BACKEND_PYTHON set to it - e.g.:"
-        echo "  Ubuntu: sudo add-apt-repository ppa:deadsnakes/ppa && sudo apt install python3.11 python3.11-venv python3.11-dev"
-        echo "          BACKEND_PYTHON=python3.11 bash utils/install_openrvdas.sh"
-        echo "  RHEL/Rocky/Alma: sudo dnf install python3.11 python3.11-devel"
-        echo "          BACKEND_PYTHON=python3.11 bash utils/install_openrvdas.sh"
-        echo "or choose UI_TYPE=django/none instead."
-        exit_gracefully
-    fi
+    # Use the same interpreter as the main venv. find_python guarantees
+    # 3.11+, which web_backend/pyproject.toml also requires (its app/main.py
+    # uses the stdlib tomllib, new in 3.11).
+    find_python
+    BACKEND_PYTHON="$PYTHON_BIN"
 
     # Remove a pre-existing venv that was built with a different Python;
     # trying to update it in-place produces "No such file or directory:
     # .../python3.12" (or whichever interpreter it was originally built
     # with). Compare reported versions rather than a hardcoded "3.12"
-    # string, since BACKEND_PYTHON may be a non-macOS 3.11+ override.
+    # string, since BACKEND_PYTHON differs by platform.
     if [ -d "$BACKEND_VENV" ]; then
         VENV_PYTHON="$BACKEND_VENV/bin/python3"
         if [ ! -x "$VENV_PYTHON" ] || [ "$("$VENV_PYTHON" --version 2>&1)" != "$("$BACKEND_PYTHON" --version 2>&1)" ]; then
@@ -2007,6 +2004,7 @@ function setup_ufw {
 
 # Set OS_TYPE to either MacOS, CentOS or Ubuntu
 get_os_type
+check_os_supported
 
 # On MacOS, Homebrew cannot run as root, so the script must not be
 # invoked as root or via sudo.
