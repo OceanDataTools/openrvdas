@@ -1,0 +1,35 @@
+################################################################################
+# NMEA 0183 device type: NMEA_AIS (AIS Receiver)
+#
+# Part of the NMEA 0183 library: logger/devices/NMEA_0183.yaml includes every
+# file in this directory. See README.md here for the format types used,
+# talker IDs and proprietary sentence prefixes.
+################################################################################
+
+######################################
+# AIS Receiver
+######################################
+NMEA_AIS:
+  category: "device_type"
+  description: "AIS (Automatic Identification System) receiver sentences"
+
+  format:
+    # AIS VHF Data Link Message (received from other vessels)
+    AIVDM: "!AIVDM,{NumMessages:d},{MessageNum:d},{SeqID:od},{Channel:ow},{Payload:nc},{FillBits:d}*{CheckSum:x}"
+
+    # AIS VHF Data Link Own-vessel (own ship data)
+    AIVDO: "!AIVDO,{NumMessages:d},{MessageNum:d},{SeqID:od},{Channel:ow},{Payload:nc},{FillBits:d}*{CheckSum:x}"
+
+  fields:
+    NumMessages:
+      description: "Total number of sentences needed to transfer message"
+    MessageNum:
+      description: "Message sentence number (1-9)"
+    SeqID:
+      description: "Sequential message identifier for multi-sentence messages"
+    Channel:
+      description: "AIS channel (A or B)"
+    Payload:
+      description: "Encapsulated ITU-R M.1371 binary data (6-bit ASCII armored)"
+    FillBits:
+      description: "Number of fill bits (0-5)"

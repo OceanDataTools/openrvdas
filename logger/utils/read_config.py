@@ -167,10 +167,14 @@ def expand_wildcards(include_pattern: str, base_dir: str) -> List[str]:
 ###################
 def expand_includes(input_dict: dict,
                     errors: Optional[List[str]] = None,
-                    files_read: Optional[List[str]] = None) -> Dict[str, Any]:
+                    files_read: Optional[List[str]] = None,
+                    _including: frozenset = frozenset()) -> Dict[str, Any]:
     """
     Recursively process any included YAML files and merge them into the top
-    level.
+    level. An included file's own includes are expanded too, so a file may
+    consist of nothing but includes (as logger/devices/NMEA_0183.yaml does).
+    Nested includes are resolved like top-level ones: relative to the project
+    directory, unless the included file sets its own 'includes_base_dir'.
 
     Args:
         input_dict (dict): The input dictionary optionally containing
@@ -179,6 +183,8 @@ def expand_includes(input_dict: dict,
                 included files into; see read_config()
         files_read: Optional list to record the included files read into;
                 see read_config()
+        _including: Absolute paths of the files whose includes are being
+                expanded, to detect a file that includes itself. Internal.
 
     Returns:
         Dictionary containing the merged YAML content or empty dict on error
@@ -212,13 +218,20 @@ def expand_includes(input_dict: dict,
 
             # Process each matching file
             for include_path in matching_files:
-                # Use the directory of the include_path as the base_dir for
-                # nested includes
                 file_path = os.path.join(base_dir, include_path)
+                abs_path = os.path.abspath(file_path)
+                if abs_path in _including:
+                    _report_error(f'Include cycle: "{file_path}" includes itself, '
+                                  'directly or through other files; skipping it.',
+                                  errors)
+                    continue
 
-                # Load the included file
+                # Load the included file, and expand its own includes
                 included_content = read_config(file_path, errors=errors,
                                                files_read=files_read)
+                included_content = expand_includes(
+                    included_content, errors=errors, files_read=files_read,
+                    _including=_including | {abs_path})
 
                 # Merge with current data
                 included_data = deep_merge(included_data, included_content)

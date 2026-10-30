@@ -330,6 +330,38 @@ nested:
         self.assertEqual(config.get('from_included'), 'value')
         self.assertEqual(config.get('main_config'), 'value')
 
+    def test_nested_includes(self):
+        """An included file's own includes are expanded too, so a file can
+        consist of nothing but includes, as NMEA_0183.yaml does (#728)."""
+        leaf = self.create_yaml_file('leaf.yaml', 'leaf_key: leaf_value\n')
+        stub = self.create_yaml_file(
+            'stub.yaml', f'includes_base_dir: {self.base_dir}\n'
+                         'includes:\n  - leaf.yaml\n')
+        files_read = []
+        result = read_config.expand_includes(
+            {'includes_base_dir': self.base_dir, 'includes': ['stub.yaml'],
+             'top_key': 'top_value'}, files_read=files_read)
+        self.assertEqual(result['leaf_key'], 'leaf_value')
+        self.assertEqual(result['top_key'], 'top_value')
+        self.assertEqual(files_read, [stub, leaf])
+
+    def test_include_cycle(self):
+        """A file that includes itself, directly or not, is reported and
+        skipped rather than recursing forever."""
+        self.create_yaml_file('a.yaml', f'includes_base_dir: {self.base_dir}\n'
+                                        'includes:\n  - b.yaml\na_key: a\n')
+        self.create_yaml_file('b.yaml', f'includes_base_dir: {self.base_dir}\n'
+                                        'includes:\n  - a.yaml\nb_key: b\n')
+        errors = []
+        with patch('logging.error'):
+            result = read_config.expand_includes(
+                {'includes_base_dir': self.base_dir, 'includes': ['a.yaml']},
+                errors=errors)
+        self.assertEqual((result['a_key'], result['b_key']), ('a', 'b'))
+        self.assertEqual(len(errors), 1)
+        self.assertIn('Include cycle', errors[0])
+        self.assertIn('a.yaml', errors[0])
+
 
 class TestExpandLoggerConfigs(unittest.TestCase):
     def setUp(self):

@@ -1,0 +1,127 @@
+################################################################################
+# NMEA 0183 device type: NMEA_Speed (Speed Log / ADCP)
+#
+# Part of the NMEA 0183 library: logger/devices/NMEA_0183.yaml includes every
+# file in this directory. See README.md here for the format types used,
+# talker IDs and proprietary sentence prefixes.
+################################################################################
+
+######################################
+# Speed Log / ADCP
+######################################
+NMEA_Speed:
+  category: "device_type"
+  description: "Speed log, Doppler log, ADCP - standard and proprietary"
+
+  format:
+    ########################################
+    # Standard NMEA Sentences
+    ########################################
+
+    # Water Speed and Heading
+    VHW: "${:2l}VHW,{HeadingTrue:of},T,{HeadingMag:of},M,{SpeedKt:of},N,{SpeedKm:of},K*{CheckSum:x}"
+
+    # Distance Traveled through Water
+    VLW:
+      - "${:2l}VLW,{TotalDistance:of},N,{TripDistance:of},N*{CheckSum:x}"
+      - "${:2l}VLW,{TotalDistance:of},N,{TripDistance:of},N,{TotalGroundDistance:of},N,{TripGroundDistance:of},N*{CheckSum:x}"
+
+    # Dual Ground/Water Speed
+    VBW: "${:2l}VBW,{WaterSpeedLong:of},{WaterSpeedTrans:of},{WaterStatus:ow},{GroundSpeedLong:of},{GroundSpeedTrans:of},{GroundStatus:ow}*{CheckSum:x}"
+
+    # Set and Drift (current)
+    VDR: "${:2l}VDR,{DirTrue:of},T,{DirMag:of},M,{Speed:of},N*{CheckSum:x}"
+
+    ########################################
+    # Proprietary: RD Instruments ADCP ($PRD, $PUH)
+    ########################################
+
+    # PRDID - ADCP internal sensors (pitch, roll, heading)
+    PRDID: "$PRDID,{Pitch:of},{Roll:of},{Heading:of}*{CheckSum:x}"
+
+    # PUHAW - RDI velocity format
+    PUHAW: "$PUHAW,UVH,{VelocityE:of},{VelocityN:of},{HeadingT:of}"
+
+    # VDVBW - ADCP bottom track (Teledyne format)
+    VDVBW: "$VDVBW,{LongWaterSpeed:of},{TransWaterSpeed:of},{WaterStatus:ow},{LongGroundSpeed:of},{TransGroundSpeed:of},{GroundStatus:ow}*{CheckSum:x}"
+
+  fields:
+    HeadingTrue:
+      units: "degrees"
+      description: "Heading true"
+    HeadingMag:
+      units: "degrees"
+      description: "Heading magnetic"
+    Heading:
+      units: "degrees"
+      description: "Heading from ADCP"
+    HeadingT:
+      units: "degrees"
+      description: "True heading"
+    SpeedKt:
+      units: "knots"
+      description: "Speed through water in knots"
+    SpeedKm:
+      units: "km/hour"
+      description: "Speed through water in km/hour"
+    TotalDistance:
+      units: "nautical miles"
+      description: "Total cumulative water distance"
+    TripDistance:
+      units: "nautical miles"
+      description: "Water distance since reset"
+    TotalGroundDistance:
+      units: "nautical miles"
+      description: "Total cumulative ground distance"
+    TripGroundDistance:
+      units: "nautical miles"
+      description: "Ground distance since reset"
+    WaterSpeedLong:
+      units: "knots"
+      description: "Longitudinal water speed (positive=ahead)"
+    LongWaterSpeed:
+      units: "knots"
+      description: "Longitudinal water speed (positive=ahead)"
+    WaterSpeedTrans:
+      units: "knots"
+      description: "Transverse water speed (positive=starboard)"
+    TransWaterSpeed:
+      units: "knots"
+      description: "Transverse water speed (positive=starboard)"
+    WaterStatus:
+      description: "A=Valid, V=Invalid"
+    GroundSpeedLong:
+      units: "knots"
+      description: "Longitudinal ground speed"
+    LongGroundSpeed:
+      units: "knots"
+      description: "Longitudinal ground speed"
+    GroundSpeedTrans:
+      units: "knots"
+      description: "Transverse ground speed"
+    TransGroundSpeed:
+      units: "knots"
+      description: "Transverse ground speed"
+    GroundStatus:
+      description: "A=Valid, V=Invalid"
+    DirTrue:
+      units: "degrees"
+      description: "Current set direction, true"
+    DirMag:
+      units: "degrees"
+      description: "Current set direction, magnetic"
+    Speed:
+      units: "knots"
+      description: "Current drift speed"
+    Pitch:
+      units: "degrees"
+      description: "Pitch angle (positive = bow up)"
+    Roll:
+      units: "degrees"
+      description: "Roll angle (positive = port up)"
+    VelocityE:
+      units: "m/s"
+      description: "Current velocity to east"
+    VelocityN:
+      units: "m/s"
+      description: "Current velocity to north"

@@ -1,0 +1,41 @@
+################################################################################
+# NMEA 0183 device type: NMEA_USBL (USBL / Underwater Positioning)
+#
+# Part of the NMEA 0183 library: logger/devices/NMEA_0183.yaml includes every
+# file in this directory. See README.md here for the format types used,
+# talker IDs and proprietary sentence prefixes.
+################################################################################
+
+######################################
+# USBL / Underwater Positioning
+######################################
+NMEA_USBL:
+  category: "device_type"
+  description: "USBL/SSBL underwater positioning - proprietary sentences"
+
+  format:
+    ########################################
+    # Proprietary: Kongsberg HiPAP ($PSIM)
+    ########################################
+
+    # PSIMSSB - SSBL/USBL transponder position
+    PSIMSSB: "$PSIMSSB,{TransponderID:nc},{Latitude:of},{Longitude:of},{Depth:of},{Accuracy:of},{GPSTime:of}*{CheckSum:x}"
+
+  fields:
+    TransponderID:
+      description: "USBL transponder identifier"
+    Latitude:
+      units: "degrees"
+      description: "Transponder latitude"
+    Longitude:
+      units: "degrees"
+      description: "Transponder longitude"
+    Depth:
+      units: "meters"
+      description: "Transponder depth"
+    Accuracy:
+      units: "meters"
+      description: "Position accuracy estimate"
+    GPSTime:
+      units: "hhmmss.ss"
+      description: "UTC time"

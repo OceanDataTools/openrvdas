@@ -1,0 +1,40 @@
+################################################################################
+# NMEA 0183 device type: NMEA_Winch (Winch / Wire Monitoring)
+#
+# Part of the NMEA 0183 library: logger/devices/NMEA_0183.yaml includes every
+# file in this directory. See README.md here for the format types used,
+# talker IDs and proprietary sentence prefixes.
+################################################################################
+
+######################################
+# Winch / Wire Monitoring
+######################################
+NMEA_Winch:
+  category: "device_type"
+  description: "Winch and wire monitoring system sentences"
+
+  format:
+    # LCI-90i format
+    LCI90: "{WinchID:nc},{WinchTime:ti},{WinchName:nc},{Tension:of},{Speed:of},{Payout:of},{Checksum:od}"
+
+    # Generic NMEA-style winch format
+    WNC: "${:2l}WNC,{WinchID:nc},{Tension:of},{Speed:of},{Payout:of}*{CheckSum:x}"
+
+  fields:
+    WinchID:
+      description: "Winch identifier"
+    WinchTime:
+      description: "Timestamp (ISO format)"
+    WinchName:
+      description: "Winch name"
+    Tension:
+      units: "lbs"
+      description: "Wire tension"
+    Speed:
+      units: "m/min"
+      description: "Payout/haul speed"
+    Payout:
+      units: "meters"
+      description: "Wire out"
+    Checksum:
+      description: "Checksum value"
