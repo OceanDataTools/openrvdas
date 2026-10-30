@@ -68,7 +68,7 @@ Extensive online documentation, including quick start guides, is also available 
 ## Installation
 
 OpenRVDAS is written primarily in Python 3.[^1] The installation script at [utils/install_openrvdas.sh](utils/install_openrvdas.sh)
-supports MacOS, Ubuntu 22.04-25.10, Debian 12 (including Raspberry Pi OS bookworm), and RHEL/Rocky/AlmaLinux 9 and 10.
+supports MacOS, Ubuntu 22.04 and later, Debian 12 and later (including Raspberry Pi OS), Linux Mint 22 and later, and RHEL/Rocky/AlmaLinux 9 and later.
 Please refer to [INSTALL.md](./INSTALL.md) for details.
 
 ## Ship/Organization-Dependent Code

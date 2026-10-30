@@ -109,6 +109,13 @@ yes_no() {
 
 ###########################################################################
 ###########################################################################
+# Print the value of field $1 in /etc/os-release, without its quotes.
+function os_release_field {
+    sed -n "s/^$1=//p" /etc/os-release | tr -d "\"'"
+}
+
+###########################################################################
+###########################################################################
 function get_os_type {
     if [[ `uname -s` == 'Darwin' ]];then
         OS_TYPE=MacOS
@@ -131,79 +138,44 @@ function get_os_type {
         fi
 
     elif [[ `uname -s` == 'Linux' ]];then
-        if [[ ! -z `grep "NAME=\"Ubuntu\"" /etc/os-release` ]];then
-            OS_TYPE=Ubuntu
-            if [[ ! -z `grep "VERSION_ID=\"18" /etc/os-release` ]];then
-                OS_VERSION=18
-            elif [[ ! -z `grep "VERSION_ID=\"20" /etc/os-release` ]];then
-                OS_VERSION=20
-            elif [[ ! -z `grep "VERSION_ID=\"21" /etc/os-release` ]];then
-                OS_VERSION=21
-            elif [[ ! -z `grep "VERSION_ID=\"22" /etc/os-release` ]];then
-                OS_VERSION=22
-            elif [[ ! -z `grep "VERSION_ID=\"23" /etc/os-release` ]];then
-                OS_VERSION=23
-            elif [[ ! -z `grep "VERSION_ID=\"24" /etc/os-release` ]];then
-                OS_VERSION=24
-            elif [[ ! -z `grep "VERSION_ID=\"25" /etc/os-release` ]];then
-                OS_VERSION=25
-            else
-                echo "Sorry - unknown Ubuntu OS Version! - exiting."
-                exit_gracefully
-            fi
+        # Identify the distribution from /etc/os-release. OS_TYPE picks the
+        # package manager family (Ubuntu: apt, CentOS: dnf/yum); OS_DISTRO
+        # and OS_VERSION (the major version) are what check_os_supported
+        # compares with its floors. Derivatives are handled as the
+        # distribution they name in ID_LIKE. See issue #722.
+        OS_ID=$(os_release_field ID)
+        OS_ID_LIKE=$(os_release_field ID_LIKE)
+        OS_NAME=$(os_release_field PRETTY_NAME)
+        OS_VERSION_ID=$(os_release_field VERSION_ID)
+        OS_VERSION=${OS_VERSION_ID%%.*}
 
-        # Mint Linux
-        elif [[ ! -z `grep "NAME=\"Linux Mint\"" /etc/os-release` ]];then
-            OS_TYPE=Ubuntu
-            if [[ ! -z `grep "VERSION_ID=\"22" /etc/os-release` ]];then
-                OS_VERSION=22
-            else
-                echo "Sorry - unknown mint-Ubuntu OS Version! - exiting."
-                exit_gracefully
-            fi
+        case "$OS_ID" in
+            ubuntu|debian|raspbian)
+                OS_DISTRO=$OS_ID ;;
+            rhel|centos|rocky|almalinux)
+                OS_DISTRO=rhel ;;
+            *)
+                # Linux Mint is Ubuntu-based; LMDE also says ID=linuxmint,
+                # but is Debian-based and numbered differently.
+                if [ "$OS_ID" == 'linuxmint' ] && [[ " $OS_ID_LIKE " == *" ubuntu "* ]]; then
+                    OS_DISTRO=linuxmint
+                elif [[ " $OS_ID_LIKE " == *" ubuntu "* ]]; then
+                    OS_DISTRO=ubuntu-like
+                elif [[ " $OS_ID_LIKE " == *" debian "* ]]; then
+                    OS_DISTRO=debian-like
+                elif [[ " $OS_ID_LIKE " == *" rhel "* ]] || [[ " $OS_ID_LIKE " == *" centos "* ]]; then
+                    OS_DISTRO=rhel-like
+                else
+                    echo "Sorry - unknown Linux variant: ${OS_NAME:-unnamed}"
+                    exit_gracefully
+                fi
+                ;;
+        esac
 
-        # With Debian (Raspbian) we're mapping to Ubuntu. Not clear that
-        # version 10 -> 18 is the right map, but 11 (bullseye)-> 20 seems to work
-        elif [[ ! -z `grep "NAME=\"Debian" /etc/os-release` ]] || [[ ! -z `grep "NAME=\"Raspbian" /etc/os-release` ]];then
-            OS_TYPE=Ubuntu
-            if [[ ! -z `grep "VERSION_ID=\"10" /etc/os-release` ]];then
-                OS_VERSION=18
-            elif [[ ! -z `grep "VERSION_ID=\"11" /etc/os-release` ]];then
-                OS_VERSION=20
-            elif [[ ! -z `grep "VERSION_ID=\"12" /etc/os-release` ]];then
-                OS_VERSION=22
-            else
-                echo "Sorry - unknown Debian OS Version! - exiting."
-                exit_gracefully
-            fi
-
-        # CentOS/RHEL/AlmaLinux
-        elif [[ ! -z `grep "NAME=\"CentOS Stream\"" /etc/os-release` ]] || [[ ! -z `grep "NAME=\"CentOS Linux\"" /etc/os-release` ]] || [[ ! -z `grep "NAME=\"Red Hat Enterprise Linux\"" /etc/os-release` ]]  || [[ ! -z `grep "NAME=\"Rocky Linux\"" /etc/os-release` ]] || [[ ! -z `grep "NAME=\"AlmaLinux\"" /etc/os-release` ]];then
+        if [ "$OS_DISTRO" == 'rhel' ] || [ "$OS_DISTRO" == 'rhel-like' ]; then
             OS_TYPE=CentOS
-            if [[ ! -z `grep "VERSION_ID=\"7" /etc/os-release` ]];then
-                OS_VERSION=7
-            elif [[ ! -z `grep "VERSION_ID=\"8" /etc/os-release` ]];then
-                OS_VERSION=8
-            elif [[ ! -z `grep "VERSION_ID=\"9" /etc/os-release` ]];then
-                OS_VERSION=9
-            elif [[ ! -z `grep "VERSION_ID=\"10" /etc/os-release` ]];then
-                OS_VERSION=10
-            # Rocky Linux uses different format in /etc/os-release
-            elif [[ ! -z `grep "VERSION=\"7" /etc/os-release` ]];then
-                OS_VERSION=7
-            elif [[ ! -z `grep "VERSION=\"8" /etc/os-release` ]];then
-                OS_VERSION=8
-            elif [[ ! -z `grep "VERSION=\"9" /etc/os-release` ]];then
-                OS_VERSION=9
-            elif [[ ! -z `grep "VERSION=\"10" /etc/os-release` ]];then
-                OS_VERSION=10
-            else
-                echo "Sorry - unknown CentOS/RHEL/AlmaLinux Version! - exiting."
-                exit_gracefully
-            fi
         else
-            echo "Sorry - unknown Linux variant!"
-            exit_gracefully
+            OS_TYPE=Ubuntu
         fi
     else
         echo Unknown OS type: `uname -s`
@@ -213,22 +185,44 @@ function get_os_type {
 
 ###########################################################################
 ###########################################################################
-# OpenRVDAS requires Python 3.11+ (requires-python in pyproject.toml).
-# Refuse up front the platforms that have no packaged Python 3.11, rather
-# than failing partway through the install. Ubuntu 18/20/21 also cover
-# Debian 10/11 and Raspbian, which get_os_type maps onto them. RHEL 8
-# could install python3.11 from AppStream, but its SQLite 3.26 is too old
-# for any Django 5.x. See issue #716.
+# Refuse releases that are too old, and accept newer ones - including
+# releases that came out after this script was written. Each distribution
+# has a floor, its oldest supported release, and the newest release it has
+# been tested on:
+#   - Below the floor there's no packaged Python 3.11, which OpenRVDAS
+#     requires (requires-python in pyproject.toml). RHEL 8 could install
+#     python3.11, but its SQLite 3.26 is too old for any Django 5.x. See #716.
+#   - Above the newest tested release, the install goes ahead with a notice;
+#     find_python still checks that Python 3.11+ is available.
+# Derivatives (OS_DISTRO *-like) have no floor, since their version numbers
+# aren't their base distribution's; find_python is their only check.
+# See issue #722. Issue #721 is about noticing when a new release breaks.
 function check_os_supported {
-    if { [ "$OS_TYPE" == 'Ubuntu' ] && \
-         { [ "$OS_VERSION" == '18' ] || [ "$OS_VERSION" == '20' ] || [ "$OS_VERSION" == '21' ]; }; } || \
-       { [ "$OS_TYPE" == 'CentOS' ] && \
-         { [ "$OS_VERSION" == '7' ] || [ "$OS_VERSION" == '8' ]; }; }; then
-        OS_NAME=$(grep '^PRETTY_NAME=' /etc/os-release 2> /dev/null | cut -d= -f2 | tr -d '"')
-        echo "Sorry - OpenRVDAS requires Python 3.11 or newer, which ${OS_NAME:-this OS} doesn't provide."
-        echo "Supported Linux versions are Ubuntu 22-25, Debian 12 (including Raspberry"
-        echo "Pi OS bookworm), Linux Mint 22, and RHEL/Rocky/AlmaLinux 9 and 10."
+    local floor newest_tested
+    case "$OS_DISTRO" in
+        ubuntu)           floor=22; newest_tested=26 ;;
+        linuxmint)        floor=22; newest_tested=22 ;;
+        debian|raspbian)  floor=12; newest_tested=13 ;;
+        rhel)             floor=9;  newest_tested=10 ;;
+        '')               return ;;  # MacOS
+        *)
+            echo "NOTE: OpenRVDAS hasn't been tested on ${OS_NAME}; installing it as"
+            echo "for ${OS_DISTRO%-like}, its base distribution."
+            return
+            ;;
+    esac
+
+    # A release with no numeric VERSION_ID (e.g. Debian testing) is newer
+    # than any numbered one.
+    if [[ "$OS_VERSION" =~ ^[0-9]+$ ]] && [ "$OS_VERSION" -lt "$floor" ]; then
+        echo "Sorry - OpenRVDAS requires Python 3.11 or newer, which ${OS_NAME} doesn't provide."
+        echo "Supported Linux versions are Ubuntu 22.04 and later, Debian 12 and later"
+        echo "(including Raspberry Pi OS bookworm), Linux Mint 22 and later, and"
+        echo "RHEL/Rocky/AlmaLinux 9 and later."
         exit_gracefully
+    fi
+    if ! [[ "$OS_VERSION" =~ ^[0-9]+$ ]] || [ "$OS_VERSION" -gt "$newest_tested" ]; then
+        echo "NOTE: OpenRVDAS hasn't been tested on ${OS_NAME} yet; continuing."
     fi
 }
 
@@ -700,16 +694,12 @@ function install_prereqs {
         fi
 
         # OpenRVDAS requires Python 3.11+. RHEL 9's python3 is 3.9, so
-        # install AppStream's python3.11 alongside it; RHEL 10's python3 is
-        # 3.12. find_python picks whichever is suitable.
+        # install AppStream's python3.11 alongside it; from RHEL 10 on,
+        # python3 is new enough. find_python picks whichever is suitable.
         if [ "$OS_VERSION" == '9' ]; then
             sudo yum install -y python3.11 python3.11-devel
-        elif [ "$OS_VERSION" == '10' ]; then
-            sudo yum install -y python3 python3-devel
         else
-            echo "Install error: unknown OS_VERSION should have been caught earlier?!?"
-            echo "OS_VERSION = \"$OS_VERSION\""
-            exit_gracefully
+            sudo yum install -y python3 python3-devel
         fi
 
     # Ubuntu/Debian
@@ -726,9 +716,10 @@ function install_prereqs {
             openssh-server supervisor libssl-dev
 
         # OpenRVDAS requires Python 3.11+. Ubuntu 22.04's python3 is 3.10,
-        # so install python3.11 from the deadsnakes PPA alongside it. (Every
-        # other platform check_os_supported allows has 3.11+ already.)
-        if ! python3 -c 'import sys; sys.exit(0 if sys.version_info >= (3, 11) else 1)'; then
+        # so install python3.11 from the deadsnakes PPA alongside it. The
+        # PPA is Ubuntu-only; elsewhere, find_python reports the problem.
+        if { [[ "$OS_DISTRO" == ubuntu* ]] || [ "$OS_DISTRO" == 'linuxmint' ]; } && \
+           ! python3 -c 'import sys; sys.exit(0 if sys.version_info >= (3, 11) else 1)'; then
             echo "System python3 is $(python3 --version 2>&1); installing python3.11 from ppa:deadsnakes/ppa"
             sudo DEBIAN_FRONTEND=noninteractive apt install -y software-properties-common
             sudo add-apt-repository -y ppa:deadsnakes/ppa
