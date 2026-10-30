@@ -364,5 +364,41 @@ modes:
 """
 
 
+class TestIncludesOnlyFiles(unittest.TestCase):
+    """A file of nothing but includes is validated as what it includes (#728)."""
+
+    def setUp(self):
+        self.temp_dir = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp_dir.cleanup)
+
+    def write(self, name, content):
+        path = os.path.join(self.temp_dir.name, name)
+        with open(path, 'w') as f:
+            f.write(content)
+        return path
+
+    def validate(self, path):
+        is_valid, errors = ConfigValidator().validate_file(path)
+        return is_valid, [str(e) for e in errors]
+
+    def stub(self):
+        return self.write('stub.yaml', f'includes_base_dir: {self.temp_dir.name}\n'
+                                       'includes:\n  - types.yaml\n')
+
+    def test_valid_device_types(self):
+        self.write('types.yaml', 'MyType:\n  category: device_type\n'
+                                 '  format: "{Value:f}"\n')
+        self.assertEqual(self.validate(self.stub()), (True, []))
+
+    def test_error_in_included_file(self):
+        self.write('types.yaml', 'MyType:\n  category: device_type\n')
+        is_valid, errors = self.validate(self.stub())
+        self.assertFalse(is_valid)
+        self.assertTrue(any("Missing required 'format' key" in e for e in errors), errors)
+
+    def test_nmea_0183_stub(self):
+        self.assertEqual(self.validate('logger/devices/NMEA_0183.yaml'), (True, []))
+
+
 if __name__ == '__main__':
     unittest.main()

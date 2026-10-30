@@ -145,6 +145,15 @@ class ConfigValidator:
                 f"Expected YAML dictionary, got {type(data).__name__}"))
             return False, self.errors
 
+        # A file of nothing but includes, such as logger/devices/NMEA_0183.yaml,
+        # is whatever the files it includes are: validate those (#728).
+        if data.get('includes') and set(data) <= {'includes', 'includes_base_dir'}:
+            from logger.utils import read_config
+            include_errors = []
+            data = read_config.expand_includes(data, errors=include_errors)
+            data.pop('includes_base_dir', None)
+            self.errors.extend(ValidationError(e) for e in include_errors)
+
         # Detect file type and validate accordingly
         file_type = self._detect_file_type(data)
 

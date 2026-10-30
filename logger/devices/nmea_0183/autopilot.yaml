@@ -1,0 +1,180 @@
+################################################################################
+# NMEA 0183 device type: NMEA_Autopilot (Autopilot / Navigation System)
+#
+# Part of the NMEA 0183 library: logger/devices/NMEA_0183.yaml includes every
+# file in this directory. See README.md here for the format types used,
+# talker IDs and proprietary sentence prefixes.
+################################################################################
+
+######################################
+# Autopilot / Navigation System
+######################################
+NMEA_Autopilot:
+  category: "device_type"
+  description: "Autopilot and navigation computer sentences"
+
+  format: &NMEA_Autopilot_format
+    # Autopilot Sentence B
+    APB: "${:2l}APB,{Status1:ow},{Status2:ow},{XTE:of},{XTEDir:ow},N,{ArrivalCircle:ow},{ArrivalPerp:ow},{BearingOrig:of},{BearingOrigType:ow},{WaypointID:nc},{BearingPos:of},{BearingPosType:ow},{HeadingToSteer:of},{HeadingType:ow},{Mode:ow}*{CheckSum:x}"
+
+    # Cross Track Error
+    XTE: "${:2l}XTE,{Status1:ow},{Status2:ow},{XTE:of},{XTEDir:ow},N,{Mode:ow}*{CheckSum:x}"
+
+    # Bearing Origin to Destination
+    BOD: "${:2l}BOD,{BearingTrue:of},T,{BearingMag:of},M,{DestWaypoint:nc},{OrigWaypoint:nc}*{CheckSum:x}"
+
+    # Bearing and Distance to Waypoint - Great Circle
+    BWC: "${:2l}BWC,{GPSTime:of},{Latitude:nlat},{NorS:ow},{Longitude:nlat},{EorW:ow},{BearingTrue:of},T,{BearingMag:of},M,{Distance:of},N,{WaypointID:nc},{Mode:ow}*{CheckSum:x}"
+
+    # Recommended Minimum Navigation Information
+    RMB: "${:2l}RMB,{Status:ow},{XTE:of},{XTEDir:ow},{OrigWaypoint:nc},{DestWaypoint:nc},{DestLat:nlat},{DestNorS:ow},{DestLon:nlat},{DestEorW:ow},{RangeToDest:of},{BearingToDest:of},{ClosingVelocity:of},{ArrivalStatus:ow},{Mode:ow}*{CheckSum:x}"
+
+    # Waypoint Location
+    WPL: "${:2l}WPL,{Latitude:nlat},{NorS:ow},{Longitude:nlat},{EorW:ow},{WaypointID:nc}*{CheckSum:x}"
+
+    # Routes
+    RTE:
+      - "${:2l}RTE,{NumMsgs:d},{MsgNum:d},{Mode:ow},{RouteID:nc},{WP1:nc}*{CheckSum:x}"
+      - "${:2l}RTE,{NumMsgs:d},{MsgNum:d},{Mode:ow},{RouteID:nc},{WP1:nc},{WP2:nc}*{CheckSum:x}"
+      - "${:2l}RTE,{NumMsgs:d},{MsgNum:d},{Mode:ow},{RouteID:nc},{WP1:nc},{WP2:nc},{WP3:nc}*{CheckSum:x}"
+      - "${:2l}RTE,{NumMsgs:d},{MsgNum:d},{Mode:ow},{RouteID:nc},{WP1:nc},{WP2:nc},{WP3:nc},{WP4:nc}*{CheckSum:x}"
+
+    # Waypoint Arrival Alarm
+    AAM: "${:2l}AAM,{ArrivalCircle:ow},{WaypointPassed:ow},{ArrivalRadius:of},N,{WaypointID:nc}*{CheckSum:x}"
+
+  fields: &NMEA_Autopilot_fields
+    Status1:
+      description: "A=Valid, V=Loran-C blink/SNR warning"
+    Status2:
+      description: "A=Valid, V=Loran-C cycle lock warning"
+    Status:
+      description: "A=Active, V=Void"
+    XTE:
+      units: "nautical miles"
+      description: "Cross track error magnitude"
+    XTEDir:
+      description: "L=Steer left, R=Steer right"
+    ArrivalCircle:
+      description: "A=Arrival circle entered"
+    ArrivalPerp:
+      description: "A=Perpendicular passed at waypoint"
+    ArrivalStatus:
+      description: "A=Arrival circle entered, V=Not entered"
+    ArrivalRadius:
+      units: "nautical miles"
+      description: "Arrival circle radius"
+    WaypointPassed:
+      description: "A=Waypoint passed, V=Not passed"
+    BearingOrig:
+      units: "degrees"
+      description: "Bearing origin to destination"
+    BearingOrigType:
+      description: "M=Magnetic, T=True"
+    BearingPos:
+      units: "degrees"
+      description: "Bearing, present position to destination"
+    BearingPosType:
+      description: "M=Magnetic, T=True"
+    BearingTrue:
+      units: "degrees"
+      description: "Bearing, true"
+    BearingMag:
+      units: "degrees"
+      description: "Bearing, magnetic"
+    BearingToDest:
+      units: "degrees"
+      description: "Bearing to destination, true"
+    HeadingToSteer:
+      units: "degrees"
+      description: "Heading to steer to destination waypoint"
+    HeadingType:
+      description: "M=Magnetic, T=True"
+    Mode:
+      description: "A=Autonomous, D=Differential, E=Estimated, M=Manual, S=Simulated, N=Not valid; or c=Complete route, w=Working route"
+    WaypointID:
+      description: "Waypoint ID"
+    OrigWaypoint:
+      description: "Origin waypoint ID"
+    DestWaypoint:
+      description: "Destination waypoint ID"
+    GPSTime:
+      units: "hhmmss.ss"
+      description: "UTC time of observation"
+    Latitude:
+      units: "degrees"
+      description: "Waypoint latitude"
+    NorS:
+      description: "N for North, S for South"
+    Longitude:
+      units: "degrees"
+      description: "Waypoint longitude"
+    EorW:
+      description: "E for East, W for West"
+    Distance:
+      units: "nautical miles"
+      description: "Distance to waypoint"
+    DestLat:
+      units: "degrees"
+      description: "Destination waypoint latitude"
+    DestNorS:
+      description: "N for North, S for South"
+    DestLon:
+      units: "degrees"
+      description: "Destination waypoint longitude"
+    DestEorW:
+      description: "E for East, W for West"
+    RangeToDest:
+      units: "nautical miles"
+      description: "Range to destination"
+    ClosingVelocity:
+      units: "knots"
+      description: "Destination closing velocity"
+    NumMsgs:
+      description: "Total number of messages"
+    MsgNum:
+      description: "Message number"
+    RouteID:
+      description: "Route identifier"
+    WP1:
+      description: "Waypoint 1 identifier"
+    WP2:
+      description: "Waypoint 2 identifier"
+    WP3:
+      description: "Waypoint 3 identifier"
+    WP4:
+      description: "Waypoint 4 identifier"
+
+
+######################################
+# NMEA_Autopilot, with signed positions (#718)
+######################################
+# NMEA_Autopilot with positions parsed by nlat_dir: latitude and longitude in signed
+# decimal degrees, negative for South and West, with no separate NorS/EorW
+# fields. Built with YAML merge keys, so only the sentences that carry a
+# position are overridden; every other sentence is NMEA_Autopilot's. Merge keys
+# can't remove keys, so the merged fields list still describes NorS and
+# EorW, which this device type never produces. See README.md here.
+NMEA_Autopilot_Signed:
+  category: "device_type"
+  description: "Autopilot and navigation computer - as NMEA_Autopilot, but with signed waypoint positions"
+
+  format:
+    <<: *NMEA_Autopilot_format
+    BWC: "${:2l}BWC,{GPSTime:of},{Latitude:nlat_dir},{Longitude:nlat_dir},{BearingTrue:of},T,{BearingMag:of},M,{Distance:of},N,{WaypointID:nc},{Mode:ow}*{CheckSum:x}"
+    RMB: "${:2l}RMB,{Status:ow},{XTE:of},{XTEDir:ow},{OrigWaypoint:nc},{DestWaypoint:nc},{DestLat:nlat_dir},{DestLon:nlat_dir},{RangeToDest:of},{BearingToDest:of},{ClosingVelocity:of},{ArrivalStatus:ow},{Mode:ow}*{CheckSum:x}"
+    WPL: "${:2l}WPL,{Latitude:nlat_dir},{Longitude:nlat_dir},{WaypointID:nc}*{CheckSum:x}"
+
+  fields:
+    <<: *NMEA_Autopilot_fields
+    Latitude:
+      units: "degrees"
+      description: "Waypoint latitude in signed decimal degrees; negative for South"
+    Longitude:
+      units: "degrees"
+      description: "Waypoint longitude in signed decimal degrees; negative for West"
+    DestLat:
+      units: "degrees"
+      description: "Destination waypoint latitude in signed decimal degrees; negative for South"
+    DestLon:
+      units: "degrees"
+      description: "Destination waypoint longitude in signed decimal degrees; negative for West"

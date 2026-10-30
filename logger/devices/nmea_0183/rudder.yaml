@@ -1,0 +1,30 @@
+################################################################################
+# NMEA 0183 device type: NMEA_Rudder (Rudder Sensor)
+#
+# Part of the NMEA 0183 library: logger/devices/NMEA_0183.yaml includes every
+# file in this directory. See README.md here for the format types used,
+# talker IDs and proprietary sentence prefixes.
+################################################################################
+
+######################################
+# Rudder Sensor
+######################################
+NMEA_Rudder:
+  category: "device_type"
+  description: "Rudder angle indicator sentences"
+
+  format:
+    # Rudder Sensor Angle
+    RSA: "${:2l}RSA,{RudderStbd:of},{StbdStatus:ow},{RudderPort:of},{PortStatus:ow}*{CheckSum:x}"
+
+  fields:
+    RudderStbd:
+      units: "degrees"
+      description: "Starboard rudder angle (positive=starboard)"
+    StbdStatus:
+      description: "A=Valid, V=Invalid"
+    RudderPort:
+      units: "degrees"
+      description: "Port rudder angle"
+    PortStatus:
+      description: "A=Valid, V=Invalid"

@@ -2,6 +2,7 @@
 
 # flake8: noqa E501 - ignore long lines
 
+import glob
 import json
 import logging
 import os
@@ -13,7 +14,8 @@ import warnings
 
 import yaml
 
-from logger.utils.record_parser import RecordParser  # noqa: E402
+from logger.utils.read_config import load_definitions  # noqa: E402
+from logger.utils.record_parser import RecordParser, DEFAULT_DEFINITION_PATH  # noqa: E402
 from logger.utils.das_record import DASRecord  # noqa: E402
 
 DEFINITIONS = """
@@ -816,7 +818,7 @@ def nmea(body):
 
 
 class TestSignedNMEADefinitions(unittest.TestCase):
-    """The *_Signed device types in logger/devices/NMEA_0183.yaml give
+    """The *_Signed device types in logger/devices/nmea_0183/ give
     positions in signed decimal degrees, and otherwise parse exactly as the
     device types they're named after (#718)."""
 
@@ -860,11 +862,9 @@ class TestSignedNMEADefinitions(unittest.TestCase):
         self.definitions = self.tmpdir.name + '/devices.yaml'
 
         # Map every field of each device type to its own name, so that parsed
-        # records keep all of them. NMEA_0183.yaml lists NorS/EorW for the
-        # signed types too (merge keys can't remove them), so their field
-        # lists are the same.
-        with open('logger/devices/NMEA_0183.yaml') as f:
-            types = yaml.safe_load(f)
+        # records keep all of them. The signed types' fields lists include
+        # NorS/EorW too (merge keys can't remove them), so they're the same.
+        types = load_definitions('logger/devices/NMEA_0183.yaml')['device_types']
         devices = {}
         for device, device_type in self.DEVICE_TYPES.items():
             for suffix in ('', '_Signed'):
@@ -940,8 +940,7 @@ class TestSignedNMEADefinitions(unittest.TestCase):
     ############################
     def test_sentences_without_positions_are_shared(self):
         """Every other sentence is the original device type's, by merge key."""
-        with open('logger/devices/NMEA_0183.yaml') as f:
-            types = yaml.safe_load(f)
+        types = load_definitions('logger/devices/NMEA_0183.yaml')['device_types']
         for device_type in self.DEVICE_TYPES.values():
             with self.subTest(device_type=device_type):
                 original = types[device_type]['format']
@@ -953,6 +952,43 @@ class TestSignedNMEADefinitions(unittest.TestCase):
                         self.assertIn(':nlat_dir}', str(signed[key]))
                     else:
                         self.assertEqual(formats, signed[key], key)
+
+
+################################################################################
+class TestNMEA0183Layout(unittest.TestCase):
+    """logger/devices/NMEA_0183.yaml is a stub that includes one file per
+    device type from logger/devices/nmea_0183/ (#728)."""
+
+    STUB = 'logger/devices/NMEA_0183.yaml'
+    PARTS = 'logger/devices/nmea_0183/*.yaml'
+
+    def test_stub_includes_every_part(self):
+        stub = load_definitions(self.STUB)['device_types']
+        parts = {}
+        for path in glob.glob(self.PARTS):
+            parts.update(load_definitions(path)['device_types'])
+        self.assertEqual(stub, parts)
+        self.assertGreaterEqual(len(stub), 17)
+
+    def test_default_path_loads_each_type_once(self):
+        """The parts are in a subdirectory so that the default definition
+        path, which globs logger/devices/*.yaml, doesn't load them twice."""
+        with self.assertLogs(level='WARNING') as logs:
+            types = load_definitions(DEFAULT_DEFINITION_PATH)['device_types']
+            logging.warning('end of load')  # assertLogs needs at least one
+        self.assertIn('NMEA_GPS', types)
+        self.assertEqual([m for m in logs.output if 'Duplicate' in m], [])
+
+    def test_signed_types_are_with_their_originals(self):
+        """A *_Signed type's merge keys refer to anchors in its original's
+        definition, and YAML anchors only work within one file."""
+        for path in glob.glob(self.PARTS):
+            with self.subTest(path=path):
+                with open(path) as f:
+                    types = yaml.safe_load(f)
+                for name in types:
+                    if name.endswith('_Signed'):
+                        self.assertIn(name[:-len('_Signed')], types)
 
 
 ################################################################################
