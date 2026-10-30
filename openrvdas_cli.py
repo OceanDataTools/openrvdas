@@ -38,10 +38,6 @@ def cached_data_server() -> None:
     _run("server.cached_data_server")
 
 
-def websocket_server() -> None:
-    _run("server.websocket_server")
-
-
 def server_api_command_line() -> None:
     _run("server.server_api_command_line")
 
