@@ -53,7 +53,7 @@ class PolledSerialReader(SerialReader):
     def __init__(self,  port, baudrate=9600, bytesize=8, parity='N',
                  stopbits=1, timeout=None, xonxoff=False, rtscts=False,
                  write_timeout=None, dsrdtr=False, inter_byte_timeout=None,
-                 exclusive=None, max_bytes=None, eol=None,
+                 exclusive=True, max_bytes=None, eol=None,
                  encoding='utf-8', encoding_errors='ignore',
                  start_cmd=None, pre_read_cmd=None, stop_cmd=None, **kwargs):
         """Extends the standard serial reader by allowing the user to define
@@ -93,6 +93,19 @@ class PolledSerialReader(SerialReader):
             seconds. It will then reissue the pre_read_cmds, if there is one, and try
             reading again. If there is a dict of pre_read_cmds, it will progress to the
             next one in the dict.
+
+        exclusive
+            True by default, as for SerialReader - take an exclusive lock on the
+            port so a second OpenRVDAS process opening it fails loudly rather
+            than silently splitting the byte stream. This reader is the case
+            that most wants the lock: it writes commands to the same port it
+            reads from, so another process taking bytes off it would break the
+            command/response pairing rather than merely thinning the data.
+
+            Note that bidirectional use needs no exception here - reads and
+            writes go through the same open port, so there is only one lock
+            holder. Set False only if something outside OpenRVDAS must share
+            the port.
         ```
         For all of these arguments, a special string, ``__PAUSE__``, is recognized. If
         followed by a number (e.g. ``__PAUSE__ 5``), it will be interpreted as a command

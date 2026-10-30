@@ -6,7 +6,27 @@ cruise:
   start: '2019-07-01'  # Enclose in quotes so they're strings
   end: '2019-12-31'
 
-# Base path where logger logfiles should be written
+# Base path where logger logfiles should be written.
+#
+# Sample data is written under /var/tmp so it is clearly disposable: on most
+# Linux distributions systemd-tmpfiles removes anything in /var/tmp that has
+# gone untouched for 30 days. That is what you want for a demo, and emphatically
+# not what you want for a cruise - data would vanish weeks later, silently.
+#
+# Before using this file as a template for a real deployment, point file_root
+# at a location intended to hold data, e.g.
+#
+#   file_root: /var/data/openrvdas
+#
+# OpenRVDAS creates the per-logger subdirectories beneath file_root itself, but
+# it cannot create the root: that lives somewhere only root can write. Create it
+# once, owned by the user the loggers run as:
+#
+#   sudo mkdir -p /var/data/openrvdas
+#   sudo chown rvdas:rvdas /var/data/openrvdas
+#
+# (No such step is needed for /var/tmp, which is world-writable - which is why
+# these samples run with no setup.)
 file_root: /var/tmp/log
 
 # The path any RecordParsers should use.

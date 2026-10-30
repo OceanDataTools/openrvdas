@@ -109,6 +109,13 @@ yes_no() {
 
 ###########################################################################
 ###########################################################################
+# Print the value of field $1 in /etc/os-release, without its quotes.
+function os_release_field {
+    sed -n "s/^$1=//p" /etc/os-release | tr -d "\"'"
+}
+
+###########################################################################
+###########################################################################
 function get_os_type {
     if [[ `uname -s` == 'Darwin' ]];then
         OS_TYPE=MacOS
@@ -127,87 +134,95 @@ function get_os_type {
             arch -x86_64 /bin/bash $THIS_SCRIPT_PATH
 
             # Exit quietly after recursive run
-            return -1 2> /dev/null || exit -1  # exit correctly if sourced/bashed
+            return 1 2> /dev/null || exit 1  # exit correctly if sourced/bashed
         fi
 
     elif [[ `uname -s` == 'Linux' ]];then
-        if [[ ! -z `grep "NAME=\"Ubuntu\"" /etc/os-release` ]];then
-            OS_TYPE=Ubuntu
-            if [[ ! -z `grep "VERSION_ID=\"18" /etc/os-release` ]];then
-                OS_VERSION=18
-            elif [[ ! -z `grep "VERSION_ID=\"20" /etc/os-release` ]];then
-                OS_VERSION=20
-            elif [[ ! -z `grep "VERSION_ID=\"21" /etc/os-release` ]];then
-                OS_VERSION=21
-            elif [[ ! -z `grep "VERSION_ID=\"22" /etc/os-release` ]];then
-                OS_VERSION=22
-            elif [[ ! -z `grep "VERSION_ID=\"23" /etc/os-release` ]];then
-                OS_VERSION=23
-            elif [[ ! -z `grep "VERSION_ID=\"24" /etc/os-release` ]];then
-                OS_VERSION=24
-            elif [[ ! -z `grep "VERSION_ID=\"25" /etc/os-release` ]];then
-                OS_VERSION=25
-            else
-                echo "Sorry - unknown Ubuntu OS Version! - exiting."
-                exit_gracefully
-            fi
+        # Identify the distribution from /etc/os-release. OS_TYPE picks the
+        # package manager family (Ubuntu: apt, CentOS: dnf/yum); OS_DISTRO
+        # and OS_VERSION (the major version) are what check_os_supported
+        # compares with its floors. Derivatives are handled as the
+        # distribution they name in ID_LIKE. See issue #722.
+        OS_ID=$(os_release_field ID)
+        OS_ID_LIKE=$(os_release_field ID_LIKE)
+        OS_NAME=$(os_release_field PRETTY_NAME)
+        OS_VERSION_ID=$(os_release_field VERSION_ID)
+        OS_VERSION=${OS_VERSION_ID%%.*}
 
-        # Mint Linux
-        elif [[ ! -z `grep "NAME=\"Linux Mint\"" /etc/os-release` ]];then
-            OS_TYPE=Ubuntu
-            if [[ ! -z `grep "VERSION_ID=\"22" /etc/os-release` ]];then
-                OS_VERSION=22
-            else
-                echo "Sorry - unknown mint-Ubuntu OS Version! - exiting."
-                exit_gracefully
-            fi
+        case "$OS_ID" in
+            ubuntu|debian|raspbian)
+                OS_DISTRO=$OS_ID ;;
+            rhel|centos|rocky|almalinux)
+                OS_DISTRO=rhel ;;
+            *)
+                # Linux Mint is Ubuntu-based; LMDE also says ID=linuxmint,
+                # but is Debian-based and numbered differently.
+                if [ "$OS_ID" == 'linuxmint' ] && [[ " $OS_ID_LIKE " == *" ubuntu "* ]]; then
+                    OS_DISTRO=linuxmint
+                elif [[ " $OS_ID_LIKE " == *" ubuntu "* ]]; then
+                    OS_DISTRO=ubuntu-like
+                elif [[ " $OS_ID_LIKE " == *" debian "* ]]; then
+                    OS_DISTRO=debian-like
+                elif [[ " $OS_ID_LIKE " == *" rhel "* ]] || [[ " $OS_ID_LIKE " == *" centos "* ]]; then
+                    OS_DISTRO=rhel-like
+                else
+                    echo "Sorry - unknown Linux variant: ${OS_NAME:-unnamed}"
+                    exit_gracefully
+                fi
+                ;;
+        esac
 
-        # With Debian (Raspbian) we're mapping to Ubuntu. Not clear that
-        # version 10 -> 18 is the right map, but 11 (bullseye)-> 20 seems to work
-        elif [[ ! -z `grep "NAME=\"Debian" /etc/os-release` ]] || [[ ! -z `grep "NAME=\"Raspbian" /etc/os-release` ]];then
-            OS_TYPE=Ubuntu
-            if [[ ! -z `grep "VERSION_ID=\"10" /etc/os-release` ]];then
-                OS_VERSION=18
-            elif [[ ! -z `grep "VERSION_ID=\"11" /etc/os-release` ]];then
-                OS_VERSION=20
-            elif [[ ! -z `grep "VERSION_ID=\"12" /etc/os-release` ]];then
-                OS_VERSION=22
-            else
-                echo "Sorry - unknown Debian OS Version! - exiting."
-                exit_gracefully
-            fi
-
-        # CentOS/RHEL/AlmaLinux
-        elif [[ ! -z `grep "NAME=\"CentOS Stream\"" /etc/os-release` ]] || [[ ! -z `grep "NAME=\"CentOS Linux\"" /etc/os-release` ]] || [[ ! -z `grep "NAME=\"Red Hat Enterprise Linux\"" /etc/os-release` ]]  || [[ ! -z `grep "NAME=\"Rocky Linux\"" /etc/os-release` ]] || [[ ! -z `grep "NAME=\"AlmaLinux\"" /etc/os-release` ]];then
+        if [ "$OS_DISTRO" == 'rhel' ] || [ "$OS_DISTRO" == 'rhel-like' ]; then
             OS_TYPE=CentOS
-            if [[ ! -z `grep "VERSION_ID=\"7" /etc/os-release` ]];then
-                OS_VERSION=7
-            elif [[ ! -z `grep "VERSION_ID=\"8" /etc/os-release` ]];then
-                OS_VERSION=8
-            elif [[ ! -z `grep "VERSION_ID=\"9" /etc/os-release` ]];then
-                OS_VERSION=9
-            elif [[ ! -z `grep "VERSION_ID=\"10" /etc/os-release` ]];then
-                OS_VERSION=10
-            # Rocky Linux uses different format in /etc/os-release
-            elif [[ ! -z `grep "VERSION=\"7" /etc/os-release` ]];then
-                OS_VERSION=7
-            elif [[ ! -z `grep "VERSION=\"8" /etc/os-release` ]];then
-                OS_VERSION=8
-            elif [[ ! -z `grep "VERSION=\"9" /etc/os-release` ]];then
-                OS_VERSION=9
-            elif [[ ! -z `grep "VERSION=\"10" /etc/os-release` ]];then
-                OS_VERSION=10
-            else
-                echo "Sorry - unknown CentOS/RHEL/AlmaLinux Version! - exiting."
-                exit_gracefully
-            fi
         else
-            echo "Sorry - unknown Linux variant!"
-            exit_gracefully
+            OS_TYPE=Ubuntu
         fi
     else
         echo Unknown OS type: `uname -s`
         exit_gracefully
+    fi
+}
+
+###########################################################################
+###########################################################################
+# Refuse releases that are too old, and accept newer ones - including
+# releases that came out after this script was written. Each distribution
+# has a floor, its oldest supported release, and the newest release it has
+# been tested on:
+#   - Below the floor there's no packaged Python 3.11, which OpenRVDAS
+#     requires (requires-python in pyproject.toml). RHEL 8 could install
+#     python3.11, but its SQLite 3.26 is too old for any Django 5.x. See #716.
+#   - Above the newest tested release, the install goes ahead with a notice;
+#     find_python still checks that Python 3.11+ is available.
+# Derivatives (OS_DISTRO *-like) have no floor, since their version numbers
+# aren't their base distribution's; find_python is their only check.
+# See issue #722. Issue #721 is about noticing when a new release breaks.
+function check_os_supported {
+    local floor newest_tested
+    case "$OS_DISTRO" in
+        ubuntu)           floor=22; newest_tested=26 ;;
+        linuxmint)        floor=22; newest_tested=22 ;;
+        debian|raspbian)  floor=12; newest_tested=13 ;;
+        rhel)             floor=9;  newest_tested=10 ;;
+        '')               return ;;  # MacOS
+        *)
+            echo "NOTE: OpenRVDAS hasn't been tested on ${OS_NAME}; installing it as"
+            echo "for ${OS_DISTRO%-like}, its base distribution."
+            return
+            ;;
+    esac
+
+    # A release with no numeric VERSION_ID (e.g. Debian testing) is newer
+    # than any numbered one.
+    if [[ "$OS_VERSION" =~ ^[0-9]+$ ]] && [ "$OS_VERSION" -lt "$floor" ]; then
+        echo "Sorry - OpenRVDAS requires Python 3.11 or newer, which ${OS_NAME} doesn't provide."
+        echo "Supported Linux versions are Ubuntu 22.04 and later, Debian 12 and later"
+        echo "(including Raspberry Pi OS bookworm), Linux Mint 22 and later, and"
+        echo "RHEL/Rocky/AlmaLinux 9 and later."
+        exit_gracefully
+    fi
+    if ! [[ "$OS_VERSION" =~ ^[0-9]+$ ]] || [ "$OS_VERSION" -gt "$newest_tested" ]; then
+        echo "NOTE: OpenRVDAS hasn't been tested on ${OS_NAME} yet; continuing."
     fi
 }
 
@@ -287,6 +302,16 @@ function set_default_variables {
         DEFAULT_RVDAS_USER=rvdas
     fi
 
+    # Whether to activate the venv from the RVDAS user's login script. An
+    # activated venv takes over python/pip for everything that user does,
+    # so only default to yes for a dedicated service account - on MacOS the
+    # RVDAS user is the account the installer is being run from.
+    if [ "${OS_TYPE:-}" == 'MacOS' ]; then
+        DEFAULT_ACTIVATE_VENV_ON_LOGIN=no
+    else
+        DEFAULT_ACTIVATE_VENV_ON_LOGIN=yes
+    fi
+
     DEFAULT_INSTALL_FIREWALLD=no
     DEFAULT_INSTALL_UFW=no
     DEFAULT_OPENRVDAS_AUTOSTART=yes
@@ -294,9 +319,25 @@ function set_default_variables {
     DEFAULT_INSTALL_SIMULATE_NBP=no
     DEFAULT_RUN_SIMULATE_NBP=no
 
+    # Port the CachedDataServer listens on. Internal: browsers reach the CDS
+    # through nginx at <server>/cds-ws, never on this port directly. Worth
+    # changing only if something else on the machine already uses 8766.
+    DEFAULT_CACHED_DATA_SERVER_PORT=8766
+
     DEFAULT_UI_TYPE=django
     DEFAULT_EXPOSE_API_DOCS=no
     DEFAULT_WEB_ADMIN_USER=
+
+    # Rotation for the stderr of the services supervisord runs. Per-logger
+    # stderr is rotated separately by logger_manager - see its
+    # --stderr_max_bytes / --stderr_backup_count.
+    DEFAULT_STDERR_LOGFILE_MAXBYTES=10000000   # 10M
+    DEFAULT_STDERR_LOGFILE_MAXBACKUPS=100
+
+    # Whether logger_manager saves automatic config snapshots, and where
+    # (--snapshot_dir). Both are settled after the preferences file is read.
+    DEFAULT_LOGGER_MANAGER_SNAPSHOTS=
+    DEFAULT_LOGGER_MANAGER_SNAPSHOT_DIR=
 
     DEFAULT_SUPERVISORD_WEBINTERFACE=no
     DEFAULT_SUPERVISORD_WEBINTERFACE_AUTH=no
@@ -309,6 +350,17 @@ function set_default_variables {
         echo Reading pre-saved defaults from "$PREFERENCES_FILE"
         source $PREFERENCES_FILE
     fi
+
+    # Preferences saved by v2.7.0rc2-rc4 have a snapshot directory but no
+    # yes/no: a directory that was set there meant yes. Otherwise, no.
+    if [ -z "$DEFAULT_LOGGER_MANAGER_SNAPSHOTS" ]; then
+        if [ -n "$DEFAULT_LOGGER_MANAGER_SNAPSHOT_DIR" ]; then
+            DEFAULT_LOGGER_MANAGER_SNAPSHOTS=yes
+        else
+            DEFAULT_LOGGER_MANAGER_SNAPSHOTS=no
+        fi
+    fi
+    DEFAULT_LOGGER_MANAGER_SNAPSHOT_DIR=${DEFAULT_LOGGER_MANAGER_SNAPSHOT_DIR:-/var/log/openrvdas/snapshots}
 }
 
 ###########################################################################
@@ -336,10 +388,13 @@ DEFAULT_SSL_CRT_LOCATION=$SSL_CRT_LOCATION
 DEFAULT_SSL_KEY_LOCATION=$SSL_KEY_LOCATION
 
 DEFAULT_RVDAS_USER=$RVDAS_USER
+DEFAULT_ACTIVATE_VENV_ON_LOGIN=$ACTIVATE_VENV_ON_LOGIN
 
 DEFAULT_INSTALL_FIREWALLD=$INSTALL_FIREWALLD
 DEFAULT_INSTALL_UFW=$INSTALL_UFW
 DEFAULT_OPENRVDAS_AUTOSTART=$OPENRVDAS_AUTOSTART
+
+DEFAULT_CACHED_DATA_SERVER_PORT=$CACHED_DATA_SERVER_PORT
 
 DEFAULT_UI_TYPE=$UI_TYPE
 DEFAULT_EXPOSE_API_DOCS=$EXPOSE_API_DOCS
@@ -347,6 +402,12 @@ DEFAULT_WEB_ADMIN_USER=$WEB_ADMIN_USER
 
 DEFAULT_INSTALL_SIMULATE_NBP=$INSTALL_SIMULATE_NBP
 DEFAULT_RUN_SIMULATE_NBP=$RUN_SIMULATE_NBP
+
+DEFAULT_STDERR_LOGFILE_MAXBYTES=$STDERR_LOGFILE_MAXBYTES
+DEFAULT_STDERR_LOGFILE_MAXBACKUPS=$STDERR_LOGFILE_MAXBACKUPS
+
+DEFAULT_LOGGER_MANAGER_SNAPSHOTS=$LOGGER_MANAGER_SNAPSHOTS
+DEFAULT_LOGGER_MANAGER_SNAPSHOT_DIR=$LOGGER_MANAGER_SNAPSHOT_DIR
 
 DEFAULT_SUPERVISORD_WEBINTERFACE=$SUPERVISORD_WEBINTERFACE
 DEFAULT_SUPERVISORD_WEBINTERFACE_AUTH=$SUPERVISORD_WEBINTERFACE_AUTH
@@ -429,6 +490,90 @@ function create_user {
           sudo usermod -a -G tty $RVDAS_USER
           sudo usermod -a -G dialout $RVDAS_USER
           sudo usermod -a -G sudo $RVDAS_USER
+    fi
+}
+
+###########################################################################
+###########################################################################
+# Add venv activation to the OpenRVDAS user's login script, so that they
+# don't have to source it by hand every time they log in.
+#
+# Note that nothing in a running OpenRVDAS depends on this: every program
+# supervisord runs invokes the venv's binaries by their absolute paths.
+# This is purely a convenience for humans at a shell prompt.
+#
+# Expect the following shell variables to be appropriately set:
+# RVDAS_USER - valid username
+# INSTALL_ROOT - path where openrvdas/ is found
+function add_venv_to_login_script {
+    VENV_ACTIVATE=${INSTALL_ROOT}/openrvdas/venv/bin/activate
+    VENV_MARKER="# Added by OpenRVDAS installer"
+
+    # Which file to append to depends on the user's login shell: zsh never
+    # reads .bashrc, and MacOS accounts default to zsh. Look the shell and
+    # home directory up rather than assuming, because the RVDAS user is
+    # often one that predates this install.
+    if [ $OS_TYPE == 'MacOS' ]; then
+        RVDAS_SHELL=$(dscl . -read /Users/${RVDAS_USER} UserShell 2>/dev/null | awk '{print $2}')
+        RVDAS_HOME=$(dscl . -read /Users/${RVDAS_USER} NFSHomeDirectory 2>/dev/null | awk '{print $2}')
+    else
+        RVDAS_SHELL=$(getent passwd ${RVDAS_USER} | cut -d: -f7)
+        RVDAS_HOME=$(getent passwd ${RVDAS_USER} | cut -d: -f6)
+    fi
+
+    if [ -z "$RVDAS_HOME" ]; then
+        echo "Unable to find home directory for $RVDAS_USER; skipping."
+        echo "To activate the venv by hand: source ${VENV_ACTIVATE}"
+        return
+    fi
+
+    case "$RVDAS_SHELL" in
+        *zsh)
+            LOGIN_SCRIPT=${RVDAS_HOME}/.zshrc ;;
+        *bash)
+            LOGIN_SCRIPT=${RVDAS_HOME}/.bashrc ;;
+        *)
+            echo "Don't know the login script for shell '${RVDAS_SHELL}'; skipping."
+            echo "To activate the venv by hand: source ${VENV_ACTIVATE}"
+            return ;;
+    esac
+
+    # Already pointing at this venv? Nothing to do. If a previous install
+    # left a line pointing somewhere else, say so rather than adding a
+    # second activation or quietly rewriting a file we don't own.
+    if [ -f "$LOGIN_SCRIPT" ]; then
+        if grep -qF "$VENV_ACTIVATE" "$LOGIN_SCRIPT"; then
+            echo "$LOGIN_SCRIPT already activates ${VENV_ACTIVATE}"
+            return
+        fi
+        if grep -qF "$VENV_MARKER" "$LOGIN_SCRIPT"; then
+            echo "WARNING: $LOGIN_SCRIPT already has an OpenRVDAS venv line"
+            echo "pointing at a different install. Leaving it alone - remove it"
+            echo "by hand if you want ${VENV_ACTIVATE} activated instead."
+            return
+        fi
+    fi
+
+    # The 'case' guard keeps this to interactive shells: bash also reads
+    # .bashrc for the likes of 'ssh host command', and those shouldn't have
+    # their python swapped out from under them. The -f test keeps a moved or
+    # rebuilt venv from producing an error on every single login.
+    # A quoted string rather than a heredoc: the bash 3.2 that MacOS ships
+    # can't parse a heredoc containing ';;' inside a command substitution.
+    VENV_SNIPPET="
+${VENV_MARKER} - activate the OpenRVDAS virtual environment
+case \$- in *i*)
+    [ -f ${VENV_ACTIVATE} ] && . ${VENV_ACTIVATE} ;;
+esac"
+
+    echo "Adding OpenRVDAS venv activation to $LOGIN_SCRIPT"
+    # The installer runs as a user with sudo rather than as root, so write
+    # as $RVDAS_USER; otherwise a created-on-demand .bashrc ends up owned
+    # by whoever ran the install.
+    if [ "$RVDAS_USER" == "${SUDO_USER:-$USER}" ]; then
+        echo "$VENV_SNIPPET" >> "$LOGIN_SCRIPT"
+    else
+        echo "$VENV_SNIPPET" | sudo -u "$RVDAS_USER" tee -a "$LOGIN_SCRIPT" > /dev/null
     fi
 }
 
@@ -520,10 +665,6 @@ function install_prereqs {
 
     # CentOS/RHEL
     elif [ $OS_TYPE == 'CentOS' ]; then
-        if [ $OS_VERSION == '7' ]; then
-            sudo yum install -y deltarpm
-        fi
-
         # Check if EPEL repository is installed by trying to install supervisor
         if dnf list available supervisor --enablerepo=epel &> /dev/null; then
             echo "EPEL is already available - skipping installation."
@@ -546,64 +687,19 @@ function install_prereqs {
             #sqlite-devel \
             #python3 python3-devel python3-pip
 
-        # Django 3+ requires a more recent version of sqlite3 than is
-        # included in CentOS 7. So instead of yum installing python3 and
-        # sqlite3, we build them from scratch. Painfully slow, but hey -
-        # isn't that par for CentOS builds?
-        export LD_LIBRARY_PATH=/usr/local/lib
-        export LD_RUN_PATH=/usr/local/lib
-
-        # Check if correct SQLite3 is installed
-        SQLITE_VERSION=3320300
-        #required_version="3.32.3"
-
         if ! command -v sqlite3 &> /dev/null
         then
             echo "SQLite3 is not installed. Installing ..."
             sudo yum install -y sqlite sqlite-devel
-#        else
-#            # Get the current version of SQLite3
-#            current_version=$(sqlite3 --version | awk '{print $1}')
-#
-#            # Compare the current version with the required version
-#            if [[ "$current_version" != "$required_version" ]]
-#            then
-#                echo "SQLite3 version $required_version is required, but version $current_version is installed. Installing version $required_version..."
-#                sudo yum install -y sqlite-$required_version sqlite-devel
-#            else
-#                echo "SQLite3 version $required_version is already installed."
-#            fi
         fi
 
-        if [ $OS_VERSION == '7' ] || [ $OS_VERSION == '8' ]; then
-            # Build Python, too, if we don't have right version
-            PYTHON_VERSION='3.8.3'
-            if [ "`/usr/local/bin/python3 --version`" == "Python $PYTHON_VERSION" ]; then
-                echo Already have appropriate version of Python3
-            else
-                OPENRVDAS_INSTALL_TMP_DIR=openrvdas_install_tmp
-                mkdir $OPENRVDAS_INSTALL_TMP_DIR
-                pushd $OPENRVDAS_INSTALL_TMP_DIR
-                yum install -y make
-                #cd /var/tmp    # Nope - some systems bar executing anything in /tmp
-                PYTHON_BASE=Python-${PYTHON_VERSION}
-                PYTHON_TGZ=${PYTHON_BASE}.tgz
-                [ -e $PYTHON_TGZ ] || wget https://www.python.org/ftp/python/${PYTHON_VERSION}/${PYTHON_TGZ}
-                tar xvf ${PYTHON_TGZ}
-                cd ${PYTHON_BASE}
-                sh ./configure # --enable-optimizations
-                sudo make altinstall
-
-                sudo ln -s -f /usr/local/bin/python3.8 /usr/local/bin/python3
-                sudo ln -s -f /usr/local/bin/pip3.8 /usr/local/bin/pip3
-                popd
-            fi
-        elif [ $OS_VERSION == '8' ] || [ $OS_VERSION == '9' ] || [ $OS_VERSION == '10' ]; then
-            sudo yum install -y python3 python3-devel
+        # OpenRVDAS requires Python 3.11+. RHEL 9's python3 is 3.9, so
+        # install AppStream's python3.11 alongside it; from RHEL 10 on,
+        # python3 is new enough. find_python picks whichever is suitable.
+        if [ "$OS_VERSION" == '9' ]; then
+            sudo yum install -y python3.11 python3.11-devel
         else
-            echo "Install error: unknown OS_VERSION should have been caught earlier?!?"
-            echo "OS_VERSION = \"$OS_VERSION\""
-            exit_gracefully
+            sudo yum install -y python3 python3-devel
         fi
 
     # Ubuntu/Debian
@@ -618,7 +714,55 @@ function install_prereqs {
         sudo DEBIAN_FRONTEND=noninteractive apt install -y git nginx libreadline-dev \
             python3-dev python3-pip python3-venv libsqlite3-dev \
             openssh-server supervisor libssl-dev
+
+        # OpenRVDAS requires Python 3.11+. Ubuntu 22.04's python3 is 3.10,
+        # so install python3.11 from the deadsnakes PPA alongside it. The
+        # PPA is Ubuntu-only; elsewhere, find_python reports the problem.
+        if { [[ "$OS_DISTRO" == ubuntu* ]] || [ "$OS_DISTRO" == 'linuxmint' ]; } && \
+           ! python3 -c 'import sys; sys.exit(0 if sys.version_info >= (3, 11) else 1)'; then
+            echo "System python3 is $(python3 --version 2>&1); installing python3.11 from ppa:deadsnakes/ppa"
+            sudo DEBIAN_FRONTEND=noninteractive apt install -y software-properties-common
+            sudo add-apt-repository -y ppa:deadsnakes/ppa
+            sudo apt-get update
+            sudo DEBIAN_FRONTEND=noninteractive apt install -y \
+                python3.11 python3.11-venv python3.11-dev
+        fi
     fi
+}
+
+###########################################################################
+###########################################################################
+# Set PYTHON_BIN to the interpreter both virtual environments (the main one
+# and the React UI's backend) are built with. OpenRVDAS requires Python
+# 3.11+ (requires-python in pyproject.toml); install_prereqs makes sure
+# one is installed.
+function find_python {
+    # On macOS we install python@3.12 explicitly (uWSGI doesn't support 3.14+).
+    # python@3.12 is keg-only in Homebrew so it is not in PATH; use the opt path.
+    # Derive the Homebrew prefix inline in case install_prereqs hasn't set it.
+    if [ "${OS_TYPE:-}" == 'MacOS' ]; then
+        local brew_prefix="${HOMEBREW_PREFIX:-$( [ "$(uname -m)" = "arm64" ] && echo /opt/homebrew || echo /usr/local )}"
+        PYTHON_BIN="${brew_prefix}/opt/python@3.12/bin/python3.12"
+        if [ ! -x "$PYTHON_BIN" ]; then
+            echo "ERROR: python@3.12 not found at $PYTHON_BIN. Please run: brew install python@3.12"
+            exit_gracefully
+        fi
+        return
+    fi
+
+    # Prefer the system python3 if it's new enough, then the python3.11
+    # install_prereqs adds (deadsnakes on Ubuntu 22.04, AppStream on RHEL 9).
+    local candidate
+    for candidate in python3 python3.11 python3.12; do
+        if command -v "$candidate" > /dev/null && \
+           "$candidate" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 11) else 1)' 2> /dev/null; then
+            PYTHON_BIN=$(command -v "$candidate")
+            return
+        fi
+    done
+    echo "ERROR: OpenRVDAS requires Python 3.11 or newer, but found none;"
+    echo "python3 is $(python3 --version 2>&1)."
+    exit_gracefully
 }
 
 ###########################################################################
@@ -708,41 +852,9 @@ function setup_python_packages {
     # Set up virtual environment
     VENV_PATH=$INSTALL_ROOT/openrvdas/venv
 
-    ## Bit of a challenge here - if our new install has a newer version of
-    ## Python or something, reusing the existing venv can cause subtle
-    ## havoc. But deleting and rebuilding it each time is a mess. Commenting
-    ## out the delete for now...
-    ##
-    # We'll rebuild the virtual environment each time to avoid version skew
-    #if [ -d $VENV_PATH ];then
-    #    mv $VENV_PATH ${VENV_PATH}.bak.$$
-    #fi
-
-    #if [ -e '${HOMEBREW_BASE}/bin/python3' ];then
-    #    eval "$(${HOMEBREW_BASE}/bin/brew shellenv)"
-    #    PYTHON_PATH=${HOMEBREW_BASE}/bin/python3
-    #elif [ -e '/usr/local/bin/python3' ];then
-    #    PYTHON_PATH=/usr/local/bin/python3
-    #elif [ -e '/usr/bin/python3' ];then
-    #    PYTHON_PATH=/usr/bin/python3
-    #else
-    #    echo 'No python3 found?!?'
-    #    exit_gracefully
-    #fi
-
     echo "Creating virtual environment"
     cd $INSTALL_ROOT/openrvdas
-    # On macOS we install python@3.12 explicitly (uWSGI doesn't support 3.14+).
-    # python@3.12 is keg-only in Homebrew so it is not in PATH; use the opt path.
-    if [ "${OS_TYPE:-}" == 'MacOS' ]; then
-        PYTHON_BIN="${HOMEBREW_PREFIX}/opt/python@3.12/bin/python3.12"
-        if [ ! -x "$PYTHON_BIN" ]; then
-            echo "ERROR: python@3.12 not found at $PYTHON_BIN. Please run: brew install python@3.12"
-            exit_gracefully
-        fi
-    else
-        PYTHON_BIN=python3
-    fi
+    find_python
 
     # If an existing venv was built with a different Python, recreate it.
     if [ -d "$VENV_PATH" ]; then
@@ -824,10 +936,23 @@ function setup_nginx {
         SSL_COMMENT='#'   # do comment out SSL stuff
     fi
 
-    if [[ "$UI_TYPE" == "react" ]]; then
-        setup_nginx_react
+    # Where nginx's mime.types lives; both UIs' configs include it
+    if [ $OS_TYPE == 'MacOS' ]; then
+        NGINX_ETC_HOME=${HOMEBREW_PREFIX}/etc
     else
-        setup_nginx_django
+        NGINX_ETC_HOME=/etc
+    fi
+
+    # Write the nginx config for BOTH UIs, not just the one selected on this
+    # run. Only the selected UI's config is actually loaded (supervisor
+    # decides that), but generating both keeps their port/SSL settings in
+    # sync. Otherwise the unselected UI's config stays frozen at whatever
+    # answers were given the last time that UI was installed, and switching
+    # to it later - e.g. via utils/switch_ui.sh - silently serves on a
+    # different port, or without SSL, than the UI it replaced.
+    setup_nginx_django
+    if [ -d "${INSTALL_ROOT}/openrvdas/web_frontend" ]; then
+        setup_nginx_react
     fi
 }
 
@@ -845,7 +970,7 @@ events {
 }
 
 http {
-    #include       mime.types;
+    include       ${NGINX_ETC_HOME}/nginx/mime.types;
     default_type  application/octet-stream;
 
     #log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
@@ -909,7 +1034,6 @@ http {
         }
         location /static {
             alias ${INSTALL_ROOT}/openrvdas/django_gui/static; # project static files
-            types { text/css css; text/javascript js; }
             autoindex on;
         }
         location /docs {
@@ -917,10 +1041,10 @@ http {
             autoindex on;
         }
 
-        # Internally, Cached Data Server operates on port 8766; we proxy
-        # it externally, serve cached data server at $SERVER_PORT/cds-ws
+        # Internally, Cached Data Server operates on port ${CACHED_DATA_SERVER_PORT};
+        # we proxy it externally, serving cached data at $SERVER_PORT/cds-ws
         location /cds-ws {
-            proxy_pass http://localhost:8766;
+            proxy_pass http://localhost:${CACHED_DATA_SERVER_PORT};
             proxy_http_version 1.1;
             proxy_set_header Upgrade \$http_upgrade;
             proxy_set_header Connection \$connection_upgrade;
@@ -953,12 +1077,6 @@ EOF
 # Write the nginx config for the React/FastAPI UI
 function setup_nginx_react {
     REACT_NGINX_CONF=$INSTALL_ROOT/openrvdas/web_frontend/openrvdas_nginx.conf
-
-    if [ $OS_TYPE == 'MacOS' ]; then
-        NGINX_ETC_HOME=${HOMEBREW_PREFIX}/etc
-    else
-        NGINX_ETC_HOME=/etc
-    fi
 
     cat > $REACT_NGINX_CONF<<EOF
 # openrvdas_nginx.conf - React/FastAPI UI
@@ -1019,7 +1137,7 @@ http {
 
         # CachedDataServer WebSocket proxy
         location /cds-ws {
-            proxy_pass http://localhost:8766;
+            proxy_pass http://localhost:${CACHED_DATA_SERVER_PORT};
             proxy_http_version 1.1;
             proxy_set_header Upgrade \$http_upgrade;
             proxy_set_header Connection \$connection_upgrade;
@@ -1060,34 +1178,68 @@ EOF
 
 ###########################################################################
 ###########################################################################
-# Install Node.js >= MIN_NODE_MAJOR if not already present or too old
-MIN_NODE_MAJOR=20
+# Install Node.js >= MIN_NODE_VERSION if not already present or too old.
+# vite 8 needs ^20.19.0 || >=22.12.0, vitest 5 needs ^22.12.0 || ^24 || >=26
+# and jsdom needs ^20.19.0 || ^22.13.0 || >=24, so 22.13.0 is the lowest
+# version that satisfies both the build and the test toolchain.
+MIN_NODE_VERSION=22.13.0
+
+# Succeed if the installed 'node' is at least MIN_NODE_VERSION. Compares
+# major.minor.patch numerically (no 'sort -V', which BSD sort lacks).
+function node_version_ok {
+    command -v node &>/dev/null || return 1
+    local have_major have_minor have_patch
+    local need_major need_minor need_patch
+    IFS=. read -r have_major have_minor have_patch <<< "$(node --version | sed 's/^v//; s/[^0-9.].*//')"
+    IFS=. read -r need_major need_minor need_patch <<< "$MIN_NODE_VERSION"
+    have_major=${have_major:-0}; have_minor=${have_minor:-0}; have_patch=${have_patch:-0}
+
+    [ "$have_major" -ne "$need_major" ] && { [ "$have_major" -gt "$need_major" ]; return; }
+    [ "$have_minor" -ne "$need_minor" ] && { [ "$have_minor" -gt "$need_minor" ]; return; }
+    [ "$have_patch" -ge "$need_patch" ]
+}
+
 function install_nodejs {
-    local need_install=true
-    if command -v node &>/dev/null; then
-        local current_major
-        current_major=$(node --version | sed 's/v\([0-9]*\).*/\1/')
-        if [ "$current_major" -ge "$MIN_NODE_MAJOR" ]; then
-            echo "Node.js already installed: $(node --version)"
-            need_install=false
-        else
-            echo "Node.js $(node --version) is too old (need >= v${MIN_NODE_MAJOR}), upgrading..."
-        fi
+    if node_version_ok; then
+        echo "Node.js already installed: $(node --version)"
+        return
+    elif command -v node &>/dev/null; then
+        echo "Node.js $(node --version) is too old (need >= v${MIN_NODE_VERSION}), upgrading..."
     else
         echo "Node.js not found, installing..."
     fi
 
-    if [ "$need_install" = true ]; then
-        if [ $OS_TYPE == 'MacOS' ]; then
+    if [ $OS_TYPE == 'MacOS' ]; then
+        # 'brew install' is a no-op when the formula is already installed,
+        # so an outdated brew node has to be upgraded instead.
+        if brew list --formula node &>/dev/null; then
+            env HOMEBREW_NO_AUTO_UPDATE=1 brew upgrade node
+        else
             env HOMEBREW_NO_AUTO_UPDATE=1 brew install node
-        elif [ $OS_TYPE == 'Ubuntu' ]; then
-            curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
-            sudo DEBIAN_FRONTEND=noninteractive apt install -y nodejs
-        elif [ $OS_TYPE == 'CentOS' ]; then
-            curl -fsSL https://rpm.nodesource.com/setup_lts.x | sudo bash -
-            sudo yum install -y nodejs
         fi
+    elif [ $OS_TYPE == 'Ubuntu' ]; then
+        curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+        sudo DEBIAN_FRONTEND=noninteractive apt install -y nodejs
+    elif [ $OS_TYPE == 'CentOS' ]; then
+        curl -fsSL https://rpm.nodesource.com/setup_lts.x | sudo bash -
+        sudo yum install -y nodejs
     fi
+
+    # Make sure the node now first on PATH is the new one - an older copy
+    # (nvm, /usr/local/bin, a versioned brew keg) can still shadow it.
+    hash -r
+    if ! node_version_ok; then
+        echo
+        echo "Node.js >= v${MIN_NODE_VERSION} is required to build the React UI,"
+        if command -v node &>/dev/null; then
+            echo "but '$(command -v node)' is still $(node --version) after installing."
+            echo "Remove or reorder the older Node.js on your PATH and re-run the installer."
+        else
+            echo "but no 'node' was found on PATH after installing."
+        fi
+        exit_gracefully
+    fi
+    echo "Node.js installed: $(node --version)"
 }
 
 ###########################################################################
@@ -1117,7 +1269,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES=15
 REFRESH_TOKEN_EXPIRE_DAYS=7
 FRONTEND_URL=${FRONTEND_URL}
 CACHED_DATA_SERVER_HOST=localhost
-CACHED_DATA_SERVER_PORT=8766
+CACHED_DATA_SERVER_PORT=${CACHED_DATA_SERVER_PORT}
 ENVIRONMENT=Production
 DEFAULT_ADMIN_USERNAME=${WEB_ADMIN_USER}
 DEFAULT_ADMIN_PASSWORD=${WEB_ADMIN_PASS}
@@ -1137,7 +1289,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES=15
 REFRESH_TOKEN_EXPIRE_DAYS=7
 FRONTEND_URL=${FRONTEND_URL}
 CACHED_DATA_SERVER_HOST=localhost
-CACHED_DATA_SERVER_PORT=8766
+CACHED_DATA_SERVER_PORT=${CACHED_DATA_SERVER_PORT}
 ENVIRONMENT=Production
 ENVDEFAULTS
 )
@@ -1152,24 +1304,21 @@ ENVDEFAULTS
     fi
 
     echo "Creating web backend virtual environment..."
-    # Use the same explicit Python 3.12 binary as the main venv on macOS;
-    # bare `python3` may resolve to a different version that won't produce
-    # the python3.12 symlink downstream code expects.
-    # Derive HOMEBREW_PREFIX inline in case this function runs before
-    # install_prereqs has set it in the environment.
-    if [ "${OS_TYPE:-}" == 'MacOS' ]; then
-        _BREW_PFX="${HOMEBREW_PREFIX:-$( [ "$(uname -m)" = "arm64" ] && echo /opt/homebrew || echo /usr/local )}"
-        BACKEND_PYTHON="${_BREW_PFX}/opt/python@3.12/bin/python3.12"
-    else
-        BACKEND_PYTHON=python3
-    fi
+    # Use the same interpreter as the main venv. find_python guarantees
+    # 3.11+, which web_backend/pyproject.toml also requires (its app/main.py
+    # uses the stdlib tomllib, new in 3.11).
+    find_python
+    BACKEND_PYTHON="$PYTHON_BIN"
 
-    # Remove a pre-existing venv that was built with the wrong Python; trying
-    # to update it in-place produces "No such file or directory: .../python3.12".
+    # Remove a pre-existing venv that was built with a different Python;
+    # trying to update it in-place produces "No such file or directory:
+    # .../python3.12" (or whichever interpreter it was originally built
+    # with). Compare reported versions rather than a hardcoded "3.12"
+    # string, since BACKEND_PYTHON differs by platform.
     if [ -d "$BACKEND_VENV" ]; then
         VENV_PYTHON="$BACKEND_VENV/bin/python3"
-        if [ ! -x "$VENV_PYTHON" ] || ! "$VENV_PYTHON" --version 2>&1 | grep -q "3\.12"; then
-            echo "Existing backend venv uses wrong Python; recreating..."
+        if [ ! -x "$VENV_PYTHON" ] || [ "$("$VENV_PYTHON" --version 2>&1)" != "$("$BACKEND_PYTHON" --version 2>&1)" ]; then
+            echo "Existing backend venv uses a different Python; recreating..."
             rm -rf "$BACKEND_VENV"
         fi
     fi
@@ -1179,6 +1328,24 @@ ENVDEFAULTS
     "$BACKEND_VENV/bin/pip" install \
         --trusted-host pypi.org --trusted-host files.pythonhosted.org \
         -r "$BACKEND_DIR/requirements.txt"
+
+    # Register OpenRVDAS's own package metadata in this venv (--no-deps: the
+    # backend reaches OpenRVDAS's modules via sys.path, not this install; this
+    # is only so importlib.metadata.version("openrvdas") can find it, for
+    # GET /api/v1/version). Version comes from git tags via setuptools_scm.
+    echo "Registering OpenRVDAS package metadata in web backend venv..."
+    "$BACKEND_VENV/bin/pip" install --no-deps --quiet \
+        --trusted-host pypi.org --trusted-host files.pythonhosted.org \
+        -e "${INSTALL_ROOT}/openrvdas"
+
+    # That metadata is frozen at install time, so it goes stale after a
+    # `git pull`. read_version.get_version() avoids that by asking
+    # setuptools_scm to read the version live from the git tree, but
+    # --no-deps above skips it - install it explicitly. Keep this range in
+    # sync with setuptools_scm in the top-level pyproject.toml.
+    "$BACKEND_VENV/bin/pip" install --quiet \
+        --trusted-host pypi.org --trusted-host files.pythonhosted.org \
+        "setuptools_scm>=8,<11"
 
     # Install packages needed by async_fastapi_server_api into the main venv
     # so logger_manager can import them when using --database fastapi.
@@ -1226,14 +1393,6 @@ function setup_new_ui_frontend {
                 echo "  Added missing key: ${key}"
             fi
         done < "${FRONTEND_DIR}/.env.dist"
-    fi
-
-    OPENRVDAS_VERSION=$(grep '^version' "${INSTALL_ROOT}/openrvdas/pyproject.toml" | sed 's/version = "\(.*\)"/\1/')
-    echo "Setting VITE_OPENRVDAS_VERSION=${OPENRVDAS_VERSION} in web frontend .env..."
-    if grep -q '^VITE_OPENRVDAS_VERSION=' "${FRONTEND_DIR}/.env"; then
-        sed -i -e "s|^VITE_OPENRVDAS_VERSION=.*|VITE_OPENRVDAS_VERSION=${OPENRVDAS_VERSION}|" "${FRONTEND_DIR}/.env"
-    else
-        echo "VITE_OPENRVDAS_VERSION=${OPENRVDAS_VERSION}" >> "${FRONTEND_DIR}/.env"
     fi
 
     echo "Installing frontend dependencies..."
@@ -1550,10 +1709,14 @@ EOF
     else
         LOGGER_MANAGER_DATABASE=django
     fi
+    LOGGER_MANAGER_SNAPSHOT_ARG=
+    if [ "$LOGGER_MANAGER_SNAPSHOTS" == 'yes' ] && [ -n "$LOGGER_MANAGER_SNAPSHOT_DIR" ]; then
+        LOGGER_MANAGER_SNAPSHOT_ARG=" --snapshot_dir ${LOGGER_MANAGER_SNAPSHOT_DIR}"
+    fi
     cat > $TEMP_FILE <<EOF
 ; Supervisor configurations for LoggerManager
 [program:logger_manager]
-command=${VENV_BIN}/python server/logger_manager.py --database ${LOGGER_MANAGER_DATABASE} --data_server_websocket :8766 -v -V --no-console
+command=${VENV_BIN}/python server/logger_manager.py --database ${LOGGER_MANAGER_DATABASE} --data_server_websocket :${CACHED_DATA_SERVER_PORT} -v -V --no-console${LOGGER_MANAGER_SNAPSHOT_ARG}
 environment=PYTHONPATH="${INSTALL_ROOT}/openrvdas",PATH="${VENV_BIN}:/usr/bin:/usr/local/bin"
 directory=${INSTALL_ROOT}/openrvdas
 priority=20
@@ -1562,8 +1725,8 @@ autorestart=true
 startretries=3
 killasgroup=true
 stderr_logfile=/var/log/openrvdas/logger_manager.stderr
-stderr_logfile_maxbytes=10000000 ; 10M
-stderr_logfile_maxbackups=100
+stderr_logfile_maxbytes=${STDERR_LOGFILE_MAXBYTES}
+stderr_logfile_maxbackups=${STDERR_LOGFILE_MAXBACKUPS}
 user=$RVDAS_USER
 EOF
     sudo mv $TEMP_FILE $LOGGER_MANAGER_FILE
@@ -1573,7 +1736,7 @@ EOF
     cat > $TEMP_FILE <<EOF
 ; Supervisor configurations for LoggerManager and CachedDataServer
 [program:cached_data_server]
-command=${VENV_BIN}/python server/cached_data_server.py --port 8766 --disk_cache /var/tmp/openrvdas/disk_cache --max_records 8640 -v
+command=${VENV_BIN}/python server/cached_data_server.py --port ${CACHED_DATA_SERVER_PORT} --disk_cache /var/tmp/openrvdas/disk_cache --max_records 8640 -v
 environment=PYTHONPATH="${INSTALL_ROOT}/openrvdas",PATH="${VENV_BIN}:/usr/bin:/usr/local/bin"
 directory=${INSTALL_ROOT}/openrvdas
 priority=10
@@ -1582,8 +1745,8 @@ autorestart=true
 startretries=3
 killasgroup=true
 stderr_logfile=/var/log/openrvdas/cached_data_server.stderr
-stderr_logfile_maxbytes=10000000 ; 10M
-stderr_logfile_maxbackups=100
+stderr_logfile_maxbytes=${STDERR_LOGFILE_MAXBYTES}
+stderr_logfile_maxbackups=${STDERR_LOGFILE_MAXBACKUPS}
 user=$RVDAS_USER
 EOF
     sudo mv $TEMP_FILE $CACHED_DATA_FILE
@@ -1602,8 +1765,8 @@ ${DJANGO_GUI_COMMENT}autorestart=true
 ${DJANGO_GUI_COMMENT}startretries=3
 ${DJANGO_GUI_COMMENT}killasgroup=true
 ${DJANGO_GUI_COMMENT}stderr_logfile=/var/log/openrvdas/nginx.stderr
-${DJANGO_GUI_COMMENT}stderr_logfile_maxbytes=10000000 ; 10M
-${DJANGO_GUI_COMMENT}stderr_logfile_maxbackups=100
+${DJANGO_GUI_COMMENT}stderr_logfile_maxbytes=${STDERR_LOGFILE_MAXBYTES}
+${DJANGO_GUI_COMMENT}stderr_logfile_maxbackups=${STDERR_LOGFILE_MAXBACKUPS}
 ${DJANGO_GUI_COMMENT};user=$RVDAS_USER
 
 ${DJANGO_GUI_COMMENT}[program:uwsgi]
@@ -1616,8 +1779,8 @@ ${DJANGO_GUI_COMMENT}autorestart=true
 ${DJANGO_GUI_COMMENT}startretries=3
 ${DJANGO_GUI_COMMENT}killasgroup=true
 ${DJANGO_GUI_COMMENT}stderr_logfile=/var/log/openrvdas/uwsgi.stderr
-${DJANGO_GUI_COMMENT}stderr_logfile_maxbytes=10000000 ; 10M
-${DJANGO_GUI_COMMENT}stderr_logfile_maxbackups=100
+${DJANGO_GUI_COMMENT}stderr_logfile_maxbytes=${STDERR_LOGFILE_MAXBYTES}
+${DJANGO_GUI_COMMENT}stderr_logfile_maxbackups=${STDERR_LOGFILE_MAXBACKUPS}
 ${DJANGO_GUI_COMMENT}user=$RVDAS_USER
 
 ${DJANGO_GUI_COMMENT}[group:django]
@@ -1638,8 +1801,8 @@ ${REACT_GUI_COMMENT}autorestart=true
 ${REACT_GUI_COMMENT}startretries=3
 ${REACT_GUI_COMMENT}killasgroup=true
 ${REACT_GUI_COMMENT}stderr_logfile=/var/log/openrvdas/nginx.stderr
-${REACT_GUI_COMMENT}stderr_logfile_maxbytes=10000000 ; 10M
-${REACT_GUI_COMMENT}stderr_logfile_maxbackups=100
+${REACT_GUI_COMMENT}stderr_logfile_maxbytes=${STDERR_LOGFILE_MAXBYTES}
+${REACT_GUI_COMMENT}stderr_logfile_maxbackups=${STDERR_LOGFILE_MAXBACKUPS}
 ${REACT_GUI_COMMENT};user=$RVDAS_USER
 
 ${REACT_GUI_COMMENT}[program:uvicorn]
@@ -1651,8 +1814,8 @@ ${REACT_GUI_COMMENT}autorestart=true
 ${REACT_GUI_COMMENT}startretries=3
 ${REACT_GUI_COMMENT}killasgroup=true
 ${REACT_GUI_COMMENT}stderr_logfile=/var/log/openrvdas/uvicorn.stderr
-${REACT_GUI_COMMENT}stderr_logfile_maxbytes=10000000 ; 10M
-${REACT_GUI_COMMENT}stderr_logfile_maxbackups=100
+${REACT_GUI_COMMENT}stderr_logfile_maxbytes=${STDERR_LOGFILE_MAXBYTES}
+${REACT_GUI_COMMENT}stderr_logfile_maxbackups=${STDERR_LOGFILE_MAXBACKUPS}
 ${REACT_GUI_COMMENT}user=$RVDAS_USER
 
 ${REACT_GUI_COMMENT}[group:react_ui]
@@ -1672,8 +1835,8 @@ ${SIMULATE_NBP_COMMENT}autorestart=true
 ${SIMULATE_NBP_COMMENT}startretries=3
 ${SIMULATE_NBP_COMMENT}killasgroup=true
 ${SIMULATE_NBP_COMMENT}stderr_logfile=/var/log/openrvdas/simulate_nbp.stderr
-${SIMULATE_NBP_COMMENT}stderr_logfile_maxbytes=10000000 ; 10M
-${SIMULATE_NBP_COMMENT}stderr_logfile_maxbackups=100
+${SIMULATE_NBP_COMMENT}stderr_logfile_maxbytes=${STDERR_LOGFILE_MAXBYTES}
+${SIMULATE_NBP_COMMENT}stderr_logfile_maxbackups=${STDERR_LOGFILE_MAXBACKUPS}
 ${SIMULATE_NBP_COMMENT}user=$RVDAS_USER
 
 ${SIMULATE_NBP_COMMENT}[group:simulate]
@@ -1703,10 +1866,9 @@ function setup_selinux {
     setsebool -P httpd_can_network_connect 1
     semanage permissive -a httpd_t
 
-    # Label the CachedDataServer's fixed port so httpd_t can connect to it.
-    # Port 8766 is the universal CDS port across all OpenRVDAS installations.
-    semanage port -a -t http_port_t -p tcp 8766 2>/dev/null || \
-        semanage port -m -t http_port_t -p tcp 8766
+    # Label the CachedDataServer's port so httpd_t can connect to it.
+    semanage port -a -t http_port_t -p tcp ${CACHED_DATA_SERVER_PORT} 2>/dev/null || \
+        semanage port -m -t http_port_t -p tcp ${CACHED_DATA_SERVER_PORT}
 
     echo "Done configuring SELinux permissions"
 }
@@ -1821,61 +1983,6 @@ function setup_ufw {
 }
 
 
-###########################################################################
-###########################################################################
-# Ubuntu ONLY - Set up ufw and open relevant ports
-function setup_ufw {
-    if [ $OS_TYPE != 'Ubuntu' ]; then
-        echo "No ufw setup on $OS_TYPE"
-        return
-    fi
-
-    apt-get install -y ufw
-    echo "#####################################################################"
-    echo "Configuring ufw firewall..."
-
-    ufw --force reset
-    ufw default deny incoming
-    ufw default allow outgoing
-
-    # Always allow SSH to prevent lockout
-    ufw allow ssh
-
-    # Web console port
-    ufw allow ${SERVER_PORT}/tcp
-
-    # If SSL is enabled, also open the non-SSL port for HTTP->HTTPS redirect
-    if [ "$USE_SSL" == 'yes' ] && [ "$NONSSL_SERVER_PORT" != "$SERVER_PORT" ]; then
-        ufw allow ${NONSSL_SERVER_PORT}/tcp
-    fi
-
-    # Supervisord web interface
-    if [ "$SUPERVISORD_WEBINTERFACE" == 'yes' ]; then
-        ufw allow ${SUPERVISORD_WEBINTERFACE_PORT}/tcp
-    fi
-
-    if [ ! -z "$TCP_PORTS_TO_OPEN" ]; then
-        for PORT in "${TCP_PORTS_TO_OPEN[@]}"
-        do
-            PORT="$(echo -e "${PORT}" | tr -d '[:space:]')"  # trim whitespace
-            echo Opening $PORT/tcp
-            ufw allow ${PORT}/tcp
-        done
-    fi
-
-    if [ ! -z "$UDP_PORTS_TO_OPEN" ]; then
-        for PORT in "${UDP_PORTS_TO_OPEN[@]}"
-        do
-            PORT="$(echo -e "${PORT}" | tr -d '[:space:]')"  # trim whitespace
-            echo Opening $PORT/udp
-            ufw allow ${PORT}/udp
-        done
-    fi
-
-    ufw --force enable
-    echo "Done configuring ufw"
-}
-
 
 
 ###########################################################################
@@ -1888,6 +1995,7 @@ function setup_ufw {
 
 # Set OS_TYPE to either MacOS, CentOS or Ubuntu
 get_os_type
+check_os_supported
 
 # On MacOS, Homebrew cannot run as root, so the script must not be
 # invoked as root or via sudo.
@@ -2027,6 +2135,13 @@ if [ $OS_TYPE == 'MacOS' ]; then
 else
     RVDAS_GROUP=$RVDAS_USER
 fi
+
+# An activated venv takes over python/pip for everything that user does,
+# which is what you want for a dedicated service account and less clearly
+# what you want for someone's personal login.
+echo
+yes_no "Activate the OpenRVDAS venv when $RVDAS_USER logs in?" $DEFAULT_ACTIVATE_VENV_ON_LOGIN
+ACTIVATE_VENV_ON_LOGIN=$YES_NO_RESULT
 
 echo
 read -p "OpenRVDAS database password for user $RVDAS_USER? ($RVDAS_USER) " RVDAS_DATABASE_PASSWORD
@@ -2189,6 +2304,19 @@ fi
 
 
 #########################################################################
+# Port for the CachedDataServer
+echo
+echo "#####################################################################"
+echo "The CachedDataServer holds recent data in memory and serves it to the"
+echo "web console and display widgets. Browsers reach it through the web"
+echo "server at <hostname>/cds-ws, so this port is internal and does not"
+echo "need to be open to the outside. Change it only if something else on"
+echo "this machine already uses it."
+echo
+read -p "Port for the CachedDataServer? ($DEFAULT_CACHED_DATA_SERVER_PORT) " CACHED_DATA_SERVER_PORT
+CACHED_DATA_SERVER_PORT=${CACHED_DATA_SERVER_PORT:-$DEFAULT_CACHED_DATA_SERVER_PORT}
+
+#########################################################################
 # Choose web UI
 echo
 echo "#####################################################################"
@@ -2268,6 +2396,37 @@ if [ $SUPERVISORD_WEBINTERFACE == 'yes' ]; then
     fi
 fi
 echo
+
+#########################################################################
+#########################################################################
+# Automatic config snapshots (logger_manager --snapshot_dir)
+echo "#####################################################################"
+echo "The logger manager can save a snapshot of the cruise definition - every"
+echo "file it is built from, the code version and the environment - whenever a"
+echo "definition is loaded or one of its files changes, as a record of what ran."
+echo "Each takes about 200 KB."
+echo
+yes_no "Take automatic snapshots of the cruise definition?" $DEFAULT_LOGGER_MANAGER_SNAPSHOTS
+LOGGER_MANAGER_SNAPSHOTS=$YES_NO_RESULT
+
+# Ask where only if they're wanted, but keep the directory either way, so
+# that turning snapshots back on later suggests the same place.
+LOGGER_MANAGER_SNAPSHOT_DIR=$DEFAULT_LOGGER_MANAGER_SNAPSHOT_DIR
+if [ "$LOGGER_MANAGER_SNAPSHOTS" == 'yes' ]; then
+    read -p "Directory for snapshots? ($DEFAULT_LOGGER_MANAGER_SNAPSHOT_DIR) " LOGGER_MANAGER_SNAPSHOT_DIR
+    LOGGER_MANAGER_SNAPSHOT_DIR=${LOGGER_MANAGER_SNAPSHOT_DIR:-$DEFAULT_LOGGER_MANAGER_SNAPSHOT_DIR}
+fi
+echo
+
+#########################################################################
+#########################################################################
+# Rotation limits for the stderr of the services supervisord runs. Not
+# prompted for - the defaults suit most installs, and the install already asks
+# plenty. To change them, edit these in $PREFERENCES_FILE and re-run; they
+# will be picked up as the defaults next time. Per-logger stderr is rotated
+# separately by logger_manager (--stderr_max_bytes, --stderr_backup_count).
+STDERR_LOGFILE_MAXBYTES=${DEFAULT_STDERR_LOGFILE_MAXBYTES}
+STDERR_LOGFILE_MAXBACKUPS=${DEFAULT_STDERR_LOGFILE_MAXBACKUPS}
 
 #########################################################################
 #########################################################################
@@ -2381,10 +2540,19 @@ sudo chmod 755 ${INSTALL_ROOT}/openrvdas
 sudo chown -R ${RVDAS_USER} ${INSTALL_ROOT}/openrvdas
 sudo chgrp -R ${RVDAS_GROUP} ${INSTALL_ROOT}/openrvdas
 
-# Create openrvdas log and tmp directories
-sudo mkdir -p /var/log/openrvdas /var/tmp/openrvdas
-sudo chown $RVDAS_USER /var/log/openrvdas /var/tmp/openrvdas
-sudo chgrp $RVDAS_GROUP /var/log/openrvdas /var/tmp/openrvdas
+# Create openrvdas log and tmp directories. Per-logger stderr goes in the
+# loggers/ subdirectory so it isn't interleaved with the stderr of the
+# services supervisord runs, whose files sit at the top level.
+sudo mkdir -p /var/log/openrvdas/loggers /var/tmp/openrvdas
+sudo chown $RVDAS_USER /var/log/openrvdas /var/log/openrvdas/loggers /var/tmp/openrvdas
+sudo chgrp $RVDAS_GROUP /var/log/openrvdas /var/log/openrvdas/loggers /var/tmp/openrvdas
+
+# The directory for automatic config snapshots, if they're wanted
+if [ "$LOGGER_MANAGER_SNAPSHOTS" == 'yes' ]; then
+    sudo mkdir -p "$LOGGER_MANAGER_SNAPSHOT_DIR"
+    sudo chown $RVDAS_USER "$LOGGER_MANAGER_SNAPSHOT_DIR"
+    sudo chgrp $RVDAS_GROUP "$LOGGER_MANAGER_SNAPSHOT_DIR"
+fi
 
 echo
 echo "#####################################################################"
@@ -2448,6 +2616,15 @@ fi
 # binaries using their venv paths, so don't need it.
 deactivate
 
+# Save the RVDAS user a 'source .../activate' on every login, if they
+# asked for it. Expects RVDAS_USER and INSTALL_ROOT to be set.
+if [ $ACTIVATE_VENV_ON_LOGIN == 'yes' ]; then
+    echo
+    echo "#####################################################################"
+    echo "Adding virtual environment activation to $RVDAS_USER's login script"
+    add_venv_to_login_script
+fi
+
 echo
 echo "#########################################################################"
 echo "Installation complete - happy logging!"
@@ -2455,6 +2632,31 @@ echo
 echo "OpenRVDAS has been installed to:"
 echo "  ${INSTALL_ROOT}/openrvdas"
 echo
-echo "To activate the virtual environment in a new terminal, run:"
+if [ $ACTIVATE_VENV_ON_LOGIN == 'yes' ]; then
+    echo "The virtual environment will be activated the next time $RVDAS_USER"
+    echo "logs in. To activate it in this terminal, run:"
+else
+    echo "To activate the virtual environment in a new terminal, run:"
+fi
 echo "  source ${INSTALL_ROOT}/openrvdas/venv/bin/activate"
 echo
+
+# Cruise definitions carry their own copy of the CDS address, in the
+# data_server variable that logger templates interpolate. The installer has
+# no business rewriting a site's cruise files, so say something instead.
+if [ "$CACHED_DATA_SERVER_PORT" != '8766' ]; then
+    echo "#####################################################################"
+    echo "NOTE: the CachedDataServer is configured on port ${CACHED_DATA_SERVER_PORT},"
+    echo "not the default 8766."
+    echo
+    echo "Cruise definitions carry their own copy of that address, in the"
+    echo "'data_server' variable that logger templates interpolate. Loggers"
+    echo "that write to or read from the CDS will not find it until that"
+    echo "variable matches, e.g.:"
+    echo
+    echo "  variables:"
+    echo "    data_server: localhost:${CACHED_DATA_SERVER_PORT}"
+    echo
+    echo "The sample definitions under test/ still say 8766."
+    echo
+fi

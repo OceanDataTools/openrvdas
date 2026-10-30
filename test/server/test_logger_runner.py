@@ -9,7 +9,8 @@ import warnings
 
 from logger.readers.text_file_reader import TextFileReader  # noqa: E402
 from logger.writers.text_file_writer import TextFileWriter  # noqa: E402
-from server.logger_runner import LoggerRunner  # noqa: E402
+from server.logger_runner import (LoggerRunner, STDERR_MAX_BYTES,  # noqa: E402
+                                  STDERR_BACKUP_COUNT)
 
 CONFIG = {
     "name": "logger",
@@ -31,6 +32,109 @@ obtaining a copy of this software and associated documentation files
 (the "Software"), to deal in the Software without restriction,
 including without limitation the rights to use, copy, modify, merge,
 publish, distribute, sublicense, and/or sell...""".split('\n')
+
+
+################################################################################
+class TestLoggerRunnerStderrPath(unittest.TestCase):
+    """LoggerRunner has to create the directory its stderr file lives in.
+
+    Per-logger stderr defaults to /var/log/openrvdas/loggers/, which the
+    installer creates - but an install upgraded without re-running it, or a
+    custom --stderr_file_pattern, can point somewhere that doesn't exist. The
+    handler is opened with delay=True, so a missing directory would not fail
+    at construction: it would fail on the first write, where logging swallows
+    the error and the stderr line is simply lost.
+    """
+
+    ############################
+    def test_creates_missing_stderr_directory(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            stderr_file = os.path.join(tmpdir, 'loggers', 'gyr1.stderr')
+            self.assertFalse(os.path.exists(os.path.dirname(stderr_file)))
+
+            runner = LoggerRunner(config=CONFIG, name='gyr1',
+                                  stderr_filename=stderr_file)
+            self.assertTrue(os.path.isdir(os.path.dirname(stderr_file)),
+                            'LoggerRunner should have created the directory')
+
+            # And the handler can actually write there.
+            runner.stderr_file_handler.emit(
+                logging.LogRecord('gyr1', logging.INFO, '', 0,
+                                  'a line of stderr', None, None))
+            runner.stderr_file_handler.close()
+            with open(stderr_file) as f:
+                self.assertIn('a line of stderr', f.read())
+
+    ############################
+    def test_nested_missing_directories(self):
+        """Several levels deep, as a non-default pattern might be."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            stderr_file = os.path.join(tmpdir, 'a', 'b', 'c', 's330.stderr')
+            LoggerRunner(config=CONFIG, name='s330',
+                         stderr_filename=stderr_file)
+            self.assertTrue(os.path.isdir(os.path.dirname(stderr_file)))
+
+    ############################
+    def test_existing_directory_is_left_alone(self):
+        """An existing directory, and anything in it, must survive."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            stderr_dir = os.path.join(tmpdir, 'loggers')
+            os.makedirs(stderr_dir)
+            keeper = os.path.join(stderr_dir, 'previous.stderr')
+            with open(keeper, 'w') as f:
+                f.write('earlier output\n')
+
+            LoggerRunner(config=CONFIG, name='gyr1',
+                         stderr_filename=os.path.join(stderr_dir, 'gyr1.stderr'))
+            self.assertTrue(os.path.exists(keeper))
+            with open(keeper) as f:
+                self.assertEqual(f.read(), 'earlier output\n')
+
+
+################################################################################
+class TestLoggerRunnerStderrRotation(unittest.TestCase):
+    """The rotation caps are parameters, not hardcoded constants (#607)."""
+
+    ############################
+    def test_defaults_match_module_constants(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            runner = LoggerRunner(
+                config=CONFIG, name='gyr1',
+                stderr_filename=os.path.join(tmpdir, 'gyr1.stderr'))
+            self.assertEqual(runner.stderr_file_handler.maxBytes,
+                             STDERR_MAX_BYTES)
+            self.assertEqual(runner.stderr_file_handler.backupCount,
+                             STDERR_BACKUP_COUNT)
+
+    ############################
+    def test_caps_can_be_overridden(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            runner = LoggerRunner(
+                config=CONFIG, name='gyr1',
+                stderr_filename=os.path.join(tmpdir, 'gyr1.stderr'),
+                stderr_max_bytes=512, stderr_backup_count=3)
+            self.assertEqual(runner.stderr_file_handler.maxBytes, 512)
+            self.assertEqual(runner.stderr_file_handler.backupCount, 3)
+
+    ############################
+    def test_overridden_caps_are_actually_applied(self):
+        """Not just stored - the file really does rotate at the new size."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            stderr_file = os.path.join(tmpdir, 'gyr1.stderr')
+            runner = LoggerRunner(config=CONFIG, name='gyr1',
+                                  stderr_filename=stderr_file,
+                                  stderr_max_bytes=200,
+                                  stderr_backup_count=2)
+            handler = runner.stderr_file_handler
+            for i in range(20):
+                handler.emit(logging.LogRecord('gyr1', logging.INFO, '', 0,
+                                               'x' * 80, None, None))
+            handler.close()
+
+            # backup_count=2 means .1 and .2 exist, and no .3
+            self.assertTrue(os.path.exists(stderr_file + '.1'))
+            self.assertTrue(os.path.exists(stderr_file + '.2'))
+            self.assertFalse(os.path.exists(stderr_file + '.3'))
 
 
 ################################################################################

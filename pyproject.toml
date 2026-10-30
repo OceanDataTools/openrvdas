@@ -1,13 +1,13 @@
 [build-system]
-requires = ["setuptools>=68", "wheel"]
+requires = ["setuptools>=68", "setuptools_scm>=8,<11", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "openrvdas"
-version = "0.1.0"
+dynamic = ["version"]
 description = "Open Research Vessel Data Acquisition System"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.11"
 license = { text = "MIT" }
 authors = [
   { name = "OpenRVDAS Contributors" }
@@ -24,6 +24,12 @@ dependencies = [
   "pyserial",
   "setproctitle",
   "websockets<18",
+
+  # Also a build-time dependency above, under [build-system]. Kept here too
+  # so logger/utils/read_version.py can recompute the version live from git
+  # at runtime instead of relying solely on the version frozen into
+  # dist-info metadata at install time (see that module's docstring).
+  "setuptools_scm>=8,<11",
 
   # Django is required regardless of which web UI (if any) is installed:
   # LoggerManager uses the Django ORM as a backing store by default, and
@@ -91,6 +97,14 @@ dev = [
 #
 # When a new major is validated against OpenRVDAS, bump the ceiling here - this
 # is the only place dependencies are declared. See issue #590.
+#
+# No LOWER bound on websockets, deliberately. websockets 14 moved serve() from
+# the legacy implementation to the asyncio one, and CachedDataServer's HTTP
+# routes (/fields, /latest/) only work with the latter - it detects which is
+# installed and skips those routes on older versions. The floor was left off
+# so that Python 3.8 installs (Ubuntu 20), which can't get websockets 14,
+# stayed resolvable. Since requires-python became >=3.11 (#716), a >=14 floor
+# - and dropping that legacy fallback - would be possible.
 # ---------------------------------------------------------------------------
 
 [project.urls]
@@ -104,7 +118,6 @@ logger_manager = "openrvdas_cli:logger_manager"
 logger_runner = "openrvdas_cli:logger_runner"
 lmcmd = "openrvdas_cli:lmcmd"
 cached_data_server = "openrvdas_cli:cached_data_server"
-websocket_server = "openrvdas_cli:websocket_server"
 server_api_command_line = "openrvdas_cli:server_api_command_line"
 read_config = "openrvdas_cli:read_config"
 validate_config = "openrvdas_cli:validate_config"
@@ -114,11 +127,21 @@ simulate_serial = "openrvdas_cli:simulate_serial"
 check_parse_format = "openrvdas_cli:check_parse_format"
 cruise_config_generator = "openrvdas_cli:cruise_config_generator"
 git_info = "openrvdas_cli:git_info"
+config_snapshot = "openrvdas_cli:config_snapshot"
 openrvdas_manage = "openrvdas_cli:openrvdas_manage"
 
 [tool.setuptools]
 py-modules = ["openrvdas_cli", "manage"]
 include-package-data = true
+
+# Version is derived from git tags (e.g. v2.6.1) rather than hand-maintained
+# here, so it can never drift from what's actually released. Untagged
+# commits get a PEP 440 dev version like "2.6.2.dev3+g1234567".
+# fallback_version covers builds with no .git tree to inspect (GitHub's
+# "Download ZIP", an rsync'd source tree, a Docker COPY with .git excluded),
+# where setuptools_scm would otherwise raise and fail the build outright.
+[tool.setuptools_scm]
+fallback_version = "0.0.0"
 
 [tool.setuptools.packages.find]
 where = ["."]

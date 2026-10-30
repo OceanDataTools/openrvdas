@@ -23,7 +23,7 @@ function exit_gracefully {
     if [ -n "$INSTALL_ROOT" ];then
         deactivate
     fi
-    return -1 2> /dev/null || exit -1  # exit correctly if sourced/bashed
+    return 1 2> /dev/null || exit 1  # exit correctly if sourced/bashed
 }
 
 #########################################################################

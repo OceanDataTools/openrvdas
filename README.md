@@ -68,7 +68,7 @@ Extensive online documentation, including quick start guides, is also available 
 ## Installation
 
 OpenRVDAS is written primarily in Python 3.[^1] The installation script at [utils/install_openrvdas.sh](utils/install_openrvdas.sh)
-has been tested on CentOS 7 and 8, Ubuntu 18 and 20, Raspbian and MacOS, but it may also work on other systems.
+supports MacOS, Ubuntu 22.04 and later, Debian 12 and later (including Raspberry Pi OS), Linux Mint 22 and later, and RHEL/Rocky/AlmaLinux 9 and later.
 Please refer to [INSTALL.md](./INSTALL.md) for details.
 
 ## Ship/Organization-Dependent Code
@@ -117,34 +117,4 @@ Creative Commons (CC) Attribution-NonCommercial licence.
   installation.** Please see the [Highcharts Licensing
   FAQ](https://shop.highsoft.com/faq/licensing) for details.
 
-[Leaflet](https://leafletjs.com/) is a software library made available under the [2-clause BSD license](https://github.com/Leaflet/Leaflet/blob/master/LICENSE):
-
-  ```
-  Copyright (c) 2010-2018, Vladimir Agafonkin
-  Copyright (c) 2010-2011, CloudMade
-  All rights reserved.
-  
-  Redistribution and use in source and binary forms, with or without modification, are
-  permitted provided that the following conditions are met:
-  
-     1. Redistributions of source code must retain the above copyright notice, this list of
-        conditions and the following disclaimer.
-  
-     2. Redistributions in binary form must reproduce the above copyright notice, this list
-        of conditions and the following disclaimer in the documentation and/or other materials
-        provided with the distribution.
-  
-  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
-  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
-  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-  COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-  HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
-  TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-  ```
-
-[^1]: Recommended version of Python is 3.6 or higher, but most listener code has been verified
-to run on 3.5 and higher. Server code such as `logger_manager.py` may experience problems on 
-3.5 due to changes in the async module.
+[^1]: OpenRVDAS requires Python 3.11 or newer.

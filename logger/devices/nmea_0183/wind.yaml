@@ -1,0 +1,57 @@
+################################################################################
+# NMEA 0183 device type: NMEA_Wind (Wind Sensor)
+#
+# Part of the NMEA 0183 library: logger/devices/NMEA_0183.yaml includes every
+# file in this directory. See README.md here for the format types used,
+# talker IDs and proprietary sentence prefixes.
+################################################################################
+
+######################################
+# Wind Sensor
+######################################
+NMEA_Wind:
+  category: "device_type"
+  description: "Anemometer / wind sensor sentences"
+
+  format:
+    # Wind Speed and Angle
+    MWV: "${:2l}MWV,{WindAngle:of},{Reference:ow},{WindSpeed:of},{WindSpeedUnits:ow},{Status:ow}*{CheckSum:x}"
+
+    # Wind Direction and Speed (true)
+    MWD: "${:2l}MWD,{WindDirTrue:of},T,{WindDirMag:of},M,{WindSpeedKt:of},N,{WindSpeedMs:of},M*{CheckSum:x}"
+
+    # Relative Wind Speed and Angle
+    VWR: "${:2l}VWR,{WindAngle:of},{WindSide:ow},{WindSpeedKt:of},N,{WindSpeedMs:of},M,{WindSpeedKm:of},K*{CheckSum:x}"
+
+    # True Wind Speed and Angle
+    VWT: "${:2l}VWT,{WindAngle:of},{WindSide:ow},{WindSpeedKt:of},N,{WindSpeedMs:of},M,{WindSpeedKm:of},K*{CheckSum:x}"
+
+  fields:
+    WindAngle:
+      units: "degrees"
+      description: "Wind angle (0-360 for MWV/MWD, 0-180 for VWR/VWT)"
+    Reference:
+      description: "R=Relative, T=True"
+    WindSpeed:
+      description: "Wind speed (units per WindSpeedUnits)"
+    WindSpeedUnits:
+      description: "K=km/h, M=m/s, N=knots, S=statute mph"
+    Status:
+      description: "A=Valid, V=Invalid"
+    WindDirTrue:
+      units: "degrees"
+      description: "Wind direction, true (from)"
+    WindDirMag:
+      units: "degrees"
+      description: "Wind direction, magnetic (from)"
+    WindSpeedKt:
+      units: "knots"
+      description: "Wind speed in knots"
+    WindSpeedMs:
+      units: "m/s"
+      description: "Wind speed in meters per second"
+    WindSpeedKm:
+      units: "km/hour"
+      description: "Wind speed in kilometers per hour"
+    WindSide:
+      description: "L=Left/Port, R=Right/Starboard"

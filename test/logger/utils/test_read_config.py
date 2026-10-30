@@ -143,6 +143,54 @@ class TestReadConfig(unittest.TestCase):
                 mock_log.assert_called_once()
                 self.assertIn("Invalid YAML syntax", mock_log.call_args[0][0])
 
+    def test_read_config_collects_errors(self):
+        """If passed a list for errors, read_config says why it failed."""
+        # A file that can't be found
+        errors = []
+        with patch('logging.error') as mock_log:
+            result = read_config.read_config("nonexistent.yaml", errors=errors)
+        self.assertEqual(result, {})
+        mock_log.assert_called_once()  # it's still logged
+        self.assertEqual(len(errors), 1)
+        self.assertIn('not found', errors[0])
+        self.assertIn('nonexistent.yaml', errors[0])
+
+        # A file with a syntax error; the message should say where
+        errors = []
+        with patch('builtins.open', mock_open(read_data='key1: [unclosed\n')):
+            with patch('logging.error'):
+                result = read_config.read_config("invalid.yaml", errors=errors)
+        self.assertEqual(result, {})
+        self.assertEqual(len(errors), 1)
+        self.assertIn('Invalid YAML syntax in "invalid.yaml"', errors[0])
+        self.assertIn('line 1', errors[0])
+
+        # A file that is merely empty is not an error
+        errors = []
+        with patch('builtins.open', mock_open(read_data='')):
+            result = read_config.read_config("empty.yaml", errors=errors)
+        self.assertEqual(result, {})
+        self.assertEqual(errors, [])
+
+    def test_expand_cruise_definition_collects_include_errors(self):
+        """An included file that can't be parsed is reported via errors."""
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            with open(os.path.join(tmpdirname, 'included.yaml'), 'w') as f:
+                f.write('configs: [unclosed\n')
+            definition = {
+                'includes_base_dir': tmpdirname,
+                'includes': ['included.yaml'],
+                'loggers': {},
+                'configs': {},
+            }
+            errors = []
+            with patch('logging.error'):
+                read_config.expand_cruise_definition(definition, errors=errors)
+
+        self.assertEqual(len(errors), 1)
+        self.assertIn('Invalid YAML syntax', errors[0])
+        self.assertIn('included.yaml', errors[0])
+
     def test_integration_read_config(self):
         """Integration test for read_config with real files."""
         # Create the main config file
@@ -281,6 +329,38 @@ nested:
         # Assert that the included file was found and merged correctly
         self.assertEqual(config.get('from_included'), 'value')
         self.assertEqual(config.get('main_config'), 'value')
+
+    def test_nested_includes(self):
+        """An included file's own includes are expanded too, so a file can
+        consist of nothing but includes, as NMEA_0183.yaml does (#728)."""
+        leaf = self.create_yaml_file('leaf.yaml', 'leaf_key: leaf_value\n')
+        stub = self.create_yaml_file(
+            'stub.yaml', f'includes_base_dir: {self.base_dir}\n'
+                         'includes:\n  - leaf.yaml\n')
+        files_read = []
+        result = read_config.expand_includes(
+            {'includes_base_dir': self.base_dir, 'includes': ['stub.yaml'],
+             'top_key': 'top_value'}, files_read=files_read)
+        self.assertEqual(result['leaf_key'], 'leaf_value')
+        self.assertEqual(result['top_key'], 'top_value')
+        self.assertEqual(files_read, [stub, leaf])
+
+    def test_include_cycle(self):
+        """A file that includes itself, directly or not, is reported and
+        skipped rather than recursing forever."""
+        self.create_yaml_file('a.yaml', f'includes_base_dir: {self.base_dir}\n'
+                                        'includes:\n  - b.yaml\na_key: a\n')
+        self.create_yaml_file('b.yaml', f'includes_base_dir: {self.base_dir}\n'
+                                        'includes:\n  - a.yaml\nb_key: b\n')
+        errors = []
+        with patch('logging.error'):
+            result = read_config.expand_includes(
+                {'includes_base_dir': self.base_dir, 'includes': ['a.yaml']},
+                errors=errors)
+        self.assertEqual((result['a_key'], result['b_key']), ('a', 'b'))
+        self.assertEqual(len(errors), 1)
+        self.assertIn('Include cycle', errors[0])
+        self.assertIn('a.yaml', errors[0])
 
 
 class TestExpandLoggerConfigs(unittest.TestCase):
@@ -748,7 +828,6 @@ loggers:
         result = read_config.substitute_variables({"bool_var": "<<var_1|true>>"}, {})
         self.assertEqual(result["bool_var"], True)
         self.assertIsInstance(result["bool_var"], bool)
-
 
     def test_template_not_found(self) -> None:
         """Test that a ValueError is raised when a template is not found."""
@@ -1426,7 +1505,6 @@ loggers:
             self.assertEqual(result["modes"]["mode2"]["logger2"], "logger2-config2")
 
 
-
 class TestExpandModesValidation(unittest.TestCase):
     """Tests for expand_modes, including the dict-mode config existence check."""
 
@@ -1683,6 +1761,162 @@ class TestExpandCruiseDefinitionErrors(unittest.TestCase):
         errors = []
         read_config.expand_cruise_definition(cfg, errors=errors)
         self.assertGreaterEqual(len(errors), 2)
+
+
+class TestAveragingLoggerTemplate(unittest.TestCase):
+    """contrib/logger_templates/averaging_logger_template.yaml takes the fields
+    to average as variables; snapshot_logger_template.yaml, which hard-codes
+    them, is unchanged so existing cruise definitions keep working (#663)."""
+
+    def expand(self, snapshot_variables, template='averaging_logger_template'):
+        """Expand a minimal cruise definition with a snapshot logger."""
+        definition = {
+            'includes': [f'contrib/logger_templates/{template}.yaml'],
+            'variables': {'data_server': 'localhost:8766',
+                          'influx_bucket_name': 'openrvdas'},
+            'loggers': {'snapshot': {'logger_template': template,
+                                     'variables': snapshot_variables}},
+        }
+        errors = []
+        with self.assertNoLogs(level='ERROR'):  # e.g. unexpanded variables
+            result = read_config.expand_cruise_definition(definition, errors=errors)
+        self.assertEqual(errors, [])
+        return result['configs']['snapshot-on']
+
+    def field_spec(self, config):
+        return {spec['algorithm']: spec['sources']
+                for spec in config['transforms'][0]['kwargs']['field_spec']}
+
+    def test_fields_come_from_variables(self):
+        config = self.expand({
+            'snapshot_fields': ['AirTemp', 'WindSpeed', 'WindDir'],
+            'average_fields': ['AirTemp', 'WindSpeed'],
+            'direction_fields': ['WindDir'],
+            'interval': 30, 'window': 30})
+        self.assertEqual(config['readers'][0]['kwargs']['subscription']['fields'],
+                         ['AirTemp', 'WindSpeed', 'WindDir'])
+        self.assertEqual(self.field_spec(config),
+                         {'boxcar_average': ['AirTemp', 'WindSpeed'],
+                          'polar_average': ['WindDir']})
+
+    def test_no_direction_fields(self):
+        """A ship with nothing to average as a direction can pass []."""
+        from logger.transforms.interpolation_transform import InterpolationTransform
+        from logger.utils.das_record import DASRecord
+
+        config = self.expand({
+            'snapshot_fields': ['AirTemp'], 'average_fields': ['AirTemp'],
+            'direction_fields': [], 'interval': 10, 'window': 30})
+        self.assertEqual(self.field_spec(config)['polar_average'], [])
+
+        transform = InterpolationTransform(**config['transforms'][0]['kwargs'])
+        results = []
+        for second in range(40):
+            result = transform.transform(
+                DASRecord(timestamp=1000 + second, fields={'AirTemp': 20.0}))
+            results.extend(result if isinstance(result, list) else [result] if result else [])
+        self.assertTrue(results)
+        self.assertEqual(results[-1]['fields'], {'AvgAirTemp': 20.0})
+
+    def test_omit_direction_fields(self):
+        """direction_fields is optional and defaults to [] (#700)."""
+        from logger.transforms.interpolation_transform import InterpolationTransform
+
+        config = self.expand({
+            'snapshot_fields': ['AirTemp'], 'average_fields': ['AirTemp'],
+            'interval': 30, 'window': 30})
+        self.assertEqual(self.field_spec(config),
+                         {'boxcar_average': ['AirTemp'], 'polar_average': []})
+        transform = InterpolationTransform(**config['transforms'][0]['kwargs'])
+        self.assertEqual(list(transform.field_spec), ['AvgAirTemp'])
+
+    def test_omit_average_fields(self):
+        """average_fields is optional and defaults to [] (#700)."""
+        from logger.transforms.interpolation_transform import InterpolationTransform
+
+        config = self.expand({
+            'snapshot_fields': ['WindDir'], 'direction_fields': ['WindDir'],
+            'interval': 30, 'window': 30})
+        self.assertEqual(self.field_spec(config),
+                         {'boxcar_average': [], 'polar_average': ['WindDir']})
+        transform = InterpolationTransform(**config['transforms'][0]['kwargs'])
+        self.assertEqual(list(transform.field_spec), ['AvgWindDir'])
+
+    def test_snapshot_template_unchanged(self):
+        """A cruise definition written for the old template - which supplies
+        only snapshot_fields - must still expand and run exactly as before."""
+        from logger.transforms.interpolation_transform import InterpolationTransform
+
+        config = self.expand({
+            'snapshot_fields': ['MwxAirTemp', 'PortTrueWindDir'],
+            'interval': 30, 'window': 30}, template='snapshot_logger_template')
+        self.assertEqual(self.field_spec(config), {
+            'boxcar_average': ['MwxAirTemp', 'RTMPTemp', 'PortTrueWindSpeed',
+                               'StbdTrueWindSpeed', 'MwxBarometer', 'KnudDepthHF',
+                               'KnudDepthLF', 'Grv1Value'],
+            'polar_average': ['PortTrueWindDir', 'StbdTrueWindDir']})
+        InterpolationTransform(**config['transforms'][0]['kwargs'])
+
+    def test_sample_cruise_definitions(self):
+        """The NBP1406 sample cruises average what they subscribe to."""
+        for filename in ('test/NBP1406/NBP1406_cruise.yaml',
+                         'test/NBP1406/NBP1406_cruise_config_templates.yaml'):
+            with self.subTest(filename=filename):
+                errors = []
+                cruise = read_config.expand_cruise_definition(
+                    read_config.read_config(filename, errors=errors), errors=errors)
+                self.assertEqual(errors, [])
+                config = cruise['configs']['snapshot-on']
+                subscribed = config['readers'][0]['kwargs']['subscription']['fields']
+                averaged = [field for sources in self.field_spec(config).values()
+                            for field in sources]
+                self.assertEqual(sorted(averaged), sorted(subscribed))
+
+
+class TestUDPLoggerTemplate(unittest.TestCase):
+    """contrib/logger_templates/udp_logger_template.yaml takes an optional
+    udp_eol variable, whose default comes from the template file itself."""
+
+    def expand(self, global_variables=None, logger_variables=None):
+        definition = {
+            'includes': ['contrib/logger_templates/udp_logger_template.yaml'],
+            'variables': {'cruise': 'TEST', 'raw_udp_port': 6224,
+                          'udp_destination': '255.255.255.255',
+                          'file_root': '/var/tmp/log', **(global_variables or {})},
+            'loggers': {'gyro': {'logger_template': 'udp_logger_template',
+                                 'variables': {'reader_udp_port': 13001,
+                                               **(logger_variables or {})}}},
+        }
+        errors = []
+        with self.assertNoLogs(level='ERROR'):  # e.g. unexpanded variables
+            cruise = read_config.expand_cruise_definition(definition, errors=errors)
+        self.assertEqual(errors, [])
+        return {name: cruise['configs'][f'gyro-{name}']['readers'][0]['kwargs']
+                for name in ('net', 'net+file')}
+
+    def test_default_is_one_record_per_packet(self):
+        """A cruise definition that doesn't mention udp_eol - every existing
+        one - gets UDPReader's own default, so behaves exactly as before."""
+        for config, reader_kwargs in self.expand().items():
+            with self.subTest(config=config):
+                self.assertEqual(reader_kwargs, {'port': 13001, 'eol': None})
+
+    def test_logger_can_set_eol(self):
+        for config, reader_kwargs in self.expand(
+                logger_variables={'udp_eol': '\r\n'}).items():
+            with self.subTest(config=config):
+                self.assertEqual(reader_kwargs['eol'], '\r\n')
+
+    def test_cruise_can_set_eol_for_all_loggers(self):
+        for config, reader_kwargs in self.expand(
+                global_variables={'udp_eol': '\n'}).items():
+            with self.subTest(config=config):
+                self.assertEqual(reader_kwargs['eol'], '\n')
+
+    def test_logger_setting_overrides_cruise_setting(self):
+        reader_kwargs = self.expand(global_variables={'udp_eol': '\n'},
+                                    logger_variables={'udp_eol': '\r\n'})
+        self.assertEqual(reader_kwargs['net']['eol'], '\r\n')
 
 
 if __name__ == "__main__":

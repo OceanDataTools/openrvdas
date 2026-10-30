@@ -107,9 +107,24 @@ class ModifyValueTransform(Transform):
         if not self.can_process_record(record):  # inherited from BaseModule()
             return self.digest_record(record)  # inherited from BaseModule()
 
-        # If we've got a dict, convert it to a DASRecord for uniform handling
-        if isinstance(record, dict):
-            record = DASRecord(record, data_id=self.data_id)
+        # If we've got a dict, convert it to a DASRecord for uniform handling,
+        # remembering its shape so we can hand back the same thing we were
+        # given, as SelectFieldsTransform and DeltaTransform do.
+        #
+        # NOTE: DASRecord's first positional argument is json_str, not fields.
+        # Passing the dict positionally handed it to json.loads() and raised
+        # on every dict record - see issue #644.
+        dict_input = isinstance(record, dict)
+        enveloped = False
+        if dict_input:
+            # A dict may carry a 'fields' sub-dict, or be a bare field dict.
+            if isinstance(record.get('fields'), dict):
+                enveloped = True
+                record = DASRecord(fields=record['fields'],
+                                   data_id=record.get('data_id', self.data_id),
+                                   timestamp=record.get('timestamp', 0))
+            else:
+                record = DASRecord(fields=record, data_id=self.data_id)
 
         # Make a copy of the original record we're going to munge
         result = copy.deepcopy(record)
@@ -129,7 +144,11 @@ class ModifyValueTransform(Transform):
             value = record.get(field)
             try:
                 value = float(value)
-            except ValueError:
+            # float(None) raises TypeError rather than ValueError, so a field
+            # that arrives as None - 'no reading', or JSON null - must be
+            # caught here too, or it propagates out of the transform instead
+            # of being skipped like any other unconvertible value (issue #644).
+            except (ValueError, TypeError):
                 if not self.quiet:
                     logging.warning(f'ModifyValueTransform could not convert field {field} value '
                                     f'"{value}" to float for modification. Type: {type(value)}')
@@ -159,6 +178,19 @@ class ModifyValueTransform(Transform):
         # add it to any existing metadata for record, overwriting existing fields.
         if self._should_attach_metadata(record):
             result.metadata.update(self.metadata)
+
+        # Hand back the shape we were given.
+        if dict_input:
+            if enveloped:
+                envelope = {'timestamp': result.timestamp, 'fields': result.fields}
+                if result.data_id is not None:
+                    envelope['data_id'] = result.data_id
+                if result.metadata:
+                    envelope['metadata'] = result.metadata
+                return envelope
+            # A bare field dict has nowhere to put a timestamp or metadata;
+            # return just the fields, matching what we were handed.
+            return result.fields
 
         return result
 

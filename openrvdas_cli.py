@@ -38,10 +38,6 @@ def cached_data_server() -> None:
     _run("server.cached_data_server")
 
 
-def websocket_server() -> None:
-    _run("server.websocket_server")
-
-
 def server_api_command_line() -> None:
     _run("server.server_api_command_line")
 
@@ -76,6 +72,10 @@ def cruise_config_generator() -> None:
 
 def git_info() -> None:
     _run("utils.git_info")
+
+
+def config_snapshot() -> None:
+    _run("server.config_snapshot")
 
 
 def openrvdas_manage() -> None:

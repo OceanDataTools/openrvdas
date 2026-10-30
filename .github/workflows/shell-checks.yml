@@ -1,0 +1,122 @@
+name: Shell Checks
+
+# Nothing else in CI touches the shell scripts, and install_openrvdas.sh is
+# both the highest-churn file in the repo and the first thing every user runs.
+# See issue #638.
+
+on:
+  push:
+    branches: [dev]
+    paths:
+      - '**/*.sh'
+      - '.github/workflows/shell-checks.yml'
+  pull_request:
+    paths:
+      - '**/*.sh'
+      - '.github/workflows/shell-checks.yml'
+
+jobs:
+  # Parse every script under both bash versions we support. The MacOS runner
+  # is the point of this job: it ships bash 3.2, which rejects constructs that
+  # bash 5 accepts - a heredoc containing ';;' inside a command substitution,
+  # for one. Such a construct authored on Linux passes review and then breaks
+  # every MacOS install. See OPERATIONS.md, "install_openrvdas.sh - platform
+  # constraints".
+  syntax:
+    name: bash -n (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+
+    steps:
+      - uses: actions/checkout@v6
+
+      # /bin/bash explicitly, not whatever 'bash' resolves to on PATH: the
+      # MacOS runners also carry a newer Homebrew bash, and checking that one
+      # would defeat the purpose of this job.
+      - name: Report bash version
+        run: /bin/bash --version | head -1
+
+      - name: Syntax-check every shell script
+        run: |
+          status=0
+          while IFS= read -r f; do
+            if /bin/bash -n "$f"; then
+              echo "ok   $f"
+            else
+              echo "FAIL $f"
+              status=1
+            fi
+          done < <(git ls-files '*.sh' | grep -v '^local/' | grep -v '^utils/deprecated/')
+          exit $status
+
+  duplicate-functions:
+    name: No duplicate function definitions
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      # ShellCheck has no check for redefined functions, and bash accepts a
+      # redefinition silently, so this needs its own check. Issue #615 shipped
+      # two setup_ufw definitions in install_openrvdas.sh.
+      - name: Check for duplicate function definitions
+        run: bash scripts/check_duplicate_functions.sh
+
+  shellcheck:
+    name: ShellCheck
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      # Pinned rather than apt's: the finding count is the baseline the
+      # ratchet in #638 measures against, and it shifts with the tool
+      # version (0.9.0 from apt reports 539 where 0.11.0 reports 465, all
+      # in the 'note' band). A baseline that moves on its own isn't one.
+      # Bump deliberately, re-measuring the baseline in the same change.
+      - name: Install ShellCheck
+        env:
+          SC_VERSION: v0.11.0
+        run: |
+          curl -fsSL "https://github.com/koalaman/shellcheck/releases/download/${SC_VERSION}/shellcheck-${SC_VERSION}.linux.x86_64.tar.xz" \
+            | tar -xJ
+          sudo install -m 0755 "shellcheck-${SC_VERSION}/shellcheck" /usr/local/bin/shellcheck
+          rm -rf "shellcheck-${SC_VERSION}"
+
+      - name: Report ShellCheck version
+        run: shellcheck --version
+
+      # Blocking gate: errors only. These are genuine defects rather than
+      # style, and the tree is expected to be clean of them.
+      - name: ShellCheck (severity=error, blocking)
+        run: |
+          # shellcheck disable=SC2046
+          shellcheck --severity=error --external-sources \
+            $(git ls-files '*.sh' | grep -v '^local/' | grep -v '^utils/deprecated/')
+
+      # Informational: the full warning/info/style set. Not a gate yet - the
+      # tree carries a backlog of 465 of these as of this workflow landing,
+      # under the pinned ShellCheck above (0 error, 37 warning, 428 note;
+      # dominated by SC2086 unquoted expansions x272, SC2006 backticks x86,
+      # SC2162 read-without-r x60). The intent per issue #638 is to work that
+      # count down and then raise the blocking severity, rather than fix them
+      # all in one change.
+      # --format=gcc so the count is one line per finding. The default format
+      # groups findings by source line, which under-counts (402 vs 465) and
+      # wouldn't match the baseline documented above.
+      - name: ShellCheck (all severities, informational)
+        continue-on-error: true
+        run: |
+          # shellcheck disable=SC2046
+          shellcheck --severity=style --external-sources --format=gcc \
+            $(git ls-files '*.sh' | grep -v '^local/' | grep -v '^utils/deprecated/') \
+            | tee shellcheck-full.txt || true
+          echo
+          echo "Total findings: $(wc -l < shellcheck-full.txt)"
+          echo "  by severity:"
+          for sev in error warning note; do
+            echo "    $sev: $(grep -c ": $sev:" shellcheck-full.txt || true)"
+          done

@@ -1,11 +1,18 @@
 ###########################################################
 ###########################################################
-# YAML cruise definition file for OpenRVDAS.
+# Sample cruise definition demonstrating config templates.
 #
-# Created by:
-#   command:  <<command_line>>
-#   time:     <<date_time>> UTC
-#   user:     <<user>>
+# A logger_template (as NBP1406_cruise.yaml uses throughout) templates a
+# whole logger: all of its configs. A config_template templates a single
+# config, so that loggers can build their configs from shared pieces. Here:
+#
+#   - mwx1 uses serial_logger_template_from_config_templates.yaml, a logger
+#     template whose configs are themselves config templates;
+#   - s330 lists its configs explicitly, each one a config template from
+#     contrib/config_templates/serial_reader_config_template.yaml.
+#
+# It is a cut-down NBP1406_cruise.yaml - two of the ship's instruments, and
+# the same derived-data loggers - so see that file for the whole ship.
 #
 ###########################################################
 cruise:
@@ -16,10 +23,10 @@ cruise:
 ###########################################################
 includes:
   - contrib/config_templates/serial_reader_config_template.yaml
-  - contrib/logger_templates/serial_logger_template_new.yaml
+  - contrib/logger_templates/serial_logger_template_from_config_templates.yaml
   - contrib/logger_templates/parse_data_logger_template.yaml
   - contrib/logger_templates/true_winds_logger_template.yaml
-  - contrib/logger_templates/snapshot_logger_template.yaml
+  - contrib/logger_templates/averaging_logger_template.yaml
 
 ###########################################################
 # Global variables - can be overridden by individual loggers
@@ -32,15 +39,30 @@ variables:
   raw_udp_port: 6224
   parsed_udp_port: 6225
 
+  # Sample data is written under /var/tmp so it is clearly disposable: on most
+  # Linux distributions systemd-tmpfiles removes anything in /var/tmp that has
+  # gone untouched for 30 days. That is what you want for a demo, and emphatically
+  # not what you want for a cruise - data would vanish weeks later, silently.
+  #
+  # Before using this file as a template for a real deployment, point file_root
+  # at a location intended to hold data, e.g.
+  #
+  #   file_root: /var/data/openrvdas
+  #
+  # OpenRVDAS creates the per-logger subdirectories beneath file_root itself, but
+  # it cannot create the root: that lives somewhere only root can write. Create it
+  # once, owned by the user the loggers run as:
+  #
+  #   sudo mkdir -p /var/data/openrvdas
+  #   sudo chown rvdas:rvdas /var/data/openrvdas
+  #
+  # (No such step is needed for /var/tmp, which is world-writable - which is why
+  # these samples run with no setup.)
   file_root: /var/tmp/log
   parse_definition_path: test/NBP1406/devices/nbp_devices.yaml
 
   data_server: localhost:8766
   influx_bucket_name: openrvdas
-
-  command_line: local/usap/create_template_cruise.py test/NBP1406/NBP1406_port_defs.yaml
-  date_time: Thu Mar 13 04:38:45 2025
-  user: pablo
 
 ###########################################################
 loggers:
@@ -89,18 +111,25 @@ loggers:
       true_dir_name: PortTrueWindDir
       true_speed_name: PortTrueWindSpeed
 
-  # # Read a bunch of variables from CDS, compute 30-second snapshot and write back
-  # # to CDS and optionally InfluxDB. This *totally* needs a way to be generalized!!!
+  # Read a bunch of variables from CDS, compute 30-second snapshot and write back
+  # to CDS and optionally InfluxDB.
   snapshot:
-    logger_template: snapshot_logger_template
+    logger_template: averaging_logger_template
     variables:
+      # Every field to read: the two lists below together
       snapshot_fields: [MwxAirTemp, PortTrueWindDir, PortTrueWindSpeed, MwxBarometer]
+      # Averaged as plain numbers
+      average_fields: [MwxAirTemp, PortTrueWindSpeed, MwxBarometer]
+      # Averaged as directions, so that 359 and 1 average to 0
+      direction_fields: [PortTrueWindDir]
       interval: 30
       window: 30
 
 ###########################################################
+default_mode: 'off'
+
 modes:
-  'off':  # without a 'default_mode' key, first defined mode will be default
+  'off':
     [s330-off, mwx1-off, parse_data-off, true_winds_port-off, snapshot-off]
 
   no_write:

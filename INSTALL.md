@@ -1,7 +1,9 @@
 # OpenRVDAS Installation Guide
-At the time of this writing OpenRVDAS has been built and tested against MacOS X, CentOS 7-9, Rocky 8-9, Ubuntu 18-23
-and Raspbian operating systems. It may be possible to build against other Linux-based operating systems, and guides
-will be added here as they are verified and documented.
+OpenRVDAS requires Python 3.11 or newer. The installation script supports MacOS, Ubuntu 22.04 and later, Debian 12
+and later (including Raspberry Pi OS), Linux Mint 22 and later, and RHEL/Rocky/AlmaLinux 9 and later. On Ubuntu 22.04
+it installs Python 3.11 from the deadsnakes PPA, and on RHEL-family 9 from AppStream. Releases newer than those the
+script has been tested on are installed with a notice. Other Linux distributions based on Ubuntu, Debian or RHEL may
+also work; the script treats them as their base distribution.
 
 You will need to be able to run the ``sudo`` command. The script handles privilege escalation internally — do **not** run it with ``sudo`` directly.
 
@@ -93,6 +95,22 @@ OpenRVDAS user to create? (rvdas)
 Checking if user rvdas exists yet
 User exists, skipping
 ```
+
+OpenRVDAS runs out of a Python virtual environment, and working with it from the
+command line means having that environment activated. The script offers to add
+the activation to that user's login script (`~/.bashrc` or `~/.zshrc`, depending
+on their shell), so that it happens automatically on every login:
+
+```
+Activate the OpenRVDAS venv when rvdas logs in? (yes)
+```
+
+This is a convenience for working at a shell prompt and nothing else: the
+OpenRVDAS processes that supervisord runs invoke the virtual environment's
+binaries by their absolute paths, so they are unaffected either way. Note that
+an activated virtual environment takes over `python` and `pip` for everything
+that user does, which is why the question defaults to 'no' on MacOS, where the
+OpenRVDAS user is typically your own login rather than a dedicated account.
 
 By default, anyone can access the OpenRVDAS Django console as a viewer. But to load configurations or
 change logger states you must be logged in. The system will create a login for the OpenRVDAS user
@@ -196,6 +214,10 @@ To activate the virtual environment in a new terminal, run:
   source /opt/openrvdas/venv/bin/activate
 ```
 
+(If you answered 'yes' to activating the virtual environment on login, it will
+say so instead, and the environment will be active the next time that user logs
+in.)
+
 ## Post-Installation
 
 The installation should allow you to connect via http to the server at the name you specified at the start of the script (e.g. ``lmg-dast-s1-t``). If you want to connect using any other names, e.g. the fully-qualified domain name ``lmg-dast-s1-t.lmg.usap.gov``, you'll need to add it to the Django server settings file in ``django_gui/settings.py``:
@@ -270,6 +292,9 @@ The OpenRVDAS virtual environment may be activated for a shell by running
 ```
 source /opt/openrvdas/venv/bin/activate
 ```
+
+(If you told the installation script to activate the virtual environment on
+login, this has already been done for you in any new shell.)
 
 (substituting your actual install root if you chose a different location — it is printed at the end of the installation). The primary effect of this activation is to modify the default path searched for binaries so that invoking ``python`` uses the version at ``venv/bin/python`` rather than the default system path. Once activated, OpenRVDAS scripts may be run by invoking their location, e.g.:
 

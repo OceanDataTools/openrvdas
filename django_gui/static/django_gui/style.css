@@ -325,6 +325,17 @@ footer {
     vertical-align: top;
     /*font-weight:bold;*/
 }
+.config_yaml {
+    background-color:white;
+    border:1px solid var(--grey);
+    padding:6px;
+    margin:0px;
+    max-height:400px;
+    overflow:auto;
+    font-size:small;
+    resize:vertical;
+}
+
 .stderr_window {
     height: 30px;
     min-height:30px;
@@ -363,6 +374,35 @@ footer {
 
 .text-danger {
     color: var(--danger-color);
+}
+
+/* Errors loading or reloading a cruise definition */
+.load-errors {
+    border: 1px solid var(--danger-border-color);
+    border-left: 6px solid var(--danger-color);
+    border-radius: 4px;
+    margin: 0.5rem 0 1rem 0;
+    padding: 0.5rem 0.75rem;
+}
+
+.load-errors-summary {
+    color: var(--danger-color);
+    font-weight: bold;
+    margin-bottom: 0.25rem;
+}
+
+/* The errors may have multiple lines, and may point at a column in the
+   file, so keep their line breaks and spacing, but wrap if we have to. */
+.load-errors-detail {
+    font-family: monospace;
+    margin: 0.25rem 0 0 0;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+}
+
+.load-errors-dismiss {
+    float: right;
+    margin-left: 0.75rem;
 }
 
 /*Colors*/

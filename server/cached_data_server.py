@@ -119,10 +119,19 @@ try:
         from websockets.exceptions import ConnectionClosed
     except ImportError:
         from websockets.connection import ConnectionClosed
-    # websockets 12+ (asyncio server) exposes http11.Response for process_request handlers
+    # The HTTP-route handler below is only usable with the asyncio server
+    # implementation, whose process_request() receives (connection, request).
+    # The legacy server passes (path, request_headers) instead, so installing
+    # the handler there makes every handshake fail with AttributeError -> 500.
+    #
+    # websockets.http11 alone does not distinguish the two: it has existed
+    # since websockets 10, while websockets.serve only became the asyncio
+    # implementation in 14.0. Test what serve() actually is. This matters on
+    # Python 3.8 (e.g. Ubuntu 20), where websockets >= 14 cannot be installed
+    # and pip resolves to 13.x.
     try:
         from websockets.http11 import Response as _WsResponse, Headers as _WsHeaders
-        _WEBSOCKETS_HAS_HTTP11 = True
+        _WEBSOCKETS_HAS_HTTP11 = websockets.serve.__module__.startswith('websockets.asyncio')
     except ImportError:
         _WEBSOCKETS_HAS_HTTP11 = False
 except ModuleNotFoundError:
@@ -498,8 +507,9 @@ class WebSocketConnection:
             Initially provide the number of seconds worth of back data
             requested, and on subsequent calls, return all data that have
             arrived since last call.
-            NOTE: if the 'seconds' field is -1, server will only ever provide
-            the single most recent value for the relevant field.
+            NOTE: if the 'seconds' field is -1, server will initially provide
+            only the single most recent value for the relevant field, then
+            all new values that arrive after it.
         ready - client has processed the previous data message and is ready
             for more.
         ```
@@ -636,10 +646,10 @@ class WebSocketConnection:
                             # specification.
                             field_timestamps[matching_field_name] = 0  # if nothing else
 
-                            if field_name not in self.cache.locks:
+                            if matching_field_name not in self.cache.locks:
                                 logging.debug('No data for requested field %s', matching_field_name)
                                 continue
-                            with self.cache.locks[field_name]:
+                            with self.cache.locks[matching_field_name]:
                                 field_cache = self.cache.data.get(matching_field_name)
                                 if field_cache is None:
                                     logging.debug('No cached data for %s', matching_field_name)
@@ -735,19 +745,10 @@ class WebSocketConnection:
                                 if not field_cache or not field_cache[-1]:
                                     continue
 
-                                # If special case -1, they want just single most recent
-                                # value, then future results. Grab last value, then set its
-                                # timestamp as the last one we've seen.
-                                back_seconds = field_spec.get('back_seconds', 0)
-                                if back_seconds == -1:
-                                    last_value = field_cache[-1]
-                                    results[field_name] = [last_value]
-                                    # ts of last value
-                                    field_timestamps[field_name] = last_value[0]
-                                    continue
-
-                                # Otherwise - if no data newer than the latest
-                                # timestamp we've already sent, skip,
+                                # If no data newer than the latest timestamp we've
+                                # already sent, skip. (The 'seconds' == -1 case was
+                                # handled at subscription time by setting the latest
+                                # timestamp to that of the second-most-recent value.)
                                 latest_timestamp = field_timestamps.get(field_name, 0)
                                 if not field_cache[-1][0] > latest_timestamp:
                                     continue
@@ -782,20 +783,8 @@ class WebSocketConnection:
                                         'No cached data for %s', field_name)
                                     continue
 
-                                # If latest_timestamp is special case -1, they want just
-                                # single most recent value, then future results. Grab
-                                # last value, then set its timestamp as the last one
-                                # we've seen.
-                                elif latest_timestamp == -1:
-                                    last_ts, last_value = field_cache[-1]
-                                    if last_ts not in records:
-                                        records[last_ts] = {}
-                                    records[last_ts][field_name] = last_value
-                                    field_timestamps[field_name] = last_ts
-                                    continue
-
-                                # Otherwise - if no data newer than the latest
-                                # timestamp we've already sent, skip,
+                                # If no data newer than the latest timestamp we've
+                                # already sent, skip.
                                 elif not field_cache[-1][0] > latest_timestamp:
                                     continue
 

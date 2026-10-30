@@ -1,0 +1,187 @@
+################################################################################
+# NMEA 0183 device type: NMEA_MRU (Heading / Motion Reference Unit (MRU))
+#
+# Part of the NMEA 0183 library: logger/devices/NMEA_0183.yaml includes every
+# file in this directory. See README.md here for the format types used,
+# talker IDs and proprietary sentence prefixes.
+################################################################################
+
+######################################
+# Heading / Motion Reference Unit (MRU)
+# For standalone gyrocompasses and MRUs
+# (For integrated GPS/INS like Seapath, use NMEA_GPS_INS instead)
+######################################
+NMEA_MRU:
+  category: "device_type"
+  description: "Standalone heading sensor, gyrocompass, or MRU (not integrated with GPS)"
+
+  format:
+    ########################################
+    # Standard NMEA Sentences
+    ########################################
+
+    # Heading True
+    HDT: "${:2l}HDT,{HeadingTrue:of},T*{CheckSum:x}"
+
+    # Heading Magnetic
+    HDM: "${:2l}HDM,{HeadingMag:of},M*{CheckSum:x}"
+
+    # Heading with Deviation and Variation
+    HDG: "${:2l}HDG,{HeadingMag:of},{Deviation:of},{DeviationDir:ow},{Variation:of},{VariationDir:ow}*{CheckSum:x}"
+
+    # Rate of Turn
+    ROT: "${:2l}ROT,{RateOfTurn:of},{Status:ow}*{CheckSum:x}"
+
+    ########################################
+    # Proprietary: Kongsberg Seapath ($PSXN)
+    ########################################
+
+    # PSXN,20 - Quality indicators
+    PSXN20: "$PSXN,20,{HorizQual:od},{HeightQual:od},{HeadingQual:od},{RollPitchQual:od}*{CheckSum:x}"
+
+    # PSXN,21 - Event trigger (synchronization)
+    PSXN21: "$PSXN,21,{EventType:od}*{CheckSum:x}"
+
+    # PSXN,22 - Gyro calibration status
+    PSXN22: "$PSXN,22,{GyroCal:of},{GyroOffset:of}*{CheckSum:x}"
+
+    # PSXN,23 - Roll, Pitch, Heading, Heave
+    PSXN23: "$PSXN,23,{Roll:of},{Pitch:of},{Heading:of},{Heave:of}*{CheckSum:x}"
+
+    # PSXN,24 - Motion rates (Seapath 300+)
+    PSXN24: "$PSXN,24,{RollRate:of},{PitchRate:of},{YawRate:of},{VerticalVel:of}*{CheckSum:x}"
+
+    # PSXN,26 - Time and date
+    PSXN26: "$PSXN,26,{Year:od},{Month:od},{Day:od},{Hour:od},{Minute:od},{Second:of}*{CheckSum:x}"
+
+    ########################################
+    # Proprietary: Ashtech/Trimble ($PASHR)
+    ########################################
+
+    # PASHR - Attitude (widely supported quasi-standard)
+    PASHR: "$PASHR,{GPSTime:of},{Heading:of},{HeadingType:ow},{Roll:of},{Pitch:of},{Heave:of},{RollAcc:of},{PitchAcc:of},{HeadingAcc:of},{AidingStatus:od},{IMUStatus:od}*{CheckSum:x}"
+    PASHRshort: "$PASHR,{GPSTime:of},{Heading:of},{HeadingType:ow},{Roll:of},{Pitch:of},{Heave:of},{RollAcc:of},{PitchAcc:of},{HeadingAcc:of},{AidingStatus:od}*{CheckSum:x}"
+
+    ########################################
+    # Proprietary: True North ($PTNT)
+    ########################################
+
+    # PTNTHTM - True North digital compass
+    PTNTHTM: "$PTNTHTM,{Heading:of},{HeadingStatus:ow},{Pitch:of},{Roll:of},{HeadingAcc:of},{Temp:of}*{CheckSum:x}"
+
+    ########################################
+    # Proprietary: Furuno ($PFEC)
+    ########################################
+
+    # PFEC,GPatt - Furuno attitude
+    PFECGPatt: "$PFEC,GPatt,{Heading:of},{Pitch:of},{Roll:of}*{CheckSum:x}"
+
+    # PFEC,GPheave - Furuno heave
+    PFECGPheave: "$PFEC,GPheave,{Heave:of}*{CheckSum:x}"
+
+    ########################################
+    # Proprietary: Kongsberg HiPAP/USBL ($PSIM)
+    ########################################
+
+    # PSIMSNS - Motion data at measurement time
+    PSIMSNS: "$PSIMSNS,{GPSTime:of},{Roll:of},{Pitch:of},{Heading:of}*{CheckSum:x}"
+
+  fields:
+    HeadingTrue:
+      units: "degrees"
+      description: "True heading"
+    HeadingMag:
+      units: "degrees"
+      description: "Magnetic heading"
+    Heading:
+      units: "degrees"
+      description: "Heading"
+    HeadingType:
+      description: "T=True, M=Magnetic"
+    HeadingStatus:
+      description: "M=Magnetometer, G=Gyro, C=Compass"
+    Deviation:
+      units: "degrees"
+      description: "Magnetic deviation"
+    DeviationDir:
+      description: "E=East, W=West"
+    Variation:
+      units: "degrees"
+      description: "Magnetic variation"
+    VariationDir:
+      description: "E=East, W=West"
+    RateOfTurn:
+      units: "degrees/minute"
+      description: "Rate of turn, negative is bow to port"
+    Status:
+      description: "A=Valid, V=Invalid"
+    Roll:
+      units: "degrees"
+      description: "Roll angle (positive = port up)"
+    Pitch:
+      units: "degrees"
+      description: "Pitch angle (positive = bow up)"
+    Heave:
+      units: "meters"
+      description: "Heave displacement"
+    RollRate:
+      units: "degrees/second"
+      description: "Roll rate (positive = port rising)"
+    PitchRate:
+      units: "degrees/second"
+      description: "Pitch rate (positive = bow rising)"
+    YawRate:
+      units: "degrees/second"
+      description: "Yaw rate (positive = bow to starboard)"
+    VerticalVel:
+      units: "m/s"
+      description: "Vertical velocity"
+    # Seapath quality fields
+    HorizQual:
+      description: "Horizontal position quality (0=none to 4=excellent)"
+    HeightQual:
+      description: "Height quality indicator"
+    HeadingQual:
+      description: "Heading quality indicator"
+    RollPitchQual:
+      description: "Roll/Pitch quality indicator"
+    EventType:
+      description: "Event trigger type"
+    GyroCal:
+      units: "degrees/hour"
+      description: "Gyro calibration status"
+    GyroOffset:
+      units: "degrees"
+      description: "Gyro offset"
+    Year:
+      description: "UTC Year"
+    Month:
+      description: "UTC Month"
+    Day:
+      description: "UTC Day"
+    Hour:
+      description: "UTC Hour"
+    Minute:
+      description: "UTC Minute"
+    Second:
+      description: "UTC Second with decimals"
+    # PASHR fields
+    GPSTime:
+      units: "hhmmss.ss"
+      description: "UTC time"
+    RollAcc:
+      units: "degrees"
+      description: "Roll accuracy estimate"
+    PitchAcc:
+      units: "degrees"
+      description: "Pitch accuracy estimate"
+    HeadingAcc:
+      units: "degrees"
+      description: "Heading accuracy estimate"
+    AidingStatus:
+      description: "Aiding status (0=none, 1=aided)"
+    IMUStatus:
+      description: "IMU status code"
+    Temp:
+      units: "degrees C"
+      description: "Internal temperature"

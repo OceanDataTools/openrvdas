@@ -26,20 +26,25 @@ database backing it:
 ```
 """
 import datetime
+import fcntl
 import getpass  # to get username
+import hashlib
 import logging
 import multiprocessing
 import os
 import signal
 import socket  # to get hostname
+import sys
 import threading
 import time
 
 # Imports for running CachedDataServer
 from server.cached_data_server import CachedDataServer  # noqa: E402
 
-from server.logger_runner import LoggerRunner  # noqa: E402
+from server.logger_runner import (LoggerRunner, STDERR_MAX_BYTES,
+                                  STDERR_BACKUP_COUNT)  # noqa: E402
 from server.server_api import ServerAPI  # noqa: E402
+from server.state_journal import StateJournal, config_hash  # noqa: E402
 from logger.transforms.to_das_record_transform import ToDASRecordTransform  # noqa: E402
 from logger.utils.stderr_logging import DEFAULT_LOGGING_FORMAT  # noqa: E402
 from logger.utils.stderr_logging import StdErrLoggingHandler  # noqa: E402
@@ -64,6 +69,16 @@ USER = getpass.getuser()
 HOSTNAME = socket.gethostname()
 
 DEFAULT_DATA_SERVER_WEBSOCKET = 'localhost:8766'
+DEFAULT_STATE_JOURNAL = '/var/log/openrvdas/logger_manager_journal'
+
+# Held while a logger manager runs, so that a second can't start on the same
+# host (#686).
+DEFAULT_LOCK_FILE = '/var/tmp/openrvdas/logger_manager.lock'
+
+# How long to reuse a computed code version: long enough that a mode change
+# starting many loggers computes it once, short enough that an edit made just
+# before a logger (re)starts is seen.
+CODE_VERSION_CACHE_SECONDS = 2
 
 ############################
 
@@ -89,6 +104,16 @@ class LoggerState:
         self.last_started = time.time()
         self.restart_count = 0
 
+        # For the state journal: how many times the logger has crashed in
+        # the current run of crashes, and when that run began. Kept apart
+        # from restart_count, which the restart policy resets as it sees fit.
+        self.crash_count = 0
+        self.crash_episode_start = None
+
+        # The version of the code it was last started with, from
+        # config_snapshot.code_version(); None if not being journaled.
+        self.code = None
+
 ################################################################################
 ################################################################################
 
@@ -97,9 +122,12 @@ class LoggerManager:
     ############################
     def __init__(self,
                  api, data_server_websocket=None,
-                 stderr_file_pattern='/var/log/openrvdas/{logger}.stderr',
+                 stderr_file_pattern='/var/log/openrvdas/loggers/{logger}.stderr',
+                 stderr_max_bytes=STDERR_MAX_BYTES,
+                 stderr_backup_count=STDERR_BACKUP_COUNT,
                  max_tries=DEFAULT_MAX_TRIES, min_uptime=DEFAULT_MIN_UPTIME,
-                 interval=0.5, logger_log_level=logging.WARNING):
+                 interval=0.5, logger_log_level=logging.WARNING,
+                 state_journal=None, snapshot_dir=None):
         """Read desired logger configs from the data store and try to keep
         the loggers specified in those configs running.
         ```
@@ -112,9 +140,15 @@ class LoggerManager:
         stderr_file_pattern - Pattern into which logger name will be
               interpolated to create the file path/name to which the
               logger's stderr will be written. E.g.
-              '/var/log/openrvdas/{logger}.stderr' If
+              '/var/log/openrvdas/loggers/{logger}.stderr' If
               data_server_websocket is defined, will also write logger
               stderr to it.
+
+        stderr_max_bytes - Size at which each logger's stderr file is
+              rotated.
+
+        stderr_backup_count - How many rotated stderr files to keep per
+              logger.
 
         max_tries - number of times to try restarting a dead logger config
               before giving up on it as failed. If zero, never stop retrying.
@@ -127,6 +161,18 @@ class LoggerManager:
 
         logger_log_level - at what logging level our component loggers
               should operate.
+
+        state_journal - path prefix of daily files in which to record each
+              change of state - definition loaded, mode changed, logger
+              started, stopped, reconfigured, crashed or recovered - as a
+              line of JSON. See server/state_journal.py. If None, changes
+              aren't recorded.
+
+        snapshot_dir - if set, the directory in which to save a snapshot of
+              the cruise definition and everything it depends on (see
+              server/config_snapshot.py) each time a definition is loaded,
+              and each time a file it depends on changes. Snapshots are
+              taken in the background. If None, none are taken.
         ```
         """
         # Set signal to catch SIGTERM and convert it into a
@@ -159,10 +205,34 @@ class LoggerManager:
             self.data_server_writer = None
 
         self.stderr_file_pattern = stderr_file_pattern
+        self.stderr_max_bytes = stderr_max_bytes
+        self.stderr_backup_count = stderr_backup_count
         self.max_tries = max_tries
         self.min_uptime = min_uptime
         self.interval = interval
         self.logger_log_level = logger_log_level
+        self.journal = StateJournal(state_journal)
+        self.code_version_cache = (0, None)  # (time computed, version)
+        self.journaled_mode = None  # the last mode recorded in the journal
+        self.journaled_mode_lock = threading.Lock()
+        self.journaled_definition = None  # (cruise id, load time) last recorded
+
+        # The files the loaded definition was built from, {path: (mtime,
+        # sha256)}, watched so that a change to any of them is noticed.
+        self.definition_files = {}
+        self.definition_filename = None   # the file they were loaded from
+        self.snapshot_dir = snapshot_dir
+
+        # Recorded here rather than in start(), because the API's callbacks
+        # can load a definition and start loggers before start() is called.
+        try:
+            from logger.utils.read_version import get_version
+            version = get_version()
+        except Exception as e:  # noqa: BLE001 - must not stop the manager
+            version = f'unknown ({e})'
+        self.journal.record('manager_start', host=HOSTNAME, user=USER,
+                            pid=os.getpid(), openrvdas_version=version,
+                            code=self._code_version())
 
         # How our various loops and threads will know it's time to quit
         self.quit_flag = False
@@ -221,7 +291,9 @@ class LoggerManager:
         self.quit_flag = True
         with self.config_lock:
             for logger in list(self.logger_states):
+                self._journal_logger_stopped(logger, reason='manager stopping')
                 self._delete_logger(logger)
+        self.journal.record('manager_stop', host=HOSTNAME, pid=os.getpid())
 
         # Give our data server writer a chance to deliver anything still
         # queued (e.g. the loggers' final stderr lines) before we exit.
@@ -265,9 +337,18 @@ class LoggerManager:
             logging.debug('New: %s', new_loggers)
             logging.debug('Other: %s', other_loggers)
 
+            # If anything is about to change, record any change of mode
+            # first, since it is usually the cause.
+            changing = stale_loggers or new_loggers or any(
+                configs[logger] != self.logger_states[logger].config
+                for logger in other_loggers)
+            if changing:
+                self._journal_mode(self.api.get_active_mode())
+
             # Find and shut down loggers that don't exist in our new configs
             for logger in stale_loggers:
                 logging.info('Shutting down logger %s.', logger)
+                self._journal_logger_stopped(logger, reason='no longer configured')
                 self._delete_logger(logger)
 
             # Add loggers that have first appeared in our new config and
@@ -277,6 +358,11 @@ class LoggerManager:
                 logging.info('Starting new logger %s with %s.', logger,
                              new_config.get('name', 'no_name'))
                 self._start_logger(logger, new_config)
+                self.journal.record('logger_started', logger=logger,
+                                    config=new_config.get('name'),
+                                    config_sha256=config_hash(new_config),
+                                    code=self.logger_states[logger].code,
+                                    pid=self._pid(logger))
 
             # For existing loggers, see whether their configs have
             # changed. If so, stop and restart with new config.
@@ -290,10 +376,45 @@ class LoggerManager:
                 logging.info('Updating %s from %s to %s', logger,
                              old_config.get('name', 'no_name'),
                              new_config.get('name', 'no_name'))
+                crashes = self.logger_states[logger].crash_count
                 self._delete_logger(logger)
                 self._start_logger(logger, new_config)
+                entry = dict(logger=logger, **{'from': old_config.get('name')},
+                             to=new_config.get('name'),
+                             config_sha256=config_hash(new_config),
+                             code=self.logger_states[logger].code,
+                             pid=self._pid(logger))
+                if crashes:
+                    entry['crashes_before_change'] = crashes
+                self.journal.record('config_changed', **entry)
 
             self.active_configs = configs
+
+    ############################
+    def _journal_mode(self, mode):
+        """Record the active mode in the journal if it has changed. Called
+        from both the update loop and the API's update callback, so locked."""
+        with self.journaled_mode_lock:
+            if mode != self.journaled_mode:
+                self.journal.record('mode_changed', **{'from': self.journaled_mode},
+                                    to=mode)
+                self.journaled_mode = mode
+
+    def _journal_logger_stopped(self, logger, reason):
+        """Record that a logger is being stopped, with how many times it had
+        crashed if it was in the middle of a run of crashes."""
+        state = self.logger_states.get(logger)
+        if not state:
+            return
+        entry = dict(logger=logger, config=state.config.get('name'), reason=reason)
+        if state.crash_count:
+            entry['crashes_before_stop'] = state.crash_count
+        self.journal.record('logger_stopped', **entry)
+
+    def _pid(self, logger):
+        state = self.logger_states.get(logger)
+        process = state.runner.process if state else None
+        return process.pid if process else None
 
     ############################
     def _start_logger(self, logger, config):
@@ -320,10 +441,13 @@ class LoggerManager:
 
         runner = LoggerRunner(config=config, name=logger,
                               stderr_filename=stderr_filename,
+                              stderr_max_bytes=self.stderr_max_bytes,
+                              stderr_backup_count=self.stderr_backup_count,
                               stderr_callback=stderr_callback,
                               death_callback=death_callback,
                               logger_log_level=self.logger_log_level)
         self.logger_states[logger] = LoggerState(config=config, runner=runner)
+        self.logger_states[logger].code = self._code_version()
         runner.start()
 
     ############################
@@ -350,6 +474,25 @@ class LoggerManager:
         with self.config_lock:
             for logger, state in self.logger_states.items():
                 self._consider_restart(logger, state)
+                self._check_recovery(logger, state)
+
+    ############################
+    def _check_recovery(self, logger, state):
+        """If a logger that has been crashing has now stayed up for
+        min_uptime seconds, record in the journal that it has recovered, and
+        how many times it crashed. ONLY CALL THIS WITH config_lock HELD."""
+        if not state.crash_count or not state.runner.is_alive():
+            return
+        if time.time() - state.last_started < self.min_uptime:
+            return
+        self.journal.record('logger_recovered', logger=logger,
+                            config=state.config.get('name'),
+                            crashes=state.crash_count,
+                            crashing_for_seconds=round(state.last_started -
+                                                       state.crash_episode_start, 1),
+                            code=state.code, pid=self._pid(logger))
+        state.crash_count = 0
+        state.crash_episode_start = None
 
     ############################
     def _consider_restart(self, logger, state):
@@ -370,6 +513,16 @@ class LoggerManager:
         # yet been labeled as a failed logger.
         logging.warning('%s unexpectedly dead.', logger)
 
+        # Journal only the first crash of a run of crashes; the rest are
+        # counted, and reported when the logger recovers, fails or stops.
+        if not state.crash_count:
+            state.crash_episode_start = time.time()
+            exit_code = runner.process.returncode if runner.process else None
+            self.journal.record('logger_crashed', logger=logger,
+                                config=state.config.get('name'), exit_code=exit_code,
+                                code=state.code)
+        state.crash_count += 1
+
         # How long was it up? If long enough, give it a clean slate.
         if time.time() - state.last_started < self.min_uptime:
             state.restart_count += 1
@@ -382,11 +535,15 @@ class LoggerManager:
             runner.failed = True
             logging.warning('%s has failed %s times; not restarting',
                             logger, state.restart_count)
+            self.journal.record('logger_failed', logger=logger,
+                                config=state.config.get('name'),
+                                crashes=state.crash_count)
             return
 
         # If here, we're going to try restarting.
         logging.info('%s - restarting', logger)
         state.last_started = time.time()
+        state.code = self._code_version()
         runner.start()
 
     ############################
@@ -477,6 +634,10 @@ class LoggerManager:
         mode_map = {'active_mode': self.api.get_active_mode()}
         self._write_record_to_data_server('status:cruise_mode', mode_map)
 
+        # Record a mode change that didn't change any logger's config (one
+        # that did was recorded when the configs were applied).
+        self._journal_mode(mode_map['active_mode'])
+
     ############################
     def load_definition_from_api(self):
         """Fetch a new cruise definition from the API and build local maps.
@@ -500,6 +661,7 @@ class LoggerManager:
             loaded_time = self.cruise.get('loaded_time')
             self.cruise_loaded_time = datetime.datetime.timestamp(loaded_time)
             self.active_mode = self.api.get_active_mode()
+            self._journal_definition_loaded(loaded_time)
 
             # Send updated cruise definition to CDS for console to read.
             cruise_dict = {
@@ -515,6 +677,133 @@ class LoggerManager:
                 'status:cruise_definition', cruise_dict)
         except Exception as e:
             logging.info('Failed to update cruise definition: %s', e)
+
+    ############################
+    def _journal_definition_loaded(self, loaded_time):
+        """Record a newly loaded cruise definition, with a hash of its file
+        so the journal can be matched to a snapshot of it."""
+        # Some data stores report the cruise id and filename at the top
+        # level of the configuration, others under its 'cruise' key.
+        cruise_section = self.cruise.get('cruise') or {}
+        cruise_id = self.cruise.get('id') or cruise_section.get('id')
+        filename = self.cruise_filename or cruise_section.get('config_filename')
+
+        # The same load is reported both by the API's callback and by the
+        # loop that watches for new definitions; record it once.
+        if (cruise_id, loaded_time) == self.journaled_definition:
+            return
+        self.journaled_definition = (cruise_id, loaded_time)
+
+        # Data stores give the load time as a datetime, naive UTC or aware.
+        if isinstance(loaded_time, datetime.datetime):
+            if loaded_time.tzinfo is not None:
+                loaded_time = loaded_time.astimezone(datetime.timezone.utc).replace(tzinfo=None)
+            loaded_time = loaded_time.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
+
+        file_sha256 = None
+        if filename:
+            try:
+                with open(filename, 'rb') as f:
+                    file_sha256 = hashlib.sha256(f.read()).hexdigest()
+            except OSError:
+                pass
+
+        # The hash of every file the definition is built from - its includes,
+        # device definitions and so on - so that a snapshot can tell exactly
+        # which have changed since, and so we can watch them.
+        files = self._definition_file_hashes(filename)
+        self.definition_files = {path: (self._mtime(path), sha256)
+                                 for path, sha256 in (files or {}).items()}
+        self.definition_filename = filename
+
+        self.journal.record('definition_loaded', cruise_id=cruise_id, filename=filename,
+                            loaded_time=loaded_time, file_sha256=file_sha256, files=files)
+        self._take_snapshot(filename, reason='definition loaded')
+
+    ############################
+    def _code_version(self):
+        """The version of the code a logger started now would run (see
+        config_snapshot.code_version()), for the journal; None if there's no
+        journal or it can't be determined. Cached briefly. Never raises."""
+        if not self.journal.filebase:
+            return None
+        computed, version = self.code_version_cache
+        if time.time() - computed < CODE_VERSION_CACHE_SECONDS:
+            return version
+        try:
+            from server.config_snapshot import code_version
+            version = code_version()
+        except Exception as e:  # noqa: BLE001 - must not stop the manager
+            logging.warning('Could not determine code version: %s', e)
+            version = None
+        self.code_version_cache = (time.time(), version)
+        return version
+
+    ############################
+    def _definition_file_hashes(self, filename):
+        """{path: sha256} of the files a definition is built from, or None
+        if they can't be determined. Never raises."""
+        # Nothing to do if there's neither a journal nor snapshots to use them.
+        if not filename or not (self.journal.filebase or self.snapshot_dir):
+            return None
+        try:
+            from server.config_snapshot import definition_file_hashes
+            return definition_file_hashes(filename)
+        except Exception as e:  # noqa: BLE001 - must not stop the manager
+            logging.warning('Could not list the files cruise definition %s '
+                            'is built from: %s', filename, e)
+            return None
+
+    @staticmethod
+    def _mtime(path):
+        try:
+            return os.path.getmtime(path)
+        except OSError:
+            return None
+
+    ############################
+    def _check_definition_files(self):
+        """If any file the loaded definition was built from has changed,
+        record which in the journal, and take a snapshot if we're taking
+        them. Cheap when nothing has changed: one stat per file."""
+        changed = {}
+        for path, (mtime, sha256) in list(self.definition_files.items()):
+            new_mtime = self._mtime(path)
+            if new_mtime == mtime:
+                continue
+            new_sha256 = None
+            if new_mtime is not None:
+                try:
+                    with open(path, 'rb') as f:
+                        new_sha256 = hashlib.sha256(f.read()).hexdigest()
+                except OSError:
+                    pass
+            self.definition_files[path] = (new_mtime, new_sha256)
+            if new_sha256 != sha256:   # touched but unchanged isn't a change
+                changed[path] = new_sha256
+        if changed:
+            self.journal.record('definition_files_changed', filename=self.definition_filename,
+                                files=changed)
+            self._take_snapshot(self.definition_filename, reason='definition files changed')
+
+    ############################
+    def _take_snapshot(self, filename, reason):
+        """If we're taking snapshots, take one of the definition in filename,
+        in the background, and record it in the journal."""
+        if not self.snapshot_dir or not filename:
+            return
+
+        def snapshot():
+            try:
+                from server.config_snapshot import take_snapshot
+                path = take_snapshot(filename, output_dir=self.snapshot_dir,
+                                     journal=self.journal.filebase)
+                self.journal.record('snapshot_taken', reason=reason, path=path)
+            except Exception as e:  # noqa: BLE001 - must not stop the manager
+                logging.warning('Could not take snapshot of %s: %s', filename, e)
+                self.journal.record('snapshot_failed', reason=reason, error=str(e))
+
+        threading.Thread(target=snapshot, name='snapshot', daemon=True).start()
 
     ############################
     def _send_cruise_definition_loop(self):
@@ -549,6 +838,9 @@ class LoggerManager:
                             self._write_record_to_data_server('status:file_update', mtime)
                     except FileNotFoundError:
                         logging.debug('Cruise file "%s" has disappeared?', self.cruise_filename)
+
+                # Has any file the definition was built from changed?
+                self._check_definition_files()
 
                 # Does database have a cruise definition with a newer timestamp?
                 # Means user loaded/reloaded definition. Update our maps to
@@ -587,9 +879,55 @@ class LoggerManager:
         else:
             logging.info('Update: %s: %s', field_name, record)
 
+
 ################################################################################
+class AnotherManagerRunning(Exception):
+    """Raised by acquire_lock() when another logger manager holds the lock."""
+
+    def __init__(self, running_pid):
+        super().__init__(running_pid)
+        self.running_pid = running_pid
 
 
+def acquire_lock(lock_file):
+    """Take an exclusive lock on lock_file, so that only one logger manager
+    runs on this host at a time, and write our pid into it (#686).
+
+    Returns the open lock file, which must be kept open: the lock lasts as
+    long as it does, and the operating system releases it when this process
+    exits, however it exits, so a crash leaves no stale lock to clear. Returns
+    None, with a warning, if the lock can't be taken for any reason other than
+    another manager holding it - an unwritable directory, say - so that the
+    manager still runs. Raises AnotherManagerRunning, with the pid recorded in
+    the file, if another manager holds it.
+    """
+    try:
+        os.makedirs(os.path.dirname(os.path.abspath(lock_file)), exist_ok=True)
+        lock = open(lock_file, 'a+')  # not 'w': that would empty a held lock's pid
+    except OSError as e:
+        logging.warning('Could not open lock file %s (%s), so not checking for '
+                        'another logger manager on this host.', lock_file, e)
+        return None
+    try:
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except BlockingIOError:
+        lock.seek(0)
+        running_pid = lock.read().strip() or 'unknown'
+        lock.close()
+        raise AnotherManagerRunning(running_pid)
+    except OSError as e:
+        logging.warning('Could not lock %s (%s), so not checking for another '
+                        'logger manager on this host.', lock_file, e)
+        lock.close()
+        return None
+    lock.seek(0)
+    lock.truncate()
+    lock.write(f'{os.getpid()}\n')
+    lock.flush()
+    return lock
+
+
+################################################################################
 def run_data_server(data_server_websocket,
                     data_server_back_seconds, data_server_cleanup_interval,
                     data_server_interval):
@@ -634,11 +972,21 @@ if __name__ == '__main__':  # noqa: C901
                         'to use.')
 
     parser.add_argument('--stderr_file_pattern', dest='stderr_file_pattern',
-                        default='/var/log/openrvdas/{logger}.stderr',
+                        default='/var/log/openrvdas/loggers/{logger}.stderr',
                         help='Pattern into which logger name will be '
                         'interpolated to create the file path/name to which '
                         'the logger\'s stderr will be written. E.g. '
-                        '\'/var/log/openrvdas/{logger}.stderr\'')
+                        '\'/var/log/openrvdas/loggers/{logger}.stderr\'')
+
+    parser.add_argument('--stderr_max_bytes', dest='stderr_max_bytes',
+                        type=int, default=STDERR_MAX_BYTES,
+                        help='Size in bytes at which each logger\'s stderr '
+                        f'file is rotated. Default: {STDERR_MAX_BYTES}')
+
+    parser.add_argument('--stderr_backup_count', dest='stderr_backup_count',
+                        type=int, default=STDERR_BACKUP_COUNT,
+                        help='How many rotated stderr files to keep per '
+                        f'logger. Default: {STDERR_BACKUP_COUNT}')
 
     # Arguments for cached data server
     parser.add_argument('--data_server_websocket', dest='data_server_websocket',
@@ -665,6 +1013,23 @@ if __name__ == '__main__':  # noqa: C901
     parser.add_argument('--interval', dest='interval', action='store',
                         type=float, default=0.5,
                         help='How many seconds to sleep between logger checks.')
+    parser.add_argument('--state_journal', dest='state_journal',
+                        default=DEFAULT_STATE_JOURNAL,
+                        help='Path prefix of daily files recording each change '
+                        'of mode, logger config and logger state, one DASRecord '
+                        'per line, readable by LogfileReader. Use "none" to '
+                        'turn the journal off. Default: '
+                        f'{DEFAULT_STATE_JOURNAL}')
+    parser.add_argument('--snapshot_dir', dest='snapshot_dir', default=None,
+                        help='If set, save a snapshot of the cruise definition and '
+                        'everything it depends on in this directory each time a '
+                        'definition is loaded or a file it depends on changes. '
+                        'See server/config_snapshot.py.')
+    parser.add_argument('--lock_file', dest='lock_file', default=DEFAULT_LOCK_FILE,
+                        help='File to lock while running, so that a second logger '
+                        'manager can\'t start on this host. Give separate installs '
+                        'on one host separate lock files. Use "none" to turn the '
+                        f'check off. Default: {DEFAULT_LOCK_FILE}')
     parser.add_argument('--max_tries', dest='max_tries', action='store', type=int,
                         default=DEFAULT_MAX_TRIES,
                         help='Number of times to retry failed loggers. If '
@@ -695,6 +1060,26 @@ if __name__ == '__main__':  # noqa: C901
 
     # What level do we want our component loggers to write?
     logger_log_level = LOG_LEVELS[min(args.logger_verbosity, max(LOG_LEVELS))]
+
+    ############################
+    # Refuse to start if another logger manager is running on this host:
+    # each would run its own copy of every logger (#686). Keep the lock
+    # file open for as long as we run.
+    manager_lock = None
+    if args.lock_file.lower() != 'none':
+        try:
+            manager_lock = acquire_lock(args.lock_file)
+        except AnotherManagerRunning as e:
+            logging.fatal('Another logger manager (pid %s) is already running on '
+                          'this host, holding %s. Not starting a second one, which '
+                          'would run a second copy of every logger. Stop it first '
+                          '("pgrep -fl logger_manager" lists them), or use '
+                          '--lock_file none to run anyway.', e.running_pid, args.lock_file)
+            journal = None if args.state_journal.lower() == 'none' else args.state_journal
+            StateJournal(journal).record('manager_refused', host=HOSTNAME, user=USER,
+                                         pid=os.getpid(), running_pid=e.running_pid,
+                                         lock_file=args.lock_file)
+            sys.exit(1)
 
     ############################
     # First off, start any servers we're supposed to be running
@@ -737,9 +1122,13 @@ if __name__ == '__main__':  # noqa: C901
         api=api,
         data_server_websocket=args.data_server_websocket,
         stderr_file_pattern=args.stderr_file_pattern,
+        stderr_max_bytes=args.stderr_max_bytes,
+        stderr_backup_count=args.stderr_backup_count,
         max_tries=args.max_tries,
         min_uptime=args.min_uptime,
         interval=args.interval,
+        state_journal=None if args.state_journal.lower() == 'none' else args.state_journal,
+        snapshot_dir=args.snapshot_dir,
         logger_log_level=logger_log_level)
 
     # When told to quit, shut down gracefully

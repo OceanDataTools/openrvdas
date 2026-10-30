@@ -100,7 +100,7 @@ into strings and parsing time strings into numeric timestamps.</p>
 
                         <div class="pdoc-code codehilite"><pre><span></span><span id="L-1"><a href="#L-1"><span class="linenos"> 1</span></a><span class="ch">#!/usr/bin/env python3</span>
 </span><span id="L-2"><a href="#L-2"><span class="linenos"> 2</span></a>
-</span><span id="L-3"><a href="#L-3"><span class="linenos"> 3</span></a><span class="sd">&quot;&quot;&quot;Tools for generating numeric timestamps, converting from timestamps</span>
+</span><span id="L-3"><a href="#L-3"><span class="linenos"> 3</span></a><span class="sd">"""Tools for generating numeric timestamps, converting from timestamps</span>
 </span><span id="L-4"><a href="#L-4"><span class="linenos"> 4</span></a><span class="sd">into strings and parsing time strings into numeric timestamps.</span>
 </span><span id="L-5"><a href="#L-5"><span class="linenos"> 5</span></a>
 </span><span id="L-6"><a href="#L-6"><span class="linenos"> 6</span></a><span class="sd">Use UTC as default timezone.</span>
@@ -122,56 +122,56 @@ into strings and parsing time strings into numeric timestamps.</p>
 </span><span id="L-22"><a href="#L-22"><span class="linenos">22</span></a>
 </span><span id="L-23"><a href="#L-23"><span class="linenos">23</span></a><span class="sd">TODO: read date/time format from some central settings file.</span>
 </span><span id="L-24"><a href="#L-24"><span class="linenos">24</span></a>
-</span><span id="L-25"><a href="#L-25"><span class="linenos">25</span></a><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="L-25"><a href="#L-25"><span class="linenos">25</span></a><span class="sd">"""</span>
 </span><span id="L-26"><a href="#L-26"><span class="linenos">26</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timezone</span>
 </span><span id="L-27"><a href="#L-27"><span class="linenos">27</span></a>
-</span><span id="L-28"><a href="#L-28"><span class="linenos">28</span></a><span class="n">TIME_FORMAT</span> <span class="o">=</span> <span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">T%H:%M:%S.</span><span class="si">%f</span><span class="s1">Z&#39;</span>  <span class="c1"># ISO 8601</span>
-</span><span id="L-29"><a href="#L-29"><span class="linenos">29</span></a><span class="n">LOGGING_TIME_FORMAT</span> <span class="o">=</span> <span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">T%H:%M:%S&#39;</span>  <span class="c1"># ISO 8601</span>
+</span><span id="L-28"><a href="#L-28"><span class="linenos">28</span></a><span class="n">TIME_FORMAT</span> <span class="o">=</span> <span class="s1">'%Y-%m-</span><span class="si">%d</span><span class="s1">T%H:%M:%S.</span><span class="si">%f</span><span class="s1">Z'</span>  <span class="c1"># ISO 8601</span>
+</span><span id="L-29"><a href="#L-29"><span class="linenos">29</span></a><span class="n">LOGGING_TIME_FORMAT</span> <span class="o">=</span> <span class="s1">'%Y-%m-</span><span class="si">%d</span><span class="s1">T%H:%M:%S'</span>  <span class="c1"># ISO 8601</span>
 </span><span id="L-30"><a href="#L-30"><span class="linenos">30</span></a>
-</span><span id="L-31"><a href="#L-31"><span class="linenos">31</span></a><span class="n">DATE_FORMAT</span> <span class="o">=</span> <span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span>              <span class="c1"># ISO 8601</span>
+</span><span id="L-31"><a href="#L-31"><span class="linenos">31</span></a><span class="n">DATE_FORMAT</span> <span class="o">=</span> <span class="s1">'%Y-%m-</span><span class="si">%d</span><span class="s1">'</span>              <span class="c1"># ISO 8601</span>
 </span><span id="L-32"><a href="#L-32"><span class="linenos">32</span></a>
 </span><span id="L-33"><a href="#L-33"><span class="linenos">33</span></a><span class="c1"># As used on the NBP</span>
-</span><span id="L-34"><a href="#L-34"><span class="linenos">34</span></a><span class="c1"># DATE_FORMAT = &#39;%y+%j&#39;      # Julian</span>
-</span><span id="L-35"><a href="#L-35"><span class="linenos">35</span></a><span class="c1"># TIME_FORMAT = &#39;%y+%j:%H:%M:%S.%f&#39;  # Julian</span>
+</span><span id="L-34"><a href="#L-34"><span class="linenos">34</span></a><span class="c1"># DATE_FORMAT = '%y+%j'      # Julian</span>
+</span><span id="L-35"><a href="#L-35"><span class="linenos">35</span></a><span class="c1"># TIME_FORMAT = '%y+%j:%H:%M:%S.%f'  # Julian</span>
 </span><span id="L-36"><a href="#L-36"><span class="linenos">36</span></a>
-</span><span id="L-37"><a href="#L-37"><span class="linenos">37</span></a><span class="c1"># DATE_FORMAT = &#39;%Y-%m-%d&#39;    # Gregorian</span>
-</span><span id="L-38"><a href="#L-38"><span class="linenos">38</span></a><span class="c1"># TIME_FORMAT = &#39;%Y-%m-%d:%H:%M:%S.%f&#39;  # Gregorian</span>
+</span><span id="L-37"><a href="#L-37"><span class="linenos">37</span></a><span class="c1"># DATE_FORMAT = '%Y-%m-%d'    # Gregorian</span>
+</span><span id="L-38"><a href="#L-38"><span class="linenos">38</span></a><span class="c1"># TIME_FORMAT = '%Y-%m-%d:%H:%M:%S.%f'  # Gregorian</span>
 </span><span id="L-39"><a href="#L-39"><span class="linenos">39</span></a>
 </span><span id="L-40"><a href="#L-40"><span class="linenos">40</span></a><span class="c1">################################################################################</span>
 </span><span id="L-41"><a href="#L-41"><span class="linenos">41</span></a>
 </span><span id="L-42"><a href="#L-42"><span class="linenos">42</span></a>
 </span><span id="L-43"><a href="#L-43"><span class="linenos">43</span></a><span class="k">def</span><span class="w"> </span><span class="nf">datetime_obj</span><span class="p">(</span><span class="n">time_str</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">time_zone</span><span class="o">=</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">,</span> <span class="n">time_format</span><span class="o">=</span><span class="n">TIME_FORMAT</span><span class="p">):</span>
-</span><span id="L-44"><a href="#L-44"><span class="linenos">44</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Return datetime object for a passed time_str. If no time_str is</span>
-</span><span id="L-45"><a href="#L-45"><span class="linenos">45</span></a><span class="sd">    passed, return datetime object for now.&quot;&quot;&quot;</span>
+</span><span id="L-44"><a href="#L-44"><span class="linenos">44</span></a><span class="w">    </span><span class="sd">"""Return datetime object for a passed time_str. If no time_str is</span>
+</span><span id="L-45"><a href="#L-45"><span class="linenos">45</span></a><span class="sd">    passed, return datetime object for now."""</span>
 </span><span id="L-46"><a href="#L-46"><span class="linenos">46</span></a>    <span class="k">if</span> <span class="n">time_str</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
 </span><span id="L-47"><a href="#L-47"><span class="linenos">47</span></a>        <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">time_zone</span><span class="p">)</span>
 </span><span id="L-48"><a href="#L-48"><span class="linenos">48</span></a>
-</span><span id="L-49"><a href="#L-49"><span class="linenos">49</span></a>    <span class="c1"># If they&#39;ve given us a time string to convert. Set timezone as necessary.</span>
+</span><span id="L-49"><a href="#L-49"><span class="linenos">49</span></a>    <span class="c1"># If they've given us a time string to convert. Set timezone as necessary.</span>
 </span><span id="L-50"><a href="#L-50"><span class="linenos">50</span></a>    <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">time_str</span><span class="p">,</span> <span class="n">time_format</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">tzinfo</span><span class="o">=</span><span class="n">time_zone</span><span class="p">)</span>
 </span><span id="L-51"><a href="#L-51"><span class="linenos">51</span></a>
 </span><span id="L-52"><a href="#L-52"><span class="linenos">52</span></a><span class="c1">################################################################################</span>
 </span><span id="L-53"><a href="#L-53"><span class="linenos">53</span></a>
 </span><span id="L-54"><a href="#L-54"><span class="linenos">54</span></a>
 </span><span id="L-55"><a href="#L-55"><span class="linenos">55</span></a><span class="k">def</span><span class="w"> </span><span class="nf">datetime_obj_from_timestamp</span><span class="p">(</span><span class="n">timestamp</span><span class="p">,</span> <span class="n">time_zone</span><span class="o">=</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">):</span>
-</span><span id="L-56"><a href="#L-56"><span class="linenos">56</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Return datetime object for a passed timestamp.&quot;&quot;&quot;</span>
+</span><span id="L-56"><a href="#L-56"><span class="linenos">56</span></a><span class="w">    </span><span class="sd">"""Return datetime object for a passed timestamp."""</span>
 </span><span id="L-57"><a href="#L-57"><span class="linenos">57</span></a>
-</span><span id="L-58"><a href="#L-58"><span class="linenos">58</span></a>    <span class="c1"># If they&#39;ve given us a time string to convert. Set timezone as necessary.</span>
+</span><span id="L-58"><a href="#L-58"><span class="linenos">58</span></a>    <span class="c1"># If they've given us a time string to convert. Set timezone as necessary.</span>
 </span><span id="L-59"><a href="#L-59"><span class="linenos">59</span></a>    <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromtimestamp</span><span class="p">(</span><span class="n">timestamp</span><span class="p">,</span> <span class="n">tz</span><span class="o">=</span><span class="n">time_zone</span><span class="p">)</span>
 </span><span id="L-60"><a href="#L-60"><span class="linenos">60</span></a>
 </span><span id="L-61"><a href="#L-61"><span class="linenos">61</span></a><span class="c1">################################################################################</span>
 </span><span id="L-62"><a href="#L-62"><span class="linenos">62</span></a>
 </span><span id="L-63"><a href="#L-63"><span class="linenos">63</span></a>
 </span><span id="L-64"><a href="#L-64"><span class="linenos">64</span></a><span class="k">def</span><span class="w"> </span><span class="nf">timestamp</span><span class="p">(</span><span class="n">time_str</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">time_zone</span><span class="o">=</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">,</span> <span class="n">time_format</span><span class="o">=</span><span class="n">TIME_FORMAT</span><span class="p">):</span>
-</span><span id="L-65"><a href="#L-65"><span class="linenos">65</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Return numeric timestamp for a passed time_str. If no time_str is</span>
-</span><span id="L-66"><a href="#L-66"><span class="linenos">66</span></a><span class="sd">    passed, return timestamp for now.&quot;&quot;&quot;</span>
+</span><span id="L-65"><a href="#L-65"><span class="linenos">65</span></a><span class="w">    </span><span class="sd">"""Return numeric timestamp for a passed time_str. If no time_str is</span>
+</span><span id="L-66"><a href="#L-66"><span class="linenos">66</span></a><span class="sd">    passed, return timestamp for now."""</span>
 </span><span id="L-67"><a href="#L-67"><span class="linenos">67</span></a>    <span class="k">return</span> <span class="n">datetime_obj</span><span class="p">(</span><span class="n">time_str</span><span class="p">,</span> <span class="n">time_zone</span><span class="p">,</span> <span class="n">time_format</span><span class="p">)</span><span class="o">.</span><span class="n">timestamp</span><span class="p">()</span>
 </span><span id="L-68"><a href="#L-68"><span class="linenos">68</span></a>
 </span><span id="L-69"><a href="#L-69"><span class="linenos">69</span></a><span class="c1">################################################################################</span>
 </span><span id="L-70"><a href="#L-70"><span class="linenos">70</span></a>
 </span><span id="L-71"><a href="#L-71"><span class="linenos">71</span></a>
 </span><span id="L-72"><a href="#L-72"><span class="linenos">72</span></a><span class="k">def</span><span class="w"> </span><span class="nf">time_str</span><span class="p">(</span><span class="n">timestamp</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">time_zone</span><span class="o">=</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">,</span> <span class="n">time_format</span><span class="o">=</span><span class="n">TIME_FORMAT</span><span class="p">):</span>
-</span><span id="L-73"><a href="#L-73"><span class="linenos">73</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Given a timestamp, return a string representing that time. If no</span>
-</span><span id="L-74"><a href="#L-74"><span class="linenos">74</span></a><span class="sd">    timestamp is given, return the string for now.&quot;&quot;&quot;</span>
+</span><span id="L-73"><a href="#L-73"><span class="linenos">73</span></a><span class="w">    </span><span class="sd">"""Given a timestamp, return a string representing that time. If no</span>
+</span><span id="L-74"><a href="#L-74"><span class="linenos">74</span></a><span class="sd">    timestamp is given, return the string for now."""</span>
 </span><span id="L-75"><a href="#L-75"><span class="linenos">75</span></a>    <span class="k">if</span> <span class="n">timestamp</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
 </span><span id="L-76"><a href="#L-76"><span class="linenos">76</span></a>        <span class="n">timestamp</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">time_zone</span><span class="p">)</span><span class="o">.</span><span class="n">timestamp</span><span class="p">()</span>
 </span><span id="L-77"><a href="#L-77"><span class="linenos">77</span></a>    <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromtimestamp</span><span class="p">(</span><span class="n">timestamp</span><span class="p">,</span> <span class="n">time_zone</span><span class="p">)</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="n">time_format</span><span class="p">)</span>
@@ -180,8 +180,8 @@ into strings and parsing time strings into numeric timestamps.</p>
 </span><span id="L-80"><a href="#L-80"><span class="linenos">80</span></a>
 </span><span id="L-81"><a href="#L-81"><span class="linenos">81</span></a>
 </span><span id="L-82"><a href="#L-82"><span class="linenos">82</span></a><span class="k">def</span><span class="w"> </span><span class="nf">date_str</span><span class="p">(</span><span class="n">timestamp</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">time_zone</span><span class="o">=</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">,</span> <span class="n">date_format</span><span class="o">=</span><span class="n">DATE_FORMAT</span><span class="p">):</span>
-</span><span id="L-83"><a href="#L-83"><span class="linenos">83</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Given a timestamp, return a string representing that date. If no</span>
-</span><span id="L-84"><a href="#L-84"><span class="linenos">84</span></a><span class="sd">    timestamp is given, return the string for today.&quot;&quot;&quot;</span>
+</span><span id="L-83"><a href="#L-83"><span class="linenos">83</span></a><span class="w">    </span><span class="sd">"""Given a timestamp, return a string representing that date. If no</span>
+</span><span id="L-84"><a href="#L-84"><span class="linenos">84</span></a><span class="sd">    timestamp is given, return the string for today."""</span>
 </span><span id="L-85"><a href="#L-85"><span class="linenos">85</span></a>    <span class="k">return</span> <span class="n">time_str</span><span class="p">(</span><span class="n">timestamp</span><span class="p">,</span> <span class="n">time_zone</span><span class="p">,</span> <span class="n">date_format</span><span class="p">)</span>
 </span></pre></div>
 
@@ -228,19 +228,19 @@ into strings and parsing time strings into numeric timestamps.</p>
 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">datetime_obj</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="n">time_str</span><span class="o">=</span><span class="kc">None</span>,</span><span class="param">	<span class="n">time_zone</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span>,</span><span class="param">	<span class="n">time_format</span><span class="o">=</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">T%H:%M:%S.</span><span class="si">%f</span><span class="s1">Z&#39;</span></span><span class="return-annotation">):</span></span>
+        <span class="name">datetime_obj</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="n">time_str</span><span class="o">=</span><span class="kc">None</span>,</span><span class="param">	<span class="n">time_zone</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span>,</span><span class="param">	<span class="n">time_format</span><span class="o">=</span><span class="s1">'%Y-%m-</span><span class="si">%d</span><span class="s1">T%H:%M:%S.</span><span class="si">%f</span><span class="s1">Z'</span></span><span class="return-annotation">):</span></span>
 
                 <label class="view-source-button" for="datetime_obj-view-source"><span>View Source</span></label>
 
     </div>
     <a class="headerlink" href="#datetime_obj"></a>
             <div class="pdoc-code codehilite"><pre><span></span><span id="datetime_obj-44"><a href="#datetime_obj-44"><span class="linenos">44</span></a><span class="k">def</span><span class="w"> </span><span class="nf">datetime_obj</span><span class="p">(</span><span class="n">time_str</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">time_zone</span><span class="o">=</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">,</span> <span class="n">time_format</span><span class="o">=</span><span class="n">TIME_FORMAT</span><span class="p">):</span>
-</span><span id="datetime_obj-45"><a href="#datetime_obj-45"><span class="linenos">45</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Return datetime object for a passed time_str. If no time_str is</span>
-</span><span id="datetime_obj-46"><a href="#datetime_obj-46"><span class="linenos">46</span></a><span class="sd">    passed, return datetime object for now.&quot;&quot;&quot;</span>
+</span><span id="datetime_obj-45"><a href="#datetime_obj-45"><span class="linenos">45</span></a><span class="w">    </span><span class="sd">"""Return datetime object for a passed time_str. If no time_str is</span>
+</span><span id="datetime_obj-46"><a href="#datetime_obj-46"><span class="linenos">46</span></a><span class="sd">    passed, return datetime object for now."""</span>
 </span><span id="datetime_obj-47"><a href="#datetime_obj-47"><span class="linenos">47</span></a>    <span class="k">if</span> <span class="n">time_str</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
 </span><span id="datetime_obj-48"><a href="#datetime_obj-48"><span class="linenos">48</span></a>        <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">time_zone</span><span class="p">)</span>
 </span><span id="datetime_obj-49"><a href="#datetime_obj-49"><span class="linenos">49</span></a>
-</span><span id="datetime_obj-50"><a href="#datetime_obj-50"><span class="linenos">50</span></a>    <span class="c1"># If they&#39;ve given us a time string to convert. Set timezone as necessary.</span>
+</span><span id="datetime_obj-50"><a href="#datetime_obj-50"><span class="linenos">50</span></a>    <span class="c1"># If they've given us a time string to convert. Set timezone as necessary.</span>
 </span><span id="datetime_obj-51"><a href="#datetime_obj-51"><span class="linenos">51</span></a>    <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">time_str</span><span class="p">,</span> <span class="n">time_format</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">tzinfo</span><span class="o">=</span><span class="n">time_zone</span><span class="p">)</span>
 </span></pre></div>
 
@@ -263,9 +263,9 @@ passed, return datetime object for now.</p>
     </div>
     <a class="headerlink" href="#datetime_obj_from_timestamp"></a>
             <div class="pdoc-code codehilite"><pre><span></span><span id="datetime_obj_from_timestamp-56"><a href="#datetime_obj_from_timestamp-56"><span class="linenos">56</span></a><span class="k">def</span><span class="w"> </span><span class="nf">datetime_obj_from_timestamp</span><span class="p">(</span><span class="n">timestamp</span><span class="p">,</span> <span class="n">time_zone</span><span class="o">=</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">):</span>
-</span><span id="datetime_obj_from_timestamp-57"><a href="#datetime_obj_from_timestamp-57"><span class="linenos">57</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Return datetime object for a passed timestamp.&quot;&quot;&quot;</span>
+</span><span id="datetime_obj_from_timestamp-57"><a href="#datetime_obj_from_timestamp-57"><span class="linenos">57</span></a><span class="w">    </span><span class="sd">"""Return datetime object for a passed timestamp."""</span>
 </span><span id="datetime_obj_from_timestamp-58"><a href="#datetime_obj_from_timestamp-58"><span class="linenos">58</span></a>
-</span><span id="datetime_obj_from_timestamp-59"><a href="#datetime_obj_from_timestamp-59"><span class="linenos">59</span></a>    <span class="c1"># If they&#39;ve given us a time string to convert. Set timezone as necessary.</span>
+</span><span id="datetime_obj_from_timestamp-59"><a href="#datetime_obj_from_timestamp-59"><span class="linenos">59</span></a>    <span class="c1"># If they've given us a time string to convert. Set timezone as necessary.</span>
 </span><span id="datetime_obj_from_timestamp-60"><a href="#datetime_obj_from_timestamp-60"><span class="linenos">60</span></a>    <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromtimestamp</span><span class="p">(</span><span class="n">timestamp</span><span class="p">,</span> <span class="n">tz</span><span class="o">=</span><span class="n">time_zone</span><span class="p">)</span>
 </span></pre></div>
 
@@ -280,15 +280,15 @@ passed, return datetime object for now.</p>
 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">timestamp</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="n">time_str</span><span class="o">=</span><span class="kc">None</span>,</span><span class="param">	<span class="n">time_zone</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span>,</span><span class="param">	<span class="n">time_format</span><span class="o">=</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">T%H:%M:%S.</span><span class="si">%f</span><span class="s1">Z&#39;</span></span><span class="return-annotation">):</span></span>
+        <span class="name">timestamp</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="n">time_str</span><span class="o">=</span><span class="kc">None</span>,</span><span class="param">	<span class="n">time_zone</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span>,</span><span class="param">	<span class="n">time_format</span><span class="o">=</span><span class="s1">'%Y-%m-</span><span class="si">%d</span><span class="s1">T%H:%M:%S.</span><span class="si">%f</span><span class="s1">Z'</span></span><span class="return-annotation">):</span></span>
 
                 <label class="view-source-button" for="timestamp-view-source"><span>View Source</span></label>
 
     </div>
     <a class="headerlink" href="#timestamp"></a>
             <div class="pdoc-code codehilite"><pre><span></span><span id="timestamp-65"><a href="#timestamp-65"><span class="linenos">65</span></a><span class="k">def</span><span class="w"> </span><span class="nf">timestamp</span><span class="p">(</span><span class="n">time_str</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">time_zone</span><span class="o">=</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">,</span> <span class="n">time_format</span><span class="o">=</span><span class="n">TIME_FORMAT</span><span class="p">):</span>
-</span><span id="timestamp-66"><a href="#timestamp-66"><span class="linenos">66</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Return numeric timestamp for a passed time_str. If no time_str is</span>
-</span><span id="timestamp-67"><a href="#timestamp-67"><span class="linenos">67</span></a><span class="sd">    passed, return timestamp for now.&quot;&quot;&quot;</span>
+</span><span id="timestamp-66"><a href="#timestamp-66"><span class="linenos">66</span></a><span class="w">    </span><span class="sd">"""Return numeric timestamp for a passed time_str. If no time_str is</span>
+</span><span id="timestamp-67"><a href="#timestamp-67"><span class="linenos">67</span></a><span class="sd">    passed, return timestamp for now."""</span>
 </span><span id="timestamp-68"><a href="#timestamp-68"><span class="linenos">68</span></a>    <span class="k">return</span> <span class="n">datetime_obj</span><span class="p">(</span><span class="n">time_str</span><span class="p">,</span> <span class="n">time_zone</span><span class="p">,</span> <span class="n">time_format</span><span class="p">)</span><span class="o">.</span><span class="n">timestamp</span><span class="p">()</span>
 </span></pre></div>
 
@@ -304,15 +304,15 @@ passed, return timestamp for now.</p>
 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">time_str</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="n">timestamp</span><span class="o">=</span><span class="kc">None</span>,</span><span class="param">	<span class="n">time_zone</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span>,</span><span class="param">	<span class="n">time_format</span><span class="o">=</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">T%H:%M:%S.</span><span class="si">%f</span><span class="s1">Z&#39;</span></span><span class="return-annotation">):</span></span>
+        <span class="name">time_str</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="n">timestamp</span><span class="o">=</span><span class="kc">None</span>,</span><span class="param">	<span class="n">time_zone</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span>,</span><span class="param">	<span class="n">time_format</span><span class="o">=</span><span class="s1">'%Y-%m-</span><span class="si">%d</span><span class="s1">T%H:%M:%S.</span><span class="si">%f</span><span class="s1">Z'</span></span><span class="return-annotation">):</span></span>
 
                 <label class="view-source-button" for="time_str-view-source"><span>View Source</span></label>
 
     </div>
     <a class="headerlink" href="#time_str"></a>
             <div class="pdoc-code codehilite"><pre><span></span><span id="time_str-73"><a href="#time_str-73"><span class="linenos">73</span></a><span class="k">def</span><span class="w"> </span><span class="nf">time_str</span><span class="p">(</span><span class="n">timestamp</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">time_zone</span><span class="o">=</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">,</span> <span class="n">time_format</span><span class="o">=</span><span class="n">TIME_FORMAT</span><span class="p">):</span>
-</span><span id="time_str-74"><a href="#time_str-74"><span class="linenos">74</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Given a timestamp, return a string representing that time. If no</span>
-</span><span id="time_str-75"><a href="#time_str-75"><span class="linenos">75</span></a><span class="sd">    timestamp is given, return the string for now.&quot;&quot;&quot;</span>
+</span><span id="time_str-74"><a href="#time_str-74"><span class="linenos">74</span></a><span class="w">    </span><span class="sd">"""Given a timestamp, return a string representing that time. If no</span>
+</span><span id="time_str-75"><a href="#time_str-75"><span class="linenos">75</span></a><span class="sd">    timestamp is given, return the string for now."""</span>
 </span><span id="time_str-76"><a href="#time_str-76"><span class="linenos">76</span></a>    <span class="k">if</span> <span class="n">timestamp</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
 </span><span id="time_str-77"><a href="#time_str-77"><span class="linenos">77</span></a>        <span class="n">timestamp</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">time_zone</span><span class="p">)</span><span class="o">.</span><span class="n">timestamp</span><span class="p">()</span>
 </span><span id="time_str-78"><a href="#time_str-78"><span class="linenos">78</span></a>    <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromtimestamp</span><span class="p">(</span><span class="n">timestamp</span><span class="p">,</span> <span class="n">time_zone</span><span class="p">)</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="n">time_format</span><span class="p">)</span>
@@ -330,15 +330,15 @@ timestamp is given, return the string for now.</p>
 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">date_str</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="n">timestamp</span><span class="o">=</span><span class="kc">None</span>,</span><span class="param">	<span class="n">time_zone</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span>,</span><span class="param">	<span class="n">date_format</span><span class="o">=</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span></span><span class="return-annotation">):</span></span>
+        <span class="name">date_str</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="n">timestamp</span><span class="o">=</span><span class="kc">None</span>,</span><span class="param">	<span class="n">time_zone</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span>,</span><span class="param">	<span class="n">date_format</span><span class="o">=</span><span class="s1">'%Y-%m-</span><span class="si">%d</span><span class="s1">'</span></span><span class="return-annotation">):</span></span>
 
                 <label class="view-source-button" for="date_str-view-source"><span>View Source</span></label>
 
     </div>
     <a class="headerlink" href="#date_str"></a>
             <div class="pdoc-code codehilite"><pre><span></span><span id="date_str-83"><a href="#date_str-83"><span class="linenos">83</span></a><span class="k">def</span><span class="w"> </span><span class="nf">date_str</span><span class="p">(</span><span class="n">timestamp</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">time_zone</span><span class="o">=</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">,</span> <span class="n">date_format</span><span class="o">=</span><span class="n">DATE_FORMAT</span><span class="p">):</span>
-</span><span id="date_str-84"><a href="#date_str-84"><span class="linenos">84</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Given a timestamp, return a string representing that date. If no</span>
-</span><span id="date_str-85"><a href="#date_str-85"><span class="linenos">85</span></a><span class="sd">    timestamp is given, return the string for today.&quot;&quot;&quot;</span>
+</span><span id="date_str-84"><a href="#date_str-84"><span class="linenos">84</span></a><span class="w">    </span><span class="sd">"""Given a timestamp, return a string representing that date. If no</span>
+</span><span id="date_str-85"><a href="#date_str-85"><span class="linenos">85</span></a><span class="sd">    timestamp is given, return the string for today."""</span>
 </span><span id="date_str-86"><a href="#date_str-86"><span class="linenos">86</span></a>    <span class="k">return</span> <span class="n">time_str</span><span class="p">(</span><span class="n">timestamp</span><span class="p">,</span> <span class="n">time_zone</span><span class="p">,</span> <span class="n">date_format</span><span class="p">)</span>
 </span></pre></div>
 
