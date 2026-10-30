@@ -211,9 +211,12 @@ issue #590) and `websockets<18`.
 
 ## 5. `utils/install_openrvdas.sh` — platform constraints
 
-~2,500 lines of platform-conditional shell targeting macOS, Ubuntu 22–25,
-Debian 12, and RHEL/Rocky/AlmaLinux 9/10. Its correctness lives in environments no CI
-job reproduces. **Changes here need real machines, not a green `bash -n`.**
+~2,500 lines of platform-conditional shell targeting macOS, Ubuntu 22.04+,
+Debian 12+, and RHEL/Rocky/AlmaLinux 9+. It refuses releases below a
+per-distribution floor and accepts newer ones, including releases that came
+out after it was written, with a notice (`check_os_supported`, #722). Its
+correctness lives in environments no CI job reproduces. **Changes here need
+real machines, not a green `bash -n`.**
 
 ### macOS ships bash 3.2 — two constructs are unavailable
 
