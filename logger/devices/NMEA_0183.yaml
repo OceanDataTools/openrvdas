@@ -26,6 +26,11 @@
 # Proprietary sentence prefixes:
 #   $Pxxx - Vendor-specific (ASH=Ashtech, GRM=Garmin, KEL=Knudsen, etc.)
 #
+# Signed positions: NMEA_GPS_Signed, NMEA_GPS_INS_Signed, NMEA_Autopilot_Signed
+# and NMEA_Radar_Signed are the device types they're named after, but give
+# latitude and longitude in signed decimal degrees (negative for South and
+# West), with no separate NorS/EorW fields. See the end of this file.
+#
 # See README.md in this directory for more information.
 ################################################################################
 
@@ -36,7 +41,7 @@ NMEA_GPS:
   category: "device_type"
   description: "GPS/GNSS receiver - standard and proprietary sentences"
 
-  format:
+  format: &NMEA_GPS_format
     ########################################
     # Standard NMEA Sentences
     ########################################
@@ -122,7 +127,7 @@ NMEA_GPS:
     # PUBX,04 - u-blox time of day
     PUBX04: "$PUBX,04,{GPSTime:of},{GPSDate:nc},{UTCTime:of},{UTCDate:nc},{UTCOffset:of},{ClockBias:of},{ClockDrift:of},{TPGranularity:of}*{CheckSum:x}"
 
-  fields:
+  fields: &NMEA_GPS_fields
     GPSTime:
       units: "hhmmss.ss"
       description: "UTC time of position fix"
@@ -421,7 +426,7 @@ NMEA_GPS_INS:
   category: "device_type"
   description: "Integrated GPS/INS system (Seapath, etc.) - outputs position, heading, and motion"
 
-  format:
+  format: &NMEA_GPS_INS_format
     ########################################
     # Standard NMEA Position Sentences
     ########################################
@@ -469,7 +474,7 @@ NMEA_GPS_INS:
     PASHR: "$PASHR,{GPSTime:of},{Heading:of},{HeadingType:ow},{Roll:of},{Pitch:of},{Heave:of},{RollAcc:of},{PitchAcc:of},{HeadingAcc:of},{AidingStatus:od},{IMUStatus:od}*{CheckSum:x}"
     PASHRshort: "$PASHR,{GPSTime:of},{Heading:of},{HeadingType:ow},{Roll:of},{Pitch:of},{Heave:of},{RollAcc:of},{PitchAcc:of},{HeadingAcc:of},{AidingStatus:od}*{CheckSum:x}"
 
-  fields:
+  fields: &NMEA_GPS_INS_fields
     # Position fields
     GPSTime:
       units: "hhmmss.ss"
@@ -1216,7 +1221,7 @@ NMEA_Autopilot:
   category: "device_type"
   description: "Autopilot and navigation computer sentences"
 
-  format:
+  format: &NMEA_Autopilot_format
     # Autopilot Sentence B
     APB: "${:2l}APB,{Status1:ow},{Status2:ow},{XTE:of},{XTEDir:ow},N,{ArrivalCircle:ow},{ArrivalPerp:ow},{BearingOrig:of},{BearingOrigType:ow},{WaypointID:nc},{BearingPos:of},{BearingPosType:ow},{HeadingToSteer:of},{HeadingType:ow},{Mode:ow}*{CheckSum:x}"
 
@@ -1245,7 +1250,7 @@ NMEA_Autopilot:
     # Waypoint Arrival Alarm
     AAM: "${:2l}AAM,{ArrivalCircle:ow},{WaypointPassed:ow},{ArrivalRadius:of},N,{WaypointID:nc}*{CheckSum:x}"
 
-  fields:
+  fields: &NMEA_Autopilot_fields
     Status1:
       description: "A=Valid, V=Loran-C blink/SNR warning"
     Status2:
@@ -1408,7 +1413,7 @@ NMEA_Radar:
   category: "device_type"
   description: "Radar and ARPA target tracking sentences"
 
-  format:
+  format: &NMEA_Radar_format
     # Tracked Target Message
     TTM: "${:2l}TTM,{TargetNum:od},{Distance:of},{Bearing:of},{BearingType:ow},{Speed:of},{Course:of},{CourseType:ow},{CPA:of},{TCPA:of},{SpeedUnits:ow},{TargetName:nc},{TargetStatus:ow},{RefTarget:ow},{AcqTime:of},{AcqType:ow}*{CheckSum:x}"
 
@@ -1421,7 +1426,7 @@ NMEA_Radar:
     # Own Ship Data
     OSD: "${:2l}OSD,{Heading:of},{HeadingStatus:ow},{Course:of},{CourseRef:ow},{Speed:of},{SpeedRef:ow},{Set:of},{Drift:of},{SpeedUnits:ow}*{CheckSum:x}"
 
-  fields:
+  fields: &NMEA_Radar_fields
     TargetNum:
       description: "Target number (00-99)"
     Distance:
@@ -1563,3 +1568,112 @@ NMEA_Winch:
       description: "Wire out"
     Checksum:
       description: "Checksum value"
+
+
+################################################################################
+# Signed-position variants (#718)
+#
+# Each *_Signed device type is the device type it is named after, except that
+# positions are parsed with nlat_dir: latitude and longitude come out in signed
+# decimal degrees, negative for South and West, and there are no separate
+# NorS/EorW (or DestNorS/DestEorW) fields. Use one when anything downstream
+# needs a real position - a geofence, a map, a distance - so that it doesn't
+# have to recombine each value with its hemisphere first. Without a position
+# fix, latitude and longitude are None.
+#
+# They are built with YAML merge keys ("<<: *NMEA_GPS_format"): every sentence
+# is the original device type's, and only the sentences that carry a position
+# are overridden below. So a change to any other sentence needs making only
+# once, in the original. Merge keys can't remove keys, so the merged fields
+# lists still describe NorS and EorW, which these device types never produce.
+################################################################################
+NMEA_GPS_Signed:
+  category: "device_type"
+  description: "GPS/GNSS receiver - as NMEA_GPS, but with signed latitude and longitude"
+
+  format:
+    <<: *NMEA_GPS_format
+    GGA: "${:2l}GGA,{GPSTime:of},{Latitude:nlat_dir},{Longitude:nlat_dir},{FixQuality:od},{NumSats:od},{HDOP:of},{AntennaHeight:of},M,{GeoidHeight:of},M,{LastDGPSUpdate:of},{DGPSStationID:od}*{CheckSum:x}"
+    GLL:
+      - "${:2l}GLL,{Latitude:nlat_dir},{Longitude:nlat_dir},{GPSTime:of},{Status:ow},{Mode:ow}*{CheckSum:x}"
+      - "${:2l}GLL,{Latitude:nlat_dir},{Longitude:nlat_dir},{GPSTime:of},{Status:ow}*{CheckSum:x}"
+    RMC:
+      - "${:2l}RMC,{GPSTime:of},{Status:ow},{Latitude:nlat_dir},{Longitude:nlat_dir},{SpeedKt:of},{CourseTrue:of},{GPSDate:ow},{MagVar:of},{MagVarDir:ow},{Mode:ow}*{CheckSum:x}"
+      - "${:2l}RMC,{GPSTime:of},{Status:ow},{Latitude:nlat_dir},{Longitude:nlat_dir},{SpeedKt:of},{CourseTrue:of},{GPSDate:ow},{MagVar:of},{MagVarDir:ow}*{CheckSum:x}"
+    GNS: "${:2l}GNS,{GPSTime:of},{Latitude:nlat_dir},{Longitude:nlat_dir},{Mode:nc},{NumSats:od},{HDOP:of},{AntennaHeight:of},{GeoidHeight:of},{DGPSAge:of},{DGPSStationID:od}*{CheckSum:x}"
+    PGRMF: "$PGRMF,{WeekNum:od},{SecondsInWeek:of},{GPSDate:od},{GPSTime:od},{LeapSeconds:od},{Latitude:nlat_dir},{Longitude:nlat_dir},{FixMode:ow},{FixType:od},{SpeedKm:of},{Course:of},{PDOP:of},{TDOP:of}*{CheckSum:x}"
+    PTNLGGK: "$PTNL,GGK,{GPSTime:of},{GPSDate:nc},{Latitude:nlat_dir},{Longitude:nlat_dir},{PosType:od},{NumSats:od},{DOP:of},{EHTm:of}*{CheckSum:x}"
+
+  fields:
+    <<: *NMEA_GPS_fields
+    Latitude:
+      units: "degrees"
+      description: "Latitude in signed decimal degrees; negative for South"
+    Longitude:
+      units: "degrees"
+      description: "Longitude in signed decimal degrees; negative for West"
+
+NMEA_GPS_INS_Signed:
+  category: "device_type"
+  description: "Integrated GPS/INS system - as NMEA_GPS_INS, but with signed latitude and longitude"
+
+  format:
+    <<: *NMEA_GPS_INS_format
+    GGA: "${:2l}GGA,{GPSTime:of},{Latitude:nlat_dir},{Longitude:nlat_dir},{FixQuality:od},{NumSats:od},{HDOP:of},{AntennaHeight:of},M,{GeoidHeight:of},M,{LastDGPSUpdate:of},{DGPSStationID:od}*{CheckSum:x}"
+    GLL:
+      - "${:2l}GLL,{Latitude:nlat_dir},{Longitude:nlat_dir},{GPSTime:of},{Status:ow},{Mode:ow}*{CheckSum:x}"
+      - "${:2l}GLL,{Latitude:nlat_dir},{Longitude:nlat_dir},{GPSTime:of},{Status:ow}*{CheckSum:x}"
+    RMC:
+      - "${:2l}RMC,{GPSTime:of},{Status:ow},{Latitude:nlat_dir},{Longitude:nlat_dir},{SpeedKt:of},{CourseTrue:of},{GPSDate:ow},{MagVar:of},{MagVarDir:ow},{Mode:ow}*{CheckSum:x}"
+      - "${:2l}RMC,{GPSTime:of},{Status:ow},{Latitude:nlat_dir},{Longitude:nlat_dir},{SpeedKt:of},{CourseTrue:of},{GPSDate:ow},{MagVar:of},{MagVarDir:ow}*{CheckSum:x}"
+
+  fields:
+    <<: *NMEA_GPS_INS_fields
+    Latitude:
+      units: "degrees"
+      description: "Latitude in signed decimal degrees; negative for South"
+    Longitude:
+      units: "degrees"
+      description: "Longitude in signed decimal degrees; negative for West"
+
+NMEA_Autopilot_Signed:
+  category: "device_type"
+  description: "Autopilot and navigation computer - as NMEA_Autopilot, but with signed waypoint positions"
+
+  format:
+    <<: *NMEA_Autopilot_format
+    BWC: "${:2l}BWC,{GPSTime:of},{Latitude:nlat_dir},{Longitude:nlat_dir},{BearingTrue:of},T,{BearingMag:of},M,{Distance:of},N,{WaypointID:nc},{Mode:ow}*{CheckSum:x}"
+    RMB: "${:2l}RMB,{Status:ow},{XTE:of},{XTEDir:ow},{OrigWaypoint:nc},{DestWaypoint:nc},{DestLat:nlat_dir},{DestLon:nlat_dir},{RangeToDest:of},{BearingToDest:of},{ClosingVelocity:of},{ArrivalStatus:ow},{Mode:ow}*{CheckSum:x}"
+    WPL: "${:2l}WPL,{Latitude:nlat_dir},{Longitude:nlat_dir},{WaypointID:nc}*{CheckSum:x}"
+
+  fields:
+    <<: *NMEA_Autopilot_fields
+    Latitude:
+      units: "degrees"
+      description: "Waypoint latitude in signed decimal degrees; negative for South"
+    Longitude:
+      units: "degrees"
+      description: "Waypoint longitude in signed decimal degrees; negative for West"
+    DestLat:
+      units: "degrees"
+      description: "Destination waypoint latitude in signed decimal degrees; negative for South"
+    DestLon:
+      units: "degrees"
+      description: "Destination waypoint longitude in signed decimal degrees; negative for West"
+
+NMEA_Radar_Signed:
+  category: "device_type"
+  description: "Radar and ARPA target tracking - as NMEA_Radar, but with signed target positions"
+
+  format:
+    <<: *NMEA_Radar_format
+    TLL: "${:2l}TLL,{TargetNum:od},{Latitude:nlat_dir},{Longitude:nlat_dir},{TargetName:nc},{GPSTime:of},{TargetStatus:ow},{RefTarget:ow}*{CheckSum:x}"
+
+  fields:
+    <<: *NMEA_Radar_fields
+    Latitude:
+      units: "degrees"
+      description: "Target latitude in signed decimal degrees; negative for South"
+    Longitude:
+      units: "degrees"
+      description: "Target longitude in signed decimal degrees; negative for West"

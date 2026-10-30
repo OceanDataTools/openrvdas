@@ -30,6 +30,9 @@ The recognized format types we add are:
   os   = optional sequence of any characters - will match everything on line
 
   nlat = NMEA-formatted latitude or longitude, converted to decimal degrees
+  nlat_dir = NMEA-formatted latitude or longitude together with the
+         hemisphere field that follows it (e.g. "4317.0146,S"), converted
+         to signed decimal degrees: negative for South and West
 
   nc = any ASCII text that is not a comma
   ns = any ASCII text that is not an asterisk ("star")
@@ -129,10 +132,14 @@ def nmea_lat_lon_dir(text):
     """Method for parsing an NMEA latitude or longitude (DDDMM.MMMM) along
     with the hemisphere (E/W/N/S) and converting it into signed decimal
     degrees. South and West are considered negative, North and East
-    positive.
+    positive. A sentence sent without a position fix leaves both fields
+    empty, so the text is just the comma between them (","); that, or any
+    empty value, is returned as None.
     """
     if text:
         nmea_str, dir = text.split(',')
+        if not nmea_str.strip():
+            return None
         nmea_value = float(nmea_str)
         normalized_value = nmea_value / 100
         degrees = int(normalized_value)
@@ -151,7 +158,9 @@ def nmea_lat_lon_dir(text):
         return None
 
 
-nmea_lat_lon_dir.pattern = r'(\s*(\d+(\.\d*)?|\.\d+),[NEWS]?|)'
+# The value and the hemisphere are each optional, but the comma between
+# them isn't: without a fix the pair is sent as two empty fields (",").
+nmea_lat_lon_dir.pattern = r'(\s*(\d+(\.\d*)?|\.\d+)?,[NEWS]?)'
 
 
 def not_comma(text):

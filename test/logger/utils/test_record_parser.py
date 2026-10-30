@@ -11,6 +11,8 @@ import time
 import unittest
 import warnings
 
+import yaml
+
 from logger.utils.record_parser import RecordParser  # noqa: E402
 from logger.utils.das_record import DASRecord  # noqa: E402
 
@@ -802,6 +804,155 @@ class TestStandardNMEADefinitions(unittest.TestCase):
                 fields = self.parse(f'{device} {ts} $GPGLL,4738.9683,N,12218.7760,W,'
                                     '233342.00,A,D*44')
                 self.assertEqual(fields['Mode'], 'D')
+
+
+################################################################################
+def nmea(body):
+    """'GPGGA,...' -> '$GPGGA,...*XX', with the checksum that body needs."""
+    checksum = 0
+    for char in body:
+        checksum ^= ord(char)
+    return f'${body}*{checksum:02X}'
+
+
+class TestSignedNMEADefinitions(unittest.TestCase):
+    """The *_Signed device types in logger/devices/NMEA_0183.yaml give
+    positions in signed decimal degrees, and otherwise parse exactly as the
+    device types they're named after (#718)."""
+
+    DEVICE_TYPES = {'gps': 'NMEA_GPS', 'ins': 'NMEA_GPS_INS',
+                    'autopilot': 'NMEA_Autopilot', 'radar': 'NMEA_Radar'}
+    # Each position value and the hemisphere field that follows it
+    POSITIONS = {'Latitude': 'NorS', 'Longitude': 'EorW',
+                 'DestLat': 'DestNorS', 'DestLon': 'DestEorW'}
+    # Every sentence that carries a position, with fixes in different hemispheres
+    SENTENCES = {
+        'gps': [
+            'GPGGA,123519.00,4317.014607,S,07049.123456,W,1,08,0.9,545.4,M,46.9,M,,',
+            'GPGGA,123519.00,4317.014607,N,07049.123456,E,1,08,0.9,545.4,M,46.9,M,,',
+            'GPGLL,4738.9683,N,12218.7760,W,233342.00,A,D',
+            'GPGLL,4738.9683,S,12218.7760,E,233342.00,A',
+            'GNRMC,233342.00,A,4738.9683,S,12218.7760,E,0.05,306.35,201026,15.55,E,D',
+            'GPRMC,233342.00,A,4738.9683,N,12218.7760,W,0.05,306.35,201026,15.55,',
+            'GNGNS,233342.00,4738.9683,N,12218.7760,W,AAN,12,0.9,10.0,-20.0,,',
+            'PGRMF,2180,432000,301026,120000,18,4738.9683,S,12218.7760,W,A,2,0.5,306.4,1.2,1.0',
+            'PTNL,GGK,120000.00,103026,4738.9683,N,12218.7760,W,3,12,1.1,45.2',
+        ],
+        'ins': [
+            'INGGA,123519.00,6452.1234,S,14733.5678,W,2,12,0.7,12.3,M,-1.2,M,,',
+            'INGLL,6452.1234,S,14733.5678,E,123519.00,A,A',
+            'INRMC,123519.00,A,6452.1234,N,14733.5678,W,10.2,88.5,301026,,,A',
+        ],
+        'autopilot': [
+            'GPBWC,120000.00,4917.24,N,12309.57,W,051.9,T,031.6,M,001.3,N,004,A',
+            'GPRMB,A,0.66,L,003,004,4917.24,S,12309.57,W,001.3,052.5,000.5,V,A',
+            'GPWPL,4917.16,S,12310.64,E,003',
+        ],
+        'radar': [
+            'RATLL,01,4917.24,S,12309.57,W,TGT1,120000.00,T,R',
+        ],
+    }
+    TS = '2026-10-30T12:00:00.000000Z'
+
+    def setUp(self):
+        self.tmpdir = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmpdir.cleanup)
+        self.definitions = self.tmpdir.name + '/devices.yaml'
+
+        # Map every field of each device type to its own name, so that parsed
+        # records keep all of them. NMEA_0183.yaml lists NorS/EorW for the
+        # signed types too (merge keys can't remove them), so their field
+        # lists are the same.
+        with open('logger/devices/NMEA_0183.yaml') as f:
+            types = yaml.safe_load(f)
+        devices = {}
+        for device, device_type in self.DEVICE_TYPES.items():
+            for suffix in ('', '_Signed'):
+                fields = {name: name for name in types[device_type + suffix]['fields']}
+                devices[device + suffix.lower()] = {
+                    'category': 'device', 'device_type': device_type + suffix,
+                    'fields': fields}
+        with open(self.definitions, 'w') as f:
+            yaml.dump({'includes': ['logger/devices/NMEA_0183.yaml'],
+                       'devices': devices}, f)
+
+    def parse(self, device, sentence):
+        parser = RecordParser(definition_path=self.definitions, quiet=True)
+        record = f'{device} {self.TS} {sentence}'
+        result = parser.parse_record(record)
+        self.assertIsNotNone(result, record)
+        return result['fields']
+
+    def assert_signed_version(self, device, body, has_position=True):
+        """Parse body with device's type and its _Signed version, and check
+        that they agree, but for the sign of each position."""
+        sentence = nmea(body)
+        unsigned = self.parse(device, sentence)
+        signed = self.parse(device + '_signed', sentence)
+        if has_position:
+            self.assertTrue(set(self.POSITIONS) & set(unsigned), unsigned)
+        for value, hemisphere in self.POSITIONS.items():
+            self.assertNotIn(hemisphere, signed)
+            if unsigned.get(value) is None:
+                self.assertIsNone(signed.get(value))
+                continue
+            expected = unsigned[value]
+            if unsigned[hemisphere] in ('S', 'W'):
+                expected = -expected
+            self.assertAlmostEqual(signed[value], expected, places=9)
+        positions = set(self.POSITIONS) | set(self.POSITIONS.values())
+        self.assertEqual({k: v for k, v in unsigned.items() if k not in positions},
+                         {k: v for k, v in signed.items() if k not in positions})
+
+    ############################
+    def test_positions_are_signed(self):
+        for device, bodies in self.SENTENCES.items():
+            for body in bodies:
+                with self.subTest(device=device, sentence=body):
+                    self.assert_signed_version(device, body)
+
+    ############################
+    def test_south_and_west_are_negative(self):
+        fields = self.parse('gps_signed', nmea(self.SENTENCES['gps'][0]))
+        self.assertAlmostEqual(fields['Latitude'], -43.2835767833, places=9)
+        self.assertAlmostEqual(fields['Longitude'], -70.8187242667, places=9)
+        fields = self.parse('gps_signed', nmea(self.SENTENCES['gps'][1]))
+        self.assertAlmostEqual(fields['Latitude'], 43.2835767833, places=9)
+        self.assertAlmostEqual(fields['Longitude'], 70.8187242667, places=9)
+
+    ############################
+    def test_no_fix(self):
+        """Without a position fix, the position fields are empty. The signed
+        types must still parse the rest of the sentence; nlat_dir used to fail
+        to match an empty position, so the whole record was dropped."""
+        for device in ('gps', 'ins'):
+            for body in ('GPGGA,123519.00,,,,,0,00,,,M,,M,,',
+                         'GPRMC,123519.00,V,,,,,,,301026,,,N',
+                         'GPGLL,,,,,123519.00,V,N'):
+                with self.subTest(device=device, sentence=body):
+                    self.assert_signed_version(device, body, has_position=False)
+                    fields = self.parse(device + '_signed', nmea(body))
+                    self.assertIsNone(fields.get('Latitude'))
+                    self.assertIsNone(fields.get('Longitude'))
+        fields = self.parse('gps_signed', nmea('GPGGA,123519.00,,,,,0,00,,,M,,M,,'))
+        self.assertEqual(fields['FixQuality'], 0)
+
+    ############################
+    def test_sentences_without_positions_are_shared(self):
+        """Every other sentence is the original device type's, by merge key."""
+        with open('logger/devices/NMEA_0183.yaml') as f:
+            types = yaml.safe_load(f)
+        for device_type in self.DEVICE_TYPES.values():
+            with self.subTest(device_type=device_type):
+                original = types[device_type]['format']
+                signed = types[device_type + '_Signed']['format']
+                self.assertEqual(list(original), list(signed))
+                for key, formats in original.items():
+                    if ':nlat}' in str(formats):
+                        self.assertNotIn(':nlat}', str(signed[key]))
+                        self.assertIn(':nlat_dir}', str(signed[key]))
+                    else:
+                        self.assertEqual(formats, signed[key], key)
 
 
 ################################################################################
