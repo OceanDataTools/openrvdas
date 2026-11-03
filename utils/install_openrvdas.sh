@@ -1329,20 +1329,15 @@ ENVDEFAULTS
         --trusted-host pypi.org --trusted-host files.pythonhosted.org \
         -r "$BACKEND_DIR/requirements.txt"
 
-    # Register OpenRVDAS's own package metadata in this venv (--no-deps: the
-    # backend reaches OpenRVDAS's modules via sys.path, not this install; this
-    # is only so importlib.metadata.version("openrvdas") can find it, for
-    # GET /api/v1/version). Version comes from git tags via setuptools_scm.
-    echo "Registering OpenRVDAS package metadata in web backend venv..."
-    "$BACKEND_VENV/bin/pip" install --no-deps --quiet \
-        --trusted-host pypi.org --trusted-host files.pythonhosted.org \
-        -e "${INSTALL_ROOT}/openrvdas"
-
-    # That metadata is frozen at install time, so it goes stale after a
-    # `git pull`. read_version.get_version() avoids that by asking
-    # setuptools_scm to read the version live from the git tree, but
-    # --no-deps above skips it - install it explicitly. Keep this range in
-    # sync with setuptools_scm in the top-level pyproject.toml.
+    # GET /api/v1/version reports the OpenRVDAS version via
+    # logger/utils/read_version.py, which the backend imports through
+    # sys.path. get_version() asks setuptools_scm to read the version live
+    # from the git tree, so setuptools_scm must be in this venv. OpenRVDAS
+    # itself is deliberately NOT pip-installed here: its metadata would only
+    # be a stale fallback, and installing it with --no-deps makes pip print
+    # a spurious "dependency conflicts" ERROR for Django etc., which live in
+    # the main venv. Keep this range in sync with setuptools_scm in the
+    # top-level pyproject.toml.
     "$BACKEND_VENV/bin/pip" install --quiet \
         --trusted-host pypi.org --trusted-host files.pythonhosted.org \
         "setuptools_scm>=8,<11"
