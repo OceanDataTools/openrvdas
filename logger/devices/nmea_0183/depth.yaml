@@ -1,0 +1,102 @@
+################################################################################
+# NMEA 0183 device type: NMEA_Depth (Depth Sounder / Echo Sounder)
+#
+# Part of the NMEA 0183 library: logger/devices/NMEA_0183.yaml includes every
+# file in this directory. See README.md here for the format types used,
+# talker IDs and proprietary sentence prefixes.
+################################################################################
+
+######################################
+# Depth Sounder / Echo Sounder
+######################################
+NMEA_Depth:
+  category: "device_type"
+  description: "Depth sounder, echo sounder, multibeam - standard and proprietary"
+
+  format:
+    ########################################
+    # Standard NMEA Sentences
+    ########################################
+
+    # Depth Below Transducer
+    DBT: "${:2l}DBT,{DepthFeet:of},f,{DepthMeters:of},M,{DepthFathoms:of},F*{CheckSum:x}"
+
+    # Depth of Water
+    DPT:
+      - "${:2l}DPT,{Depth:of},{Offset:of}*{CheckSum:x}"
+      - "${:2l}DPT,{Depth:of},{Offset:of},{MaxRange:of}*{CheckSum:x}"
+
+    # Depth Below Surface
+    DBS: "${:2l}DBS,{DepthFeet:of},f,{DepthMeters:of},M,{DepthFathoms:of},F*{CheckSum:x}"
+
+    # Depth Below Keel
+    DBK: "${:2l}DBK,{DepthFeet:of},f,{DepthMeters:of},M,{DepthFathoms:of},F*{CheckSum:x}"
+
+    ########################################
+    # Proprietary: Kongsberg/Simrad ($KI, $PSIM)
+    ########################################
+
+    # KIDPT - Kongsberg/Simrad multibeam depth
+    KIDPT: "$KIDPT,{Depth:of},{WaterlineDist:of},{MaxRange:of}*{CheckSum:x}"
+
+    ########################################
+    # Proprietary: Knudsen ($PKEL)
+    ########################################
+
+    # PKEL99 - Knudsen chirp sounder
+    PKEL99: "$PKEL99,{LFkHz:of}kHz,{LFDepth:of},{LFValid:od},{HFkHz:of}kHz,{HFDepth:of},{HFValid:od},{SoundSpeed:of},{Latitude:of},{Longitude:of}"
+
+    # Knudsen alternate format (no prefix)
+    PKELalt:
+      - "{LFkHz:of}kHz,{LFDepth:of},{LFValid:od},{HFkHz:of}kHz,{HFDepth:of},{HFValid:od},{SoundSpeed:of},{Latitude:of},{Longitude:of}"
+      - "{LFkHz:of}kHz,{LFDepth:of},{LFValid:od},,,,{SoundSpeed:of},{Latitude:of},{Longitude:of}"
+      - ",,,{HFkHz:of}kHz,{HFDepth:of},{HFValid:od},{SoundSpeed:of},{Latitude:of},{Longitude:of}"
+
+  fields:
+    DepthFeet:
+      units: "feet"
+      description: "Water depth in feet"
+    DepthMeters:
+      units: "meters"
+      description: "Water depth in meters"
+    DepthFathoms:
+      units: "fathoms"
+      description: "Water depth in fathoms"
+    Depth:
+      units: "meters"
+      description: "Water depth relative to transducer"
+    Offset:
+      units: "meters"
+      description: "Offset from transducer (positive=keel, negative=waterline)"
+    MaxRange:
+      units: "meters"
+      description: "Maximum range scale in use"
+    WaterlineDist:
+      units: "meters"
+      description: "Distance from transducer to waterline"
+    # Knudsen fields
+    LFkHz:
+      units: "kHz"
+      description: "Low frequency transducer frequency"
+    LFDepth:
+      units: "meters"
+      description: "Low frequency depth reading"
+    LFValid:
+      description: "Low frequency validity flag"
+    HFkHz:
+      units: "kHz"
+      description: "High frequency transducer frequency"
+    HFDepth:
+      units: "meters"
+      description: "High frequency depth reading"
+    HFValid:
+      description: "High frequency validity flag"
+    SoundSpeed:
+      units: "m/s"
+      description: "Sound velocity used for depth calculation"
+    Latitude:
+      units: "degrees"
+      description: "Latitude"
+    Longitude:
+      units: "degrees"
+      description: "Longitude"

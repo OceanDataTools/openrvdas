@@ -1,0 +1,128 @@
+################################################################################
+# NMEA 0183 device type: NMEA_Radar (Radar / Target Tracking)
+#
+# Part of the NMEA 0183 library: logger/devices/NMEA_0183.yaml includes every
+# file in this directory. See README.md here for the format types used,
+# talker IDs and proprietary sentence prefixes.
+################################################################################
+
+######################################
+# Radar / Target Tracking
+######################################
+NMEA_Radar:
+  category: "device_type"
+  description: "Radar and ARPA target tracking sentences"
+
+  format: &NMEA_Radar_format
+    # Tracked Target Message
+    TTM: "${:2l}TTM,{TargetNum:od},{Distance:of},{Bearing:of},{BearingType:ow},{Speed:of},{Course:of},{CourseType:ow},{CPA:of},{TCPA:of},{SpeedUnits:ow},{TargetName:nc},{TargetStatus:ow},{RefTarget:ow},{AcqTime:of},{AcqType:ow}*{CheckSum:x}"
+
+    # Target Latitude and Longitude
+    TLL: "${:2l}TLL,{TargetNum:od},{Latitude:nlat},{NorS:ow},{Longitude:nlat},{EorW:ow},{TargetName:nc},{GPSTime:of},{TargetStatus:ow},{RefTarget:ow}*{CheckSum:x}"
+
+    # Target Label
+    TLB: "${:2l}TLB,{TargetNum1:od},{Label1:nc},{TargetNum2:od},{Label2:nc}*{CheckSum:x}"
+
+    # Own Ship Data
+    OSD: "${:2l}OSD,{Heading:of},{HeadingStatus:ow},{Course:of},{CourseRef:ow},{Speed:of},{SpeedRef:ow},{Set:of},{Drift:of},{SpeedUnits:ow}*{CheckSum:x}"
+
+  fields: &NMEA_Radar_fields
+    TargetNum:
+      description: "Target number (00-99)"
+    Distance:
+      units: "nautical miles"
+      description: "Distance from own ship"
+    Bearing:
+      units: "degrees"
+      description: "Bearing from own ship"
+    BearingType:
+      description: "T=True, R=Relative"
+    Speed:
+      description: "Target speed"
+    Course:
+      units: "degrees"
+      description: "Target course"
+    CourseType:
+      description: "T=True, R=Relative"
+    CPA:
+      units: "nautical miles"
+      description: "Closest Point of Approach"
+    TCPA:
+      units: "minutes"
+      description: "Time to CPA (negative = past)"
+    SpeedUnits:
+      description: "K=km/h, N=knots, S=statute mph"
+    TargetName:
+      description: "Target name/label"
+    TargetStatus:
+      description: "L=Lost, Q=Query, T=Tracking"
+    RefTarget:
+      description: "R=Reference target"
+    AcqTime:
+      units: "hhmmss.ss"
+      description: "Time of acquisition"
+    AcqType:
+      description: "A=Automatic, M=Manual, R=Reported"
+    Latitude:
+      units: "degrees"
+      description: "Target latitude"
+    NorS:
+      description: "N for North, S for South"
+    Longitude:
+      units: "degrees"
+      description: "Target longitude"
+    EorW:
+      description: "E for East, W for West"
+    GPSTime:
+      units: "hhmmss.ss"
+      description: "UTC time"
+    TargetNum1:
+      description: "First target number"
+    Label1:
+      description: "First target label"
+    TargetNum2:
+      description: "Second target number"
+    Label2:
+      description: "Second target label"
+    Heading:
+      units: "degrees"
+      description: "Own ship heading"
+    HeadingStatus:
+      description: "A=Valid, V=Invalid"
+    CourseRef:
+      description: "B=Bottom track, M=Magnetic, P=Positioning, T=True, W=Water"
+    SpeedRef:
+      description: "B=Bottom track, M=Magnetic, P=Positioning, T=True, W=Water"
+    Set:
+      units: "degrees"
+      description: "Current set direction"
+    Drift:
+      units: "knots"
+      description: "Current drift speed"
+
+
+######################################
+# NMEA_Radar, with signed positions (#718)
+######################################
+# NMEA_Radar with positions parsed by nlat_dir: latitude and longitude in signed
+# decimal degrees, negative for South and West, with no separate NorS/EorW
+# fields. Built with YAML merge keys, so only the sentences that carry a
+# position are overridden; every other sentence is NMEA_Radar's. Merge keys
+# can't remove keys, so the merged fields list still describes NorS and
+# EorW, which this device type never produces. See README.md here.
+NMEA_Radar_Signed:
+  category: "device_type"
+  description: "Radar and ARPA target tracking - as NMEA_Radar, but with signed target positions"
+
+  format:
+    <<: *NMEA_Radar_format
+    TLL: "${:2l}TLL,{TargetNum:od},{Latitude:nlat_dir},{Longitude:nlat_dir},{TargetName:nc},{GPSTime:of},{TargetStatus:ow},{RefTarget:ow}*{CheckSum:x}"
+
+  fields:
+    <<: *NMEA_Radar_fields
+    Latitude:
+      units: "degrees"
+      description: "Target latitude in signed decimal degrees; negative for South"
+    Longitude:
+      units: "degrees"
+      description: "Target longitude in signed decimal degrees; negative for West"

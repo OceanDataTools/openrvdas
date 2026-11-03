@@ -1,0 +1,426 @@
+################################################################################
+# NMEA 0183 device type: NMEA_GPS (GPS / GNSS Device)
+#
+# Part of the NMEA 0183 library: logger/devices/NMEA_0183.yaml includes every
+# file in this directory. See README.md here for the format types used,
+# talker IDs and proprietary sentence prefixes.
+################################################################################
+
+######################################
+# GPS / GNSS Device
+######################################
+NMEA_GPS:
+  category: "device_type"
+  description: "GPS/GNSS receiver - standard and proprietary sentences"
+
+  format: &NMEA_GPS_format
+    ########################################
+    # Standard NMEA Sentences
+    ########################################
+
+    # GPS Fix Data - Position, quality, and satellite information
+    GGA: "${:2l}GGA,{GPSTime:of},{Latitude:nlat},{NorS:ow},{Longitude:nlat},{EorW:ow},{FixQuality:od},{NumSats:od},{HDOP:of},{AntennaHeight:of},M,{GeoidHeight:of},M,{LastDGPSUpdate:of},{DGPSStationID:od}*{CheckSum:x}"
+
+    # Geographic Position - Latitude/Longitude
+    GLL:
+      - "${:2l}GLL,{Latitude:nlat},{NorS:ow},{Longitude:nlat},{EorW:ow},{GPSTime:of},{Status:ow},{Mode:ow}*{CheckSum:x}"
+      # NMEA before 2.3 has no mode indicator field
+      - "${:2l}GLL,{Latitude:nlat},{NorS:ow},{Longitude:nlat},{EorW:ow},{GPSTime:of},{Status:ow}*{CheckSum:x}"
+
+    # Recommended Minimum Navigation Information
+    RMC:
+      - "${:2l}RMC,{GPSTime:of},{Status:ow},{Latitude:nlat},{NorS:ow},{Longitude:nlat},{EorW:ow},{SpeedKt:of},{CourseTrue:of},{GPSDate:ow},{MagVar:of},{MagVarDir:ow},{Mode:ow}*{CheckSum:x}"
+      # NMEA before 2.3 has no mode indicator field
+      - "${:2l}RMC,{GPSTime:of},{Status:ow},{Latitude:nlat},{NorS:ow},{Longitude:nlat},{EorW:ow},{SpeedKt:of},{CourseTrue:of},{GPSDate:ow},{MagVar:of},{MagVarDir:ow}*{CheckSum:x}"
+
+    # Course Over Ground and Ground Speed
+    VTG:
+      - "${:2l}VTG,{CourseTrue:of},T,{CourseMag:of},M,{SpeedKt:of},N,{SpeedKm:of},K,{Mode:ow}*{CheckSum:x}"
+      # NMEA before 2.3 has no mode indicator field
+      - "${:2l}VTG,{CourseTrue:of},T,{CourseMag:of},M,{SpeedKt:of},N,{SpeedKm:of},K*{CheckSum:x}"
+
+    # Time and Date
+    ZDA:
+      - "${:2l}ZDA,{GPSTime:of},{Day:od},{Month:od},{Year:od},{LocalHours:od},{LocalMinutes:od}*{CheckSum:x}"
+      # Some receivers (e.g. Trimble) send an extra empty field before the checksum
+      - "${:2l}ZDA,{GPSTime:of},{Day:od},{Month:od},{Year:od},{LocalHours:od},{LocalMinutes:od},*{CheckSum:x}"
+
+    # GNSS DOP and Active Satellites
+    GSA:
+      - "${:2l}GSA,{Mode:ow},{FixType:od},{Sat01:od},{Sat02:od},{Sat03:od},{Sat04:od},{Sat05:od},{Sat06:od},{Sat07:od},{Sat08:od},{Sat09:od},{Sat10:od},{Sat11:od},{Sat12:od},{PDOP:of},{HDOP:of},{VDOP:of}*{CheckSum:x}"
+      - "${:2l}GSA,{Mode:ow},{FixType:od},{Sat01:od},{Sat02:od},{Sat03:od},{Sat04:od},{Sat05:od},{Sat06:od},{Sat07:od},{Sat08:od},{Sat09:od},{Sat10:od},{Sat11:od},{Sat12:od},{PDOP:of},{HDOP:of},{VDOP:of},{SystemID:od}*{CheckSum:x}"
+
+    # GNSS Satellites in View
+    GSV:
+      - "${:2l}GSV,{NumMsgs:d},{MsgNum:d},{NumSats:d},{Sat1PRN:od},{Sat1Elev:od},{Sat1Az:od},{Sat1SNR:od}*{CheckSum:x}"
+      - "${:2l}GSV,{NumMsgs:d},{MsgNum:d},{NumSats:d},{Sat1PRN:od},{Sat1Elev:od},{Sat1Az:od},{Sat1SNR:od},{Sat2PRN:od},{Sat2Elev:od},{Sat2Az:od},{Sat2SNR:od}*{CheckSum:x}"
+      - "${:2l}GSV,{NumMsgs:d},{MsgNum:d},{NumSats:d},{Sat1PRN:od},{Sat1Elev:od},{Sat1Az:od},{Sat1SNR:od},{Sat2PRN:od},{Sat2Elev:od},{Sat2Az:od},{Sat2SNR:od},{Sat3PRN:od},{Sat3Elev:od},{Sat3Az:od},{Sat3SNR:od}*{CheckSum:x}"
+      - "${:2l}GSV,{NumMsgs:d},{MsgNum:d},{NumSats:d},{Sat1PRN:od},{Sat1Elev:od},{Sat1Az:od},{Sat1SNR:od},{Sat2PRN:od},{Sat2Elev:od},{Sat2Az:od},{Sat2SNR:od},{Sat3PRN:od},{Sat3Elev:od},{Sat3Az:od},{Sat3SNR:od},{Sat4PRN:od},{Sat4Elev:od},{Sat4Az:od},{Sat4SNR:od}*{CheckSum:x}"
+
+    # GNSS Satellite Fault Detection
+    GBS: "${:2l}GBS,{GPSTime:of},{LatErr:of},{LonErr:of},{AltErr:of},{SatID:od},{Probability:of},{Bias:of},{StdDev:of}*{CheckSum:x}"
+
+    # GNSS Pseudorange Error Statistics
+    GST: "${:2l}GST,{GPSTime:of},{RangeRMS:of},{SemiMajor:of},{SemiMinor:of},{Orientation:of},{LatErr:of},{LonErr:of},{AltErr:of}*{CheckSum:x}"
+
+    # GNSS Fix Data - Multi-constellation
+    GNS: "${:2l}GNS,{GPSTime:of},{Latitude:nlat},{NorS:ow},{Longitude:nlat},{EorW:ow},{Mode:nc},{NumSats:od},{HDOP:of},{AntennaHeight:of},{GeoidHeight:of},{DGPSAge:of},{DGPSStationID:od}*{CheckSum:x}"
+
+    # Datum Reference
+    DTM: "${:2l}DTM,{LocalDatum:nc},{LocalDatumSub:ow},{LatOffset:of},{LatOffsetDir:ow},{LonOffset:of},{LonOffsetDir:ow},{AltOffset:of},{RefDatum:nc}*{CheckSum:x}"
+
+    ########################################
+    # Proprietary: Garmin ($PGRM)
+    ########################################
+
+    # PGRMT - Garmin sensor status
+    PGRMT: "$PGRMT,{Product:nc},{RomTest:ow},{ReceiverTest:ow},{StoredData:ow},{RTCLost:ow},{OscDrift:ow},{DataCollect:ow},{BoardTemp:of},{BoardConfig:ow}*{CheckSum:x}"
+
+    # PGRMF - Garmin fix data with extended info
+    PGRMF: "$PGRMF,{WeekNum:od},{SecondsInWeek:of},{GPSDate:od},{GPSTime:od},{LeapSeconds:od},{Latitude:nlat},{NorS:ow},{Longitude:nlat},{EorW:ow},{FixMode:ow},{FixType:od},{SpeedKm:of},{Course:of},{PDOP:of},{TDOP:of}*{CheckSum:x}"
+
+    ########################################
+    # Proprietary: Trimble ($PTNL)
+    ########################################
+
+    # PTNL,GGK - Trimble time, position, quality
+    PTNLGGK: "$PTNL,GGK,{GPSTime:of},{GPSDate:nc},{Latitude:nlat},{NorS:ow},{Longitude:nlat},{EorW:ow},{PosType:od},{NumSats:od},{DOP:of},{EHTm:of}*{CheckSum:x}"
+
+    # PTNL,PJK - Trimble local coordinate position
+    PTNLPJK: "$PTNL,PJK,{GPSTime:of},{GPSDate:nc},{Northing:of},{NorthingZone:nc},{Easting:of},{EastingZone:nc},{PosType:od},{NumSats:od},{DOP:of},{EHTm:of}*{CheckSum:x}"
+
+    ########################################
+    # Proprietary: u-blox ($PUBX)
+    ########################################
+
+    # PUBX,00 - u-blox position data
+    PUBX00: "$PUBX,00,{GPSTime:of},{Latitude:nc},{NorS:ow},{Longitude:nc},{EorW:ow},{AltRef:of},{NavStat:nc},{HAcc:of},{VAcc:of},{SpeedKm:of},{Course:of},{VelD:of},{TDOP:of},{NumSats:od},{Reserved:od},{DR:od}*{CheckSum:x}"
+
+    # PUBX,04 - u-blox time of day
+    PUBX04: "$PUBX,04,{GPSTime:of},{GPSDate:nc},{UTCTime:of},{UTCDate:nc},{UTCOffset:of},{ClockBias:of},{ClockDrift:of},{TPGranularity:of}*{CheckSum:x}"
+
+  fields: &NMEA_GPS_fields
+    GPSTime:
+      units: "hhmmss.ss"
+      description: "UTC time of position fix"
+    GPSDate:
+      units: "ddmmyy"
+      description: "UTC date"
+    Latitude:
+      units: "degrees"
+      description: "Latitude in decimal degrees; sign depends on NorS"
+    NorS:
+      description: "N for North, S for South"
+    Longitude:
+      units: "degrees"
+      description: "Longitude in decimal degrees; sign depends on EorW"
+    EorW:
+      description: "E for East, W for West"
+    FixQuality:
+      description: "0=invalid, 1=GPS, 2=DGPS, 3=PPS, 4=RTK, 5=Float RTK, 6=Estimated, 7=Manual, 8=Simulation"
+    NumSats:
+      units: "count"
+      description: "Number of satellites in use"
+    HDOP:
+      description: "Horizontal dilution of precision"
+    VDOP:
+      description: "Vertical dilution of precision"
+    PDOP:
+      description: "Position dilution of precision"
+    TDOP:
+      description: "Time dilution of precision"
+    AntennaHeight:
+      units: "meters"
+      description: "Antenna height above mean sea level"
+    GeoidHeight:
+      units: "meters"
+      description: "Geoidal separation"
+    LastDGPSUpdate:
+      units: "seconds"
+      description: "Time since last DGPS update"
+    DGPSStationID:
+      description: "DGPS reference station ID"
+    DGPSAge:
+      units: "seconds"
+      description: "Age of differential data"
+    Status:
+      description: "A=Active/Valid, V=Void/Invalid"
+    Mode:
+      description: "A=Autonomous, D=Differential, E=Estimated, N=Not valid"
+    SpeedKt:
+      units: "knots"
+      description: "Speed over ground in knots"
+    SpeedKm:
+      units: "km/hour"
+      description: "Speed over ground in km/hour"
+    CourseTrue:
+      units: "degrees"
+      description: "Course over ground, true"
+    CourseMag:
+      units: "degrees"
+      description: "Course over ground, magnetic"
+    Course:
+      units: "degrees"
+      description: "Course over ground"
+    MagVar:
+      units: "degrees"
+      description: "Magnetic variation"
+    MagVarDir:
+      description: "E=East, W=West"
+    Day:
+      description: "Day of month (01-31)"
+    Month:
+      description: "Month (01-12)"
+    Year:
+      description: "Year (4 digits)"
+    LocalHours:
+      units: "hours"
+      description: "Local zone offset from UTC (hours)"
+    LocalMinutes:
+      units: "minutes"
+      description: "Local zone offset from UTC (minutes)"
+    FixType:
+      description: "1=No fix, 2=2D fix, 3=3D fix"
+    Sat01:
+      description: "Satellite 1 PRN number"
+    Sat02:
+      description: "Satellite 2 PRN number"
+    Sat03:
+      description: "Satellite 3 PRN number"
+    Sat04:
+      description: "Satellite 4 PRN number"
+    Sat05:
+      description: "Satellite 5 PRN number"
+    Sat06:
+      description: "Satellite 6 PRN number"
+    Sat07:
+      description: "Satellite 7 PRN number"
+    Sat08:
+      description: "Satellite 8 PRN number"
+    Sat09:
+      description: "Satellite 9 PRN number"
+    Sat10:
+      description: "Satellite 10 PRN number"
+    Sat11:
+      description: "Satellite 11 PRN number"
+    Sat12:
+      description: "Satellite 12 PRN number"
+    SystemID:
+      description: "GNSS system ID (NMEA 4.10+)"
+    NumMsgs:
+      description: "Total number of messages"
+    MsgNum:
+      description: "Message number"
+    Sat1PRN:
+      description: "Satellite 1 PRN number"
+    Sat1Elev:
+      units: "degrees"
+      description: "Satellite 1 elevation (0-90)"
+    Sat1Az:
+      units: "degrees"
+      description: "Satellite 1 azimuth (0-359)"
+    Sat1SNR:
+      units: "dB-Hz"
+      description: "Satellite 1 signal-to-noise ratio"
+    Sat2PRN:
+      description: "Satellite 2 PRN number"
+    Sat2Elev:
+      units: "degrees"
+      description: "Satellite 2 elevation"
+    Sat2Az:
+      units: "degrees"
+      description: "Satellite 2 azimuth"
+    Sat2SNR:
+      units: "dB-Hz"
+      description: "Satellite 2 signal-to-noise ratio"
+    Sat3PRN:
+      description: "Satellite 3 PRN number"
+    Sat3Elev:
+      units: "degrees"
+      description: "Satellite 3 elevation"
+    Sat3Az:
+      units: "degrees"
+      description: "Satellite 3 azimuth"
+    Sat3SNR:
+      units: "dB-Hz"
+      description: "Satellite 3 signal-to-noise ratio"
+    Sat4PRN:
+      description: "Satellite 4 PRN number"
+    Sat4Elev:
+      units: "degrees"
+      description: "Satellite 4 elevation"
+    Sat4Az:
+      units: "degrees"
+      description: "Satellite 4 azimuth"
+    Sat4SNR:
+      units: "dB-Hz"
+      description: "Satellite 4 signal-to-noise ratio"
+    LatErr:
+      units: "meters"
+      description: "Expected/standard deviation error in latitude"
+    LonErr:
+      units: "meters"
+      description: "Expected/standard deviation error in longitude"
+    AltErr:
+      units: "meters"
+      description: "Expected/standard deviation error in altitude"
+    SatID:
+      description: "ID of most likely failed satellite"
+    Probability:
+      description: "Probability of missed detection"
+    Bias:
+      units: "meters"
+      description: "Estimate of bias on most likely failed satellite"
+    StdDev:
+      units: "meters"
+      description: "Standard deviation of bias estimate"
+    RangeRMS:
+      units: "meters"
+      description: "RMS value of standard deviation of range inputs"
+    SemiMajor:
+      units: "meters"
+      description: "Standard deviation of semi-major axis of error ellipse"
+    SemiMinor:
+      units: "meters"
+      description: "Standard deviation of semi-minor axis of error ellipse"
+    Orientation:
+      units: "degrees"
+      description: "Orientation of semi-major axis of error ellipse"
+    LocalDatum:
+      description: "Local datum code (e.g., W84=WGS84)"
+    LocalDatumSub:
+      description: "Local datum subdivision code"
+    LatOffset:
+      units: "minutes"
+      description: "Latitude offset"
+    LatOffsetDir:
+      description: "N for North, S for South"
+    LonOffset:
+      units: "minutes"
+      description: "Longitude offset"
+    LonOffsetDir:
+      description: "E for East, W for West"
+    AltOffset:
+      units: "meters"
+      description: "Altitude offset"
+    RefDatum:
+      description: "Reference datum code"
+    # Garmin proprietary fields
+    Product:
+      description: "Product model and software version"
+    RomTest:
+      description: "ROM checksum test (P=pass, F=fail)"
+    ReceiverTest:
+      description: "Receiver test (P=pass, F=fail)"
+    StoredData:
+      description: "Stored data (R=retained, L=lost)"
+    RTCLost:
+      description: "Real-time clock (R=retained, L=lost)"
+    OscDrift:
+      description: "Oscillator drift (P=pass, F=fail)"
+    DataCollect:
+      description: "Data collection (C=collecting, null=not)"
+    BoardTemp:
+      units: "degrees C"
+      description: "Board temperature"
+    BoardConfig:
+      description: "Board config data (R=retained, L=lost)"
+    WeekNum:
+      description: "GPS week number"
+    SecondsInWeek:
+      units: "seconds"
+      description: "Seconds into GPS week"
+    LeapSeconds:
+      units: "seconds"
+      description: "GPS-UTC leap seconds"
+    FixMode:
+      description: "Fix mode (M=Manual, A=Auto)"
+    # Trimble proprietary fields
+    PosType:
+      description: "Position type (1=GPS, 2=DGPS, 4=RTK fixed, 5=RTK float)"
+    DOP:
+      description: "Dilution of precision"
+    EHTm:
+      units: "meters"
+      description: "Ellipsoidal height"
+    Northing:
+      units: "meters"
+      description: "Northing coordinate"
+    NorthingZone:
+      description: "Northing zone identifier"
+    Easting:
+      units: "meters"
+      description: "Easting coordinate"
+    EastingZone:
+      description: "Easting zone identifier"
+    # u-blox proprietary fields
+    AltRef:
+      units: "meters"
+      description: "Altitude above user datum"
+    NavStat:
+      description: "Navigation status (NF=No Fix, G2=2D, G3=3D, D2/D3=DGPS, RK=RTK)"
+    HAcc:
+      units: "meters"
+      description: "Horizontal accuracy estimate"
+    VAcc:
+      units: "meters"
+      description: "Vertical accuracy estimate"
+    VelD:
+      units: "km/hour"
+      description: "Vertical velocity (positive = down)"
+    Reserved:
+      description: "Reserved field"
+    DR:
+      description: "Dead reckoning used (0=no, 1=yes)"
+    UTCTime:
+      description: "UTC time"
+    UTCDate:
+      description: "UTC date"
+    UTCOffset:
+      units: "seconds"
+      description: "UTC offset from GPS time"
+    ClockBias:
+      units: "nanoseconds"
+      description: "Receiver clock bias"
+    ClockDrift:
+      units: "ns/s"
+      description: "Receiver clock drift"
+    TPGranularity:
+      units: "nanoseconds"
+      description: "Time pulse granularity"
+
+
+######################################
+# NMEA_GPS, with signed positions (#718)
+######################################
+# NMEA_GPS with positions parsed by nlat_dir: latitude and longitude in signed
+# decimal degrees, negative for South and West, with no separate NorS/EorW
+# fields. Built with YAML merge keys, so only the sentences that carry a
+# position are overridden; every other sentence is NMEA_GPS's. Merge keys
+# can't remove keys, so the merged fields list still describes NorS and
+# EorW, which this device type never produces. See README.md here.
+NMEA_GPS_Signed:
+  category: "device_type"
+  description: "GPS/GNSS receiver - as NMEA_GPS, but with signed latitude and longitude"
+
+  format:
+    <<: *NMEA_GPS_format
+    GGA: "${:2l}GGA,{GPSTime:of},{Latitude:nlat_dir},{Longitude:nlat_dir},{FixQuality:od},{NumSats:od},{HDOP:of},{AntennaHeight:of},M,{GeoidHeight:of},M,{LastDGPSUpdate:of},{DGPSStationID:od}*{CheckSum:x}"
+    GLL:
+      - "${:2l}GLL,{Latitude:nlat_dir},{Longitude:nlat_dir},{GPSTime:of},{Status:ow},{Mode:ow}*{CheckSum:x}"
+      - "${:2l}GLL,{Latitude:nlat_dir},{Longitude:nlat_dir},{GPSTime:of},{Status:ow}*{CheckSum:x}"
+    RMC:
+      - "${:2l}RMC,{GPSTime:of},{Status:ow},{Latitude:nlat_dir},{Longitude:nlat_dir},{SpeedKt:of},{CourseTrue:of},{GPSDate:ow},{MagVar:of},{MagVarDir:ow},{Mode:ow}*{CheckSum:x}"
+      - "${:2l}RMC,{GPSTime:of},{Status:ow},{Latitude:nlat_dir},{Longitude:nlat_dir},{SpeedKt:of},{CourseTrue:of},{GPSDate:ow},{MagVar:of},{MagVarDir:ow}*{CheckSum:x}"
+    GNS: "${:2l}GNS,{GPSTime:of},{Latitude:nlat_dir},{Longitude:nlat_dir},{Mode:nc},{NumSats:od},{HDOP:of},{AntennaHeight:of},{GeoidHeight:of},{DGPSAge:of},{DGPSStationID:od}*{CheckSum:x}"
+    PGRMF: "$PGRMF,{WeekNum:od},{SecondsInWeek:of},{GPSDate:od},{GPSTime:od},{LeapSeconds:od},{Latitude:nlat_dir},{Longitude:nlat_dir},{FixMode:ow},{FixType:od},{SpeedKm:of},{Course:of},{PDOP:of},{TDOP:of}*{CheckSum:x}"
+    PTNLGGK: "$PTNL,GGK,{GPSTime:of},{GPSDate:nc},{Latitude:nlat_dir},{Longitude:nlat_dir},{PosType:od},{NumSats:od},{DOP:of},{EHTm:of}*{CheckSum:x}"
+
+  fields:
+    <<: *NMEA_GPS_fields
+    Latitude:
+      units: "degrees"
+      description: "Latitude in signed decimal degrees; negative for South"
+    Longitude:
+      units: "degrees"
+      description: "Longitude in signed decimal degrees; negative for West"

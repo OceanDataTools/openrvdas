@@ -150,7 +150,7 @@ git branch issue_57
 git checkout issue_57
 ```
 
-When your contribution is ready, submit a pull request, requesting that it be merged back into the OpenRVDAS ``dev`` branch. The ``dev`` branch will be merged into the ``master`` branch when new numbered versions are released.
+When your contribution is ready, submit a pull request, requesting that it be merged back into the OpenRVDAS ``dev`` branch. The ``dev`` branch will be merged into the ``master`` branch when new numbered versions are released; see [RELEASING.md](RELEASING.md) for the release process.
 
 ### Git Commits and Pull Requests
 

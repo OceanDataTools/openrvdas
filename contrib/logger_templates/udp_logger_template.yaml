@@ -1,3 +1,25 @@
+###############################################################################
+# UDP logger: reads records from a UDP port, timestamps them, prefixes them
+# with the logger name and rebroadcasts them on <<raw_udp_port>>; the
+# net+file config also writes them to a log file.
+#
+# Variables:
+#   reader_udp_port  UDP port to read from
+#   udp_eol          optional; for sources that send several records in one
+#                    packet, the separator to split packets at, e.g. "\r\n".
+#                    Records from one packet share a timestamp. By default
+#                    each packet is a single record.
+#
+# Expects these globals, as used elsewhere in the cruise definition:
+#   <<raw_udp_port>>, <<udp_destination>>, <<file_root>>, <<cruise>>
+###############################################################################
+
+# Default values for this template's optional variables. Files listed under
+# "includes:" are merged underneath the cruise definition, so a cruise
+# definition, or an individual logger, can override these.
+variables:
+  udp_eol: null
+
 ###################
 logger_templates:
   #################
@@ -9,6 +31,7 @@ logger_templates:
         - class: UDPReader
           kwargs:
             port: <<reader_udp_port>>
+            eol: <<udp_eol>>
         transforms:
         - class: TimestampTransform
         - class: PrefixTransform
@@ -24,6 +47,7 @@ logger_templates:
         - class: UDPReader
           kwargs:
             port: <<reader_udp_port>>
+            eol: <<udp_eol>>
         transforms:
         - class: TimestampTransform
           mirror_to:

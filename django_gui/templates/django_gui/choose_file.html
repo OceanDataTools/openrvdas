@@ -39,11 +39,7 @@
     {% csrf_token %}
     {# ############################################################ #}
     {# Here, we're going to display the file listing and any errors #}
-    {% if load_errors %}
-      {% for error in load_errors %}
-        <div class='text-danger'>{{ error }}</div>
-      {% endfor %}
-    {% endif %}
+    {% include 'django_gui/load_errors.html' %}
 
     <input type=hidden name="dir_name" value="{{ dir_name }}">
     <h3>

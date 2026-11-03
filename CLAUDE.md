@@ -9,6 +9,11 @@ code in this repository. It has two sections:
 2. **[Workflow](#part-2-workflow)** — how to work on it: branching and PR
    conventions, code style, component patterns, and things to avoid.
 
+See also **[OPERATIONS.md](OPERATIONS.md)** for the operational knowledge that
+isn't derivable from the code: release-process traps, platform constraints on
+the install script, dependency rules, and testing caveats. Read it before
+touching `utils/install_openrvdas.sh`, the release process, or dependencies.
+
 Full project documentation: https://www.oceandatatools.org/openrvdas-docs/
 
 ---
@@ -185,7 +190,7 @@ are in `server/supervisord/`.
 
 ## Code Style
 
-- Python 3.8+ compatible (per `requires-python` in `pyproject.toml`)
+- Python 3.11+ (per `requires-python` in `pyproject.toml`)
 - Follow existing patterns in the file being modified — do not introduce new
   style conventions mid-file
 - Type hints are encouraged on `read()`/`write()`/`transform()` methods; see

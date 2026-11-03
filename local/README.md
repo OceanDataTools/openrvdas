@@ -20,15 +20,22 @@ your ship, the M/V Plunger, you would probably create a UUW repository with
 university-wide code and definitions and a 'mvp' subdirectory for ship-specific
 code and definitions (see below for suggested structure).
 
-Assuming OpenRVDAS is checked out into `/opt/openrvdas`, you might then check
-your repository out into `/opt/oceandatatools_local/uww`, creating a symbolic
-link as follows:
+Assuming OpenRVDAS is checked out into `/opt/openrvdas`, the convention is to
+check your repository out alongside it as `/opt/openrvdas_uuw`, and link it
+into `local/` under the same short name:
 ```
-ln -s /opt/oceandatatools_local/uww /opt/openrvdas/local
+git clone <your UUW repository> /opt/openrvdas_uuw
+ln -s /opt/openrvdas_uuw /opt/openrvdas/local/uuw
 ```
+Give the link's full path (`local/uuw`) rather than just `local`.
+`ln -s /opt/openrvdas_uuw /opt/openrvdas/local` would name the link after
+its target, `local/openrvdas_uuw` - or, if `local/` didn't exist, make
+`local` itself the link.
+
 This will allow you to reference your institution's and ship's configurations
-and data as though they were subdirectories under `local`, without clogging
-the original repository with institution/ship-specific files.
+and data as though they were subdirectories under `local` (for example,
+`local/uuw/mvp/devices/*.yaml`), without clogging the original repository
+with institution/ship-specific files.
 
 The effective file structure should look something like:
 ```
@@ -36,18 +43,18 @@ The effective file structure should look something like:
     <your org or ship>/  - Subdirectory for device and cruise definitions specific to your org
       devices/             - Device types and physical devices specific to your org
       modules/             - Readers, transforms and writers specific to your org
-      <cruise id>/         - Directory for files specific to cruise a specific cruise
+      <cruise id>/         - Directory for files specific to a particular cruise
         devices/                - (optional) Device definitions specific to this particular cruise
         <cruise_id>_cruise.yaml - Cruise definition file for this cruise
         ...                     - Other files for this specific cruise
 ```
-For example, 
+For example,
 ```
   local/
     usap/
       nbp/       - Subdirectory for device and cruise definitions for the NB Palmer
         devices/   - Device types and physical devices specific to the NB Palmer
-        NBP1906/   - Files specific to cruise NBP1406
+        NBP1906/   - Files specific to cruise NBP1906
           devices/   - If there are any devices specific to cruise NBP1906
           NBP1906_cruise.yaml - Cruise definition file for NBP1906
           NBP1906_winch.yaml  - If you want to have a separate instance for monitoring winches

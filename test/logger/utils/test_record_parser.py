@@ -2,15 +2,20 @@
 
 # flake8: noqa E501 - ignore long lines
 
+import glob
 import json
 import logging
+import os
 import pprint
 import tempfile
 import time
 import unittest
 import warnings
 
-from logger.utils.record_parser import RecordParser  # noqa: E402
+import yaml
+
+from logger.utils.read_config import load_definitions  # noqa: E402
+from logger.utils.record_parser import RecordParser, DEFAULT_DEFINITION_PATH  # noqa: E402
 from logger.utils.das_record import DASRecord  # noqa: E402
 
 DEFINITIONS = """
@@ -736,6 +741,321 @@ class TestRecordParser(unittest.TestCase):
                                               'Seap200Heave': -0.38,
                                               'Seap200HeadingTrue': 235.77,
                                               'Seap200Pitch': 0.01}))
+
+################################################################################
+class TestStandardNMEADefinitions(unittest.TestCase):
+    """Sentences parsed with the device types in logger/devices/NMEA_0183.yaml."""
+
+    def setUp(self):
+        self.tmpdir = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmpdir.cleanup)
+        self.definitions = self.tmpdir.name + '/devices.yaml'
+        with open(self.definitions, 'w') as f:
+            f.write('includes:\n'
+                    '  - logger/devices/NMEA_0183.yaml\n'
+                    'devices:\n'
+                    '  gps:\n'
+                    '    category: device\n'
+                    '    device_type: NMEA_GPS\n'
+                    '    fields: {Latitude: Lat, CourseTrue: COG, SpeedKt: SOG,\n'
+                    '             Mode: Mode}\n'
+                    '  ins:\n'
+                    '    category: device\n'
+                    '    device_type: NMEA_GPS_INS\n'
+                    '    fields: {Latitude: Lat, CourseTrue: COG, SpeedKt: SOG,\n'
+                    '             Mode: Mode}\n')
+
+    def parse(self, record):
+        parser = RecordParser(definition_path=self.definitions, quiet=True)
+        result = parser.parse_record(record)
+        self.assertIsNotNone(result, record)
+        return result['fields']
+
+    ############################
+    def test_rmc_vtg_gll_with_and_without_mode(self):
+        """NMEA 2.3 added a mode indicator field to RMC, VTG and GLL; devices
+        that predate it, like the Garmin GPS 24xd, omit it. Both must parse."""
+        ts = '2026-10-20T23:33:58.959091Z'
+        for device in ('gps', 'ins'):
+            with self.subTest(device=device, sentence='RMC, pre-2.3'):
+                fields = self.parse(f'{device} {ts} $GPRMC,233342.00,A,4738.9683,N,'
+                                    '12218.7760,W,0.05,306.35,201026,15.55,*0F')
+                self.assertEqual(fields['COG'], 306.35)
+                self.assertEqual(fields['SOG'], 0.05)
+                self.assertAlmostEqual(fields['Lat'], 47.6494717, places=6)
+                self.assertNotIn('Mode', fields)
+            with self.subTest(device=device, sentence='RMC, 2.3+'):
+                fields = self.parse(f'{device} {ts} $GNRMC,233342.00,A,4738.9683,N,'
+                                    '12218.7760,W,0.05,306.35,201026,15.55,E,D*1F')
+                self.assertEqual(fields['COG'], 306.35)
+                self.assertEqual(fields['Mode'], 'D')
+            with self.subTest(device=device, sentence='VTG, pre-2.3'):
+                fields = self.parse(f'{device} {ts} $GPVTG,306.35,T,290.80,M,0.05,N,'
+                                    '0.10,K*4A')
+                self.assertEqual(fields, {'COG': 306.35, 'SOG': 0.05})
+            with self.subTest(device=device, sentence='VTG, 2.3+'):
+                fields = self.parse(f'{device} {ts} $GPVTG,306.35,T,290.80,M,0.05,N,'
+                                    '0.10,K,A*25')
+                self.assertEqual(fields, {'COG': 306.35, 'SOG': 0.05, 'Mode': 'A'})
+            with self.subTest(device=device, sentence='GLL, pre-2.3'):
+                fields = self.parse(f'{device} {ts} $GPGLL,4738.9683,N,12218.7760,W,'
+                                    '233342.00,A*2C')
+                self.assertAlmostEqual(fields['Lat'], 47.6494717, places=6)
+                self.assertNotIn('Mode', fields)
+            with self.subTest(device=device, sentence='GLL, 2.3+'):
+                fields = self.parse(f'{device} {ts} $GPGLL,4738.9683,N,12218.7760,W,'
+                                    '233342.00,A,D*44')
+                self.assertEqual(fields['Mode'], 'D')
+
+
+################################################################################
+def nmea(body):
+    """'GPGGA,...' -> '$GPGGA,...*XX', with the checksum that body needs."""
+    checksum = 0
+    for char in body:
+        checksum ^= ord(char)
+    return f'${body}*{checksum:02X}'
+
+
+class TestSignedNMEADefinitions(unittest.TestCase):
+    """The *_Signed device types in logger/devices/nmea_0183/ give
+    positions in signed decimal degrees, and otherwise parse exactly as the
+    device types they're named after (#718)."""
+
+    DEVICE_TYPES = {'gps': 'NMEA_GPS', 'ins': 'NMEA_GPS_INS',
+                    'autopilot': 'NMEA_Autopilot', 'radar': 'NMEA_Radar'}
+    # Each position value and the hemisphere field that follows it
+    POSITIONS = {'Latitude': 'NorS', 'Longitude': 'EorW',
+                 'DestLat': 'DestNorS', 'DestLon': 'DestEorW'}
+    # Every sentence that carries a position, with fixes in different hemispheres
+    SENTENCES = {
+        'gps': [
+            'GPGGA,123519.00,4317.014607,S,07049.123456,W,1,08,0.9,545.4,M,46.9,M,,',
+            'GPGGA,123519.00,4317.014607,N,07049.123456,E,1,08,0.9,545.4,M,46.9,M,,',
+            'GPGLL,4738.9683,N,12218.7760,W,233342.00,A,D',
+            'GPGLL,4738.9683,S,12218.7760,E,233342.00,A',
+            'GNRMC,233342.00,A,4738.9683,S,12218.7760,E,0.05,306.35,201026,15.55,E,D',
+            'GPRMC,233342.00,A,4738.9683,N,12218.7760,W,0.05,306.35,201026,15.55,',
+            'GNGNS,233342.00,4738.9683,N,12218.7760,W,AAN,12,0.9,10.0,-20.0,,',
+            'PGRMF,2180,432000,301026,120000,18,4738.9683,S,12218.7760,W,A,2,0.5,306.4,1.2,1.0',
+            'PTNL,GGK,120000.00,103026,4738.9683,N,12218.7760,W,3,12,1.1,45.2',
+        ],
+        'ins': [
+            'INGGA,123519.00,6452.1234,S,14733.5678,W,2,12,0.7,12.3,M,-1.2,M,,',
+            'INGLL,6452.1234,S,14733.5678,E,123519.00,A,A',
+            'INRMC,123519.00,A,6452.1234,N,14733.5678,W,10.2,88.5,301026,,,A',
+        ],
+        'autopilot': [
+            'GPBWC,120000.00,4917.24,N,12309.57,W,051.9,T,031.6,M,001.3,N,004,A',
+            'GPRMB,A,0.66,L,003,004,4917.24,S,12309.57,W,001.3,052.5,000.5,V,A',
+            'GPWPL,4917.16,S,12310.64,E,003',
+        ],
+        'radar': [
+            'RATLL,01,4917.24,S,12309.57,W,TGT1,120000.00,T,R',
+        ],
+    }
+    TS = '2026-10-30T12:00:00.000000Z'
+
+    def setUp(self):
+        self.tmpdir = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmpdir.cleanup)
+        self.definitions = self.tmpdir.name + '/devices.yaml'
+
+        # Map every field of each device type to its own name, so that parsed
+        # records keep all of them. The signed types' fields lists include
+        # NorS/EorW too (merge keys can't remove them), so they're the same.
+        types = load_definitions('logger/devices/NMEA_0183.yaml')['device_types']
+        devices = {}
+        for device, device_type in self.DEVICE_TYPES.items():
+            for suffix in ('', '_Signed'):
+                fields = {name: name for name in types[device_type + suffix]['fields']}
+                devices[device + suffix.lower()] = {
+                    'category': 'device', 'device_type': device_type + suffix,
+                    'fields': fields}
+        with open(self.definitions, 'w') as f:
+            yaml.dump({'includes': ['logger/devices/NMEA_0183.yaml'],
+                       'devices': devices}, f)
+
+    def parse(self, device, sentence):
+        parser = RecordParser(definition_path=self.definitions, quiet=True)
+        record = f'{device} {self.TS} {sentence}'
+        result = parser.parse_record(record)
+        self.assertIsNotNone(result, record)
+        return result['fields']
+
+    def assert_signed_version(self, device, body, has_position=True):
+        """Parse body with device's type and its _Signed version, and check
+        that they agree, but for the sign of each position."""
+        sentence = nmea(body)
+        unsigned = self.parse(device, sentence)
+        signed = self.parse(device + '_signed', sentence)
+        if has_position:
+            self.assertTrue(set(self.POSITIONS) & set(unsigned), unsigned)
+        for value, hemisphere in self.POSITIONS.items():
+            self.assertNotIn(hemisphere, signed)
+            if unsigned.get(value) is None:
+                self.assertIsNone(signed.get(value))
+                continue
+            expected = unsigned[value]
+            if unsigned[hemisphere] in ('S', 'W'):
+                expected = -expected
+            self.assertAlmostEqual(signed[value], expected, places=9)
+        positions = set(self.POSITIONS) | set(self.POSITIONS.values())
+        self.assertEqual({k: v for k, v in unsigned.items() if k not in positions},
+                         {k: v for k, v in signed.items() if k not in positions})
+
+    ############################
+    def test_positions_are_signed(self):
+        for device, bodies in self.SENTENCES.items():
+            for body in bodies:
+                with self.subTest(device=device, sentence=body):
+                    self.assert_signed_version(device, body)
+
+    ############################
+    def test_south_and_west_are_negative(self):
+        fields = self.parse('gps_signed', nmea(self.SENTENCES['gps'][0]))
+        self.assertAlmostEqual(fields['Latitude'], -43.2835767833, places=9)
+        self.assertAlmostEqual(fields['Longitude'], -70.8187242667, places=9)
+        fields = self.parse('gps_signed', nmea(self.SENTENCES['gps'][1]))
+        self.assertAlmostEqual(fields['Latitude'], 43.2835767833, places=9)
+        self.assertAlmostEqual(fields['Longitude'], 70.8187242667, places=9)
+
+    ############################
+    def test_no_fix(self):
+        """Without a position fix, the position fields are empty. The signed
+        types must still parse the rest of the sentence; nlat_dir used to fail
+        to match an empty position, so the whole record was dropped."""
+        for device in ('gps', 'ins'):
+            for body in ('GPGGA,123519.00,,,,,0,00,,,M,,M,,',
+                         'GPRMC,123519.00,V,,,,,,,301026,,,N',
+                         'GPGLL,,,,,123519.00,V,N'):
+                with self.subTest(device=device, sentence=body):
+                    self.assert_signed_version(device, body, has_position=False)
+                    fields = self.parse(device + '_signed', nmea(body))
+                    self.assertIsNone(fields.get('Latitude'))
+                    self.assertIsNone(fields.get('Longitude'))
+        fields = self.parse('gps_signed', nmea('GPGGA,123519.00,,,,,0,00,,,M,,M,,'))
+        self.assertEqual(fields['FixQuality'], 0)
+
+    ############################
+    def test_sentences_without_positions_are_shared(self):
+        """Every other sentence is the original device type's, by merge key."""
+        types = load_definitions('logger/devices/NMEA_0183.yaml')['device_types']
+        for device_type in self.DEVICE_TYPES.values():
+            with self.subTest(device_type=device_type):
+                original = types[device_type]['format']
+                signed = types[device_type + '_Signed']['format']
+                self.assertEqual(list(original), list(signed))
+                for key, formats in original.items():
+                    if ':nlat}' in str(formats):
+                        self.assertNotIn(':nlat}', str(signed[key]))
+                        self.assertIn(':nlat_dir}', str(signed[key]))
+                    else:
+                        self.assertEqual(formats, signed[key], key)
+
+
+################################################################################
+class TestNMEA0183Layout(unittest.TestCase):
+    """logger/devices/NMEA_0183.yaml is a stub that includes one file per
+    device type from logger/devices/nmea_0183/ (#728)."""
+
+    STUB = 'logger/devices/NMEA_0183.yaml'
+    PARTS = 'logger/devices/nmea_0183/*.yaml'
+
+    def test_stub_includes_every_part(self):
+        stub = load_definitions(self.STUB)['device_types']
+        parts = {}
+        for path in glob.glob(self.PARTS):
+            parts.update(load_definitions(path)['device_types'])
+        self.assertEqual(stub, parts)
+        self.assertGreaterEqual(len(stub), 17)
+
+    def test_default_path_loads_each_type_once(self):
+        """The parts are in a subdirectory so that the default definition
+        path, which globs logger/devices/*.yaml, doesn't load them twice."""
+        with self.assertLogs(level='WARNING') as logs:
+            types = load_definitions(DEFAULT_DEFINITION_PATH)['device_types']
+            logging.warning('end of load')  # assertLogs needs at least one
+        self.assertIn('NMEA_GPS', types)
+        self.assertEqual([m for m in logs.output if 'Duplicate' in m], [])
+
+    def test_signed_types_are_with_their_originals(self):
+        """A *_Signed type's merge keys refer to anchors in its original's
+        definition, and YAML anchors only work within one file."""
+        for path in glob.glob(self.PARTS):
+            with self.subTest(path=path):
+                with open(path) as f:
+                    types = yaml.safe_load(f)
+                for name in types:
+                    if name.endswith('_Signed'):
+                        self.assertIn(name[:-len('_Signed')], types)
+
+
+################################################################################
+class TestTimestampsWithoutTimeZone(unittest.TestCase):
+    """A timestamp with no time zone is UTC, wherever it is parsed (#690)."""
+
+    # 2014-08-01T20:28:46.352 UTC
+    UTC_TIMESTAMP = 1406924926.352
+
+    # A device whose records carry their own time, with no zone - as the
+    # NBP winches' do
+    DEFINITIONS = """
+Winch:
+  category: device_type
+  format: "{LANID:nc},{WinchTime:ti}"
+winch:
+  category: device
+  device_type: Winch
+  fields: {LANID: LANID, WinchTime: WinchTime}
+"""
+
+    def setUp(self):
+        definitions = tempfile.NamedTemporaryFile('w', suffix='.yaml', delete=False)
+        definitions.write(self.DEFINITIONS)
+        definitions.close()
+        self.definition_path = definitions.name
+        self.addCleanup(os.unlink, definitions.name)
+
+        saved_tz = os.environ.get('TZ')
+
+        def restore():
+            if saved_tz is None:
+                os.environ.pop('TZ', None)
+            else:
+                os.environ['TZ'] = saved_tz
+            time.tzset()
+        self.addCleanup(restore)
+
+    def parse_in(self, tz, record, **kwargs):
+        os.environ['TZ'] = tz
+        time.tzset()
+        return RecordParser(**kwargs).parse_record(record)
+
+    def winch_time(self, tz, value):
+        r = self.parse_in(tz, f'winch 2014-08-01T00:00:00Z 01RD,{value}',
+                          definition_path=self.definition_path)
+        return r['fields']['WinchTime']
+
+    def test_field_without_time_zone(self):
+        for tz in ('UTC', 'America/Los_Angeles', 'Asia/Tokyo'):
+            with self.subTest(tz=tz):
+                self.assertEqual(self.winch_time(tz, '2014-08-01T20:28:46.352'),
+                                 self.UTC_TIMESTAMP)
+
+    def test_record_timestamp_without_time_zone(self):
+        for tz in ('UTC', 'America/Los_Angeles', 'Asia/Tokyo'):
+            with self.subTest(tz=tz):
+                r = self.parse_in(tz, '2014-08-01T20:28:46.352 01:024557 00',
+                                  record_format='{timestamp:ti} {field_string}',
+                                  field_patterns=['{CounterUnits:d}:{GravityValue:d} {GravityError:d}'])
+                self.assertEqual(r['timestamp'], self.UTC_TIMESTAMP)
+
+    def test_explicit_time_zones_are_unchanged(self):
+        for value in ('2014-08-01T20:28:46.352Z', '2014-08-01T22:28:46.352+02:00'):
+            with self.subTest(value=value):
+                self.assertEqual(self.winch_time('America/Los_Angeles', value),
+                                 self.UTC_TIMESTAMP)
 
 
 ################################################################################

@@ -1,0 +1,327 @@
+{
+  "PCOD": {
+    "fields": [
+      "PcodAntennaHeight",
+      "PcodCourseMag",
+      "PcodCourseTrue",
+      "PcodDataValid",
+      "PcodEorW",
+      "PcodFixQuality",
+      "PcodGPSDate",
+      "PcodGPSDay",
+      "PcodGPSMonth",
+      "PcodGPSTime",
+      "PcodGPSYear",
+      "PcodGeoidHeight",
+      "PcodHDOP",
+      "PcodLatitude",
+      "PcodLocalHours",
+      "PcodLocalZone",
+      "PcodLongitude",
+      "PcodMagVar",
+      "PcodMagVarEorW",
+      "PcodNorS",
+      "PcodNumSats",
+      "PcodSpeedKm",
+      "PcodSpeedKt"
+    ],
+    "parsed": 5000,
+    "records": 5000,
+    "sha256": "3b9ebc8604e69c416c7f786fec1819b5223712fbc7e2c2cb86eb2b16a0eced70"
+  },
+  "adcp": {
+    "fields": [
+      "AdcpHeadingTrue",
+      "AdcpVelocityE",
+      "AdcpVelocityN"
+    ],
+    "parsed": 5000,
+    "records": 5000,
+    "sha256": "ebe3d5fd08c83a4abd8ce319600795df05d9a33277556d6a428277105df4a0f3"
+  },
+  "cwnc": {
+    "fields": [
+      "WaterfallLANID",
+      "WaterfallName",
+      "WaterfallPayout",
+      "WaterfallSpeed",
+      "WaterfallTension",
+      "WaterfallWinchTime"
+    ],
+    "parsed": 5000,
+    "records": 5000,
+    "sha256": "51b58d4d154705965075d1639703f5d61e17f3cbaf54dc2b45d51d752384257b"
+  },
+  "eng1": {
+    "fields": [
+      "EngCaseTemp",
+      "EngFreezer1Temp",
+      "EngFreezer2Temp",
+      "EngPIRCaseMv",
+      "EngPIRCaseRes",
+      "EngPowerVoltage",
+      "EngPump1Flow",
+      "EngPump2Flow",
+      "EngPump3Flow",
+      "EngSeismicPressure"
+    ],
+    "parsed": 5000,
+    "records": 5000,
+    "sha256": "f339c55b796852e14741d89c1f2640ce0f2d2d9299237289fa562d8723434981"
+  },
+  "gp02": {
+    "fields": [
+      "Gp02CourseTrue",
+      "Gp02EorW",
+      "Gp02GPSLocalHours",
+      "Gp02Latitude",
+      "Gp02Longitude",
+      "Gp02NorS",
+      "Gp02SpeedKm",
+      "Gp02SpeedKt"
+    ],
+    "parsed": 5000,
+    "records": 5000,
+    "sha256": "a6f238ed78889724d8bd470b5c5f9b37b9e2e36d207696cdfc95b8de017a80b8"
+  },
+  "grv1": {
+    "fields": [
+      "Grv1Error",
+      "Grv1Value"
+    ],
+    "parsed": 5000,
+    "records": 5000,
+    "sha256": "cf72ef2861e2bd6ce350c8732f5af0a07a38e53c561db6b97807b165dc908232"
+  },
+  "gyr1": {
+    "fields": [
+      "Gyr1HeadingTrue"
+    ],
+    "parsed": 5000,
+    "records": 5000,
+    "sha256": "df8604ccf9ff242867dd3c4cbfe26a804ef5a5cf48285938a60f11c4c39ff157"
+  },
+  "hdas": {
+    "fields": [
+      "HDASCaseTemp",
+      "HDASFlow1Freq",
+      "HDASFlow2Freq",
+      "HDASFlow3Freq",
+      "HDASFlow4Freq",
+      "HDASFluorometer",
+      "HDASSeawaterValve",
+      "HDASTransmissometer",
+      "HDASVoltage"
+    ],
+    "parsed": 5000,
+    "records": 5000,
+    "sha256": "be988402e0a78d9a9794b99f9d4b5baabcd43dfa7aad67c0a9ff869d1bb1c972"
+  },
+  "knud": {
+    "fields": [
+      "KnudDepthLF",
+      "KnudLatitude",
+      "KnudLongitude",
+      "KnudSoundSpeed",
+      "KnudValidLF"
+    ],
+    "parsed": 5000,
+    "records": 5000,
+    "sha256": "7ed8d25f89d21bd189add7c0f3dd586a64d1c316084838b172835421f7ea8495"
+  },
+  "mbdp": {
+    "fields": [
+      "MBDPDepth",
+      "MBDPMaxRange",
+      "MBDPWaterlineDist"
+    ],
+    "parsed": 5000,
+    "records": 5000,
+    "sha256": "913017cbe2f0787030276c8a22278ee95cf4af6b39cb1d0b0481d5eb22d5634e"
+  },
+  "mwx1": {
+    "fields": [
+      "MwxAirRelHumid",
+      "MwxAirTemp",
+      "MwxBarometer",
+      "MwxEncRelHumid",
+      "MwxPAR",
+      "MwxPIRCaseTemp",
+      "MwxPIRDomeTemp",
+      "MwxPIRThermo",
+      "MwxPSP",
+      "MwxPortRelWindDir",
+      "MwxPortRelWindSpeed",
+      "MwxPortSonicTemp",
+      "MwxPortSoundSpeed",
+      "MwxPortStatus",
+      "MwxPowerVolt",
+      "MwxStbdRelWindDir",
+      "MwxStbdRelWindSpeed",
+      "MwxStbdSonicTemp",
+      "MwxStbdStatus",
+      "MwxStbeSoundSpeed"
+    ],
+    "parsed": 5000,
+    "records": 5000,
+    "sha256": "1072aeb1ceeb929bff22bfd79d71d6cb6c94d026c004a8470fea004d66bb291f"
+  },
+  "pco2": {
+    "fields": [
+      "PCO2CellTemp",
+      "PCO2EquiPressure",
+      "PCO2EquilTempRTD",
+      "PCO2EquilTempSBE38",
+      "PCO2FlowRate",
+      "PCO2Pressure",
+      "PCO2Source",
+      "PCO2TimeTag",
+      "PCO2VCO2Concentration",
+      "PCO2ValvePosition",
+      "PCO2Voltage"
+    ],
+    "parsed": 472,
+    "records": 472,
+    "sha256": "c66dd500cc04a954e8a160399acf0131b38b8f29e0c84bac525676b32ae0c71b"
+  },
+  "pguv": {
+    "fields": [
+      "GUVDate",
+      "GUVGroundVoltage",
+      "GUVInputVoltage",
+      "GUVIrradiance305",
+      "GUVIrradiance313",
+      "GUVIrradiance320",
+      "GUVIrradiance340",
+      "GUVIrradiance380",
+      "GUVIrradiance395",
+      "GUVIrradiance400",
+      "GUVTemp",
+      "GUVTime"
+    ],
+    "parsed": 5000,
+    "records": 5000,
+    "sha256": "a0766f8ed8e00e75135d26a653266548dfc870f9507afe2a55dd713f259c59de"
+  },
+  "rtmp": {
+    "fields": [
+      "RTMPTemp"
+    ],
+    "parsed": 5000,
+    "records": 5000,
+    "sha256": "fbb0a6be06943d7eebcf16116b5094a5fe322f54c4c93543a5e3b9614459132c"
+  },
+  "s330": {
+    "fields": [
+      "S330AntennaHeight",
+      "S330CourseMag",
+      "S330CourseTrue",
+      "S330EorW",
+      "S330FixQuality",
+      "S330GPSDate",
+      "S330GPSDay",
+      "S330GPSMonth",
+      "S330GPSTime",
+      "S330GPSYear",
+      "S330GeoidHeight",
+      "S330GyroCal",
+      "S330GyroOffset",
+      "S330HDOP",
+      "S330HeadingQual",
+      "S330HeadingTrue",
+      "S330Heave",
+      "S330HeightQual",
+      "S330HorizQual",
+      "S330Latitude",
+      "S330Longitude",
+      "S330MagVar",
+      "S330MagVarEorW",
+      "S330Mode",
+      "S330NorS",
+      "S330NumSats",
+      "S330Pitch",
+      "S330Roll",
+      "S330RollPitchQual",
+      "S330SpeedKm",
+      "S330SpeedKt"
+    ],
+    "parsed": 5000,
+    "records": 5000,
+    "sha256": "07d5ae3bccd10a7f8d6b688d4c5193d374f9795128d4f4064d69f0284d2c57a7"
+  },
+  "seap": {
+    "fields": [
+      "SeapAntennaHeight",
+      "SeapCourseTrue",
+      "SeapEorW",
+      "SeapFixQuality",
+      "SeapGPSDay",
+      "SeapGPSMonth",
+      "SeapGPSTime",
+      "SeapGPSYear",
+      "SeapGyroCal",
+      "SeapGyroOffset",
+      "SeapHDOP",
+      "SeapHeadingQual",
+      "SeapHeadingTrue",
+      "SeapHeave",
+      "SeapHeightQual",
+      "SeapHorizQual",
+      "SeapLatitude",
+      "SeapLongitude",
+      "SeapMode",
+      "SeapNorS",
+      "SeapNumSats",
+      "SeapPitch",
+      "SeapRoll",
+      "SeapRollPitchQual",
+      "SeapSpeedKt"
+    ],
+    "parsed": 5000,
+    "records": 5000,
+    "sha256": "a35b8b24d1260745ae2636d6a4f9a4b653fff24996689158543275deef281263"
+  },
+  "svp1": {
+    "fields": [
+      "SVPVelocity"
+    ],
+    "parsed": 5000,
+    "records": 5000,
+    "sha256": "348bd90ae58e554b2045159f788555f4abd77b50cc3fd7ea4343ef23c0a1ea57"
+  },
+  "tsg1": {
+    "fields": [
+      "TSG1Conductivity",
+      "TSG1Salinity",
+      "TSG1SoundVelocity",
+      "TSG1Temp"
+    ],
+    "parsed": 5000,
+    "records": 5000,
+    "sha256": "4bed0536f12f87004962e5bb1063b28711a1b7ea40fdaaf961fb7d0420c6fa9e"
+  },
+  "tsg2": {
+    "fields": [
+      "TSG2Conductivity",
+      "TSG2Salinity",
+      "TSG2SoundVelocity",
+      "TSG2Temp"
+    ],
+    "parsed": 5000,
+    "records": 5000,
+    "sha256": "4fbcbf8ecd629c5ddc0c75f7f649a97f5d837a296913716de2a6385fc67c9f44"
+  },
+  "twnc": {
+    "fields": [
+      "TrawlLANID",
+      "TrawlName",
+      "TrawlPayout",
+      "TrawlSpeed",
+      "TrawlTension",
+      "TrawlWinchTime"
+    ],
+    "parsed": 5000,
+    "records": 5000,
+    "sha256": "f760dc8ef7b9b6b1ca7f9b07d22679c93051ca08f8d8ef58e05d3d751da6c1bc"
+  }
+}

@@ -74,19 +74,23 @@ PYEOF
 echo "Generating documentation with pdoc $PDOC_VERSION..."
 echo "Output: $OUTPUT_DIR"
 
-# Remove old generated content so stale files don't linger.
-# Covers both old (logger/, server/) and new (openrvdas/) output structures.
-rm -rf "$OUTPUT_DIR/logger" "$OUTPUT_DIR/server" "$OUTPUT_DIR/openrvdas" \
-       "$OUTPUT_DIR/index.html" "$OUTPUT_DIR/search.js" \
-       "$OUTPUT_DIR/logger.html" "$OUTPUT_DIR/server.html"
+# Generate into a temporary directory, and only replace the old output once
+# that has succeeded, so a failed run leaves the existing docs in place.
+BUILD_DIR="$(mktemp -d)"
+trap 'rm -rf "$BUILD_DIR"' EXIT
 
+# server/fastapi_server_api.py imports the web_backend submodule, which needs
+# fastapi; neither is available to the docs build, so leave that module out.
+# pdoc still warns "Couldn't import ..." while listing server's submodules,
+# then skips it; that warning is expected.
 pdoc \
-    --output-directory "$OUTPUT_DIR" \
+    --output-directory "$BUILD_DIR" \
     --template-dir "$TEMPLATE_DIR" \
     --docformat restructuredtext \
     --footer-text "OpenRVDAS" \
     ./logger \
-    ./server
+    ./server \
+    '!.*\.server\.fastapi_server_api$'
 
 # Remove generated pages for subpackages that have no docstrings at all,
 # and scrub their references from index.html and search.js.
@@ -95,8 +99,8 @@ if [[ -n "$EMPTY_PKG_PATHS" ]]; then
     echo "Removing empty package pages:"
     while IFS= read -r pkg_path; do
         [[ -z "$pkg_path" ]] && continue
-        flat_html="$OUTPUT_DIR/openrvdas/${pkg_path}.html"
-        pkg_dir="$OUTPUT_DIR/openrvdas/$pkg_path"
+        flat_html="$BUILD_DIR/openrvdas/${pkg_path}.html"
+        pkg_dir="$BUILD_DIR/openrvdas/$pkg_path"
         if [[ -f "$flat_html" ]]; then
             echo "  Removing $flat_html"
             rm -f "$flat_html"
@@ -108,17 +112,26 @@ if [[ -n "$EMPTY_PKG_PATHS" ]]; then
         # Remove references from index.html and search.js (use dotted module name).
         # sed -i.bak is portable across macOS and Linux; we remove the backup immediately.
         mod_name="${pkg_path//\//.}"
-        sed -i.bak "/${mod_name//./\.}/d" "$OUTPUT_DIR/index.html" "$OUTPUT_DIR/search.js"
-        rm -f "$OUTPUT_DIR/index.html.bak" "$OUTPUT_DIR/search.js.bak"
+        sed -i.bak "/${mod_name//./\.}/d" "$BUILD_DIR/index.html" "$BUILD_DIR/search.js"
+        rm -f "$BUILD_DIR/index.html.bak" "$BUILD_DIR/search.js.bak"
         # Remove reference from the parent package HTML (e.g. logger.html lists devices).
         leaf="${pkg_path##*/}"
-        parent_html="$OUTPUT_DIR/openrvdas/${pkg_path%/*}.html"
+        parent_html="$BUILD_DIR/openrvdas/${pkg_path%/*}.html"
         if [[ -f "$parent_html" ]]; then
             sed -i.bak "/${leaf}/d" "$parent_html"
             rm -f "${parent_html}.bak"
         fi
     done <<< "$EMPTY_PKG_PATHS"
 fi
+
+# Remove old generated content so stale files don't linger, then move the new
+# content into place. Covers both old (logger/, server/) and new (openrvdas/)
+# output structures.
+rm -rf "$OUTPUT_DIR/logger" "$OUTPUT_DIR/server" "$OUTPUT_DIR/openrvdas" \
+       "$OUTPUT_DIR/index.html" "$OUTPUT_DIR/search.js" \
+       "$OUTPUT_DIR/logger.html" "$OUTPUT_DIR/server.html"
+mkdir -p "$OUTPUT_DIR"
+cp -R "$BUILD_DIR"/. "$OUTPUT_DIR"/
 
 echo ""
 echo "Done. Open $OUTPUT_DIR/index.html to browse."

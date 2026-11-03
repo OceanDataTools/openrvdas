@@ -1,0 +1,244 @@
+################################################################################
+# NMEA 0183 device type: NMEA_GPS_INS (Integrated GPS/INS (e.g., Seapath))
+#
+# Part of the NMEA 0183 library: logger/devices/NMEA_0183.yaml includes every
+# file in this directory. See README.md here for the format types used,
+# talker IDs and proprietary sentence prefixes.
+################################################################################
+
+######################################
+# Integrated GPS/INS (e.g., Seapath)
+# Combined position, heading, and motion
+######################################
+NMEA_GPS_INS:
+  category: "device_type"
+  description: "Integrated GPS/INS system (Seapath, etc.) - outputs position, heading, and motion"
+
+  format: &NMEA_GPS_INS_format
+    ########################################
+    # Standard NMEA Position Sentences
+    ########################################
+
+    GGA: "${:2l}GGA,{GPSTime:of},{Latitude:nlat},{NorS:ow},{Longitude:nlat},{EorW:ow},{FixQuality:od},{NumSats:od},{HDOP:of},{AntennaHeight:of},M,{GeoidHeight:of},M,{LastDGPSUpdate:of},{DGPSStationID:od}*{CheckSum:x}"
+    GLL:
+      - "${:2l}GLL,{Latitude:nlat},{NorS:ow},{Longitude:nlat},{EorW:ow},{GPSTime:of},{Status:ow},{Mode:ow}*{CheckSum:x}"
+      # NMEA before 2.3 has no mode indicator field
+      - "${:2l}GLL,{Latitude:nlat},{NorS:ow},{Longitude:nlat},{EorW:ow},{GPSTime:of},{Status:ow}*{CheckSum:x}"
+    RMC:
+      - "${:2l}RMC,{GPSTime:of},{Status:ow},{Latitude:nlat},{NorS:ow},{Longitude:nlat},{EorW:ow},{SpeedKt:of},{CourseTrue:of},{GPSDate:ow},{MagVar:of},{MagVarDir:ow},{Mode:ow}*{CheckSum:x}"
+      # NMEA before 2.3 has no mode indicator field
+      - "${:2l}RMC,{GPSTime:of},{Status:ow},{Latitude:nlat},{NorS:ow},{Longitude:nlat},{EorW:ow},{SpeedKt:of},{CourseTrue:of},{GPSDate:ow},{MagVar:of},{MagVarDir:ow}*{CheckSum:x}"
+    VTG:
+      - "${:2l}VTG,{CourseTrue:of},T,{CourseMag:of},M,{SpeedKt:of},N,{SpeedKm:of},K,{Mode:ow}*{CheckSum:x}"
+      # NMEA before 2.3 has no mode indicator field
+      - "${:2l}VTG,{CourseTrue:of},T,{CourseMag:of},M,{SpeedKt:of},N,{SpeedKm:of},K*{CheckSum:x}"
+    ZDA:
+      - "${:2l}ZDA,{GPSTime:of},{Day:od},{Month:od},{Year:od},{LocalHours:od},{LocalMinutes:od}*{CheckSum:x}"
+      # Some receivers (e.g. Trimble) send an extra empty field before the checksum
+      - "${:2l}ZDA,{GPSTime:of},{Day:od},{Month:od},{Year:od},{LocalHours:od},{LocalMinutes:od},*{CheckSum:x}"
+
+    ########################################
+    # Standard NMEA Heading Sentences
+    ########################################
+
+    HDT: "${:2l}HDT,{HeadingTrue:of},T*{CheckSum:x}"
+    HDG: "${:2l}HDG,{HeadingMag:of},{Deviation:of},{DeviationDir:ow},{Variation:of},{VariationDir:ow}*{CheckSum:x}"
+    ROT: "${:2l}ROT,{RateOfTurn:of},{Status:ow}*{CheckSum:x}"
+
+    ########################################
+    # Proprietary: Kongsberg Seapath ($PSXN)
+    ########################################
+
+    PSXN20: "$PSXN,20,{HorizQual:od},{HeightQual:od},{HeadingQual:od},{RollPitchQual:od}*{CheckSum:x}"
+    PSXN21: "$PSXN,21,{EventType:od}*{CheckSum:x}"
+    PSXN22: "$PSXN,22,{GyroCal:of},{GyroOffset:of}*{CheckSum:x}"
+    PSXN23: "$PSXN,23,{Roll:of},{Pitch:of},{Heading:of},{Heave:of}*{CheckSum:x}"
+    PSXN24: "$PSXN,24,{RollRate:of},{PitchRate:of},{YawRate:of},{VerticalVel:of}*{CheckSum:x}"
+
+    ########################################
+    # Proprietary: Ashtech/Trimble ($PASHR)
+    ########################################
+
+    PASHR: "$PASHR,{GPSTime:of},{Heading:of},{HeadingType:ow},{Roll:of},{Pitch:of},{Heave:of},{RollAcc:of},{PitchAcc:of},{HeadingAcc:of},{AidingStatus:od},{IMUStatus:od}*{CheckSum:x}"
+    PASHRshort: "$PASHR,{GPSTime:of},{Heading:of},{HeadingType:ow},{Roll:of},{Pitch:of},{Heave:of},{RollAcc:of},{PitchAcc:of},{HeadingAcc:of},{AidingStatus:od}*{CheckSum:x}"
+
+  fields: &NMEA_GPS_INS_fields
+    # Position fields
+    GPSTime:
+      units: "hhmmss.ss"
+      description: "UTC time"
+    GPSDate:
+      units: "ddmmyy"
+      description: "UTC date"
+    Latitude:
+      units: "degrees"
+      description: "Latitude in decimal degrees"
+    NorS:
+      description: "N for North, S for South"
+    Longitude:
+      units: "degrees"
+      description: "Longitude in decimal degrees"
+    EorW:
+      description: "E for East, W for West"
+    FixQuality:
+      description: "0=invalid, 1=GPS, 2=DGPS, 3=PPS, 4=RTK, 5=Float RTK"
+    NumSats:
+      units: "count"
+      description: "Number of satellites in use"
+    HDOP:
+      description: "Horizontal dilution of precision"
+    AntennaHeight:
+      units: "meters"
+      description: "Antenna height above mean sea level"
+    GeoidHeight:
+      units: "meters"
+      description: "Geoidal separation"
+    LastDGPSUpdate:
+      units: "seconds"
+      description: "Time since last DGPS update"
+    DGPSStationID:
+      description: "DGPS reference station ID"
+    Status:
+      description: "A=Active/Valid, V=Void/Invalid"
+    Mode:
+      description: "A=Autonomous, D=Differential, E=Estimated, N=Not valid"
+    SpeedKt:
+      units: "knots"
+      description: "Speed over ground in knots"
+    SpeedKm:
+      units: "km/hour"
+      description: "Speed over ground in km/hour"
+    CourseTrue:
+      units: "degrees"
+      description: "Course over ground, true"
+    CourseMag:
+      units: "degrees"
+      description: "Course over ground, magnetic"
+    MagVar:
+      units: "degrees"
+      description: "Magnetic variation"
+    MagVarDir:
+      description: "E=East, W=West"
+    Day:
+      description: "Day of month (01-31)"
+    Month:
+      description: "Month (01-12)"
+    Year:
+      description: "Year (4 digits)"
+    LocalHours:
+      units: "hours"
+      description: "Local zone offset from UTC"
+    LocalMinutes:
+      units: "minutes"
+      description: "Local zone offset from UTC"
+    # Heading fields
+    HeadingTrue:
+      units: "degrees"
+      description: "True heading"
+    HeadingMag:
+      units: "degrees"
+      description: "Magnetic heading"
+    Heading:
+      units: "degrees"
+      description: "Heading"
+    HeadingType:
+      description: "T=True, M=Magnetic"
+    Deviation:
+      units: "degrees"
+      description: "Magnetic deviation"
+    DeviationDir:
+      description: "E=East, W=West"
+    Variation:
+      units: "degrees"
+      description: "Magnetic variation"
+    VariationDir:
+      description: "E=East, W=West"
+    RateOfTurn:
+      units: "degrees/minute"
+      description: "Rate of turn"
+    # Motion fields
+    Roll:
+      units: "degrees"
+      description: "Roll angle (positive = port up)"
+    Pitch:
+      units: "degrees"
+      description: "Pitch angle (positive = bow up)"
+    Heave:
+      units: "meters"
+      description: "Heave displacement"
+    RollRate:
+      units: "degrees/second"
+      description: "Roll rate"
+    PitchRate:
+      units: "degrees/second"
+      description: "Pitch rate"
+    YawRate:
+      units: "degrees/second"
+      description: "Yaw rate"
+    VerticalVel:
+      units: "m/s"
+      description: "Vertical velocity"
+    # Quality fields
+    HorizQual:
+      description: "Horizontal position quality (0=none to 4=excellent)"
+    HeightQual:
+      description: "Height quality indicator"
+    HeadingQual:
+      description: "Heading quality indicator"
+    RollPitchQual:
+      description: "Roll/Pitch quality indicator"
+    EventType:
+      description: "Event trigger type"
+    GyroCal:
+      units: "degrees/hour"
+      description: "Gyro calibration status"
+    GyroOffset:
+      units: "degrees"
+      description: "Gyro offset"
+    # PASHR fields
+    RollAcc:
+      units: "degrees"
+      description: "Roll accuracy estimate"
+    PitchAcc:
+      units: "degrees"
+      description: "Pitch accuracy estimate"
+    HeadingAcc:
+      units: "degrees"
+      description: "Heading accuracy estimate"
+    AidingStatus:
+      description: "Aiding status (0=none, 1=aided)"
+    IMUStatus:
+      description: "IMU status code"
+
+
+######################################
+# NMEA_GPS_INS, with signed positions (#718)
+######################################
+# NMEA_GPS_INS with positions parsed by nlat_dir: latitude and longitude in signed
+# decimal degrees, negative for South and West, with no separate NorS/EorW
+# fields. Built with YAML merge keys, so only the sentences that carry a
+# position are overridden; every other sentence is NMEA_GPS_INS's. Merge keys
+# can't remove keys, so the merged fields list still describes NorS and
+# EorW, which this device type never produces. See README.md here.
+NMEA_GPS_INS_Signed:
+  category: "device_type"
+  description: "Integrated GPS/INS system - as NMEA_GPS_INS, but with signed latitude and longitude"
+
+  format:
+    <<: *NMEA_GPS_INS_format
+    GGA: "${:2l}GGA,{GPSTime:of},{Latitude:nlat_dir},{Longitude:nlat_dir},{FixQuality:od},{NumSats:od},{HDOP:of},{AntennaHeight:of},M,{GeoidHeight:of},M,{LastDGPSUpdate:of},{DGPSStationID:od}*{CheckSum:x}"
+    GLL:
+      - "${:2l}GLL,{Latitude:nlat_dir},{Longitude:nlat_dir},{GPSTime:of},{Status:ow},{Mode:ow}*{CheckSum:x}"
+      - "${:2l}GLL,{Latitude:nlat_dir},{Longitude:nlat_dir},{GPSTime:of},{Status:ow}*{CheckSum:x}"
+    RMC:
+      - "${:2l}RMC,{GPSTime:of},{Status:ow},{Latitude:nlat_dir},{Longitude:nlat_dir},{SpeedKt:of},{CourseTrue:of},{GPSDate:ow},{MagVar:of},{MagVarDir:ow},{Mode:ow}*{CheckSum:x}"
+      - "${:2l}RMC,{GPSTime:of},{Status:ow},{Latitude:nlat_dir},{Longitude:nlat_dir},{SpeedKt:of},{CourseTrue:of},{GPSDate:ow},{MagVar:of},{MagVarDir:ow}*{CheckSum:x}"
+
+  fields:
+    <<: *NMEA_GPS_INS_fields
+    Latitude:
+      units: "degrees"
+      description: "Latitude in signed decimal degrees; negative for South"
+    Longitude:
+      units: "degrees"
+      description: "Longitude in signed decimal degrees; negative for West"

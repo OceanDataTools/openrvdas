@@ -39,6 +39,57 @@ class TestModifyValueTransform(unittest.TestCase):
                          '{"f1": 11.0}, "metadata": {}}')
 
     ###############
+    # Issue #644: DASRecord's first positional arg is json_str, not fields, so
+    # passing a dict positionally handed it to json.loads() and every dict
+    # record raised - even though the type hint advertises dict support and
+    # can_process_record() returns True for one.
+    def test_dict_record(self):
+        transform = ModifyValueTransform(fields={'f1': {'mult_factor': 2, 'add_factor': 1}})
+
+        # can_process_record() and transform() must agree about dicts
+        self.assertTrue(transform.can_process_record({'f1': 5}))
+
+        # A bare field dict comes back as a bare field dict
+        result = transform.transform({'f1': 5, 'f2': 7})
+        self.assertEqual(result, {'f1': 11.0, 'f2': 7})
+
+        # ...and a dict carrying a 'fields' sub-dict keeps its envelope
+        result = transform.transform({'data_id': 'd1', 'timestamp': 1,
+                                      'fields': {'f1': 5, 'f2': 7}})
+        self.assertEqual(result['fields'], {'f1': 11.0, 'f2': 7})
+        self.assertEqual(result['timestamp'], 1)
+        self.assertEqual(result['data_id'], 'd1')
+
+        # A DASRecord still comes back as a DASRecord
+        result = transform.transform(DASRecord(timestamp=1, fields={'f1': 5}))
+        self.assertEqual(result.fields, {'f1': 11.0})
+
+    ###############
+    # Issue #644: float(None) raises TypeError, not ValueError, so a None
+    # field value escaped the handler that is meant to skip unconvertible
+    # values and propagated out of the transform.
+    def test_none_value(self):
+        transform = ModifyValueTransform(fields={'f1': {'mult_factor': 2, 'add_factor': 1}})
+
+        # None is skipped and left alone, like any other unconvertible value
+        result = transform.transform(DASRecord(timestamp=1, fields={'f1': None, 'f2': 7}))
+        self.assertEqual(result.fields, {'f1': None, 'f2': 7})
+
+        # ...and the same by way of a dict, which is how JSON null arrives
+        self.assertEqual(transform.transform({'f1': None, 'f2': 7}),
+                         {'f1': None, 'f2': 7})
+
+        # A non-numeric string must still be skipped the way it always was
+        result = transform.transform(DASRecord(timestamp=1, fields={'f1': 'bad'}))
+        self.assertEqual(result.fields, {'f1': 'bad'})
+
+        # Both unconvertible cases should warn, not raise
+        with self.assertLogs(logging.getLogger(), logging.WARNING):
+            transform.transform(DASRecord(timestamp=1, fields={'f1': None}))
+        with self.assertLogs(logging.getLogger(), logging.WARNING):
+            transform.transform(DASRecord(timestamp=1, fields={'f1': 'bad'}))
+
+    ###############
     def test_bad_initialization(self):
         with self.assertRaises(ValueError):
             ModifyValueTransform(

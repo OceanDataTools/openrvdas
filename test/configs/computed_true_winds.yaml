@@ -1,0 +1,133 @@
+###############################################################################
+# True winds computed by ComputedFieldsTransform, as an illustration of what
+# the transform can do. This reproduces what TrueWindsTransform computes for
+# the port anemometer in test/NBP1406/NBP1406_cruise_full.yaml, using the
+# formulas in logger/utils/truewinds/truew.py.
+#
+# Run with:
+#   logger/listener/listen.py --config_file test/configs/computed_true_winds.yaml
+#
+# test/logger/transforms/test_computed_fields_transform.py checks that this
+# config gives the same results as TrueWindsTransform.
+#
+# HOW IT WORKS
+#
+# The rules are evaluated in the order they are listed, and each can use the
+# results of the rules before it. Rules marked "intermediate: true" produce
+# values for later rules to use, but aren't output.
+#
+#   valid       checks the inputs (see below)
+#   apparent    PortApparentWindDir = (heading + rel_wind_dir + zero_line) % 360
+#   x, y        the true wind's east and north vector components:
+#                 x = rel_wind_speed * cos(270 - apparent) + ship_speed * cos(90 - course)
+#                 y = rel_wind_speed * sin(270 - apparent) + ship_speed * sin(90 - course)
+#               (270 - apparent and 90 - course turn compass bearings into
+#               the anticlockwise-from-east angles that sin and cos expect.)
+#   speed       PortTrueWindSpeed = hypot(x, y)
+#   direction   PortTrueWindDir = atan2(-x, -y) % 360
+#
+# (x, y) is where the wind is blowing *to*; a wind direction says where it
+# blows *from*, so the direction is the compass bearing of (-x, -y). This is
+# truew()'s "tdir = 270 - atan2(y, x)" written so that it can't come out
+# negative. The direction rule also follows truew()'s special cases: a calm
+# wind (both components within 1e-5 of zero) is reported as 0; a wind with
+# only a north-south component is reported as exactly 180 or 360; and a
+# direction within 0.0001 degrees of north is reported as 360 rather than 0,
+# the WMO convention.
+#
+# CHECKING THE INPUTS
+#
+# TrueWindsTransform computes nothing unless all five inputs are present,
+# recent enough, and physically sensible: course, heading and relative wind
+# direction within 0-360, speeds not negative, and wind speed not the old
+# missing-value marker 9999. The "valid" rule makes the same checks, and
+# gives None if any fails. It reads all five inputs, so it only produces a
+# value when all five are fresh. PortApparentWindDir mentions valid, and
+# everything after builds on PortApparentWindDir; when a rule produces no
+# value, no rule that uses its result fires, so nothing is output.
+###############################################################################
+
+name: computed_true_winds->on
+
+readers:
+  class: CachedDataReader
+  kwargs:
+    data_server: localhost:8766
+    subscription:
+      fields:
+        S330CourseTrue: {seconds: 0}
+        S330HeadingTrue: {seconds: 0}
+        S330SpeedKt: {seconds: 0}
+        MwxPortRelWindDir: {seconds: 0}
+        MwxPortRelWindSpeed: {seconds: 0}
+
+transforms:
+- class: ComputedFieldsTransform
+  kwargs:
+    data_id: computed_true_winds
+
+    # The five inputs arrive in separate records from different instruments,
+    # so remember the latest value of each, compute only when a new wind
+    # direction arrives, and don't compute from anything over 15 seconds old.
+    # These are the same settings, with the same meanings, as the
+    # TrueWindsTransform logger in NBP1406_cruise_full.yaml.
+    update_on_fields: [MwxPortRelWindDir]
+    max_field_age:
+      S330CourseTrue: 15
+      S330HeadingTrue: 15
+      S330SpeedKt: 15
+      MwxPortRelWindDir: 15
+      MwxPortRelWindSpeed: 15
+
+    # Output only what we compute, not the raw inputs.
+    delete_input_fields: true
+    delete_other_fields: true
+    metadata_interval: 10
+
+    fields:
+      valid:
+        equation: "True if 0 <= crse <= 360 and 0 <= hd <= 360 and 0 <= wdir <= 360 and cspd >= 0 and wspd >= 0 and wspd != 9999 else None"
+        # Names used in the equations, so they can be written as in truew().
+        inputs:
+          crse: S330CourseTrue       # course over ground, degrees true
+          cspd: S330SpeedKt          # speed over ground, knots
+          hd: S330HeadingTrue        # heading, degrees true
+          wdir: MwxPortRelWindDir    # wind direction relative to the bow
+          wspd: MwxPortRelWindSpeed  # wind speed relative to the ship, m/s
+        intermediate: true
+
+      PortApparentWindDir:
+        equation: "(hd + wdir + zlr) % 360 if valid else None"
+        inputs: {hd: S330HeadingTrue, wdir: MwxPortRelWindDir}
+        constants:
+          zlr: 0                     # anemometer zero line, clockwise from bow
+        metadata: Apparent wind direction, degrees true (direction from)
+
+      x:
+        equation: "wspd * cos(radians(270 - PortApparentWindDir)) + cspd * knots_to_ms * cos(radians(90 - crse))"
+        inputs: &components_inputs
+          wspd: MwxPortRelWindSpeed
+          cspd: S330SpeedKt
+          crse: S330CourseTrue
+        constants: &components_constants
+          knots_to_ms: 0.5144        # ship speed is in knots, wind in m/s
+        intermediate: true
+
+      y:
+        equation: "wspd * sin(radians(270 - PortApparentWindDir)) + cspd * knots_to_ms * sin(radians(90 - crse))"
+        inputs: *components_inputs
+        constants: *components_constants
+        intermediate: true
+
+      PortTrueWindSpeed:
+        equation: "hypot(x, y)"
+        metadata: True wind speed, m/s
+
+      PortTrueWindDir:
+        equation: "0 if abs(x) <= 1e-5 and abs(y) <= 1e-5 else (180 if y > 0 else 360) if abs(x) <= 1e-5 else 360 if degrees(atan2(-x, -y)) % 360 < 0.0001 else degrees(atan2(-x, -y)) % 360"
+        metadata: True wind direction, degrees true (direction from)
+
+writers:
+  class: CachedDataWriter
+  kwargs:
+    data_server: localhost:8766

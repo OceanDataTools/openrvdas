@@ -7,6 +7,7 @@ from .extract_field_transform import ExtractFieldTransform
 from .format_transform import FormatTransform
 from .from_json_transform import FromJSONTransform
 from .geofence_transform import GeofenceTransform
+from .computed_fields_transform import ComputedFieldsTransform
 from .interpolation_transform import InterpolationTransform
 from .max_min_transform import MaxMinTransform
 from .modify_value_transform import ModifyValueTransform

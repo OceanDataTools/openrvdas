@@ -31,6 +31,18 @@ DEFAULT_DEFINITION_PATH = 'logger/devices/*.yaml,contrib/devices/*.yaml'
 DEFAULT_RECORD_FORMAT = '{data_id:w} {timestamp:ti} {field_string}'
 
 
+def _to_timestamp(value):
+    """Numeric timestamp of a parsed datetime. One with no time zone - such
+    as an ISO time without a 'Z', which the 'ti' format returns as a naive
+    datetime - is taken to be UTC, as instrument and ship times almost always
+    are, and as RegexParser takes it. Left naive, datetime.timestamp() would
+    read it as the machine's local time, so the same record would parse to
+    different values in different time zones (#690)."""
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=datetime.timezone.utc)
+    return value.timestamp()
+
+
 class RecordParser:
     ############################
     def __init__(self, record_format=None,
@@ -212,7 +224,7 @@ class RecordParser:
         # Convert timestamp to numeric, if it's there
         timestamp = parsed_record.get('timestamp')
         if timestamp is not None and isinstance(timestamp, datetime.datetime):
-            timestamp = timestamp.timestamp()
+            timestamp = _to_timestamp(timestamp)
             parsed_record['timestamp'] = timestamp
 
         # Extract the field string we're going to parse; remove trailing
@@ -407,7 +419,7 @@ class RecordParser:
                 continue
             # If it's a datetime, convert to numeric timestamp
             if isinstance(value, datetime.datetime):
-                value = value.timestamp()
+                value = _to_timestamp(value)
             fields[variable_name] = value
 
         logging.debug('Got fields: %s', pprint.pformat(fields))

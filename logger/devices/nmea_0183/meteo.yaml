@@ -1,0 +1,148 @@
+################################################################################
+# NMEA 0183 device type: NMEA_Meteo (Meteorological / Oceanographic Sensors)
+#
+# Part of the NMEA 0183 library: logger/devices/NMEA_0183.yaml includes every
+# file in this directory. See README.md here for the format types used,
+# talker IDs and proprietary sentence prefixes.
+################################################################################
+
+######################################
+# Meteorological / Oceanographic Sensors
+######################################
+NMEA_Meteo:
+  category: "device_type"
+  description: "Weather station, TSG, temperature sensors - standard and proprietary"
+
+  format:
+    ########################################
+    # Standard NMEA Sentences
+    ########################################
+
+    # Meteorological Composite
+    MDA: "${:2l}MDA,{BaroInches:of},I,{BaroBars:of},B,{AirTemp:of},C,{WaterTemp:of},C,{RelHumidity:of},{AbsHumidity:of},{DewPoint:of},C,{WindDirTrue:of},T,{WindDirMag:of},M,{WindSpeedKt:of},N,{WindSpeedMs:of},M*{CheckSum:x}"
+
+    # Mean Temperature of Water
+    MTW: "${:2l}MTW,{WaterTemp:of},{Units:ow}*{CheckSum:x}"
+
+    # Transducer Measurement (generic sensor data)
+    XDR:
+      - "${:2l}XDR,{Type1:nc},{Value1:of},{Units1:nc},{Name1:nc}*{CheckSum:x}"
+      - "${:2l}XDR,{Type1:nc},{Value1:of},{Units1:nc},{Name1:nc},{Type2:nc},{Value2:of},{Units2:nc},{Name2:nc}*{CheckSum:x}"
+      - "${:2l}XDR,{Type1:nc},{Value1:of},{Units1:nc},{Name1:nc},{Type2:nc},{Value2:of},{Units2:nc},{Name2:nc},{Type3:nc},{Value3:of},{Units3:nc},{Name3:nc}*{CheckSum:x}"
+      - "${:2l}XDR,{Type1:nc},{Value1:of},{Units1:nc},{Name1:nc},{Type2:nc},{Value2:of},{Units2:nc},{Name2:nc},{Type3:nc},{Value3:of},{Units3:nc},{Name3:nc},{Type4:nc},{Value4:of},{Units4:nc},{Name4:nc}*{CheckSum:x}"
+
+    # Air Temperature (deprecated NMEA, superseded by XDR; still used by Vaisala WI talker)
+    MTA: "${:2l}MTA,{AirTemp:of},{Units:ow}*{CheckSum:x}"
+
+    # Relative Humidity and Dew Point (deprecated NMEA, superseded by XDR; still used by Vaisala WI talker)
+    # AbsHumidity is optional (of) to handle instruments that omit it (e.g. $WIMHU,80,,15.4,C)
+    MHU: "${:2l}MHU,{RelHumidity:of},{AbsHumidity:of},{DewPoint:of},{DewPointUnits:ow}*{CheckSum:x}"
+
+    # Barometric Pressure (deprecated NMEA, superseded by XDR; still used by Vaisala WI talker)
+    MMB: "${:2l}MMB,{BaroInches:of},{BaroInchesUnit:ow},{BaroBars:of},{BaroBarsUnit:ow}*{CheckSum:x}"
+
+    ########################################
+    # Proprietary: Sea-Bird Scientific
+    ########################################
+
+    # SBE45 TSG - Thermosalinograph
+    SBE45: "{Temp:of},{Conductivity:of},{Salinity:of},{SoundVelocity:of}"
+    SBE45short: "{Temp:of},{Conductivity:of},{Salinity:of}"
+
+    # SBE38 - Remote temperature sensor
+    SBE38: "{Temp:of}"
+
+    # SBE48 - Remote temperature with timestamp
+    SBE48: "# {Temp:of}, {Date:nc}, {Time:nc}"
+
+  fields:
+    BaroInches:
+      units: "inches Hg"
+      description: "Barometric pressure in inches of mercury"
+    BaroBars:
+      units: "bars"
+      description: "Barometric pressure in bars"
+    AirTemp:
+      units: "degrees C"
+      description: "Air temperature"
+    WaterTemp:
+      units: "degrees C"
+      description: "Water temperature"
+    Temp:
+      units: "degrees C"
+      description: "Temperature"
+    Units:
+      description: "C=Celsius, F=Fahrenheit"
+    RelHumidity:
+      units: "percent"
+      description: "Relative humidity"
+    AbsHumidity:
+      units: "percent"
+      description: "Absolute humidity"
+    DewPoint:
+      units: "degrees C"
+      description: "Dew point temperature"
+    WindDirTrue:
+      units: "degrees"
+      description: "Wind direction, true"
+    WindDirMag:
+      units: "degrees"
+      description: "Wind direction, magnetic"
+    WindSpeedKt:
+      units: "knots"
+      description: "Wind speed in knots"
+    WindSpeedMs:
+      units: "m/s"
+      description: "Wind speed in meters per second"
+    Type1:
+      description: "Transducer 1 type (A=Angular, C=Temperature, etc.)"
+    Value1:
+      description: "Transducer 1 measurement value"
+    Units1:
+      description: "Transducer 1 units"
+    Name1:
+      description: "Transducer 1 name"
+    Type2:
+      description: "Transducer 2 type"
+    Value2:
+      description: "Transducer 2 measurement value"
+    Units2:
+      description: "Transducer 2 units"
+    Name2:
+      description: "Transducer 2 name"
+    Type3:
+      description: "Transducer 3 type"
+    Value3:
+      description: "Transducer 3 measurement value"
+    Units3:
+      description: "Transducer 3 units"
+    Name3:
+      description: "Transducer 3 name"
+    Type4:
+      description: "Transducer 4 type"
+    Value4:
+      description: "Transducer 4 measurement value"
+    Units4:
+      description: "Transducer 4 units"
+    Name4:
+      description: "Transducer 4 name"
+    DewPointUnits:
+      description: "C=Celsius, F=Fahrenheit"
+    BaroInchesUnit:
+      description: "I=inches of mercury"
+    BaroBarsUnit:
+      description: "B=bars"
+    # Sea-Bird fields
+    Conductivity:
+      units: "S/m"
+      description: "Conductivity"
+    Salinity:
+      units: "PSU"
+      description: "Practical salinity"
+    SoundVelocity:
+      units: "m/s"
+      description: "Sound velocity"
+    Date:
+      description: "Date string"
+    Time:
+      description: "Time string"

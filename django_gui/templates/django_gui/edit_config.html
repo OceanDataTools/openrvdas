@@ -50,46 +50,42 @@
         <button class='btn-primary' name="update" type="submit">Update</button>
         <button class='btn-secondary' name="close" type="submit">Close</button>
       </form>
-      Config definition: <div id="config_json"></div>
+      Config definition: <pre id="config_yaml" class="config_yaml"></pre>
     </td>
   </tr>
 </table>
-<link rel="stylesheet" href="../static/django_gui/json-viewer/json-viewer.css">
-<script src="../static/django_gui/json-viewer/json-viewer.js"></script>
+
+{{ config_map|json_script:"config_map" }}
+{{ current_config|json_script:"current_config" }}
 
 <script>
 
-// Create the JSON viewer and attach to the div
-var jsonViewer = new JSONViewer();
-document.querySelector("#config_json").appendChild(jsonViewer.getContainer());
+// Map of config_name -> config as pretty-printed YAML, and the name of the
+// config currently in effect. Both are emitted by json_script above, which
+// escapes them safely for embedding in the page.
+var config_map = JSON.parse(document.getElementById("config_map").textContent);
+var current_config = JSON.parse(
+    document.getElementById("current_config").textContent);
 
-// Parse map from config_name->config_json and show JSON of current config
-var config_map = JSON.parse(clean_json("{{ config_map }}"));
-set_config_json("{{ current_config }}");
+set_config_yaml(current_config);
 
-// Remove all those ugly escapes
-function clean_json(source) {
-  return source.replace(/&quot;/g,'"').replace(/&gt;/g,'>'); //"
-}
-
-// Set the "config" section to the JSON for the specified config.
-function set_config_json(config_name) {
-  config_name = clean_json(config_name);
-  config_json = config_map[config_name];
-  jsonViewer.showJSON(config_json, null, 1);
+// Set the "config" section to the YAML for the specified config.
+function set_config_yaml(config_name) {
+  // textContent, not innerHTML: the YAML is displayed as-is, not as markup.
+  document.getElementById("config_yaml").textContent =
+      config_map[config_name] || '';
 }
 
 // Highlight if the selection isn't the currently saved one.
 function update_select() {
   var sel = document.getElementById("select_config");
   var selected_value = sel.options[sel.selectedIndex].value;
-  var current_config = clean_json("{{ current_config }}");
   if (selected_value == current_config) {
     sel.style.backgroundColor="white";
   } else {
     sel.style.backgroundColor="var(--orange)";
   }
-  set_config_json(selected_value);
+  set_config_yaml(selected_value);
 }
 </script>
 {% endblock %}
