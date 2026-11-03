@@ -14,20 +14,20 @@ You will need to be able to run the ``sudo`` command. The script handles privile
 | `master` | Stable release — recommended for production deployments |
 | `dev` | Latest development — newer features but may be less stable |
 
-Replace `dev` with `master` (or any other branch name) in the commands below to select the version you want.
+Replace `master` with `dev` (or any other branch name) in the commands below to select the version you want.
 
 ## Option 1: Download and run (recommended)
 
 ```
-curl -fsSL https://raw.githubusercontent.com/oceandatatools/openrvdas/dev/utils/install_openrvdas.sh \
+curl -fsSL https://raw.githubusercontent.com/oceandatatools/openrvdas/master/utils/install_openrvdas.sh \
   -o /tmp/install_openrvdas.sh
 bash /tmp/install_openrvdas.sh
 ```
 
-For the stable release, use the `master` branch instead:
+For the latest development version, use the `dev` branch instead:
 
 ```
-curl -fsSL https://raw.githubusercontent.com/oceandatatools/openrvdas/master/utils/install_openrvdas.sh \
+curl -fsSL https://raw.githubusercontent.com/oceandatatools/openrvdas/dev/utils/install_openrvdas.sh \
   -o /tmp/install_openrvdas.sh
 bash /tmp/install_openrvdas.sh
 ```
