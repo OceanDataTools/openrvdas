@@ -815,14 +815,20 @@ class LoggerManager:
         cached data server.
         """
         last_loaded_timestamp = 0
+        # No cruise loaded is a normal state (e.g. right after install), so
+        # say so once rather than on every pass through the loop.
+        reported_no_cruise = False
 
         while not self.quit_flag:
             try:
                 self.cruise = self.api.get_configuration()  # a Cruise object
                 if not self.cruise:
-                    logging.info('No cruise definition found in API')
+                    if not reported_no_cruise:
+                        logging.info('No cruise definition loaded; waiting for one.')
+                        reported_no_cruise = True
                     time.sleep(self.interval * 2)
                     continue
+                reported_no_cruise = False
                 self.cruise_filename = self.cruise.get('config_filename')
                 loaded_time = self.cruise.get('loaded_time')
                 self.cruise_loaded_time = datetime.datetime.timestamp(loaded_time)
