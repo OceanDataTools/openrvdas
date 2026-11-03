@@ -1,0 +1,34 @@
+name: Release Tags
+
+# dev must describe as the latest release, or as a pre-release of a later
+# version, and the latest release must be reachable from it. Otherwise
+# git describe, and the version setuptools_scm derives from it for the UIs,
+# report a stale version - as happened for months before v2.7.0 (#621). See
+# scripts/check_release_tags.sh and RELEASING.md.
+#
+# Between tagging a release on master and merging master back into dev, this
+# fails on purpose: it's the reminder that the back-merge is still to do.
+
+on:
+  push:
+    branches: [dev]
+  pull_request:
+    branches: [dev]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  describe:
+    name: dev describes as the latest release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          # git describe walks history to the nearest tag, so it needs all
+          # of both, and origin/master to find the latest release.
+          fetch-depth: 0
+
+      - name: Check release tags
+        run: bash scripts/check_release_tags.sh HEAD origin/master
