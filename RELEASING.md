@@ -25,6 +25,12 @@ pytest test/
 Confirm CI on `dev` is green and that anything intended for the release has
 merged.
 
+If the release needs testing on real installations first, cut release
+candidates from `dev`; see [Release candidates](#release-candidates). Once the
+last one is tagged, don't merge anything else into `dev` until the release is
+out: step 2 merges `dev` as it stands, so anything merged in the meantime ships
+without having been in a release candidate.
+
 ### 2. Merge `dev` into `master` as a true merge
 
 ```bash
@@ -36,6 +42,17 @@ git merge --no-ff dev
 **Use a merge commit, not a squash.** On GitHub this is the "Create a merge
 commit" option — *not* "Squash and merge". This matters; see
 [Why `--no-ff`](#why---no-ff) below.
+
+In practice `master` is protected, so this is a pull request from `dev` into
+`master`, and it needs an approving review — which GitHub doesn't let a pull
+request's author give. Open it from an account other than the approving
+maintainer's. Then **approve it, but don't merge it with the button**: in this
+repository the button defaults to "Squash and merge". Merge from the command
+line instead:
+
+```bash
+gh pr merge <PR number> --merge
+```
 
 ### 3. Tag the merge commit
 
@@ -66,6 +83,13 @@ git log -1 --format=%p        # expect TWO parent hashes
 git diff HEAD^1 HEAD          # expect EMPTY
 ```
 
+On GitHub `dev` is protected too, so this is a pull request from `master` into
+`dev`, which also needs an approval. Merge it the same way, with
+`gh pr merge <PR number> --merge`. A squash here defeats the purpose: a squash
+commit has one parent, so the release tag stays out of `dev`'s history. That
+happened to v2.7.0's first back-merge (#739), which had to be redone as #740;
+step 5's check catches it.
+
 If conflicts appear, resolve them in `dev`'s favour (`git checkout --ours
 <file>`); `--ours` during a merge means the branch you are on, i.e. `dev`.
 
@@ -75,12 +99,44 @@ A non-empty diff means something reached `master` without going through
 ### 5. Verify tag reachability from `dev`
 
 ```bash
-git describe --tags dev       # expect: v2.6.2
+git describe --tags --abbrev=0 dev    # expect: the release you just tagged
 ```
 
 If this reports an *older* release, the release is not properly reachable from
 `dev` and version-derivation tooling will report stale numbers. See
 [Why `--no-ff`](#why---no-ff).
+
+`scripts/check_release_tags.sh` makes this check, and runs in CI on every push
+and pull request to `dev` (the Release Tags workflow). It fails if the latest
+release on `master` isn't reachable from `dev`, or if `dev`'s nearest tag is
+anything other than that release or a pre-release of a later version. Run it
+locally with:
+
+```bash
+scripts/check_release_tags.sh origin/dev origin/master
+```
+
+Between steps 3 and 4 it fails on purpose, as a reminder that the back-merge is
+still to do.
+
+## Release candidates
+
+To have a release tested before it's cut, tag release candidates on `dev`:
+
+```bash
+git tag -a v2.7.0rc1 -m "Release candidate 1 for v2.7.0"
+git push origin v2.7.0rc1
+gh release create v2.7.0rc1 --verify-tag --prerelease --latest=false \
+    --title "v2.7.0rc1 (release candidate)" --notes-file notes.md
+```
+
+- `--latest=false` keeps the current release marked Latest on GitHub.
+- `setuptools_scm` handles `rcN` tags: commits after `v2.7.0rc1` report
+  `2.7.0rc2.devN`.
+- The release tags check accepts a release candidate as `dev`'s nearest tag, as
+  long as it's for a version after the latest release.
+- If code changes land on `dev` after the last candidate, cut another before
+  releasing. A documentation-only change needn't wait for one.
 
 ## Why `--no-ff`
 
@@ -99,36 +155,19 @@ back-merge in step 4 the tag sits a handful of commits from `dev`, so
 `git describe` stays correct, and both distances grow in lockstep afterwards so
 it stays correct permanently.
 
-## Marker tags (transitional)
+## Marker tags (retired)
 
-Until the first `--no-ff` release lands, `dev` carries a marker tag of the form
-`vX.Y.Z.dev0` (currently `v2.6.2.dev0`) so that tag-walking tooling reports a
-sensible version. These are a workaround for the squash-merge history, not part
-of the process.
-
-**Once a release has been cut as a true merge, stop creating them** — the
-release tag itself does the job. See
+Before v2.7.0, releases were squash-merged, and `dev` carried a marker tag of the
+form `vX.Y.Z.dev0` (`v2.6.2.dev0`, then `v2.6.3.dev0`) so that tag-walking tooling
+reported a sensible version. v2.7.0 was the first release cut as a true merge,
+so its tag does that job, and **no more marker tags are needed**; the old ones
+are harmless and stay. See
 [#624](https://github.com/OceanDataTools/openrvdas/issues/624).
 
-### Marker tags must end in `.dev0`
-
-Tag `vX.Y.Z.dev0` and nothing else — never `.dev1`, `.dev2`, and so on.
-`setuptools_scm` derives the running count itself, so one `.dev0` marker per
-release cycle is all that is needed: with `v2.6.2.dev0` on `dev`, a commit on
-top reports `2.6.2.dev1+g<sha>`, the next `2.6.2.dev2+g<sha>`, and so on.
-
-Tagging a hand-numbered `.devN` instead breaks the build as soon as any commit
-lands after it:
-
-```
-ValueError: choosing custom numbers for the `.devX` distance is not supported.
- The 2.6.2.dev1 can't be bumped
-Please drop the tag or create a new supported one ending in .dev0
-```
-
-The tag itself is accepted, so this does not fail until the next commit — by
-which point the bad tag may already be pushed. If that happens, delete the tag
-(locally and on the remote) and re-cut it as `.dev0`.
+If one is ever needed again, it must end in `.dev0`, never `.dev1` and so on.
+`setuptools_scm` derives the running count itself, and a hand-numbered `.devN`
+tag breaks the build as soon as another commit lands after it (`ValueError:
+choosing custom numbers for the .devX distance is not supported`).
 
 ## Version numbers
 

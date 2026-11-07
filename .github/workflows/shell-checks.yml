@@ -15,6 +15,11 @@ on:
       - '**/*.sh'
       - '.github/workflows/shell-checks.yml'
 
+# Every job only reads the code, so don't give it the repository's default
+# (possibly read-write) GITHUB_TOKEN. Flagged by CodeQL.
+permissions:
+  contents: read
+
 jobs:
   # Parse every script under both bash versions we support. The MacOS runner
   # is the point of this job: it ships bash 3.2, which rejects constructs that

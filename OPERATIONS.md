@@ -6,7 +6,7 @@ derivable from the code, the git history, or the docs — the traps that have
 actually cost contributors time, and the decisions whose reasoning would
 otherwise be lost.
 
-Time-sensitive facts are marked **[as of 2026-09-26]**. Re-verify those before
+Time-sensitive facts are marked **[as of <date>]**. Re-verify those before
 relying on them; everything else is structural.
 
 ---
@@ -47,8 +47,12 @@ Prefer surfacing the choice over silently using `--admin`.
 |---|---|---|
 | Feature branch → `dev` | `gh pr merge <n> --squash` | WIP commits aren't worth keeping |
 | Release `dev` → `master` | `gh pr merge <n> --merge` | **Must** be a real merge commit — see §2 |
+| Back-merge `master` → `dev` | `gh pr merge <n> --merge` | **Must** be a real merge commit too — see §2 |
 
-Use the explicit flag every time. All three merge methods stay enabled on the
+Use the explicit flag every time. **Don't merge release or back-merge PRs with
+the GitHub button:** here it has defaulted to "Squash and merge", and that is
+how v2.7.0's first back-merge (#739) was squashed and had to be redone (#740).
+Approve in the UI, then merge with `gh pr merge <n> --merge`. All three merge methods stay enabled on the
 repo deliberately: GitHub has no "default merge method" setting (only the three
 `allow_*` booleans), so disabling squash to force correct releases would also
 stop feature PRs from squashing. **Don't "fix" the repo settings.**
@@ -58,19 +62,22 @@ stop feature PRs from squashing. **Don't "fix" the repo settings.**
 ## 2. Release process — the squash-merge legacy
 
 Every `dev` → `master` release through **v2.6.1** was a squash merge rather than
-a true merge. Two distinct consequences follow, and they are easy to confuse.
+a true merge (v2.6.2 was a hotfix cherry-picked onto `master`). **v2.7.0
+(2026-11-03) was the first release cut as a true merge** (#720), and merged back
+into `dev` as one (#740). Two consequences of the older history are easy to
+confuse.
 
 ### Commit counts overstate divergence
 
-`git log master..dev` reports a large number of commits whose *content* is
-already in master. Use `git diff master..dev --stat` for the real delta. On
-2026-09-10 the counts were 119 commits vs. 25 files actually differing.
+For history before v2.7.0, `git log master..dev` reports many commits whose
+*content* was already in master. Use `git diff master..dev --stat` for the real
+delta. On 2026-09-10 the counts were 119 commits vs. 25 files actually differing.
 
-### Release tags fall out of `git describe` range
+### Release tags fell out of `git describe` range
 
 `git describe` returns the nearest reachable tag **by commit distance**, not the
-newest one. Because master's squash line contains none of dev's individual
-commits, every release tag sits 100+ commits from dev's tip — while `v2.3.1`,
+newest one. Because master's squash line contained none of dev's individual
+commits, every release tag sat 100+ commits from dev's tip — while `v2.3.1`,
 the one tag that landed on a real two-parent merge on dev's own mainline, sat
 closer and won. `dev` described itself as `v2.3.1-79` long after v2.6.x shipped,
 and `setuptools_scm` derived `2.3.2.devN` from it. Tracked as
@@ -78,48 +85,38 @@ and `setuptools_scm` derived `2.3.2.devN` from it. Tracked as
 
 **Two traps worth internalizing:**
 
-1. **Reachability was never the problem.** v2.4.0–v2.6.0 *were* already ancestors
-   of dev. `git merge-base --is-ancestor <tag> dev` passes green while the bug is
-   live. The check that catches it asserts that `git describe --tags dev`
-   **names** the latest release.
-2. **Back-merging master into dev does not fix it.** Both distances just
-   increment. Verified empirically 2026-09-10.
+1. **Reachability alone isn't enough.** v2.4.0–v2.6.0 *were* already ancestors of
+   dev, so `git merge-base --is-ancestor <tag> dev` passed while the bug was
+   live. A check has to assert that `git describe --tags dev` **names** the
+   latest release, as `scripts/check_release_tags.sh` does (it checks
+   reachability too, which catches a skipped or squashed back-merge).
+2. **Back-merging a squashed release into dev doesn't fix it.** Both distances
+   just increment (verified 2026-09-10). Only a true-merge release followed by a
+   true-merge back-merge does.
 
-### The fix, and why it hasn't been exercised
+### The fix, as exercised in v2.7.0
 
-The decision to cut releases with `--no-ff` was made **2026-08-23** — about an
-hour *after* the v2.6.1 cut. **[as of 2026-09-26]** no release has happened
-since, so nothing in git history demonstrates the new practice. Do not infer
-from the history that squashing is still the policy.
+The release commit (`ae353258`) has dev's tip as a parent, and after the
+back-merge `git describe --tags dev` reports `v2.7.0-N-g…`. setuptools_scm gives
+`dev` `2.7.1.devN`, and the `v2.7.0` tag exactly `2.7.0`. The squash commit from
+the botched first back-merge (#739) is still in dev's history; it is empty and
+harmless.
 
-Once a release is cut as a real merge, the tag has dev's tip as a parent,
-`git describe` stays correct unaided, and the transitional marker tags retire.
+The **Release Tags** CI workflow (`scripts/check_release_tags.sh`, on every push
+and pull request to `dev`) keeps it that way. It deliberately accepts a release
+candidate (`vX.Y.ZrcN`) as dev's nearest tag if it is for a version after the
+latest release; the plain string comparison first drafted in #624 would have
+gone red for every release-candidate cycle. Between tagging a release on
+`master` and merging it back, it fails on purpose.
 
-### Marker tags must end in `.dev0` — never `.dev1`
+### Marker tags are retired
 
-`setuptools_scm` refuses to bump a hand-numbered `.devN` tag. `v2.6.2.dev1` is
-accepted at distance 0, then raises
+Until v2.7.0, `dev` carried `vX.Y.Z.dev0` marker tags (`v2.6.2.dev0`,
+`v2.6.3.dev0`) to work around the squash history. They are no longer needed and
+shouldn't be cut. If one ever is, it must end in `.dev0`: setuptools_scm refuses
+to bump a hand-numbered `.devN` tag, and raises
 `ValueError: choosing custom numbers for the .devX distance is not supported`
-as soon as the next commit lands — possibly after it has been pushed.
-setuptools_scm derives the running count itself, so **one `.dev0` per cycle** is
-all that's needed.
-
-Recovery: delete the tag locally and on the remote, re-cut as `.dev0`.
-
-**[as of 2026-09-26]** `dev` carries `v2.6.2.dev0`; last release was v2.6.1
-(2026-08-23).
-
-### Open process work — [#624](https://github.com/OceanDataTools/openrvdas/issues/624)
-
-One of five checklist items done (`RELEASING.md`, PR #625, extended by #626,
-corrected by #628). The other four are all gated on the first `--no-ff` release
-actually happening.
-
-**The CI check is deliberately deferred.** As drafted it goes *red today*,
-because `v2.6.2.dev0` on dev intentionally differs from `v2.6.1` on master. The
-plan is to land it *with* the first real-merge release, when dev describes as the
-release tag and a plain string comparison is correct. **Don't merge that check
-early — it lands red.**
+as soon as the next commit lands — possibly after the tag has been pushed.
 
 ---
 
