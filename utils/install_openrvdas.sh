@@ -711,9 +711,13 @@ function install_prereqs {
         # DEBIAN_FRONTEND=noninteractive suppresses interactive configuration
         # dialogs (e.g. openssh-server) that cannot be answered when stdin is
         # a pipe (curl | bash) or a non-interactive session.
+        # build-essential (the C compiler) is listed explicitly: uwsgi for the
+        # Django console has to be compiled, and the compiler otherwise arrives
+        # only as a recommended package of python3-pip - which apt skips if
+        # python3-pip is already installed (#744). RHEL lists gcc likewise.
         sudo DEBIAN_FRONTEND=noninteractive apt install -y git nginx libreadline-dev \
             python3-dev python3-pip python3-venv libsqlite3-dev \
-            openssh-server supervisor libssl-dev
+            openssh-server supervisor libssl-dev build-essential
 
         # OpenRVDAS requires Python 3.11+. Ubuntu 22.04's python3 is 3.10,
         # so install python3.11 from the deadsnakes PPA alongside it. The
@@ -902,9 +906,25 @@ function setup_python_packages {
         # This condition matches the one guarding setup_uwsgi below.
         if [[ "${UI_TYPE:-}" == "django" ]]; then
             echo "Installing uwsgi for the Django web console."
-            venv/bin/python venv/bin/pip3 install \
-              --trusted-host pypi.org --trusted-host files.pythonhosted.org \
-              -e '.[web]'
+            # uwsgi is built from source. If that fails, say why and stop here,
+            # rather than leave pip's long traceback as the last thing shown.
+            if ! venv/bin/python venv/bin/pip3 install \
+                   --trusted-host pypi.org --trusted-host files.pythonhosted.org \
+                   -e '.[web]'; then
+                echo
+                echo "ERROR: Building uwsgi for the Django web console failed (see above)."
+                echo "uwsgi is compiled during the install, so it needs a C compiler and"
+                echo "the Python development headers. Install them and re-run this script:"
+                if [ "${OS_TYPE:-}" == 'CentOS' ]; then
+                    echo "    sudo dnf install gcc python3-devel    # python3.11-devel on RHEL 9"
+                elif [ "${OS_TYPE:-}" == 'Ubuntu' ]; then
+                    echo "    sudo apt install build-essential python3-dev"
+                else
+                    echo "    xcode-select --install"
+                fi
+                echo "Or choose the React console (UI_TYPE=react), which doesn't need uwsgi."
+                exit_gracefully
+            fi
         fi
     else
         # Pre-v2.x checkout with no pyproject.toml: fall back to the
