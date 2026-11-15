@@ -547,10 +547,11 @@ function check_prerequisites {
         # uvicorn runs out of web_backend/.venv, but logger_manager runs out of
         # the MAIN venv - and with --database fastapi it imports web_backend's
         # async API, so FastAPI's packages have to be in the main venv too. The
-        # installer puts them there only while installing the React UI, so an
-        # install that has since been re-run for Django (which recreates the
-        # venv) ends up with a complete-looking React tree whose logger_manager
-        # dies on startup with "No module named 'fastapi'".
+        # installer puts them there only while installing the React UI. If the
+        # venv has been rebuilt since - by a re-run of an installer from before
+        # #750, which rebuilt it every time, or because its Python changed -
+        # the React tree looks complete but logger_manager dies on startup with
+        # "No module named 'fastapi'".
         MAIN_PYTHON="${OPENRVDAS_ROOT}/venv/bin/python"
         if [ -x "$MAIN_PYTHON" ] && \
            ! "$MAIN_PYTHON" -c 'import fastapi, sqlalchemy, aiosqlite, greenlet, pydantic_settings' \

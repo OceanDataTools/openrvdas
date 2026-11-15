@@ -5,7 +5,7 @@ import sys
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
 from logger.utils import record_parser  # noqa: E402
-from contrib.csiro.logger.utils import regex_parser
+from contrib.csiro.logger.utils import regex_record_parser as regex_parser
 from logger.transforms.transform import Transform  # noqa: E402
 from logger.transforms.parse_transform import ParseTransform
 

@@ -2,7 +2,7 @@ import logging
 import unittest
 
 
-from contrib.csiro.logger.utils.regex_parser import RegexRecordParser
+from contrib.csiro.logger.utils.regex_record_parser import RegexRecordParser
 
 
 class TestRegexRecordParser(unittest.TestCase):

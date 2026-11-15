@@ -58,6 +58,16 @@ extra_data_formats = {
     'hex_double': hex_double
 }
 
+# The standard Python data types a device definition's 'data_type' may name.
+# Converted by looking the function up here, never by eval(): the value comes
+# from the incoming record, and eval() let a crafted value run arbitrary code.
+# 'str' needs no conversion.
+standard_data_types = {
+    'int': int,
+    'float': float,
+    'bool': bool,
+}
+
 
 class RegexRecordParser(RecordParser):
     ############################
@@ -157,11 +167,17 @@ class RegexRecordParser(RecordParser):
                         logging.warning('Unable convert to extra data type "%s" with exception %s',
                                         self.data_type_map[device_type][devices_key], e)
                 # ----- STANDARD PYTHON DATA TYPE CONVERSIONS ------
-                # Need this if statement because eval can do some funky stuff when casting a string of numbers to a string
-                # (e.g. eval(str, '10/20') -> '0.5')
                 elif self.data_type_map[device_type][devices_key] != 'str':
+                    data_type = self.data_type_map[device_type][devices_key]
+                    convert = standard_data_types.get(data_type)
+                    if convert is None:
+                        logging.warning('Unknown data type "%s" for the field "%s"; leaving its '
+                                        'value as a string. Known types are %s, plus str and %s',
+                                        data_type, key, sorted(standard_data_types),
+                                        sorted(extra_data_formats))
+                        continue
                     try:
-                        parsed_record['fields'][key] = eval(self.data_type_map[device_type][devices_key] + '("' + value + '")')
+                        parsed_record['fields'][key] = convert(value)
                     except Exception as e:
                         if value == '' or value == '-':
                             parsed_record['fields'][key] = None
@@ -169,9 +185,9 @@ class RegexRecordParser(RecordParser):
                                             'inserting "None" instead', value, self.data_type_map[device_type][devices_key], key, record)
                         else:
                             logging.warning(
-                                'Unable convert to data type "%s" for the field "%s" with call eval("%s(%s)") with exception %s, '
+                                'Unable convert to data type "%s" for the field "%s" (value "%s") with exception %s, '
                                 'consider adding a new extra_data_format',
-                                self.data_type_map[device_type][devices_key], key, self.data_type_map[device_type][devices_key], value, e)
+                                data_type, key, value, e)
 
         return parsed_record
 
