@@ -860,10 +860,18 @@ function setup_python_packages {
     cd $INSTALL_ROOT/openrvdas
     find_python
 
-    # If an existing venv was built with a different Python, recreate it.
+    # If an existing venv was built with a different Python (or is broken),
+    # recreate it. Otherwise keep it, so that re-running the installer for
+    # one web console doesn't remove the packages the other one needs
+    # (uwsgi for Django, FastAPI's for React), and utils/switch_ui.sh can
+    # switch between them. Compare the version and the base installation:
+    # sys.executable inside a venv is the venv's own python, so the check
+    # this replaces never matched, and every run rebuilt the venv (#750).
     if [ -d "$VENV_PATH" ]; then
         VENV_PYTHON="$VENV_PATH/bin/python3"
-        if [ -x "$VENV_PYTHON" ] && ! "$VENV_PYTHON" -c "import sys; assert sys.executable.startswith('$(dirname $PYTHON_BIN)')" 2>/dev/null; then
+        PYTHON_ID='import sys; print(sys.version_info[:2], sys.base_prefix)'
+        if [ ! -x "$VENV_PYTHON" ] || \
+           [ "$("$VENV_PYTHON" -c "$PYTHON_ID" 2>&1)" != "$("$PYTHON_BIN" -c "$PYTHON_ID" 2>&1)" ]; then
             echo "Existing venv uses a different Python; recreating..."
             rm -rf "$VENV_PATH"
         fi
