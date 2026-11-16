@@ -28,6 +28,15 @@ var global_last_logger_status_timestamp = 0;
 
 ////////////////////////////
 function initial_send_message() {
+  // Called each time the websocket (re)connects. A new connection starts
+  // with no subscriptions, and the server resends recent history, so forget
+  // what we've already shown. The cruise definition that arrives next will
+  // then rebuild the logger table and resubscribe to each logger's stderr.
+  global_loggers = {};
+  global_last_cruise_timestamp = 0;
+  var logger_manager_stderr = document.getElementById('logger_manager_stderr');
+  if (logger_manager_stderr) { logger_manager_stderr.innerHTML = ''; }
+
   // Subscribing with seconds:-1 means we'll always start by getting
   // the most recent value, then all subsequent ones.
   return {'type':'subscribe',
@@ -126,6 +135,10 @@ function process_data_message(message) {
       //console.log('cruise_definition: ' + JSON.stringify(cruise_definition));
       if (timestamp > global_last_cruise_timestamp) {
         global_last_cruise_timestamp = timestamp;
+        // A newly loaded definition isn't stale. If its file changes again,
+        // the next status:file_update will show the reload button again.
+        var reload_span = document.getElementById('reload_span');
+        if (reload_span) { reload_span.style.display = 'none' }
         new_fields = update_cruise_definition(timestamp, cruise_definition);
       }
       break;
