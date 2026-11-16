@@ -80,13 +80,18 @@ class PolledSerialReader(SerialReader):
             of lists of strings:
 
                 pre_read_cmd:
-                  key1: ['command 1_1', 'command 1_2]
-                  key2: ['command 2_1', 'command 2_2]
+                  key1: ['command 1_1', 'command 1_2']
+                  key2: ['command 2_1', 'command 2_2']
                   key3: ...
                 ...
             The first time read() is called, the strings associated with key1 will be
             sent. The second time, those associated with key2, and so on. When the end
-            of the dict is reached, it will start again with key1.
+            of the dict is reached, it will start again with key1. For example, to
+            poll two addresses on different intervals:
+
+                pre_read_cmd:
+                  key1: ['SR0\\r\\n', '__PAUSE__ 12']
+                  key2: ['SR2\\r\\n', '__PAUSE__ 3']
 
         timeout <seconds>
             If timeout is specified, then the serial read will time out after this many
@@ -111,6 +116,12 @@ class PolledSerialReader(SerialReader):
         followed by a number (e.g. ``__PAUSE__ 5``), it will be interpreted as a command
         to pause for that many seconds prior to sending the next command. If no number
         is given, it will pause for one second.
+
+        Escape sequences such as ``\\r\\n`` in these strings are converted before
+        they are sent. In YAML, single-quote them (``'SR0\\r\\n'``): YAML leaves the
+        backslashes for the reader to convert, and the logger's messages show the
+        command on one line. Double quotes send the same bytes, but YAML converts
+        the escapes itself, so the messages print real line breaks.
         """
         # Can we even run this?
         if not SERIAL_MODULE_FOUND:
