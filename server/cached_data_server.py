@@ -63,6 +63,12 @@ says to
                                         'field_2':'value_2'}}}
        - submit new data to the cache (an alternative way to get data
          in without the same record size limits of a UDP packet).
+
+         Refused (status 403) on connections that arrive through a proxy
+         marking them with the X-OpenRVDAS-Proxied header, as the nginx
+         /cds-ws location written by utils/install_openrvdas.sh does. Clients
+         that reach the CDS through the web server can read, but not write;
+         loggers publish by connecting to the CDS's port directly.
 ```
 
 HTTP GET interface (requires websockets >= 12):
@@ -142,6 +148,20 @@ from logger.utils.stderr_logging import StdErrLoggingHandler, DEFAULT_LOGGING_FO
 from logger.utils.das_record import DASRecord                 # noqa: E402
 
 logging.basicConfig(format=DEFAULT_LOGGING_FORMAT)
+
+# A proxy sets this header on connections it forwards, and the CDS then refuses
+# 'publish' on them. The nginx /cds-ws location written by
+# utils/install_openrvdas.sh sets it, so browsers and other clients that come
+# in through the web server can read the cache but not write to it (#748).
+PROXIED_HEADER = 'X-OpenRVDAS-Proxied'
+
+
+def _request_headers(websocket):
+    """Return the HTTP headers of a websocket's opening handshake."""
+    request = getattr(websocket, 'request', None)  # websockets >= 14
+    if request is not None:
+        return request.headers
+    return getattr(websocket, 'request_headers', {})  # legacy implementation
 
 
 ############################
@@ -418,10 +438,17 @@ class WebSocketConnection:
     """Handle the websocket connection, serving data as requested."""
     ############################
 
-    def __init__(self, websocket, cache, interval):
+    def __init__(self, websocket, cache, interval, read_only=False):
+        """
+        websocket  The client connection
+        cache      The RecordCache to serve from
+        interval   Default interval between subscription updates
+        read_only  If True, refuse 'publish' requests
+        """
         self.websocket = websocket
         self.cache = cache
         self.interval = interval
+        self.read_only = read_only
         self.quit_flag = False
 
     ############################
@@ -571,7 +598,17 @@ class WebSocketConnection:
                 elif request['type'] == 'publish':
                     logging.debug('publish request')
                     data = request.get('data')
-                    if data is None:
+                    if self.read_only:
+                        logging.warning(
+                            'Refused publish from a client connected through '
+                            'a proxy (%s). To write to the cache, connect to '
+                            'the CachedDataServer port directly.', PROXIED_HEADER)
+                        await self.send_json_response(
+                            {'type': 'publish', 'status': 403,
+                             'error': 'publishing is not permitted on this '
+                             'connection; connect to the CachedDataServer '
+                             'port directly'})
+                    elif data is None:
                         await self.send_json_response(
                             {'type': 'publish', 'status': 400,
                              'error': 'no data field found in request'},
@@ -930,7 +967,8 @@ class CachedDataServer:
             max_records=60 * 24,
             min_back_records=100,
             cleanup_interval=60,
-            disk_cache=None):
+            disk_cache=None,
+            host=''):
         """
         port         Port on which to serve websocket connections
         interval     How frequently to serve updates
@@ -945,8 +983,12 @@ class CachedDataServer:
                      and save to disk (if disk_cache is specified)
         disk_cache   If not None, name of directory in which to backup values
                      from in-memory cache
+        host         Interface to listen on. The default, '', listens on all
+                     interfaces; 'localhost' accepts connections only from
+                     this machine.
         """
         self.port = port
+        self.host = host
         self.interval = interval
         self.back_seconds = back_seconds
         self.max_records = max_records
@@ -1102,11 +1144,12 @@ class CachedDataServer:
 
                 self.websocket_server = await websockets.serve(
                     self._serve_websocket_data,
-                    host='',
+                    host=self.host,
                     port=self.port,
                     **extra_kwargs
                 )
-                logging.info('WebSocket server running on port %d', self.port)
+                logging.info('WebSocket server running on %s:%d',
+                             self.host or '*', self.port)
                 await self.websocket_server.wait_closed()
             except OSError as e:
                 logging.fatal('Failed to open websocket on port %d: %s', self.port, e)
@@ -1148,7 +1191,9 @@ class CachedDataServer:
         #    proc.start()
         #
         # then self.cache always appears ins in its initial (empty) state.
-        connection = WebSocketConnection(websocket, self.cache, self.interval)
+        read_only = PROXIED_HEADER in _request_headers(websocket)
+        connection = WebSocketConnection(websocket, self.cache, self.interval,
+                                         read_only=read_only)
 
         # Stash the connection so we can tell it to exit when we receive a
         # quit(). But first do some cleanup, getting rid of old
@@ -1189,6 +1234,13 @@ if __name__ == '__main__':
     parser.add_argument('--port', dest='port', required=True,
                         action='store', type=int,
                         help='Websocket port on which to serve data')
+
+    parser.add_argument('--host', dest='host', default='', action='store',
+                        help='Interface to listen on for websocket and HTTP '
+                        'connections. By default, listen on all interfaces. '
+                        'Use "localhost" to accept connections only from this '
+                        'machine, e.g. when clients elsewhere reach the server '
+                        'through a web server proxy.')
 
     parser.add_argument('--udp', dest='udp', default=None, action='store',
                         help='Comma-separated list of network ports to listen '
@@ -1248,7 +1300,8 @@ if __name__ == '__main__':
                               max_records=args.max_records,
                               min_back_records=args.min_back_records,
                               cleanup_interval=args.cleanup_interval,
-                              disk_cache=args.disk_cache)
+                              disk_cache=args.disk_cache,
+                              host=args.host)
 
     # Only create reader(s) if they've given us a network to read from;
     # otherwise, count on data coming from websocket publish
