@@ -9,7 +9,7 @@ from os import listdir
 from os.path import dirname, isfile, isdir, abspath, relpath
 
 from django.shortcuts import render, redirect
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseForbidden
 
 
 # Read in JSON with comments
@@ -100,6 +100,22 @@ def login(request):
     return render(request, 'django_gui/login.html', template_vars)
 
 
+def refuse_anonymous_change(request):
+    """Return a 403 response if this is a POST that would change something
+    and the user isn't logged in, otherwise None.
+
+    The templates disable these controls for anonymous users, but that alone
+    doesn't stop a form from being submitted, so each view that acts on a POST
+    checks here first. Closing a window changes nothing, so it's allowed.
+    """
+    if (request.method == 'POST' and not request.user.is_authenticated
+            and 'close' not in request.POST):
+        logging.warning('Refused change from anonymous user at %s: %s',
+                        request.get_host(), request.path)
+        return HttpResponseForbidden('You must be logged in to make changes.')
+    return None
+
+
 def log_request(request, cmd):
     global api
     if api:
@@ -118,6 +134,10 @@ def index(request):
     global api
     if api is None:
         api = DjangoServerAPI()
+
+    refused = refuse_anonymous_change(request)
+    if refused:
+        return refused
 
     ############################
     # If we've gotten a POST request
@@ -207,6 +227,10 @@ def change_mode(request):
     if api is None:
         api = DjangoServerAPI()
 
+    refused = refuse_anonymous_change(request)
+    if refused:
+        return refused
+
     ############################
     # If we've gotten a POST request
     # cruise_id = ''
@@ -249,6 +273,10 @@ def edit_config(request, logger_id):
     global api
     if api is None:
         api = DjangoServerAPI()
+
+    refused = refuse_anonymous_change(request)
+    if refused:
+        return refused
 
     ############################
     # If we've gotten a POST request, they've selected a new config
@@ -311,6 +339,10 @@ def choose_file(request, selection=None):
     global api
     if api is None:
         api = DjangoServerAPI()
+
+    refused = refuse_anonymous_change(request)
+    if refused:
+        return refused
 
     ##################
     # Internal function to create listing from dirname

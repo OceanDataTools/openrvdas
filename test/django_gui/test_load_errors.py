@@ -15,6 +15,7 @@ from unittest import mock
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'django_gui.settings')
 django.setup()
 
+from django.contrib.auth.models import User  # noqa: E402
 from django.test import TestCase, override_settings  # noqa: E402
 
 from django_gui import views  # noqa: E402
@@ -73,6 +74,9 @@ class TestLoadErrors(TestCase):
         patcher = mock.patch('django_gui.views.api', self.api)
         patcher.start()
         self.addCleanup(patcher.stop)
+
+        # Loading and reloading are only allowed for logged-in users
+        self.client.force_login(User.objects.create_user('tech', password='secret'))
 
     def _write(self, content):
         with open(self.filename, 'w') as f:
