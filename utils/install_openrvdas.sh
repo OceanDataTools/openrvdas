@@ -324,6 +324,11 @@ function set_default_variables {
     # changing only if something else on the machine already uses 8766.
     DEFAULT_CACHED_DATA_SERVER_PORT=8766
 
+    # Whether the CachedDataServer accepts connections from other machines,
+    # or only from this one (it's reached through nginx either way). Settled
+    # after the preferences file is read.
+    DEFAULT_CDS_ALLOW_REMOTE=
+
     DEFAULT_UI_TYPE=django
     DEFAULT_EXPOSE_API_DOCS=no
     DEFAULT_WEB_ADMIN_USER=
@@ -361,6 +366,18 @@ function set_default_variables {
         fi
     fi
     DEFAULT_LOGGER_MANAGER_SNAPSHOT_DIR=${DEFAULT_LOGGER_MANAGER_SNAPSHOT_DIR:-/var/log/openrvdas/snapshots}
+
+    # Before #748 the CachedDataServer always listened on all interfaces.
+    # Preferences saved then have no setting for it, so an existing install
+    # keeps that behavior by default (loggers on other machines may rely on
+    # it); new installs accept connections from this machine only.
+    if [ -z "$DEFAULT_CDS_ALLOW_REMOTE" ]; then
+        if [ -e $PREFERENCES_FILE ]; then
+            DEFAULT_CDS_ALLOW_REMOTE=yes
+        else
+            DEFAULT_CDS_ALLOW_REMOTE=no
+        fi
+    fi
 }
 
 ###########################################################################
@@ -395,6 +412,7 @@ DEFAULT_INSTALL_UFW=$INSTALL_UFW
 DEFAULT_OPENRVDAS_AUTOSTART=$OPENRVDAS_AUTOSTART
 
 DEFAULT_CACHED_DATA_SERVER_PORT=$CACHED_DATA_SERVER_PORT
+DEFAULT_CDS_ALLOW_REMOTE=$CDS_ALLOW_REMOTE
 
 DEFAULT_UI_TYPE=$UI_TYPE
 DEFAULT_EXPOSE_API_DOCS=$EXPOSE_API_DOCS
@@ -1077,6 +1095,9 @@ http {
             proxy_set_header Upgrade \$http_upgrade;
             proxy_set_header Connection \$connection_upgrade;
             proxy_set_header Host \$host;
+            # Clients coming in this way can read the cache but not publish
+            # to it; loggers publish to the CachedDataServer port directly.
+            proxy_set_header X-OpenRVDAS-Proxied 1;
         }
 
         # Finally, send all non-CDS, non-media requests to the Django server.
@@ -1170,6 +1191,9 @@ http {
             proxy_set_header Upgrade \$http_upgrade;
             proxy_set_header Connection \$connection_upgrade;
             proxy_set_header Host \$host;
+            # Clients coming in this way can read the cache but not publish
+            # to it; loggers publish to the CachedDataServer port directly.
+            proxy_set_header X-OpenRVDAS-Proxied 1;
         }
 
 $(if [ "$EXPOSE_API_DOCS" == "yes" ]; then cat <<APIDOCS
@@ -1759,7 +1783,7 @@ EOF
     cat > $TEMP_FILE <<EOF
 ; Supervisor configurations for LoggerManager and CachedDataServer
 [program:cached_data_server]
-command=${VENV_BIN}/python server/cached_data_server.py --port ${CACHED_DATA_SERVER_PORT} --disk_cache /var/tmp/openrvdas/disk_cache --max_records 8640 -v
+command=${VENV_BIN}/python server/cached_data_server.py --port ${CACHED_DATA_SERVER_PORT}${CDS_HOST_ARG} --disk_cache /var/tmp/openrvdas/disk_cache --max_records 8640 -v
 environment=PYTHONPATH="${INSTALL_ROOT}/openrvdas",PATH="${VENV_BIN}:/usr/bin:/usr/local/bin"
 directory=${INSTALL_ROOT}/openrvdas
 priority=10
@@ -2338,6 +2362,22 @@ echo "this machine already uses it."
 echo
 read -p "Port for the CachedDataServer? ($DEFAULT_CACHED_DATA_SERVER_PORT) " CACHED_DATA_SERVER_PORT
 CACHED_DATA_SERVER_PORT=${CACHED_DATA_SERVER_PORT:-$DEFAULT_CACHED_DATA_SERVER_PORT}
+
+echo
+echo "The CachedDataServer has no authentication of its own. Unless loggers"
+echo "or other tools on other machines connect to it directly (for example"
+echo "a CachedDataWriter or CachedDataReader with data_server set to"
+echo "<this host>:$CACHED_DATA_SERVER_PORT), it only needs to accept connections"
+echo "from this machine. Browsers are unaffected either way: they reach it"
+echo "through the web server."
+echo
+yes_no "Allow other machines to connect to the CachedDataServer directly?" $DEFAULT_CDS_ALLOW_REMOTE
+CDS_ALLOW_REMOTE=$YES_NO_RESULT
+if [ "$CDS_ALLOW_REMOTE" == "yes" ]; then
+    CDS_HOST_ARG=''
+else
+    CDS_HOST_ARG=' --host localhost'
+fi
 
 #########################################################################
 # Choose web UI

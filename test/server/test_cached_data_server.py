@@ -434,6 +434,71 @@ class TestCachedDataServer(unittest.TestCase):
 
         time.sleep(1)
 
+    ############################
+    def test_proxied_connection_cannot_publish(self):
+        # A connection marked by a proxy with X-OpenRVDAS-Proxied (as the
+        # nginx /cds-ws location is) can read but not publish (#748).
+        WEBSOCKET_PORT = 8773
+        cds = CachedDataServer(port=WEBSOCKET_PORT)
+        cds.cache_record({'fields': {'proxy_field': 'original'}})
+        url = 'ws://localhost:%d' % WEBSOCKET_PORT
+
+        # The client argument for extra handshake headers was renamed in
+        # websockets 14.
+        major = int(websockets.version.version.split('.')[0])
+        header_kwarg = 'additional_headers' if major >= 14 else 'extra_headers'
+        proxied = {header_kwarg: {'X-OpenRVDAS-Proxied': '1'}}
+
+        async def publish(ws, value):
+            await ws.send(json.dumps({'type': 'publish',
+                                      'data': {'timestamp': time.time(),
+                                               'fields': {'proxy_field': value}}}))
+            return json.loads(await ws.recv())
+
+        async def run_test():
+            await asyncio.sleep(0.05)
+            async with websockets.connect(url, **proxied) as ws:
+                # Reading still works
+                await ws.send(json.dumps({'type': 'fields'}))
+                self.assertIn('proxy_field', json.loads(await ws.recv())['data'])
+
+                response = await publish(ws, 'from proxy')
+                self.assertEqual(response['status'], 403)
+
+            # A direct connection can still publish
+            async with websockets.connect(url) as ws:
+                response = await publish(ws, 'direct')
+                self.assertEqual(response['status'], 200)
+
+        with self.assertLogs(level='WARNING') as logs:
+            asyncio.new_event_loop().run_until_complete(run_test())
+        self.assertTrue(any('Refused publish' in line for line in logs.output))
+
+        values = [value for _, value in cds.cache.data['proxy_field']]
+        self.assertEqual(values, ['original', 'direct'])
+        time.sleep(1)
+
+    ############################
+    def test_host_localhost(self):
+        # With host='localhost', the server listens only on loopback addresses.
+        WEBSOCKET_PORT = 8774
+        cds = CachedDataServer(port=WEBSOCKET_PORT, host='localhost')
+        cds.cache_record({'fields': {'local_field': 'value'}})
+
+        async def run_test():
+            await asyncio.sleep(0.05)
+            async with websockets.connect('ws://localhost:%d' % WEBSOCKET_PORT) as ws:
+                await ws.send(json.dumps({'type': 'fields'}))
+                self.assertEqual(json.loads(await ws.recv())['data'], ['local_field'])
+
+        asyncio.new_event_loop().run_until_complete(run_test())
+
+        addresses = [sock.getsockname()[0] for sock in cds.websocket_server.sockets]
+        self.assertTrue(addresses)
+        self.assertTrue(all(address in ('127.0.0.1', '::1') for address in addresses),
+                        addresses)
+        time.sleep(1)
+
 
 ############################
 if __name__ == '__main__':
